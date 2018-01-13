@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Munin: мониторинг Percona Server"/>
+  <meta name="twitter:description" content="Давайте разберемся, как отслеживать важные параметры Percona Server и отображать их на графиках в системе мониторинга Munin!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Munin: мониторинг Percona Server &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Munin: мониторинг Percona Server
+                    </h1>
+                    <h2 class="headline">
+                    Jan 7, 2018 20:52
+                    · 339 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/munin">munin</a>
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                              <a href="https://ealebed.github.io/tags/percona">percona</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Давайте разберемся, как <strong>отслеживать важные параметры Percona Server</strong> и отображать их на графиках в <strong>системе мониторинга Munin</strong>!</p>
+
+<p></p>
+
+<p>Считаем, что у нас уже установлен Munin со всеми необходимыми зависимостями и Percona Server. Как уже упоминалось <a href="https://letsclearitup.com.ua/ubuntu/missing-dependency-cache-cache-at-etc-munin-plugins-mysql_.html">ранее</a>, настройки плагинов <code>mysql*</code> находятся в файле <code>/etc/munin/plugin-conf.d/munin-node</code> и имеют примерно следующий вид:</p>
+
+<pre><code>[mysql*]
+user root
+env.mysqlopts --defaults-file=/etc/mysql/debian.cnf
+env.mysqluser munin
+env.mysqlpassword &lt;Очень_сложный_пароль&gt;
+env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
+</code></pre>
+
+<p>Не забываем создать соответствующего пользователя в базе данных с помощью следующих запросов:</p>
+
+<pre><code>CREATE USER munin@127.0.0.1 IDENTIFIED BY '&lt; Очень_сложный_пароль &gt;';
+GRANT SUPER,PROCESS ON *.* TO munin@127.0.0.1;
+GRANT SELECT ON mysql.* TO munin@127.0.0.1;
+FLUSH PRIVILEGES;
+</code></pre>
+
+<p>Просмотрим все доступные для использования плагины мониторинга баз данных MySQL командой:</p>
+
+<pre><code>munin-node-configure --suggest 2&gt;&amp;1 | grep mysql
+</code></pre>
+
+<p>Результат выполнения команды выглядит примерно так:</p>
+
+<pre><code>mysql_                     | yes  | yes (innodb_bpool innodb_bpool_act innodb_io tmp_tables +bin_relay_log +commands +connections +files_tables +innodb_insert_buf +innodb_io_pend +innodb_log +innodb_rows +innodb_semaphores +innodb_tnx +myisam_indexes +network_traffic +qcache +qcache_mem +replication +select_types +slow +sorts +table_locks)
+</code></pre>
+
+<p>Для создания симлинков на все плагины в директории <code>/etc/munin/plugins/</code> запускаем:</p>
+
+<pre><code>munin-node-configure --shell 2&gt;&amp;1 | grep mysql | /bin/bash
+</code></pre>
+
+<p><strong>Примечание.</strong> Гораздо лучше из списка доступных выбрать только действительно необходимые плагины и включить их вручную.</p>
+
+<p>Проверим корректность работы плагина с помощью <code>munin-run</code>:</p>
+
+<pre><code>munin-run mysql_innodb_bpool_act
+Unknown section: Main thread process no. 4159, id 140055130330880, state: sleeping at /etc/munin/plugins/mysql_innodb_bpool_act line 1098.
+</code></pre>
+
+<p>Получаем сообщение об ошибке, которое можно довольно легко исправить. Открываем на редактирование файл <code>/usr/share/munin/plugins/mysql_</code>:</p>
+
+<pre><code>nano /usr/share/munin/plugins/mysql_
+</code></pre>
+
+<p>Находим процедуру <code>update_innodb</code> (в моем случае это 965 строка) и в ней после строки <code>$sth-&gt;finish();</code> добавляем еще одну <code>$status =~ s/-----------------\nMain thread//g;</code></p>
+
+<p>В результате эта процедура будет выглядеть следующим образом:</p>
+
+<pre><code>...
+sub update_innodb {
+    my ($dbh) = @_;
+ 
+    my $sth = $dbh-&gt;prepare('SHOW /*!50000 ENGINE*/ INNODB STATUS');
+    eval {
+  $sth-&gt;execute();
+    };
+    if ($@) {
+  if ($@ =~ /Unknown (storage|table) engine 'INNODB'|Cannot call SHOW INNODB STATUS because skip-innodb is defined/i) {
+      $data-&gt;{_innodb_disabled} = 1;
+      return;
+  }
+  die $@;
+    }
+    my $row = $sth-&gt;fetchrow_hashref();
+    my $status = $row-&gt;{'status'};
+    $sth-&gt;finish();
+    $status =~ s/-----------------\nMain thread//g;
+    parse_innodb_status($status);
+}
+...
+</code></pre>
+
+<p>Еще раз проверим работоспособность плагина:</p>
+
+<pre><code>munin-run mysql_innodb_bpool
+ib_bpool_size.value 4194303
+ib_bpool_dbpages.value 3527649
+ib_bpool_free.value 0
+ib_bpool_modpages.value 30115
+</code></pre>
+
+<p>Не забываем перезапустить <code>munin-node</code>:</p>
+
+<pre><code>/etc/init.d/munin-node restart
+</code></pre>
+
+<p>Спустя несколько минут графики появятся в web-интерфейсе системы мониторинга.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fmunin-%25D0%25BC%25D0%25BE%25D0%25BD%25D0%25B8%25D1%2582%25D0%25BE%25D1%2580%25D0%25B8%25D0%25BD%25D0%25B3-percona-server%2f - Munin%3a%20%d0%bc%d0%be%d0%bd%d0%b8%d1%82%d0%be%d1%80%d0%b8%d0%bd%d0%b3%20Percona%20Server by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

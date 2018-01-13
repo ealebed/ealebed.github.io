@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Установка subversion 1.8 в Debian Wheezy"/>
+  <meta name="twitter:description" content="В репозитории Debian Wheezy доступен пакет subversion версии 1.6 (просмотреть детали). В этой статье давайте разберемся с установкой subversion более свежей версии — 1.8 от WANdisco.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Установка subversion 1.8 в Debian Wheezy &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Установка subversion 1.8 в Debian Wheezy
+                    </h1>
+                    <h2 class="headline">
+                    Jan 4, 2018 17:31
+                    · 251 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/svn">svn</a>
+                          
+                              <a href="https://ealebed.github.io/tags/debian">debian</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В репозитории Debian Wheezy доступен пакет <code>subversion</code> версии 1.6 (<a href="https://packages.debian.org/wheezy/subversion">просмотреть детали</a>). В этой статье давайте разберемся с установкой <code>subversion</code> более свежей версии — 1.8 от WANdisco.</p>
+
+<p></p>
+
+<p>Для начала добавим ключ репозитория (WANdisco GPG key):</p>
+
+<pre><code>wget -q http://opensource.wandisco.com/wandisco-debian.gpg -O- | apt-key add -
+</code></pre>
+
+<p>Затем добавим сам репозиторий, создав новый файл <code>/etc/apt/sources.list.d/subversion.list</code>:</p>
+
+<pre><code>echo &quot;deb http://staging.opensource.wandisco.com/debian wheezy svn18&quot; &gt; /etc/apt/sources.list.d/subversion.list
+</code></pre>
+
+<p><strong>Примечание.</strong> Конечно, можно добавить репозиторий и в файл <code>/etc/apt/sources.list</code> — это дело вкуса.</p>
+
+<p>Теперь следует обновить информацию о пакетах:</p>
+
+<pre><code>apt-get update
+</code></pre>
+
+<p><strong>Примечание.</strong> Вместо <code>apt-get</code> вы можете использовать <code>aptitude</code>.</p>
+
+<p>После этих действий <code>apt-cache</code> должен показать минимум две возможные версии пакета <code>subversion</code> для установки:</p>
+
+<pre><code>apt-cache show subversion
+Package: subversion
+Version: 1.8.14-1+WANdisco
+Architecture: amd64
+Maintainer: Philip Herron &lt; opensource@wandisco.com &gt;
+Installed-Size: 4431
+Depends: libsvn1 (= 1.8.14-1+WANdisco), libapr1 (&gt;= 1.3.2), libaprutil1 (&gt;= 1.2.7+dfsg), libc6 (&gt;= 2.3), libsasl2-2 (&gt;= 2.1.24)
+Suggests: subversion-tools, db4.8-util, patch
+Filename: dists/wheezy/svn18/binary-amd64/subversion_1.8.14-1+WANdisco_amd64.deb
+Size: 1460814
+MD5sum: 297376f5c790f8da972ce1e2d0b88027
+SHA1: 5c93c3ccd52eb33ab143842f6f51344df3c1942c
+SHA256: f8dfc62d2b9477ad6d564724287e609852e73e16bca452e1e89f2e6624895d5c
+Section: vcs
+Priority: optional
+Homepage: http://wandisco.com
+Description-en: Advanced version control system
+
+Package: subversion
+Version: 1.6.17dfsg-4+deb7u10
+Installed-Size: 4108
+Maintainer: Peter Samuelson &lt; peter@p12n.org &gt;
+Architecture: amd64
+Depends: libsvn1 (= 1.6.17dfsg-4+deb7u10), libapr1 (&gt;= 1.2.7), libc6 (&gt;= 2.3), libsasl2-2 (&gt;= 2.1.24)
+Suggests: subversion-tools, db5.1-util, patch
+Description-en: Advanced version control system
+Homepage: http://subversion.apache.org/
+Description-md5: 15da1bb51fb2e9ea5e25b3a489b864d9
+Tag: devel::rcs, implemented-in::c++, implemented-in::python,
+ interface::commandline, network::client, network::server,
+ protocol::http, protocol::ssh, protocol::webdav, role::program,
+ use::storing, use::synchronizing
+Section: vcs
+Priority: optional
+Filename: pool/main/s/subversion/subversion_1.6.17dfsg-4+deb7u10_amd64.deb
+Size: 1317726
+MD5sum: e42b145e8b02836dab5788920a5c8b7d
+SHA1: 5ef5d0b769706244722cb5324426724c1e89b697
+SHA256: 57c5fd82a30e6762826993e8fdb59b1e8dd2848e3880440430ed2c928f82e0a0
+</code></pre>
+
+<p><strong>Установка SVN (<code>subversion</code>) 1.8 в Debian Wheezy</strong> выполняется следующей командой:</p>
+
+<pre><code>apt-get install subversion
+</code></pre>
+
+<p>Проверить установленную версию пакета <code>subversion</code> можно так:</p>
+
+<pre><code>svn --version
+svn, version 1.8.14 (r1692801)
+...
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D1%2583%25D1%2581%25D1%2582%25D0%25B0%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25BA%25D0%25B0-subversion-1-8-%25D0%25B2-debian-wheezy%2f - %d0%a3%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%ba%d0%b0%20subversion%201.8%20%d0%b2%20Debian%20Wheezy by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

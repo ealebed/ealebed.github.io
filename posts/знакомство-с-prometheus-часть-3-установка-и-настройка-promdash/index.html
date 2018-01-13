@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Prometheus. Часть 3: установка и настройка PromDash"/>
+  <meta name="twitter:description" content="В первой части нашего знакомства с Prometheus мы успешно установили и настроили систему мониторинга.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Знакомство с Prometheus. Часть 3: установка и настройка PromDash &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Prometheus. Часть 3: установка и настройка PromDash
+                    </h1>
+                    <h2 class="headline">
+                    Jan 5, 2018 21:42
+                    · 409 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/prometheus">prometheus</a>
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В <a href="https://letsclearitup.com.ua/debian/znakomstvo-s-prometheus-chast-1-ustanovka-i-nastroyka.html">первой части</a> нашего знакомства с Prometheus мы успешно установили и настроили систему мониторинга.</p>
+
+<p></p>
+
+<p>Во <a href="https://letsclearitup.com.ua/debian/znakomstvo-s-prometheus-chast-2-sbor-metrik-ot-mysql-servera.html">второй части</a> научились собирать метрики от MySQL-сервера и строить по ним графики, теперь настало время организовать отдельные графики в дашборд. Давайте разберемся!</p>
+
+<p>Как уже упоминалось ранее, для построения дашбордов в <strong>системе мониторинга Prometheus</strong> используется инструмент <a href="https://github.com/prometheus/promdash">PromDash</a>. <strong>Установка и настройка PromDash</strong> начинается с установки необходимых компонентов (Git, Ruby, MySQL, Bundler) и их зависимостей:</p>
+
+<pre><code>sudo aptitude install git ruby-full mysql-server libmysqlclient-dev
+</code></pre>
+
+<p>далее:</p>
+
+<pre><code>gem install bundler
+</code></pre>
+
+<p>загружаем исходники:</p>
+
+<pre><code>git clone https://github.com/prometheus/promdash.git
+</code></pre>
+
+<p>переходим в каталог с исходниками:</p>
+
+<pre><code>cd promdash
+</code></pre>
+
+<p>и выполняем:</p>
+
+<pre><code>bundle install --without sqlite3 postgresql
+</code></pre>
+
+<p>После успешного завершения скопируем настройки базы данных из файла-примера:</p>
+
+<pre><code>cp config/database.yml.example config/database.yml
+</code></pre>
+
+<p>Приведем конфигурационный файл <code>database.yml</code> к следующему виду:</p>
+
+<pre><code>production:
+  adapter: mysql2
+  database: promdash_test
+  host: localhost
+  username: root
+  pool: 5
+  timeout: 5000
+</code></pre>
+
+<p><strong>Примечание.</strong> Это тестовый пример настройки, ни к коем случае не используйте эти параметры на вашем production-сервере.</p>
+
+<p>Выполняем первичную настройку (инициализацию) базы данных:</p>
+
+<pre><code>RAILS_ENV=production bundle exec rake db:setup
+/var/lib/gems/2.1.0/gems/bundler-1.11.2/lib/bundler/shared_helpers.rb:78: warning: Insecure world writable dir /usr/local/sbin in PATH, mode 042777
+/var/lib/gems/2.1.0/gems/bundler-1.11.2/lib/bundler/shared_helpers.rb:78: warning: Insecure world writable dir /usr/local/sbin in PATH, mode 042777
+(in /opt/promdash)
+-- create_table(&quot;dashboards&quot;, {:force=&gt;true})
+   -&gt; 0.0174s
+-- add_index(&quot;dashboards&quot;, [&quot;directory_id&quot;], {:name=&gt;&quot;index_dashboards_on_directory_id&quot;})
+   -&gt; 0.0349s
+-- add_index(&quot;dashboards&quot;, [&quot;slug&quot;], {:name=&gt;&quot;index_dashboards_on_slug&quot;, :unique=&gt;true})
+   -&gt; 0.0103s
+-- create_table(&quot;directories&quot;, {:force=&gt;true})
+   -&gt; 0.0095s
+-- create_table(&quot;servers&quot;, {:force=&gt;true})
+   -&gt; 0.0083s
+-- create_table(&quot;shortened_urls&quot;, {:force=&gt;true})
+   -&gt; 0.0085s
+-- add_index(&quot;shortened_urls&quot;, [&quot;checksum&quot;], {:name=&gt;&quot;index_shortened_urls_on_checksum&quot;, :unique=&gt;true})
+   -&gt; 0.0102s
+-- initialize_schema_migrations_table()
+   -&gt; 0.0547s
+</code></pre>
+
+<p>Следуя инструкции создаем Ruby-окружение:</p>
+
+<pre><code>make build
+</code></pre>
+
+<p>и запускаем сервер в режиме демона на 8000 порту:</p>
+
+<pre><code>bin/env bin/bundle exec bin/thin -p 8000 start -d
+</code></pre>
+
+<p>В браузере открываем адрес http://[IP-адрес сервера]:8000 и указываем параметры подключения к серверу Prometheus. Для этого переходим на вкладку Servers, жмем New Server, в открывшейся форме вводим имя сервера (на ваше усмотрение), URL — http://[IP-адрес сервера]:9090 и выбираем тип сервера Prometheus.</p>
+
+<p>После добавления сервера возвращаемся на вкладку Dashboards и создаем директорию для дашбордов нажатием на New Directory (имя директории на ваше усмотрение). Дальше приступаем к созданию дашборда — жмем New Dashboard.</p>
+
+<p>Давайте отобразим на графике 5 самых больших таблиц определенной базы (эту метрику мы уже использовали в <a href="https://letsclearitup.com.ua/debian/znakomstvo-s-prometheus-chast-2-sbor-metrik-ot-mysql-servera.html">предыдущей части</a> знакомства с Prometheus) — в поле Enter Expression введем <code>topk(5, sum(mysql_info_schema_table_size{schema='&lt;ИМЯ_БД&gt;'}) by (table))</code> и нажмем первую слева иконку в заголовку графика (Refresh).</p>
+
+<p>Дашборд с одним графиком имеет мало смысла, добавить еще графики нажатием на кнопку Add Graph внизу. После внесения изменений не забываем нажимать кнопку Save Changes.</p>
+
+<p>На этом все, <strong>установка и настройка PromDash</strong> завершена, но остается самое сложное — из множества доступных выбрать действительно важные и необходимые метрики и создать нужные вам дашборды.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-prometheus-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-3-%25D1%2583%25D1%2581%25D1%2582%25D0%25B0%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25BA%25D0%25B0-%25D0%25B8-%25D0%25BD%25D0%25B0%25D1%2581%25D1%2582%25D1%2580%25D0%25BE%25D0%25B9%25D0%25BA%25D0%25B0-promdash%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Prometheus.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%203%3a%20%d1%83%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%ba%d0%b0%20%d0%b8%20%d0%bd%d0%b0%d1%81%d1%82%d1%80%d0%be%d0%b9%d0%ba%d0%b0%20PromDash by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

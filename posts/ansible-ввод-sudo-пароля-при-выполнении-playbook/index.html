@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Ansible: ввод sudo-пароля при выполнении playbook"/>
+  <meta name="twitter:description" content="Большинство действий в наборах инструкций системы управления конфигурациями Ansible следует выполнять с привилегиями суперпользователя. Давайте разберемся с вариантами ввода sudo-пароля при выполнении playbook’ов!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Ansible: ввод sudo-пароля при выполнении playbook &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Ansible: ввод sudo-пароля при выполнении playbook
+                    </h1>
+                    <h2 class="headline">
+                    Jan 8, 2018 21:04
+                    · 343 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/ansible">ansible</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Большинство действий в наборах инструкций <strong>системы управления конфигурациями Ansible</strong> следует выполнять с привилегиями суперпользователя. Давайте разберемся с вариантами ввода <code>sudo</code>-пароля при выполнении playbook’ов!</p>
+
+<p></p>
+
+<p>Самый простой способ — отключить необходимость ввода пароля при использовании <code>sudo</code>. Делается это в конфигурационном файле <code>/etc/sudoers</code>, где нужно добавить (или раскомментировать) строку:</p>
+
+<pre><code>...
+%sudo ALL=(ALL:ALL) NOPASSWD: ALL
+...
+</code></pre>
+
+<p>Второй вариант — использовать дополнительные параметры при запуске набора инструкций. Чтобы <strong>Ansible</strong> в нужный момент попросил ввести <code>sudo</code>-пароль, в старых версиях (&lt; 1.9) следует использовать параметр <code>-—ask-sudo-pass</code> (или <code>-K</code>), а в версии <strong>Ansible</strong> старше 1.9 параметр <code>--ask-become-pass</code>, например:</p>
+
+<pre><code>ansible-playbook playbooks/useradd.yml --ask-become-pass
+</code></pre>
+
+<p>Бывают случаи, когда не подходит ни один из предложенных вариантов — отключать ввод пароля при использовании <code>sudo</code> небезопасно, а вводить пароль на каждое действие при выполнении набора инструкций неудобно (к тому же, можно ошибиться при ручном вводе).</p>
+
+<p>Я использовал третий вариант — добавил буквально пару строк в инвентарном файле, теперь он выглядит следующим образом:</p>
+
+<pre><code>[all:vars]
+ansible_sudo_pass=VeryStrongPassword
+ 
+[webservers]
+web1
+web2
+web3
+ 
+[mailservers]
+mail1
+mail2
+mail3
+ 
+[database]
+db1
+db2
+ 
+[others]
+stat
+mars
+venus
+earth
+</code></pre>
+
+<p>Следует отметить, что переменную <code>ansible_sudo_pass</code> можно переопределять в нескольких местах:</p>
+
+<ul>
+<li>для каждого отдельного хоста в инвентарном файле <code>inventory/inventoryname/hosts</code>;</li>
+<li>для группы хостов в инвентарном файле <code>inventory/inventoryname/groups</code> (как раз наш случай);</li>
+<li>для группы хостов в файле групповых переменных <code>group_vars/groupname/ansible.yml</code>;</li>
+<li>для группы хостов в файле групповых переменных в зашифрованном виде <code>ansible-vault create group_vars/groupname/ansible.yml</code>.</li>
+</ul>
+
+<p>Если хочется еще больше «безопасности» и зашифрованный пароль, то следует использовать <a href="https://docs.ansible.com/playbooks_vault.html"><code>ansible-vault</code></a>.</p>
+
+<p>Сначала создадим файл, в котором будет храниться пароль для получения привилегий суперпользователя:</p>
+
+<pre><code>ansible-vault create secret
+</code></pre>
+
+<p>В созданный файл <code>secret</code> следует добавить строку вида:</p>
+
+<pre><code>ansible_sudo_pass: VeryStrongPassword
+</code></pre>
+
+<p>И, так как мы все равно не хотим вводить пароль при запуске плейбука (даже пароль <code>ansible-vault</code>), то создадим файл <code>vault.txt</code> (не забываем выставить корректные права доступа):</p>
+
+<pre><code>touch vault.txt
+</code></pre>
+
+<p>В котором в текстовом виде запишем свой пароль от <code>ansible-vault</code>.</p>
+
+<p>Далее приводим playbook к примерно такому виду:</p>
+
+<pre><code>---
+- hosts: all
+  become: yes
+ 
+  vars_files:
+    - secret
+ 
+  tasks:
+  - name: Add user to remote hosts
+    user: name=admin groups=sudo shell=/bin/bash password=$7$ZIJUvGwr$empMJ4r1JUGcxmjxtTBfTpIdO95JBTJO2/BtD23F2Rfeg2rqN.8t1v3ePPXVl.W7yal2fvrtbJ0T18YwCXmbh0
+ 
+  - name: Add SSH keys to remote hosts
+    authorized_key: user=admin key=&quot;{{ lookup('file', &quot;~/Downloads/key.pub&quot;) }}&quot;
+</code></pre>
+
+<p>Теперь можно запускать выполнение набора инструкций командой:</p>
+
+<pre><code>ansible-playbook playbooks/useradd.yml --vault-password-file=vault.txt
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fansible-%25D0%25B2%25D0%25B2%25D0%25BE%25D0%25B4-sudo-%25D0%25BF%25D0%25B0%25D1%2580%25D0%25BE%25D0%25BB%25D1%258F-%25D0%25BF%25D1%2580%25D0%25B8-%25D0%25B2%25D1%258B%25D0%25BF%25D0%25BE%25D0%25BB%25D0%25BD%25D0%25B5%25D0%25BD%25D0%25B8%25D0%25B8-playbook%2f - Ansible%3a%20%d0%b2%d0%b2%d0%be%d0%b4%20sudo-%d0%bf%d0%b0%d1%80%d0%be%d0%bb%d1%8f%20%d0%bf%d1%80%d0%b8%20%d0%b2%d1%8b%d0%bf%d0%be%d0%bb%d0%bd%d0%b5%d0%bd%d0%b8%d0%b8%20playbook by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

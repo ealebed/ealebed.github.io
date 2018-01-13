@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="GitLab CI: Часть 3, введение в .gitlab-ci.yml"/>
+  <meta name="twitter:description" content="В одной из предыдущих статей мы полностью подготовили фундамент для использования GitLab CI, во второй успешно зарегистрировали раннер (runner), который будет заниматься выполнением инструкций из специального файла .gitlab-ci.yml.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>GitLab CI: Часть 3, введение в .gitlab-ci.yml &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        GitLab CI: Часть 3, введение в .gitlab-ci.yml
+                    </h1>
+                    <h2 class="headline">
+                    Jan 9, 2018 16:24
+                    · 454 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab">gitlab</a>
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab-ci">gitlab ci</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В <a href="https://letsclearitup.com.ua/bash/gitlab-gitlab-ci-docker-registry-s-pomoshhyu-docker-compose.html">одной</a> из предыдущих статей мы полностью подготовили фундамент для использования <strong>GitLab CI</strong>, во <a href="https://letsclearitup.com.ua/gitlab/gitlab-ci-chast-1-zapusk-rannerov-runners.html">второй</a> успешно зарегистрировали раннер (runner), который будет заниматься выполнением инструкций из специального файла <code>.gitlab-ci.yml</code>.</p>
+
+<p></p>
+
+<p>В третьей статье цикла мы подробнее рассмотрим процесс <strong>continuous integration в GitLab</strong> и разберемся с простым примером конфигурационного файла <code>.gitlab-ci.yml</code>!</p>
+
+<p>Итак, просесс <strong>continuous integration (CI) в GitLab</strong> работает следующим образом:</p>
+
+<ul>
+<li>выполняется push изменений в репозиторий проекта;</li>
+<li>если в корне проекта есть файл <code>.gitlab-ci.yml</code>, то <strong>GitLab</strong> понимает, что для этого проекта нужно использовать continuous integration;</li>
+<li><strong>GitLab</strong> ищет запущенный runner, подключенный для этого проекта (или общедоступный, shared runner);</li>
+<li><strong>GitLab</strong> передает файл <code>.gitlab-ci.yml</code> раннеру, который обновляет исходники в своем каталоге для билда (<code>--builds-dir</code>) и выполняет команды, описанные в этом файле;</li>
+<li>после выполнения команд раннер возвращает в <strong>GitLab</strong> результаты, которые можно посмотреть рядом с соответствующим коммитом, на вкладке pipelines или вкладке jobs.</li>
+</ul>
+
+<p>Простейший файл <code>.gitlab-ci.yml</code> (не выполняет полезных действий, но важен для понимания) может выглядеть так:</p>
+
+<pre><code>before_script:
+    - uname -a 
+job1:
+  script:
+    - php -v
+job2:
+  script:
+    - php -v
+</code></pre>
+
+<p>или так:</p>
+
+<pre><code>stages:
+  - test
+  - deploy
+ 
+test_job:
+  stage: test
+  script:
+    - ansible-lint playbook.yml
+    - ansible-playbook --check playbook.yml
+ 
+  tags:
+    - ansible
+ 
+deploy_job:
+  stage: deploy
+  script:
+    - ansible-playbook playbook.yml
+ 
+  tags:
+    - ansible
+</code></pre>
+
+<p>Если ваши глаза владеют английским, то в <a href="https://docs.gitlab.com/ce/ci/yaml/">официальной документации</a> можно найти куда больше полезных примеров данного конфигурационного файла, а также обязательно стоит ознакомиться с <a href="https://docs.gitlab.com/ce/ci/variables/">переменными</a>, которые используются в процессе continuous integration.</p>
+
+<p>Подготовим «скелет» для нашего файла <code>.gitlab-ci.yml</code> — для начала опишем этапы и задачи, которые мы хотим реализовать с его помощью:</p>
+
+<pre><code>image: registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh
+services:
+  - registry.gitlab.lc:5000/develop/ed:my-docker-dind
+ 
+variables:
+  DOCKER_DRIVER: overlay
+ 
+stages:
+  - spawn
+  - build
+  - test
+  - release
+  - deploy
+  - cleanup
+   
+spawn_containers:
+  stage: spawn
+  script:
+    - echo &quot;Start docker-containers for compile sources&quot;
+ 
+compile:
+  stage: build
+  script:
+    - echo &quot;Compile sources&quot;
+ 
+testing:
+  stage: test
+  script:
+    - echo &quot;Testing&quot;
+ 
+release-image:
+  stage: release
+  script:
+    - echo &quot;Build docker-image with sources&quot;
+ 
+deploy-to-review:
+  stage: deploy
+  script:
+    - echo &quot;Deploy docker-image with sources to rewiew&quot;
+ 
+deploy-to-prod:
+  stage: deploy
+  script:
+    - echo &quot;Deploy docker-image with sources to production&quot;
+  when: manual
+ 
+cleanup:
+  stage: cleanup
+  when: always
+  script:
+    - echo &quot;Stop &amp; remove containers&quot;
+</code></pre>
+
+<p>Итак, в данном примере мы включаем в <code>.gitlab-ci.yml</code> специальные образы, которые подготовили в <a href="https://letsclearitup.com.ua/docker/gitlab-ci-chast-2-spetsialnyie-obrazyi.html">предыдущей статье</a> и описываем шесть этапов (stages), а именно:</p>
+
+<ul>
+<li>запуск контейнеров, которые будут использоваться для сборки проекта;</li>
+<li>выполнение действий по сборке проекта;</li>
+<li>тестирование собранного проекта;</li>
+<li>«упаковку» собранного и протестированного проекта в docker-образ;</li>
+<li>деплой docker-образа с проектом на ревью (автоматический режим) и продакшн (ручной режим);</li>
+<li>остановка и удаление контейнеров, которые использовались для сборки проекта.</li>
+</ul>
+
+<p>Также следуется отметить, что данные этапы выполняются последовательно и зависят друг от друга — если, например, этап сборки проекта завершится с ошибкой, то этап тестирования (и следующие за ним) просто не запустится.</p>
+
+<p>На этом все, а в <a href="https://letsclearitup.com.ua/gitlab/gitlab-ci-chast-4-etap-spawn-v-gitlab-ci-yml.html">следующих статьях</a> мы подробно рассмотрим каждый из описанных этапов отдельно.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fgitlab-ci-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-3-%25D0%25B2%25D0%25B2%25D0%25B5%25D0%25B4%25D0%25B5%25D0%25BD%25D0%25B8%25D0%25B5-%25D0%25B2-.gitlab-ci.yml%2f - GitLab%20CI%3a%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%203%2c%20%d0%b2%d0%b2%d0%b5%d0%b4%d0%b5%d0%bd%d0%b8%d0%b5%20%d0%b2%20.gitlab-ci.yml by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

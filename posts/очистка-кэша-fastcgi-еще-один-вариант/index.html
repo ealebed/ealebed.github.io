@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Очистка кэша FastCGI: еще один вариант"/>
+  <meta name="twitter:description" content="Ранее мы уже рассматривали настройку кэширования на Nginx, упоминали об очистке кэша FastCGI в бесплатной версии веб-сервера Nginx с помощью модуля ngx_cache_purge.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Очистка кэша FastCGI: еще один вариант &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Очистка кэша FastCGI: еще один вариант
+                    </h1>
+                    <h2 class="headline">
+                    Jan 11, 2018 10:36
+                    · 333 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/nginx">nginx</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Ранее мы уже рассматривали <a href="https://letsclearitup.com.ua/nginx/nastroyka-keshirovaniya-na-nginx.html">настройку кэширования на Nginx</a>, упоминали об <a href="https://letsclearitup.com.ua/debian/ispolzovanie-modulya-ngx_cache_purge-dlya-ochistki-kesha-fastcgi.html">очистке кэша FastCGI</a> в бесплатной версии веб-сервера Nginx с помощью модуля <code>ngx_cache_purge</code>.</p>
+
+<p></p>
+
+<p>Как оказалось, бывают случаи, когда функционала данного модуля недостаточно или нет возможности пересборки веб-сервера Nginx — давайте разберемся и рассмотрим <strong>еще один вариант очистки кэша FastCGI</strong>!</p>
+
+<p>Однажды я столкнулся с тем, что функционал модуля <code>ngx_cache_purge</code> позволял чистить кэш страницы только частично. Это было связано со специфическим значением директивы <code>fastcgi_cache_key</code>, который в рассматриваемом случае выглядел так:</p>
+
+<pre><code>...
+        fastcgi_cache_key &quot;$scheme$request_method$host$request_uri$allowed_country&quot;;
+...
+</code></pre>
+
+<p>Мы знаем, что имена кэша основываются на переменных директивы <code>fastcgi_cache_key</code>. Значение последней переменной (<code>$allowed_country</code>) определяется с помощью GeoIP и содержит двухбуквенный код страны, с которой происходит запрос к сайту.</p>
+
+<p><strong>Примечание.</strong> Читайте также <a href="https://letsclearitup.com.ua/debian/nginx-geoip-blokirovka-polzovateley-iz-opredelennyih-stran.html">Nginx + GeoIP: блокировка пользователей из определенных стран</a>.</p>
+
+<p>Таким образом, при запросе страницы <a href="http://example.com/test.php">http://example.com/test.php</a> с украинского ip-адреса будет сформировано следующее имя кэша:</p>
+
+<pre><code>fastcgi_cache_key &quot;httpGETexample.com/test.phpUA&quot;;
+</code></pre>
+
+<p>После хеширования этой строки в MD5 получилось бы следующее:</p>
+
+<pre><code>b57290d1cda3bf4187dcd7fc68fae2db
+</code></pre>
+
+<p>В соотношении с подкаталогами, указанными в <code>levels=1:2</code>, первый уровень каталога в этой строке MD5 будет обозначен последним символом строки (в данном примере это символ <code>b</code>). Второму уровню принадлежат следующие после первого уровня 2 символа (<code>2d</code>). Таким образом, вся структура каталогов нашей кэш-зоны будет такой:</p>
+
+<pre><code>/var/tmp/nginx_cache/b/2d/b57290d1cda3bf4187dcd7fc68fae2db
+</code></pre>
+
+<p>Для пользователя, посетившего сайт с российского ip-адреса получится соответственно:</p>
+
+<pre><code>5b5d5cfc3aba90a81ecb7fddf0d8259d
+</code></pre>
+
+<p>и</p>
+
+<pre><code>/var/tmp/nginx_cache/d/59/5b5d5cfc3aba90a81ecb7fddf0d8259d
+</code></pre>
+
+<p>Зная структуру каталогов кэш-зоны, можно легко создать скрипт очистки кэша (в данном примере используется PHP). В корневой директории сайта создайте файл <code>cleancache.php</code> следующего содержания:</p>
+
+<pre><code>&lt;?php
+$cache_path = '/var/tmp/nginx_cache/';
+$url = parse_url($_POST['url']);
+ 
+$scheme = $url['scheme'];
+$host = $url['host'];
+$requesturi = $url['path'];
+ 
+$hash_ua = md5($scheme.'GET'.$host.$requesturi.'UA');
+$hash_ru = md5($scheme.'GET'.$host.$requesturi.'RU');
+// Выводим хэш MD5 для отладки
+var_dump($hash_ua);
+var_dump($hash_ru);
+ 
+var_dump(unlink($cache_path . substr($hash_ua, -1) . '/' . substr($hash_ua,-3,2) . '/' . $hash_ua));
+var_dump(unlink($cache_path . substr($hash_ru, -1) . '/' . substr($hash_ru,-3,2) . '/' . $hash_ru));
+?&gt;
+</code></pre>
+
+<p>Теперь можно отправить POST-запрос на этот файл с URL, который нужно очистить, в качестве параметра:</p>
+
+<pre><code>curl -d 'url=http://example.com/url-for-clean.php' http://example.com/cleancache.php
+</code></pre>
+
+<p>В результате выполнения скрипта вы увидите в консоли <code>true</code> или <code>false</code> в зависимости от того, очистился кэш или нет.</p>
+
+<p>Не забудьте исключить данный скрипт из кэширования и ограничить доступ к нему.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25BE%25D1%2587%25D0%25B8%25D1%2581%25D1%2582%25D0%25BA%25D0%25B0-%25D0%25BA%25D1%258D%25D1%2588%25D0%25B0-fastcgi-%25D0%25B5%25D1%2589%25D0%25B5-%25D0%25BE%25D0%25B4%25D0%25B8%25D0%25BD-%25D0%25B2%25D0%25B0%25D1%2580%25D0%25B8%25D0%25B0%25D0%25BD%25D1%2582%2f - %d0%9e%d1%87%d0%b8%d1%81%d1%82%d0%ba%d0%b0%20%d0%ba%d1%8d%d1%88%d0%b0%20FastCGI%3a%20%d0%b5%d1%89%d0%b5%20%d0%be%d0%b4%d0%b8%d0%bd%20%d0%b2%d0%b0%d1%80%d0%b8%d0%b0%d0%bd%d1%82 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

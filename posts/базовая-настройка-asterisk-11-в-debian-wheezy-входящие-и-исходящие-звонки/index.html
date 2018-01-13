@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Базовая настройка Asterisk 11 в Debian Wheezy: входящие и исходящие звонки"/>
+  <meta name="twitter:description" content="Продолжаем настраивать сервер телефонии на базе Asterisk 11 в Debian Wheezy — у нас уже работают звонки внутри офиса и голосовая почта, пора заняться настройкой входящих и исходящих звонков.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Базовая настройка Asterisk 11 в Debian Wheezy: входящие и исходящие звонки &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Базовая настройка Asterisk 11 в Debian Wheezy: входящие и исходящие звонки
+                    </h1>
+                    <h2 class="headline">
+                    Jan 4, 2018 11:34
+                    · 630 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/asterisk">asterisk</a>
+                          
+                              <a href="https://ealebed.github.io/tags/debian">debian</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Продолжаем настраивать <strong>сервер телефонии на базе Asterisk 11</strong> в Debian Wheezy — у нас уже работают <a href="https://letsclearitup.com.ua/debian/bazovaya-nastroyka-asterisk-11-v-debian-wheezy-obsluzhivanie-vnutrennih-zvonkov.html">звонки внутри офиса</a> и <a href="https://letsclearitup.com.ua/debian/bazovaya-nastroyka-asterisk-11-v-debian-wheezy-golosovaya-pochta.html">голосовая почта</a>, пора заняться настройкой входящих и исходящих звонков.</p>
+
+<p></p>
+
+<p>Под входящими/исходящими звонками будем иметь в виду звонки, в которых вызывающий (или вызываемый) абонент находится за пределами офиса.
+Для совершения таких звонков можно использовать протокол H.323 или более распространенный и перспективный протокол SIP. За счет простоты реализации, связь по протоколу SIP становится все более популярной услугой, которую предоставляют множество провайдеров Интернет-телефонии.</p>
+
+<p>Поддержка протокола SIP в Asterisk встроена по умолчанию, поэтому как только мы заключим договор с провайдером и получим от него учетные данные, можно сразу же приступать к <strong>настройке входящих и исходящих звонков</strong>.</p>
+
+<p>Для этого откроем файл <code>/etc/asterisk/sip.conf</code> и в секции <code>[general]</code> добавим определение <code>register</code> в следующем формате:</p>
+
+<pre><code>register =&gt; user [:secret[:authuser]] @host [:port] [/extension]
+</code></pre>
+
+<ul>
+<li><code>user</code> — идентификатор пользователя, используемый SIP-сервером (например, лицевой счет);</li>
+<li><code>authuser</code> — необязательное имя пользователя для авторизации на SIP-сервере;</li>
+<li><code>secret</code> — пароль пользователя для авторизации на SIP-сервере;</li>
+<li><code>host</code> — имя домена или хоста SIP-сервера. Данный SIP-сервер необходимо описать в своей секции в файле <code>sip.conf</code>;</li>
+<li><code>port</code> — номер порта, для регистрации на сервере <code>host</code>. По умолчанию — 5060;</li>
+<li><code>extension</code> — номер екстеншена для приема вызовов в вашем Asterisk’е.</li>
+</ul>
+
+<p>В нашем случае получится примерно следующее:</p>
+
+<pre><code>register =&gt; номер_лс_1:очень_сложный_пароль@62.64.127.43/номер_лс_1
+register =&gt; номер_лс_2:очень_сложный_пароль@62.64.127.43/номер_лс_2
+</code></pre>
+
+<p><strong>Примечание.</strong> На мой взгляд, использование незашифрованных паролей в текстовом файле — не самая удачная идея, но что уж тут поделать…</p>
+
+<p>Для каждого SIP-сервера нужно создать свою секцию в файле <code>/etc/asterisk/sip.conf</code>, в которой должны быть описаны его параметры. В данном примере используется один SIP-сервер провайдера, но с двумя разными телефонными номерами (лицевыми счетами) — киевским и днепропетровским. Следовательно, будем использовать шаблоны, как мы уже делали <a href="https://letsclearitup.com.ua/debian/bazovaya-nastroyka-asterisk-11-v-debian-wheezy-obsluzhivanie-vnutrennih-zvonkov.html">ранее</a>.</p>
+
+<ul>
+<li>сначала создаем шаблон (общие параметры для всех лицевых счетов провайдера):</li>
+</ul>
+
+<pre><code>[beeline](!)
+type=friend
+host=62.64.127.43
+dtmfmode=inband
+canreinvite=no
+insecure=invite
+context=beeline-in
+</code></pre>
+
+<ul>
+<li>теперь указываем отдельные параметры для каждого лицевого счета:</li>
+</ul>
+
+<pre><code>[bee56](beeline)
+username=номер_лс_1
+secret=очень_сложный_пароль
+fromuser=номер_лс_1
+[bee44](beeline)
+username=номер_лс_2
+secret=очень_сложный_пароль
+fromuser=номер_лс_2
+</code></pre>
+
+<p>Для совершения <strong>входящих и исходящих звонков</strong> через SIP-сервер данного провайдера необходимо также изменить номерной план. В большинстве инструкций, которые мне доводилось встречать, исходящие звонки предлагают настраивать через дополнительную цифру (например, 9) и примерно следующую строку в файле <code>/etc/asterisk/extensions.conf</code>:</p>
+
+<pre><code>exten =&gt; _9.,1,Dial(SIP/${EXTEN:1}@beeline,30,r)
+</code></pre>
+
+<p><strong>Примечание.</strong> Конструкция <code>${EXTEN:1}</code> извлекает содержимое переменной за исключением первой цифры, в которой содержится вызываемый екстеншен.</p>
+
+<p>Но так как у нас два телефонных номера, разумнее и экономнее будет разделить исходящие звонки по коду города. Еще мы умеем записывать телефонные звонки, поэтому в нашем случае в <strong>номерной план Asterisk’а</strong> нужно добавить следующие строки:</p>
+
+<pre><code>; звонки на киев
+exten =&gt; _044[1-9].,1,Set(fname=${STRFTIME(${EPOCH},,%Y%m%d)}-${UNIQUEID})
+exten =&gt; _044[1-9].,n,MixMonitor(/var/spool/asterisk/monitor/${fname}.wav)
+exten =&gt; _044[1-9].,n,Set(AUDIOHOOK_INHERIT(MixMonitor)=yes)
+exten =&gt; _044[1-9].,n,Dial(SIP/bee44/${EXTEN})
+; звонки на днепропетровск
+exten =&gt; _056[1-9].,1,Set(fname=${STRFTIME(${EPOCH},,%Y%m%d)}-${UNIQUEID})
+exten =&gt; _056[1-9].,n,MixMonitor(/var/spool/asterisk/monitor/${fname}.wav)
+exten =&gt; _056[1-9].,n,Set(AUDIOHOOK_INHERIT(MixMonitor)=yes)
+exten =&gt; _056[1-9].,n,Dial(SIP/bee56/${EXTEN})
+; остальные исходящие звонки
+exten =&gt; _0[1-9].,1,Gosub(city-out,s,1(${EXTEN}))
+exten =&gt; _380[1-9].,1,Gosub(city-out,s,1(${EXTEN:3}))
+[city-out]
+exten =&gt; s,1,Set(fname=${STRFTIME(${EPOCH},,%Y%m%d)}-${UNIQUEID})
+exten =&gt; s,n,MixMonitor(/var/spool/asterisk/monitor/${fname}.wav)
+exten =&gt; s,n,Set(AUDIOHOOK_INHERIT(MixMonitor)=yes)
+exten =&gt; s,n,Dial(SIP/bee44/${ARG1})
+exten =&gt; s,n,Dial(SIP/bee56/${ARG1})
+exten =&gt; s,n,Goto(${DIALSTATUS})
+exten =&gt; s,n(BUSY),Busy()
+exten =&gt; s,n(NOANSWER),Hangup()
+exten =&gt; s,n,Hangup
+</code></pre>
+
+<p>Входящие звонки на выданные SIP-провайдером номера (441233211 и 561233211) будем принимать в контекст <code>[beeline-in]</code>. Его можно сконфигурировать примерно так:</p>
+
+<pre><code>[beeline-in]
+exten =&gt; 441233211,1,Goto(office-in,s,1)
+exten =&gt; 561233211,1,Goto(office-in,s,1)
+ 
+[office-in]
+exten =&gt; s,1,Set(fname=${STRFTIME(${EPOCH},,%Y%m%d)}-${UNIQUEID})
+exten =&gt; s,n,MixMonitor(/var/spool/asterisk/monitor/${fname}.wav)
+exten =&gt; s,n,Set(AUDIOHOOK_INHERIT(MixMonitor)=yes)
+exten =&gt; s,n,Answer
+exten =&gt; s,n,Wait(1)
+exten =&gt; s,n,Ringing
+exten =&gt; s,n,Dial(SIP/101,10,m)
+exten =&gt; s,n,Queue(office_all,tT,,,15)
+exten =&gt; s,n,Playback(vm-nobodyavail)
+exten =&gt; s,n,VoiceMail(101@office)
+exten =&gt; s,n,Playback(vm-goodbye)
+exten =&gt; s,n,Hangup()
+</code></pre>
+
+<p>Давайте разберемся, что произойдет при входящем звонке на любой из телефонных номеров выданных провайдером:</p>
+
+<ul>
+<li>звонок на внутренний номер 101;</li>
+<li>если номер 101 не отвечает в течении 10 секунд, то звонок попадает в очередь <code>office_all</code>;</li>
+<li>если в течении 15 секунд никто из очереди не отвечает, то проигрываем сообщение «в данный момент никто не может принять ваш звонок»;</li>
+<li>предлагаем оствить сообщение голосовой почты и отправляем его в голосовой ящик абонента 101;</li>
+<li>прощаемся со звонящим и завершаем звонок.</li>
+</ul>
+
+<p><strong>Примечание.</strong> Настройку статических очередей звонков в Asterisk’е рассмотрим в <a href="https://letsclearitup.com.ua/debian/bazovaya-nastroyka-asterisk-11-v-debian-wheezy-ocheredi-zvonkov.html">следующей статье</a>.</p>
+
+<p>На этом <strong>базовая настройка входящих/исходящих звонков в Asterisk</strong> закончена.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25B1%25D0%25B0%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D1%258F-%25D0%25BD%25D0%25B0%25D1%2581%25D1%2582%25D1%2580%25D0%25BE%25D0%25B9%25D0%25BA%25D0%25B0-asterisk-11-%25D0%25B2-debian-wheezy-%25D0%25B2%25D1%2585%25D0%25BE%25D0%25B4%25D1%258F%25D1%2589%25D0%25B8%25D0%25B5-%25D0%25B8-%25D0%25B8%25D1%2581%25D1%2585%25D0%25BE%25D0%25B4%25D1%258F%25D1%2589%25D0%25B8%25D0%25B5-%25D0%25B7%25D0%25B2%25D0%25BE%25D0%25BD%25D0%25BA%25D0%25B8%2f - %d0%91%d0%b0%d0%b7%d0%be%d0%b2%d0%b0%d1%8f%20%d0%bd%d0%b0%d1%81%d1%82%d1%80%d0%be%d0%b9%d0%ba%d0%b0%20Asterisk%2011%20%d0%b2%20Debian%20Wheezy%3a%20%d0%b2%d1%85%d0%be%d0%b4%d1%8f%d1%89%d0%b8%d0%b5%20%d0%b8%20%d0%b8%d1%81%d1%85%d0%be%d0%b4%d1%8f%d1%89%d0%b8%d0%b5%20%d0%b7%d0%b2%d0%be%d0%bd%d0%ba%d0%b8 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

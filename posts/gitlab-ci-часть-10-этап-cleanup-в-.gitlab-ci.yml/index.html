@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="GitLab CI: Часть 10 (финал), этап cleanup в .gitlab-ci.yml"/>
+  <meta name="twitter:description" content="В завершении цикла статей о настройке continuous integration в GitLab мы рассмотрим еще один несложный, но важный этап, который позволит поддерживать в чистоте и порядке все наши сборочные контейнеры, а также увидим финальную версию конфигурационного файла .gitlab-ci.yml.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>GitLab CI: Часть 10 (финал), этап cleanup в .gitlab-ci.yml &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        GitLab CI: Часть 10 (финал), этап cleanup в .gitlab-ci.yml
+                    </h1>
+                    <h2 class="headline">
+                    Jan 10, 2018 08:32
+                    · 812 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab">gitlab</a>
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab-ci">gitlab ci</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В завершении цикла статей о настройке <strong>continuous integration в GitLab</strong> мы рассмотрим еще один несложный, но важный этап, который позволит поддерживать в чистоте и порядке все наши сборочные контейнеры, а также увидим финальную версию конфигурационного файла <code>.gitlab-ci.yml</code>.</p>
+
+<p></p>
+
+<p>Давайте разберемся с этапом удаления ненужных контейнеров, которые использовались при сборке проекта, его тестировании, упаковке и деплое!</p>
+
+<p>Инструкции для выполнения последнего этапа в цепочке continuous integration выглядят следующим образом:</p>
+
+<pre><code>...
+cleanup:
+  stage: cleanup
+  when: always
+  script:
+    - docker-compose -f docker/docker-compose-build.yml down
+  only:
+    - develop
+    - docker
+</code></pre>
+
+<p>Как и ранее, данный шаг будет выполняться для веток develop и docker, однако благодаря параметру <code>when: always</code> он будет выполнен вне зависимости от результатов выполнения предыдущих этапов (неважно, удалось ли собрать docker-образ или протестировать код — &ldquo;убираем&rdquo; за собой всегда).</p>
+
+<p>Основная задача также довольно проста — остановить и удалить docker-контейнеры, описанные в конфигурационном файле <code>docker-compose-build.yml</code>, который мы рассматривали в этой статье.</p>
+
+<p>&ldquo;Уборка&rdquo; занимает 15-20 секунд, а подробности выполнения этапа <code>cleanup</code> на вкладке pipelines выглядят так:</p>
+
+<pre><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
+Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
+Starting service registry.gitlab.lc/develop/ed:my-docker-dind ...
+Using locally found image version due to if-not-present pull policy
+Waiting for services to be up and running...
+Using locally found image version due to if-not-present pull policy
+Running on runner-9e68759f-project-8-concurrent-0 via c7662d5025ba...
+Fetching changes...
+Removing .env
+Removing bin/
+Removing build/all.html
+Removing build/complexity.html
+Removing build/coupling.html
+Removing build/css/
+Removing build/images/
+Removing build/index.html
+Removing build/js/
+Removing build/loc.html
+Removing build/oop.html
+Removing build/panel.html
+Removing build/relations.html
+Removing build/violations.html
+Removing public/default_img/user/en/
+Removing public/default_img/user/ru/
+Removing public/dsd/css/style.css
+Removing public/dsd/css/style.css.map
+Removing public/dsd/js/bundles/
+Removing public/dsd/js/templates.hbs.js
+Removing public/dsd/js/templates.html.js
+Removing public/dsd/js/utils/routes.js
+Removing public/dsd/mix/tmp-pages-bundle/
+Removing public/dsl/css/
+Removing public/dsl/js/bundles/
+Removing public/dsm/css/ltr-style.css
+Removing public/dsm/css/ltr-style.css.map
+Removing public/dsm/css/rtl-style.css
+Removing public/dsm/css/rtl-style.css.map
+Removing public/dsm/js/main-build.js
+Removing public/dsm/js/main-build.js.map
+Removing public/vendor/
+Removing vendor/
+HEAD is now at 635e14c14a Merge branch 'develop' into 'develop'
+Checking out 635e14c1 as develop...
+Skipping Git submodules setup
+Downloading artifacts for testing (2610)...
+Downloading artifacts from coordinator... ok        id=2610 responseStatus=200 OK token=uv5PAJbp
+Downloading artifacts for compile (2609)...
+Downloading artifacts from coordinator... ok        id=2609 responseStatus=200 OK token=ERugScWJ
+$ docker-compose -f docker/docker-compose-build.yml down
+Stopping memcached ...
+Stopping redis ...
+Stopping php-fpm ...
+Stopping workspace ...
+Stopping websocket ...
+Stopping websocket ... done
+Stopping memcached ... done
+Stopping redis ... done
+Stopping php-fpm ... done
+Stopping workspace ... done
+Removing memcached ...
+Removing redis ...
+Removing php-fpm ...
+Removing node ...
+Removing workspace ...
+Removing websocket ...
+Removing application ...
+Removing application ... done
+Removing workspace ... done
+Removing memcached ... done
+Removing php-fpm ... done
+Removing redis ... done
+Removing websocket ... done
+Removing node ... done
+Removing network docker_default
+Build succeeded
+</code></pre>
+
+<p>Если собрать все наши этапы, которые мы подробно рассматривали на протяжении всего цикла статей о <strong>GitLab CI</strong>, в один файл, то у нас получится следующее:</p>
+
+<pre><code>image: registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh
+ 
+services:
+  - registry.gitlab.lc:5000/develop/ed:my-docker-dind
+ 
+variables:
+  DOCKER_DRIVER: overlay
+  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY/develop/ed:$CI_COMMIT_REF_SLUG.sources.last
+  BUILD: docker-compose -f docker/docker-compose-build.yml
+  DC_FILE: ./docker/docker-compose-staging.yml
+  ENV_FILE: ./docker/.env.staging.lc
+ 
+stages:
+  - spawn
+  - build
+  - test
+  - release
+  - deploy
+  - cleanup
+   
+spawn_containers:
+  stage: spawn
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - set -o allexport; . ./docker/.env.staging.lc
+    - $BUILD up -d
+  only:
+    - develop
+    - docker
+ 
+compile:
+  stage: build
+  script:
+    - cp -u .env.develop .env
+    - $BUILD exec --user www-data -T workspace sh -c &quot;composer install&quot;
+    - $BUILD exec --user www-data -T workspace sh -c &quot;./zf routes compile&quot;
+    - $BUILD exec --user www-data -T workspace sh -c &quot;./zf cache clean-modified-content&quot;
+    - $BUILD run -T --rm node sh -c &quot;npm install --production &amp;&amp; grunt install-build --no-dev&quot;
+    - $BUILD exec --user www-data -T workspace sh -c &quot;./zf user-default-avatar&quot;
+  cache:
+    key: ${CI_COMMIT_REF_NAME}
+    paths:
+      - node_modules/
+      - vendor/
+  artifacts:
+    paths:
+    - vendor/
+    - public/dsd/js/utils/routes.js
+    - bin/
+    - .env
+    - public/default_img/user/en/
+    - public/default_img/user/ru/
+    - public/dsd/css/style.css
+    - public/dsd/css/style.css.map
+    - public/dsd/mix/tmp-pages-bundle/
+    - public/dsd/js/bundles/
+    - public/dsd/js/templates.hbs.js
+    - public/dsd/js/templates.html.js
+    - public/dsl/css/
+    - public/dsl/js/bundles/
+    - public/dsm/css/ltr-style.css
+    - public/dsm/css/ltr-style.css.map
+    - public/dsm/css/rtl-style.css
+    - public/dsm/css/rtl-style.css.map
+    - public/dsm/js/main-build.js
+    - public/dsm/js/main-build.js.map
+    - public/vendor/
+    when: on_success
+    expire_in: 1h
+  only:
+    - develop
+    - docker
+ 
+testing:
+  stage: test
+  dependencies:
+  - compile
+  script:
+    - $BUILD exec --user www-data -T workspace sh -c &quot;./bin/phpmetrics \&quot;./\&quot;  --exclude=\&quot;node_modules|bin|log|temp|var|vendor|public|www|tests\&quot; --report-html=./build&quot;
+  artifacts:
+    paths:
+    - build/all.html
+    - build/complexity.html
+    - build/coupling.html
+    - build/css/
+    - build/images/
+    - build/index.html
+    - build/js/
+    - build/loc.html
+    - build/oop.html
+    - build/panel.html
+    - build/relations.html
+    - build/violations.html
+    when: on_success
+    expire_in: 1h
+  only:
+    - develop
+    - docker
+ 
+release-image:
+  stage: release
+  dependencies:
+  - compile
+  - testing
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - docker build -t $CONTAINER_RELEASE_IMAGE -f Dockerfile . --build-arg BRANCH_NAME=$CI_COMMIT_REF_SLUG
+  after_script:
+    - docker push $CONTAINER_RELEASE_IMAGE
+  only:
+    - develop
+    - docker
+ 
+deploy-to-review:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s)
+    - ssh-add &lt;(echo &quot;$SSH_PRIVATE_KEY&quot;)
+  script:
+    - scp $ENV_FILE $DC_FILE provisioner@staging.lc:~/docker
+    - ssh provisioner@staging.lc 'bash -s' &lt; ./docker/deploy.sh
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+    url: https://www.$CI_COMMIT_REF_SLUG.labs.lc
+  only:
+    - develop
+    - docker
+ 
+deploy-to-prod:
+  stage: deploy
+  script:
+    - echo &quot;Deployed!&quot; # здесь должен быть настоящий скрипт деплоя
+  environment:
+    name: production
+    url: https://www.example.com/
+  only:
+    - develop
+    - docker
+  when: manual
+ 
+cleanup:
+  stage: cleanup
+  when: always
+  script:
+    - $BUILD down
+  only:
+    - develop
+    - docker
+</code></pre>
+
+<p>На этом все, буду рад любым уточнениям и усовершенствованиям, конструктивная критика также приветствуется.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fgitlab-ci-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-10-%25D1%258D%25D1%2582%25D0%25B0%25D0%25BF-cleanup-%25D0%25B2-.gitlab-ci.yml%2f - GitLab%20CI%3a%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%2010%20%28%d1%84%d0%b8%d0%bd%d0%b0%d0%bb%29%2c%20%d1%8d%d1%82%d0%b0%d0%bf%20cleanup%20%d0%b2%20.gitlab-ci.yml by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Ansible. Часть 4: модули"/>
+  <meta name="twitter:description" content="Мы уже справились установкой системы управления конфигурациями Ansible, написали первый набор инструкций (playbook) и разобрали результат его выполнения, а также ознакомились с использованием переменных в Ansible.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Знакомство с Ansible. Часть 4: модули &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Ansible. Часть 4: модули
+                    </h1>
+                    <h2 class="headline">
+                    Jan 4, 2018 20:35
+                    · 1027 words
+                    · 5 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/ansible">ansible</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Мы уже справились <a href="https://letsclearitup.com.ua/ubuntu/znakomstvo-s-ansible-chast1-vvedenie.html">установкой</a> системы управления конфигурациями <code>Ansible</code>, написали первый набор инструкций (playbook) и <a href="https://letsclearitup.com.ua/ubuntu/znakomstvo-s-ansible-chast-2-razbor-vyivoda-playbook.html">разобрали результат его выполнения</a>, а также ознакомились с <a href="https://letsclearitup.com.ua/ubuntu/znakomstvo-s-ansible-chast-3-peremennyie.html">использованием переменных</a> в <code>Ansible</code>.</p>
+
+<p></p>
+
+<p>В этой части давайте разберемся с модулями в <code>Ansible</code>.</p>
+
+<p>Система управления конфигурациями <code>Ansible</code> позволяет использовать более двух сотен модулей (<a href="http://docs.ansible.com/ansible/list_of_all_modules.html">полный список модулей и их параметры</a>) для настройки IT-инфраструктуры.</p>
+
+<p>Рассмотрим наиболее часто используемые модули и их параметры.</p>
+
+<p>Модуль <code>command</code> принимает команду и аргументы, разделенные пробелом. Аргументами могут быть:</p>
+
+<ul>
+<li><code>chdir</code> — переход в каталог для выполнения команды;</li>
+<li><code>creates</code> — создание файла по указанному пути;</li>
+<li><code>removes</code> — удаление файла по указанному пути.</li>
+</ul>
+
+<p>Для проверки работы модуля command напишем набор инструкций <code>/etc/ansible/playbooks/install_ntpdate.yml</code> такого вида:</p>
+
+<pre><code>---
+- hosts: test
+  tasks:
+ 
+  - name: Check if ntpdate is installed
+    command: dpkg-query -W ntpdate
+    register: ntpdate_check_deb
+    failed_when: ntpdate_check_deb.rc &gt; 1
+    changed_when: ntpdate_check_deb.rc == 1
+ 
+  - name: Install ntpdate
+    apt: name=ntpdate update_cache=yes
+    sudo: yes
+    when: ntpdate_check_deb.rc == 1
+ 
+  - name: Sync date
+    command: ntpdate -u 192.168.0.13
+    sudo: yes
+</code></pre>
+
+<p>Результат выполнения данного playbook будет таким:</p>
+
+<pre><code>ansible-playbook install_ntpdate.yml 
+
+PLAY [test] ******************************************************************* 
+
+GATHERING FACTS *************************************************************** 
+ok: [test-1]
+
+TASK: [Check if ntpdate is installed] ***************************************** 
+ok: [test-1]
+
+TASK: [Install ntpdate] ******************************************************* 
+skipping: [test-1]
+
+TASK: [Sync date] ************************************************************* 
+changed: [test-1]
+
+PLAY RECAP ******************************************************************** 
+test-1                 : ok=3    changed=1    unreachable=0    failed=0   
+</code></pre>
+
+<p>Модуль <code>shell</code> — это аналог модуля <code>command</code> с важным отличием: для выполнения команд используется оболочка <code>/bin/sh</code>. Параметры такие же, как и у модуля <code>command</code> — <code>chdir</code>, <code>creates</code> и <code>removes</code>.</p>
+
+<p>Модуль <code>script</code> используют при необходимости копирования скрипта на удаленный хост с последующим выполнением. Поддерживаются параметры <code>creates</code> и <code>removes</code>. Для проверки работы данного модуля напишем простейший скрипт <code>/etc/ansible/playbooks/scripts/count_dir.sh</code> со следующим содержимым:</p>
+
+<pre><code>#/bin/bash
+ls -l /var/log | grep &quot;^d&quot; | wc -l
+</code></pre>
+
+<p><strong>Примечание.</strong> Скрипт посчитает количество директорий в <code>/var/log</code>.</p>
+
+<p>Playbook в этом случае будет выглядеть так:</p>
+
+<pre><code>---
+- hosts: test
+  tasks:
+ 
+  - name: Count directories in /var/log
+    script: /etc/ansible/playbooks/scripts/count_dir.sh /var/log
+    sudo: yes
+</code></pre>
+
+<p>Результат выполнения данного набора инструкций (с выводом отладочной информации) следующий:</p>
+
+<pre><code>ansible-playbook -vv count_directories.yml 
+
+PLAY [test] ******************************************************************* 
+
+GATHERING FACTS *************************************************************** 
+ REMOTE_MODULE setup
+ok: [test-1]
+
+TASK: [Count directories in /var/log] ***************************************** 
+changed: [test-1] =&gt; {&quot;changed&quot;: true, &quot;rc&quot;: 0, &quot;stderr&quot;: &quot;&quot;, &quot;stdout&quot;: &quot;15\r\n&quot;}
+
+PLAY RECAP ******************************************************************** 
+test                 : ok=2    changed=1    unreachable=0    failed=0   
+</code></pre>
+
+<p>Модуль <code>raw</code> предусмотрен для использования в случаях, когда другие командные модули (<code>command</code>, <code>shell</code> и <code>script</code>) использовать невозможно. Этот модуль можно использовать на удаленных хостах даже без установленного Python. Пример playbook:</p>
+
+<pre><code>---
+- hosts: test
+  tasks:
+ 
+  - name: Update &amp; safe-upgrade
+    raw: aptitude update &amp;&amp; aptitude safe-upgrade -y
+    sudo: yes
+</code></pre>
+
+<p>и результат его выполнения:</p>
+
+<pre><code>ansible-playbook safe_upgrade.yml 
+
+PLAY [test] ******************************************************************* 
+
+GATHERING FACTS *************************************************************** 
+ok: [test-1]
+
+TASK: [Update &amp; safe-upgrade] ************************************************* 
+ok: [test-1]
+
+PLAY RECAP ******************************************************************** 
+test-1                 : ok=2    changed=0    unreachable=0    failed=0   
+</code></pre>
+
+<p>Модуль <code>file</code> предназначен для создания/удаления каталогов, символических ссылок и файлов, а также для работы с атрибутами файлов. Параметры:</p>
+
+<ul>
+<li><code>group</code> — имя группы-владельца файла/каталога;</li>
+<li><code>owner</code> — имя пользователя-владельца файла/каталога;</li>
+<li><code>mode</code> — права доступа к файлу/каталогу;</li>
+<li><code>path</code> — путь к файлу/каталогу (можно использовать алиасы dest или name);</li>
+<li><code>src</code> — путь к файлу, для создания симлинка (используется при <code>state=link</code>);</li>
+<li><code>recurse</code> — рекурсивно установить атрибуты файла/каталога (используется при <code>state=directory</code>);</li>
+<li><code>state</code> — определяет типы файлов, над которым проводятся операции (<code>file</code>, <code>link</code>, <code>directory</code>, <code>hard</code>, <code>touch</code> и <code>absent</code>).</li>
+</ul>
+
+<p>Пример использования модуля в наборе инструкций:</p>
+
+<pre><code>---
+- hosts: test
+  vars:
+    dir: /home/admin/testdir
+  tasks:
+ 
+  - name: Create directory 
+    file: path={{ dir }} state=directory owner=admin group=admin mode=0777
+    sudo: yes
+ 
+  - name: Create symlink
+    file: src=/etc/hostname dest=/home/admin/testdir/hostname owner=root group=root state=link
+    sudo: yes
+</code></pre>
+
+<p>Результат выполнения playbook:</p>
+
+<pre><code>ansible-playbook mkdir.yml 
+
+PLAY [test] ******************************************************************* 
+
+GATHERING FACTS *************************************************************** 
+ok: [test-1]
+
+TASK: [Create directory] ****************************************************** 
+ok: [test-1]
+
+TASK: [Create symlink] ******************************************************** 
+changed: [test-1]
+
+PLAY RECAP ******************************************************************** 
+test-1                 : ok=3    changed=1    unreachable=0    failed=0   
+</code></pre>
+
+<p>Модуль <code>copy</code> используется для копирования файлов на удаленный хост. Кроме уже описанных выше параметров <code>group</code>, <code>owner</code>, <code>mode</code> может принимать следующие:</p>
+
+<ul>
+<li><code>backup</code> — создает резервную копию файла (в имени файла будет дописан <code>timestamp</code>);</li>
+<li><code>dest</code> — куда будет скопирован файл (абсолютный путь на удаленном хосте);</li>
+<li><code>directory_mode</code> — используется для рекурсивного копирования каталогов;</li>
+<li><code>force</code> — копировать файл на удаленный хост, если содержимое файла было изменено;</li>
+<li><code>src</code> — откуда копировать файл — локальный путь (абсолютный или относительный).</li>
+</ul>
+
+<p>Пример использования в наборе инструкций:</p>
+
+<pre><code>---
+- hosts: test
+  tasks:
+ 
+  - name: Copy speedtest-cli
+    copy: src=/home/install/speedtest-cli dest=/usr/local/bin/speedtest-cli mode=0777
+    sudo: yes
+</code></pre>
+
+<p>и результат выполения playbook:</p>
+
+<pre><code>ansible-playbook copy.yml 
+
+PLAY [test] ******************************************************************* 
+
+GATHERING FACTS *************************************************************** 
+ok: [test-1]
+
+TASK: [Copy speedtest-cli] **************************************************** 
+ok: [test-1]
+
+PLAY RECAP ******************************************************************** 
+test-1                 : ok=2    changed=0    unreachable=0    failed=0   
+</code></pre>
+
+<p>Для управления планировщиком задач используется модуль <code>cron</code>. Может принимать следующие параметры:</p>
+
+<ul>
+<li><code>backup</code> — создает резервную перед изменением;</li>
+<li><code>cron_file</code> — использует указанный файл из каталога <code>cron.d</code> вместо пользовательского <code>crontab</code>;</li>
+<li><code>day</code> — день запуска задачи (1-31, *, */2);</li>
+<li><code>hour</code> — час запуска задачи (0-23, *, */2);</li>
+<li><code>minute</code> — минута запуска задачи (0-59, *, */2);</li>
+<li><code>month</code> — месяц запуска задачи (1-12, *, */2);</li>
+<li><code>weekday</code> — неделя запуска задачи (0-6 for Sunday-Saturday, *);</li>
+<li><code>disabled</code> — закомментировать ранее добавленную задачу;</li>
+<li><code>job</code> — задача;</li>
+<li><code>name</code> — описание задачи в crontab (комментарий);</li>
+<li><code>state</code> — существует ли такая задача(принимает значения present и absent);</li>
+<li><code>user</code> — пользователь, в чей crontab следует добавить задачу;</li>
+<li><code>special_time</code> — специальное время запуска задачи (reboot, yearly, annually, monthly, weekly, daily и hourly).</li>
+</ul>
+
+<p>Пример playbook с использованием модуля <code>cron</code>:</p>
+
+<pre><code>---
+- hosts: test
+  tasks:
+ 
+  - name: Add task to cron
+    cron: name=&quot;check speedtest&quot; minute=&quot;0&quot; hour=&quot;1,10&quot; job=&quot;/usr/local/bin/speedtest.sh&quot;
+    sudo: yes
+</code></pre>
+
+<p>результатом выполнения задачи будет:</p>
+
+<pre><code>ansible-playbook cron.yml 
+
+PLAY [test] ******************************************************************* 
+
+GATHERING FACTS *************************************************************** 
+ok: [test-1]
+
+TASK: [Add task to cron] ****************************************************** 
+ok: [test-1]
+
+PLAY RECAP ******************************************************************** 
+test-1                 : ok=2    changed=0    unreachable=0    failed=0   
+</code></pre>
+
+<p>Модуль <code>template</code> используется в <code>Ansible</code> для создания файлов по определенным шаблонам (например, конфигов) на удаленных хостах. Чтобы проверить работу данного модуля, создадим простенький шаблон <code>/etc/ansible/playbooks/templates/hostname/</code> с таким содержимым:</p>
+
+<pre><code>This is test file on {{ ansible_hostname }}
+</code></pre>
+
+<p>Playbook с использованием модуля <code>template</code> получится такой:</p>
+
+<pre><code>---
+- hosts: test
+  tasks:
+ 
+  - name: Create template with hostname
+    template: src=/etc/ansible/playbooks/templates/hostname dest=/home/admin/testfile mode=0644
+    sudo: yes
+</code></pre>
+
+<p>Результатом выполнения этого набора инструкций будет:</p>
+
+<pre><code>ansible-playbook create_template.yml 
+
+PLAY [test] ******************************************************************* 
+
+GATHERING FACTS *************************************************************** 
+ok: [test-1]
+
+TASK: [Create template with hostname] ***************************************** 
+changed: [test-1]
+
+PLAY RECAP ******************************************************************** 
+test-1                 : ok=2    changed=1    unreachable=0    failed=0   
+</code></pre>
+
+<p>На удаленном хосте по указанному нами пути появился файл со следующим содержимым:</p>
+
+<pre><code>This is test file on test-1
+</code></pre>
+
+<p><strong>Примечание.</strong> Данный модуль также позволяет использовать функцию <code>validate</code>, которая проверяет файл перед его копированием на удаленный сервер.</p>
+
+<p>На этом с модулями в <code>Ansible</code> все, в <a href="https://letsclearitup.com.ua/ubuntu/znakomstvo-s-ansible-chast-5-roli-usloviya-i-tsiklyi.html">следующей статье</a> поговорим о ролях и об использовании условий в наборах инструкций.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-ansible-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-4-%25D0%25BC%25D0%25BE%25D0%25B4%25D1%2583%25D0%25BB%25D0%25B8%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Ansible.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%204%3a%20%d0%bc%d0%be%d0%b4%d1%83%d0%bb%d0%b8 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

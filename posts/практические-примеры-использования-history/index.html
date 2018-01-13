@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Практические примеры использования history"/>
+  <meta name="twitter:description" content="Использование истории введенных команд существенно может ускорить вашу работу в консоли Linux. Давайте разберемся с использованием history на конкретных примерах!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Практические примеры использования history &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Практические примеры использования history
+                    </h1>
+                    <h2 class="headline">
+                    Jan 7, 2018 20:54
+                    · 352 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/history">history</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Использование истории введенных команд существенно может ускорить вашу работу в консоли Linux. Давайте разберемся с <strong>использованием <code>history</code> на конкретных примерах</strong>!</p>
+
+<p></p>
+
+<p>Отобразить дату и время вызова команды можно следующим образом:</p>
+
+<pre><code>export HISTTIMEFORMAT='%F %T '
+history | more
+1  2016-08-04 11:05:58 asterisk -rx 'queue show'
+2  2016-08-04 11:05:58 asterisk -rx 'queue show'
+3  2016-08-04 11:05:58 asterisk -rx 'queue show'
+4  2016-08-04 11:05:58 cat sip.conf | grep -A 3 113
+5  2016-08-04 11:05:58 asterisk -rx 'queue show'
+6  2016-08-04 11:05:58 asterisk -rx 'queue show admin'
+7  2016-08-04 11:05:58 /etc/init.d/asterisk reload
+8  2016-08-04 11:05:58 tail -f /var/log/asterisk/messages
+</code></pre>
+
+<p>Использование Control+R для поиска команды в <code>history</code> по части слова (ищем по php, по нажатию клавиши ввода эта команда будет выполнена):</p>
+
+<pre><code>#
+(reverse-i-search)`php': aptitude purge phpmyadmin
+</code></pre>
+
+<p>Аналогичным образом можно найти команду, изменить ее часть (например, изменить <code>stop</code> на <code>start</code>) и выполнить:</p>
+
+<pre><code>#
+(reverse-i-search)`bind': /etc/init.d/bind9 stop
+﻿﻿/etc/init.d/bind9 start
+</code></pre>
+
+<p>Быстрый повтор предыдущей команды можно сделать аж четырьмя способами:</p>
+
+<ul>
+<li>использовать стрелку вверх и нажать клавишу ввода;</li>
+<li>ввести <code>!!</code> и нажать клавишу ввода;</li>
+<li>ввести <code>!-1</code> и нажать клавишу ввода;</li>
+<li>использовать комбинацию клавиш Control+P и нажать клавишу ввода.</li>
+</ul>
+
+<p>Повторить 5-ю команду из истории:</p>
+
+<pre><code>history | more
+1  cd /etc/dhcp/
+2  mcedit dhcpd.conf
+3  git commit dhcpd.conf -m &quot;test commit&quot;
+4  git push
+5  /etc/init.d/isc-dhcp-server restart
+</code></pre>
+
+<pre><code>!5
+/etc/init.d/isc-dhcp-server restart
+[ ok ] Restarting isc-dhcp-server (via systemctl): isc-dhcp-server.service.
+</code></pre>
+
+<p>Выполнить последнюю команду из списка, которая начинается на определенное слово:</p>
+
+<pre><code>!dpkg
+dpkg -l | grep rrd
+ii  librrd4                            1.4.8-1.2                     amd64        time-series data storage and display system (runtime library)
+ii  librrds-perl                       1.4.8-1.2                     amd64        time-series data storage and display system (Perl interface, shared)
+ii  rrdtool                            1.4.8-1.2                     amd64        time-series data storage and display system (programs)
+</code></pre>
+
+<p>Выполнить другую команду с параметром, который был использован при выполнении последней команды можно с помощью символов <code>!!:$</code>:</p>
+
+<pre><code>ls dhcpd.conf
+dhcpd.conf
+</code></pre>
+
+<pre><code>nano !!:$
+nano dhcpd.conf
+</code></pre>
+
+<p>Если при выполнении предыдущей команды использовалось два параметра, то выполнить другую команду с использованием первого из них можно используя символы <code>!^</code>:</p>
+
+<pre><code>cp dhcpd.conf dhcpd.conf.bak
+dhcpd.conf
+</code></pre>
+
+<pre><code>nano  !^
+nano dhcpd.conf
+</code></pre>
+
+<p>Найти в истории команду, которая начинается с <code>cp</code> (копирование), и использовать ее второй аргумент для выполнения новой команды:</p>
+
+<pre><code>cp ~/test.txt /really/a/very/long/path/long-filename.txt
+ls -l !cp:2
+ls -l /really/a/very/long/path/long-filename.txt
+</code></pre>
+
+<p>Очистить историю введенных команд:</p>
+
+<pre><code>history -c
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25BF%25D1%2580%25D0%25B0%25D0%25BA%25D1%2582%25D0%25B8%25D1%2587%25D0%25B5%25D1%2581%25D0%25BA%25D0%25B8%25D0%25B5-%25D0%25BF%25D1%2580%25D0%25B8%25D0%25BC%25D0%25B5%25D1%2580%25D1%258B-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D1%258F-history%2f - %d0%9f%d1%80%d0%b0%d0%ba%d1%82%d0%b8%d1%87%d0%b5%d1%81%d0%ba%d0%b8%d0%b5%20%d0%bf%d1%80%d0%b8%d0%bc%d0%b5%d1%80%d1%8b%20%d0%b8%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f%20history by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Cкрипт для бекапа таблиц в БД &#43; шифрования"/>
+  <meta name="twitter:description" content="Мы уже рассматривали примеры создания резервных копий баз данных и восстановления из них, были даже полностью готовые к употреблению скрипты.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Cкрипт для бекапа таблиц в БД &#43; шифрования &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Cкрипт для бекапа таблиц в БД &#43; шифрования
+                    </h1>
+                    <h2 class="headline">
+                    Jan 10, 2018 17:29
+                    · 237 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/mysql">mysql</a>
+                          
+                              <a href="https://ealebed.github.io/tags/backup">backup</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Мы уже рассматривали примеры <a href="https://letsclearitup.com.ua/bash/rezervnoe-kopirovanie-bazyi-dannyih-s-pomoshhyu-percona-xtrabackup.html">создания резервных копий</a> баз данных и <a href="https://letsclearitup.com.ua/debian/razvertyivanie-bekapov-baz-dannyih-sozdannyih-s-pomoshhyu-xtrabackup.html">восстановления</a> из них, были даже полностью <a href="https://letsclearitup.com.ua/bash/ckript-dlya-sozdaniya-rezervnyih-kopiy-baz-dannyih-s-pomoshhyu-percona-xtrabackup.html">готовые к употреблению скрипты</a>.</p>
+
+<p></p>
+
+<p>Но как поступить, если нужна резервная копия не всей БД, а лишь одной таблицы? Давайте разберемся!</p>
+
+<p>Скрипт выполняет резервное копирование БД (кроме test | information_schema | performance_schema) и отдельных таблиц в этих БД с помощью утилиты <code>mysqldump</code>. Дамп таблиц сжимается сначала в <code>.gz</code>, потом в <code>.bz2</code> (при этом архив <code>.gz</code> удаляется). Созданный архив <code>.bz2</code> <a href="https://letsclearitup.com.ua/backup/openssl-prostoe-shifrovanie-faylov-s-ispolzovaniem-parolya.html">шифруется с помощью <code>openssl</code></a> с последующим удалением незашифрованного архива.
+Хранится 5 резервных копий, более старые — удаляются.</p>
+
+<pre><code>#!/bin/bash
+ 
+date=`date +%Y-%m-%d`
+MYSQL=/usr/bin/mysql
+DUMP=/usr/bin/mysqldump
+DUMPOPTIONS=&quot;-ceqQ --single-transaction --add-drop-table --allow-keywords --events&quot;
+ACCOUNT=&quot;--defaults-file=/root/.my.cnf&quot; # данные для подключения к MySQL
+PASS=`cat /root/bin/.pass` # пароль для шифрования архива
+BKPDIR=&quot;/var/backup/sync/mysql/&quot;
+DBASES_DIR=&quot;$BKPDIR/$date/db&quot;
+TABLES_DIR=&quot;$BKPDIR/$date/tables&quot;
+DATABASES=`$MYSQL $ACCOUNT -Bse 'show databases'|grep -vP 'information_schema|performance_schema'`
+mkdir -p $DBASES_DIR
+for i in $DATABASES; do
+    if [ &quot;$i&quot; = &quot;test&quot; ];
+    then
+        continue
+    fi
+    echo $DATABASES:;
+    [ ! -d $TABLES_DIR/$i ] &amp;&amp; mkdir -p $TABLES_DIR/$i
+    schem=&quot;\`$i\`&quot;
+    TABLES=`$MYSQL $ACCOUNT -Bse &quot;show tables from $schem&quot;`
+    for j in $TABLES;do
+        echo $i ___ $j ;
+        $DUMP $ACCOUNT $DUMPOPTIONS $i $j | gzip -1 &gt; $TABLES_DIR/$i/$j.sql.gz
+        zcat $TABLES_DIR/$i/$j.sql.gz | bzip2 -c | tee -a $DBASES_DIR/$i.sql.bz2 &gt; $TABLES_DIR/$i/$j.sql.bz2 &amp;&amp; rm -f $TABLES_DIR/$i/$j.sql.gz
+        openssl enc -aes-256-cbc -salt -pass pass:$PASS -in $TABLES_DIR/$i/$j.sql.bz2 -out $TABLES_DIR/$i/$j.sql.bz2.enc
+        rm -f $TABLES_DIR/$i/$j.sql.bz2
+    done
+done
+  
+arh=5
+for cusr in `ls $BKPDIR --full-time -t | awk '{print $9}'`;
+    do
+    if ((&quot;$arh&quot; &lt; 1))
+    then
+        `rm -fr $BKPDIR/$cusr`
+    fi
+    let &quot;arh -= 1&quot;
+done
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fc%25D0%25BA%25D1%2580%25D0%25B8%25D0%25BF%25D1%2582-%25D0%25B4%25D0%25BB%25D1%258F-%25D0%25B1%25D0%25B5%25D0%25BA%25D0%25B0%25D0%25BF%25D0%25B0-%25D1%2582%25D0%25B0%25D0%25B1%25D0%25BB%25D0%25B8%25D1%2586-%25D0%25B2-%25D0%25B1%25D0%25B4-%25D0%25B8-%25D1%2588%25D0%25B8%25D1%2584%25D1%2580%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D1%258F%2f - C%d0%ba%d1%80%d0%b8%d0%bf%d1%82%20%d0%b4%d0%bb%d1%8f%20%d0%b1%d0%b5%d0%ba%d0%b0%d0%bf%d0%b0%20%d1%82%d0%b0%d0%b1%d0%bb%d0%b8%d1%86%20%d0%b2%20%d0%91%d0%94%20%2b%20%d1%88%d0%b8%d1%84%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

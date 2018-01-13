@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Ищем и убиваем zombie процессы"/>
+  <meta name="twitter:description" content="Дочерний процесс в Unix-системе, завершивший своё выполнение, но ещё присутствующий в списке процессов операционной системы, чтобы дать родительскому процессу считать код завершения называют зомби (англ. zombie process, defunct process) — говорит нам Википедия.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Ищем и убиваем zombie процессы &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Ищем и убиваем zombie процессы
+                    </h1>
+                    <h2 class="headline">
+                    Jan 9, 2018 16:22
+                    · 405 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/zombie">zombie</a>
+                          
+                              <a href="https://ealebed.github.io/tags/defunct">defunct</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Дочерний процесс в Unix-системе, завершивший своё выполнение, но ещё присутствующий в списке процессов операционной системы, чтобы дать родительскому процессу считать код завершения называют зомби (англ. zombie process, defunct process) — говорит нам <a href="https://ru.wikipedia.org/wiki/%D0%9F%D1%80%D0%BE%D1%86%D0%B5%D1%81%D1%81-%D0%B7%D0%BE%D0%BC%D0%B1%D0%B8">Википедия</a>.</p>
+
+<p></p>
+
+<p>Подробнее ознакомиться с возникновением зомби-процессов и связанными с ними проблемами можно на той же Wiki, а мы разберемся как вычислить такие процессы и &ldquo;убить&rdquo; их!</p>
+
+<p>Найти <code>zombie</code>-процесс можно несколькими способами, например:</p>
+
+<pre><code>top | grep zombie
+</code></pre>
+
+<p>или</p>
+
+<pre><code>ps aux | grep -w Z
+</code></pre>
+
+<p>или</p>
+
+<pre><code>ps -alx | awk '$10 ~ /STAT|Z/'
+</code></pre>
+
+<p>Итак, находим <code>zombie</code>-процессы в нашей системе:</p>
+
+<pre><code>ps aux | grep -w Z
+git       2512  0.6  0.0      0     0 ?        Z    08:31   1:08 [grunt] 
+git       3574  0.0  0.0      0     0 ?        Z    кві13   0:48 [grunt] 
+root     12523  0.0  0.0 112652  1036 pts/5    S+   11:22   0:00 grep --color=auto -w Z
+git      13855  0.3  0.0      0     0 ?        Z    07:07   0:47 [grunt] 
+git      14896  0.0  0.0      0     0 ?        Z    кві13   0:48 [grunt] 
+git      16213  0.0  0.0      0     0 ?        Z    кві03   0:44 [grunt] 
+git      24146  0.5  0.0      0     0 ?        Z    07:49   1:11 [grunt] 
+git      26321  0.0  0.0      0     0 ?        Z    кві13   0:47 [grunt] 
+git      29765  0.5  0.0      0     0 ?        Z    08:10   1:09 [grunt] 
+git      32440  0.0  0.0      0     0 ?        Z    кві13   0:47 [grunt] 
+</code></pre>
+
+<p>&ldquo;Убить&rdquo; найденные zombie-процессы просто так не получится. Самый правильный вариант — найти родительский процесс и убить или перезапустить его. (Еще может помочь перезагрузка сервера, но это точно не наш путь). Находим родительские процессы (их PID’ы в третьей колонке):</p>
+
+<pre><code>ps ajx | grep -w Z
+ 2475  2512  2427  2427 ?           -1 Z     1004   1:08 [grunt] 
+ 3557  3574  3509  3509 ?           -1 Z     1004   0:48 [grunt] 
+12350 12671 12671 12330 pts/5    12671 S+       0   0:00 grep --color=auto -w Z
+13839 13855 13791 13791 ?           -1 Z     1004   0:47 [grunt] 
+14869 14896 14820 14820 ?           -1 Z     1004   0:48 [grunt] 
+16192 16213 16144 16144 ?           -1 Z     1004   0:44 [grunt] 
+24120 24146 24071 24071 ?           -1 Z     1004   1:11 [grunt] 
+26290 26321 26236 26236 ?           -1 Z     1004   0:47 [grunt] 
+29725 29765 29645 29645 ?           -1 Z     1004   1:09 [grunt] 
+32423 32440 32375 32375 ?           -1 Z     1004   0:47 [grunt] 
+</code></pre>
+
+<p>При желании можно узнать больше подробностей о родительском процессе, например так:</p>
+
+<pre><code>ps auxww | grep 32375
+root     12689  0.0  0.0 112648  1016 pts/5    S+   11:23   0:00 grep --color=auto 32375
+git      32375  0.0  0.0 211180  2892 ?        Ss   кві13   0:00 git-receive-pack /home/git/repo/ed.git
+</code></pre>
+
+<p>Дальше этот процесс можем просто &ldquo;убить&rdquo;:</p>
+
+<pre><code>kill -9 32375
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25B8%25D1%2589%25D0%25B5%25D0%25BC-%25D0%25B8-%25D1%2583%25D0%25B1%25D0%25B8%25D0%25B2%25D0%25B0%25D0%25B5%25D0%25BC-zombie-%25D0%25BF%25D1%2580%25D0%25BE%25D1%2586%25D0%25B5%25D1%2581%25D1%2581%25D1%258B%2f - %d0%98%d1%89%d0%b5%d0%bc%20%d0%b8%20%d1%83%d0%b1%d0%b8%d0%b2%d0%b0%d0%b5%d0%bc%20zombie%20%d0%bf%d1%80%d0%be%d1%86%d0%b5%d1%81%d1%81%d1%8b by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

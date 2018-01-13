@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Percona Server и Percona XtraBackup в docker-контейнере"/>
+  <meta name="twitter:description" content="Со стремительным ростом популярности docker-контейнеров уже никого не удивить, например, запуском Percona Server в docker&rsquo;е. Однако на просторах Интернета не так уж много подробных инструкций о том, как делать резервные копии (и восстанавливаться из них), если ваш MySQL-сервер запущен в docker-контейнере.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Percona Server и Percona XtraBackup в docker-контейнере &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Percona Server и Percona XtraBackup в docker-контейнере
+                    </h1>
+                    <h2 class="headline">
+                    Jan 10, 2018 10:00
+                    · 856 words
+                    · 5 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/percona">percona</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/backup">backup</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Со стремительным ростом популярности docker-контейнеров уже никого не удивить, например, запуском Percona Server в docker&rsquo;е. Однако на просторах Интернета не так уж много подробных инструкций о том, как делать резервные копии (и восстанавливаться из них), если ваш MySQL-сервер запущен в docker-контейнере.</p>
+
+<p></p>
+
+<p>Давайте разберемся с запуском Percona Server в docker&rsquo;е и рассмотрим вариант <a href="https://letsclearitup.com.ua/bash/rezervnoe-kopirovanie-bazyi-dannyih-s-pomoshhyu-percona-xtrabackup.html">создания бекапов с помощью утилиты Percona XtraBackup</a>!</p>
+
+<p>Итак, нам понадобятся два docker-контейнера — один непосредственно для MySQL-сервера, второй — для создания резервных копий. В качестве MySQL-сервера будем использовать Percona Server 5.7, контейнеры будем собирать самостоятельно — это <a href="https://letsclearitup.com.ua/docker/optimizatsiya-docker-obrazov.html">несложно</a>.</p>
+
+<p>Создадим каталог, в котором будет находиться все необходимое для основного контейнера (назовем его percona):</p>
+
+<pre><code>mkdir /percona
+</code></pre>
+
+<p>В данном каталоге у нас будут находится инструкции по сборке контейнера (Dockerfile), конфигурационный файл для MySQL-сервера (<code>my.cnf</code>), файл <code>docker-compose.yml</code> для запуска контейнера (не люблю вводить длиннющие команды вида <code>docker run ...</code>) и файл с переменными окружения, которые будут использоваться при запуске контейнера (<code>.env</code>).</p>
+
+<p>Давайте рассмотрим содержимое данных файлов, Dockerfile выглядит так:</p>
+
+<pre><code>FROM percona:5.7
+ 
+RUN chown -R mysql:mysql /var/lib/mysql/
+ 
+ADD my.cnf /etc/mysql/conf.d/my.cnf
+ 
+CMD [&quot;mysqld&quot;]
+ 
+EXPOSE 3306
+</code></pre>
+
+<p>Содержимое файла с настройками MySQL-сервера в моем случае такое (разумеется, для вашего случая подберите эти параметры индивидуально):</p>
+
+<pre><code>[client]
+socket                                      = /var/run/mysqld/mysqld.sock
+ 
+[mysqld]
+socket                                      = /var/run/mysqld/mysqld.sock
+pid-file                                    = /var/run/mysqld/mysqld.pid
+user                                        = mysql
+basedir                                     = /usr
+datadir                                     = /var/lib/mysql
+tmpdir                                      = /var/lib/mysql-tmp
+sql-mode                                    = &quot;STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION&quot;
+sysdate-is-now                              = 0
+transaction-isolation                       = REPEATABLE-READ
+default-storage-engine                      = InnoDB
+event-scheduler                             = OFF
+performance_schema                          = 0
+collation-server                            = utf8_general_ci
+character-set-server                        = utf8
+ 
+### Percona specific general options
+expand_fast_index_creation                  = OFF
+userstat                                    = OFF
+thread_statistics                           = OFF
+ 
+### Connectivity options
+port                                        = 3306
+max_user_connections                        = 400
+secure-auth                                 = ON
+back_log                                    = 2048
+skip-name-resolve                           = 0
+max_connect_errors                          = 1000000
+read_only                                   = OFF
+bind-address                                = ::
+max_allowed_packet                          = 16777216
+wait_timeout                                = 14400
+max_connections                             = 500
+thread_cache_size                           = 64
+net_write_timeout                           = 60
+net_read_timeout                            = 30
+safe-user-create                            = 1
+interactive_timeout                         = 14400
+ 
+### General caches
+key_buffer_size                             = 16777216
+query_cache_size                            = 0
+tmp_table_size                              = 16777216
+max_heap_table_size                         = 16777216
+table_open_cache                            = 8192
+query_cache_type                            = 0
+ 
+### InnoDB options
+innodb_buffer_pool_size                     = 512M
+innodb_open_files                           = 1024
+innodb_flush_method                         = O_DIRECT
+innodb_log_file_size                        = 64M
+innodb_read_io_threads                      = 4
+innodb_file_format                          = Barracuda
+innodb_old_blocks_time                      = 1000
+innodb_autoinc_lock_mode                    = 2
+innodb_io_capacity                          = 200
+innodb_log_buffer_size                      = 8M
+innodb_stats_on_metadata                    = OFF
+innodb_thread_concurrency                   = 0
+innodb_support_xa                           = ON
+innodb_buffer_pool_instances                = 1
+innodb_concurrency_tickets                  = 10000
+innodb_write_io_threads                     = 4
+innodb                                      = force
+innodb_file_per_table                       = ON
+innodb_flush_log_at_trx_commit              = 2
+ 
+### Logging options
+general_log_file                            = /var/log/mysql/mysql_general.log
+log-error                                   = /var/log/mysql/mysql_error.log
+slow_query_log_file                         = /var/log/mysql/mysql_slow.log
+log-warnings                                = 1
+log-queries-not-using-indexes               = ON
+long_query_time                             = 2
+log-slow-admin-statements                   = 1
+log-slow-slave-statements                   = 1
+general-log                                 = OFF
+slow-query-log                              = ON
+ 
+### Percona specific logging options
+log_slow_rate_type                          = session
+slow_query_log_use_global_control           = log_slow_filter,log_slow_rate_limit,log_slow_verbosity,long_query_time,min_examined_row_limit
+log_slow_sp_statements                      = ON
+log_slow_filter                             = ''
+log_slow_verbosity                          = microtime,query_plan
+log_slow_rate_limit                         = 1
+slow_query_log_always_write_time            = 10
+ 
+[mysqld_safe]
+log-error                                   = /var/log/mysql/mysql_error.log
+</code></pre>
+
+<p>Файл с переменными окружения может выглядеть, например, так:</p>
+
+<pre><code>### Data Path for all storage systems.
+DATA_SAVE_PATH=/srv
+### Percona ############################################################################################################
+PERCONA_DATABASE=test_db
+PERCONA_USER=testuser
+PERCONA_PASSWORD=testpassword
+PERCONA_PORT=3306
+PERCONA_ROOT_PASSWORD=rootpassword
+</code></pre>
+
+<p>И, наконец, <code>docker-compose.yml</code> содержит такие строки:</p>
+
+<pre><code>version: '2'
+services:
+### Percona Container ########################################
+    percona:
+        container_name: percona
+        image: my-percona-test:latest
+        environment:
+            - MYSQL_DATABASE=${PERCONA_DATABASE}
+            - MYSQL_USER=${PERCONA_USER}
+            - MYSQL_PASSWORD=${PERCONA_PASSWORD}
+            - MYSQL_ROOT_PASSWORD=${PERCONA_ROOT_PASSWORD}
+        volumes:
+            - ${DATA_SAVE_PATH}/percona:/var/lib/mysql
+        ports:
+            - &quot;${PERCONA_PORT}:3306&quot;
+</code></pre>
+
+<p>Для сборки образа, находясь в каталоге <code>/percona</code>, запускаем команду:</p>
+
+<pre><code>docker build -t my-percona-test:latest .
+</code></pre>
+
+<p>После успешной сборки контейнер можно запустить командой:</p>
+
+<pre><code>docker-compose up -d
+</code></pre>
+
+<p>Приступим к второму docker-контейнеру, с помощью которого мы будем делать резервные копии и восстанавливаться из них. Создадим каталог для него (назовем его <code>xtrabackup</code>):</p>
+
+<pre><code>mkdir /xtrabackup
+</code></pre>
+
+<p>В данном каталоге у нас будут находиться инструкции по сборке контейнера (Dockerfile) и два скрипта — один для создания бекапа (<code>make_backup.sh</code>), второй для восстановления данных (<code>make_backup.sh</code>).</p>
+
+<p>Содержимое Dockerfile следующее:</p>
+
+<pre><code>FROM percona:5.7
+ 
+RUN apt-get update &amp;&amp; \
+    apt-get install -y --no-install-suggests pigz percona-xtrabackup-24 &amp;&amp; \
+    rm -rf /var/lib/apt/lists/*
+ 
+RUN mkdir -p /backups
+ 
+ADD make_backup.sh /make_backup.sh
+ADD restore_backup.sh /restore_backup.sh
+ 
+VOLUME [&quot;/backups&quot;]
+</code></pre>
+
+<p>Содержимое скрипта создания бекапа:</p>
+
+<pre><code>
+BACKUP=&quot;/usr/bin/innobackupex&quot;
+workdir=&quot;/backups/&quot;
+OPTIONS=&quot;--host=percona --port=3306 --user=root --password=rootpassword&quot;
+dump=&quot;mysql.tar&quot;
+
+# при распаковке использовать ключ -i, например tar -ixvf backup.tar
+$BACKUP $OPTIONS --stream=tar ./ | pigz -p 5 &gt; ${workdir}${dump}.gz
+</code></pre>
+
+<p>Скрипт для восстановления данных из резервной копии выглядит так:</p>
+
+<pre><code>backupdir=&quot;/backups/&quot;
+archive=&quot;mysql.tar.gz&quot;
+mysqldir=&quot;/var/lib/mysql/&quot;
+ 
+cd $mysqldir &amp;&amp; rm -rf *
+cd $backupdir &amp;&amp; tar -ixvf $archive -C $mysqldir
+cd $mysqldir &amp;&amp; innobackupex --apply-log --ibbackup=xtrabackup ./
+chown -R 999:999 $mysqldir
+</code></pre>
+
+<p>Собираем контейнер (находясь в каталоге с Dokerfile) командой:</p>
+
+<pre><code>docker build -t my-xtrabackup:latest .
+</code></pre>
+
+<p>После всех проделанных действий для создания резерной копии баз данных достаточно запустить следующую команду:</p>
+
+<pre><code>docker run -it --net=docker_default --link percona:percona --name=xtrabackup -v /srv/percona:/var/lib/mysql -v /srv/backups:/backups --rm my-xtrabackup:latest sh -c 'exec /make_backup.sh'
+</code></pre>
+
+<p>Даная команда запускает контейнер из собранного нами образа (my-xtrabackup:latest), присваивает ему имя xtrabackup, назначает ему такую же локальную сеть, как и в запущенного ранее контейнера с Percona Server, связывает контейнеры с помощью опции <code>--link</code>, пробрасывает внутрь контейнера каталоги <code>/srv/percona</code> и <code>/srv/backups</code> с хост-машины (в одном находятся БД, второй используется для хранения бекапов) и выполняет скрипт <code>make_backup.sh</code>. После после выполнения скрипта (когда бекап будет создан) контейнер будет удален, благодаря использованию опции <code>--rm</code>.</p>
+
+<p>Чтобы восстановить данные из резервной копии, следует использовать такую команду (контейнер с Percona Server должен быть выключен во избежание возможных конфликтов):</p>
+
+<pre><code>docker run -it --name=xtrabackup -v /srv/percona:/var/lib/mysql -v /srv/backups:/backups --rm my-xtrabackup:latest sh -c 'exec /restore_backup.sh'
+</code></pre>
+
+<p>Данная команда очень похожа на предыдущую, разница лишь в выполняемом скрипте и в отсутствии параметров <code>--net=docker_default</code> <code>--link percona:percona</code> — они нам не нужны, так как контейнер с MySQL-сервером выключен.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fpercona-server-%25D0%25B8-percona-xtrabackup-%25D0%25B2-docker-%25D0%25BA%25D0%25BE%25D0%25BD%25D1%2582%25D0%25B5%25D0%25B9%25D0%25BD%25D0%25B5%25D1%2580%25D0%25B5%2f - Percona%20Server%20%d0%b8%20Percona%20XtraBackup%20%d0%b2%20docker-%d0%ba%d0%be%d0%bd%d1%82%d0%b5%d0%b9%d0%bd%d0%b5%d1%80%d0%b5 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

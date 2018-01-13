@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Кэш пакетов для Composer"/>
+  <meta name="twitter:description" content="При современном подходе к разработке проектов не обойтись без менеджера пакетов — в случаe с разработкой на PHP это Composer. В данной статье пойдёт речь о настройке локального кэша пакетов для Composer.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Кэш пакетов для Composer &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Кэш пакетов для Composer
+                    </h1>
+                    <h2 class="headline">
+                    Jan 10, 2018 14:54
+                    · 899 words
+                    · 5 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/satis">satis</a>
+                          
+                              <a href="https://ealebed.github.io/tags/composer">composer</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>При современном подходе к разработке проектов не обойтись без менеджера пакетов — в случаe с разработкой на PHP это Composer. В данной статье пойдёт речь о настройке локального кэша пакетов для Composer.</p>
+
+<p></p>
+
+<p>Решать данную задачу будем с помощью <a href="https://github.com/composer/satis">Satis</a> (естественно в docker-контейнере) — давайте разберемся!</p>
+
+<p>Проблема заключается в частой установке одних и тех же пакетов. Каждая новая установка проекта, это обращение к packagist.org для нахождения источников зависимостей вашего пакета, зависимостей зависимостей и т.д. и скачивание необходимых пакетов. Конечно, у Composer есть встроенный кэш, но он хранится в <code>~/.composer/cache</code>, индивидуален для каждого пользователя и не доступен для других разработчиков, QA и окружений разработки.</p>
+
+<p><a href="https://github.com/composer/satis">Satis</a> — статическое хранилище Composer пакетов, ультра-легкая версия Packagist, которая также может быть использована для размещения приватных пакетов вашей компании.</p>
+
+<p>Поднимать локальную версию хранилища пакетов будем с помощью docker-контейнера, сам контейнер будет запускаться с помощью файла <code>docker-compose.yml</code> следующего содержания:</p>
+
+<pre><code>version: &quot;2&quot;
+services:
+  satis:
+    image: ealebed/satis:1.0
+    container_name: satis
+    hostname: satis
+    volumes:
+      - &quot;/srv/satis/COMPOSER_CACHE:/root/.composer&quot;
+      - &quot;/srv/satis/satis.json:/app/config.json&quot;
+      - &quot;/srv/satis/dist:/satisfy/web/dist&quot;
+      - &quot;/srv/satis/include:/satisfy/web/include&quot;
+    environment:
+      CRONTAB_FREQUENCY: &quot;*/10 * * * *&quot;
+      VIRTUAL_HOST: satis.lc
+    ports:
+      - 3333:3000
+      - 8181:80
+</code></pre>
+
+<p>Перед запуском docker-контейнера в каталоге <code>/srv/satis/www</code> на хост-машине создаем конфигурационный файл <code>satis.json</code> примерно с таким содержимым:</p>
+
+<pre><code>{
+    &quot;name&quot;: &quot;Satis&quot;,
+    &quot;homepage&quot;: &quot;http://satis.lc:8181&quot;,
+    &quot;archive&quot;: {
+        &quot;directory&quot;: &quot;dist&quot;,
+        &quot;format&quot;: &quot;zip&quot;,
+        &quot;skip-dev&quot;: false
+    },
+    &quot;repositories&quot;: [
+    {
+      &quot;type&quot;: &quot;composer&quot;,
+      &quot;url&quot;: &quot;https://packagist.org&quot;
+    }
+  ],
+    &quot;require&quot;: {
+        &quot;league/fractal&quot;: &quot;^0.15.0&quot;,
+        &quot;psr/container&quot;: &quot;^1.0&quot;,
+        &quot;roave/security-advisories&quot;: &quot;dev-master&quot;,
+        &quot;zendframework/zend-component-installer&quot;: &quot;^1.0 || ^0.7.0&quot;,
+        &quot;zendframework/zend-config-aggregator&quot;: &quot;^0.2.0&quot;,
+        &quot;zendframework/zend-expressive&quot;: &quot;^2.0.2&quot;,
+        &quot;zendframework/zend-expressive-fastroute&quot;: &quot;^2.0&quot;,
+        &quot;zendframework/zend-expressive-helpers&quot;: &quot;^4.0&quot;,
+        &quot;zendframework/zend-http&quot;: &quot;^2.6&quot;,
+        &quot;zendframework/zend-log&quot;: &quot;^2.9&quot;,
+        &quot;zendframework/zend-servicemanager&quot;: &quot;^3.3&quot;,
+        &quot;zendframework/zend-stdlib&quot;: &quot;^3.1&quot;,
+        &quot;phpunit/phpunit&quot;: &quot;^6.0.8 || ^5.7.15&quot;,
+        &quot;squizlabs/php_codesniffer&quot;: &quot;^2.8.1&quot;,
+        &quot;zfcampus/zf-development-mode&quot;: &quot;^3.1&quot;,
+        &quot;zendframework/zend-expressive-tooling&quot;: &quot;^0.3.2&quot;
+    },
+    &quot;require-dependencies&quot;: true
+}
+</code></pre>
+
+<p>Здесь:</p>
+
+<ul>
+<li><code>name:</code> имя локального хранилища;</li>
+<li><code>homepage:</code> линк по которому будет доступна <code>/srv/satis/web</code> директория;</li>
+<li><code>archive.directory:</code> путь где будут храниться пакеты;</li>
+<li><code>archive.format:</code> сжимаем пакеты для экономии места;</li>
+<li><code>archive.skip-dev:</code> пропускать ли дев пакеты. Если мы хотим полностью избавиться от зависимости от packagist.org, github, bitbucket и т.д. то ставим <code>false</code>;</li>
+<li><code>repositories:</code> список хранилищ, их может быть несколько. Можно указывать прямые линки пакетов на github и т.д;</li>
+<li><code>{ &quot;type&quot;: &quot;composer&quot;, &quot;url&quot;: &quot;https://packagist.org&quot; }:</code> указываем оригинальное для Composer хранилище пакетов — Packagist;</li>
+<li><code>require:</code> список пакетов кэш которых мы хотим использовать в своих проектах — здесь список значительно сокращен;</li>
+<li><code>require-dependencies:</code> нужно ли скачивать зависимости зависимостей. Опять же, для полной независимости ставим <code>true</code>;</li>
+</ul>
+
+<p>Теперь, находясь в каталоге с конфигурационным файлом <code>docker-compose.yml</code> выполняем команду:</p>
+
+<pre><code>docker-compose up -d
+</code></pre>
+
+<p>При первом запуске контейнера будет скачаны и упакованы все зависимости (и их зависимости), указанные в секции <code>&quot;require&quot;: { }</code>. Если их много, то процесс займет довольно продолжительное время, поэтому можно наблюдать за прогрессом с помощью команды:</p>
+
+<pre><code>docker logs -f satis
+</code></pre>
+
+<p>Пример вывода логов:</p>
+
+<pre><code>...
+Dumping 'symfony/dependency-injection'.
+Dumping 'symfony/yaml'.
+wrote packages to /var/www/mirror/include/all$133181d2d1ff19075832276e1ade0a6499395e5d.json
+Writing packages.json
+Pruning include directories
+Deleted /var/www/mirror/include/all$f77decc941e6a091ed3c3abe89dafd6343a053f3.json
+Writing web view
+Rather than invoking init scripts through /etc/init.d, use the service(8)
+utility, e.g. service cron start
+
+Since the script you are attempting to invoke has been converted to an
+Upstart job, you may also use the start(8) utility, e.g. start cron
+</code></pre>
+
+<p>После скачивания и упаковки зависимостей в браузере открываем адрес, который указывали в <code>homepage</code> и проверяем список имеющихся пакетов</p>
+
+<p>Теперь в проектах, для которых мы хотим использовать локальное хранилище пакетов, в файле <code>composer.json</code> вставляем:</p>
+
+<pre><code>{
+    &quot;repositories&quot;: [
+        {
+            &quot;type&quot;: &quot;composer&quot;,
+            &quot;url&quot;: &quot;http://satis.lc:8181&quot;
+        }
+    ]
+}
+</code></pre>
+
+<p>В таком случае, нужные зависимости сначала будут браться из локального хранилища, а если их там нет — то из packagist.org. Запретить использование официального репозитория пакетов можно добавив такие строки в <code>composer.json</code> проекта:</p>
+
+<pre><code>{
+    &quot;repositories&quot;: [
+        {
+            &quot;type&quot;: &quot;composer&quot;,
+            &quot;url&quot;: &quot;http://satis.lc:8181&quot;
+        },
+        {
+            &quot;packagist&quot;:false
+        }
+    ]
+}
+</code></pre>
+
+<p>Далее следует очистить индивидуальный кэш Composer и удалить файл <code>composer.lock</code>, после чего можно протестировать работоспособность созданного хранилища.</p>
+
+<p>Несколько тестов (вывод сокращен).</p>
+
+<ul>
+<li>Установка зависимостей из официального репозитория packagist.org:</li>
+</ul>
+
+<pre><code>time composer install
+Loading composer repositories with package information
+Installing dependencies (including require-dev) from lock file
+Warning: The lock file is not up to date with the latest changes in composer.json. You may be getting outdated dependencies. Run update to update them.
+Package operations: 59 installs, 0 updates, 0 removals
+  - Installing zendframework/zend-component-installer (0.7.1): Downloading (100%)         
+  - Installing league/fractal (0.15.0): Downloading (100%)         
+...
+Generating autoload files
+
+real	2m0.982s
+user	0m2.460s
+sys	0m0.496s
+</code></pre>
+
+<ul>
+<li>Установка зависимостей из локального satis-репозитория:</li>
+</ul>
+
+<pre><code>time composer install
+Loading composer repositories with package information
+Warning: Accessing satis.lc over http which is an insecure protocol.
+Updating dependencies (including require-dev)
+Package operations: 60 installs, 0 updates, 0 removals
+  - Installing zendframework/zend-component-installer (0.7.1): Downloading (100%)         
+  - Installing league/fractal (0.15.0): Downloading (100%)         
+  ...
+Writing lock file
+Generating autoload files
+
+real	0m12.749s
+user	0m3.640s
+sys	0m1.404s
+</code></pre>
+
+<ul>
+<li>Установка зависимостей при недоступном локальном репозитории (попытка подключиться к satis’у, после чего загрузка и установка из официального packagist.org):</li>
+</ul>
+
+<pre><code>time composer install
+Loading composer repositories with package information
+Installing dependencies (including require-dev) from lock file
+Package operations: 60 installs, 0 updates, 0 removals
+  - Installing zendframework/zend-component-installer (0.7.1): Warning: Accessing satis.lc over http which is an insecure protocol.
+Downloading (failed)       
+Downloading (failed)       
+Downloading (failed)    Failed to download zendframework/zend-component-installer from dist: The &quot;http://satis.lc:8181/dist/zendframework-zend-component-installer-700a22e4791daa1110be06f2fb055dc678d2b7ff-zip-5e33b1.zip&quot; file could not be downloaded: failed to open stream: Connection refused
+    Now trying to download from source
+  - Installing zendframework/zend-component-installer (0.7.1): Cloning 700a22e479 from cache
+  - Installing league/fractal (0.15.0): Downloading (100%)         
+  - Installing zendframework/zend-config-aggregator (0.2.1): Downloading (failed)       
+Downloading (failed)       
+Downloading (failed)    Failed to download zendframework/zend-config-aggregator from dist: The &quot;http://satis.lc:8181/dist/zendframework-zend-config-aggregator-633a0bf3030a68d2a71cb41a121ad930a52041ea-zip-84656d.zip&quot; file could not be downloaded: failed to open stream: Connection refused
+    Now trying to download from source
+  - Installing zendframework/zend-config-aggregator (0.2.1): Cloning 633a0bf303 from cache
+...
+Generating autoload files
+
+real	5m5.170s
+user	0m22.544s
+sys	0m4.496s
+</code></pre>
+
+<p>Также есть возможность обновлять локальный кэш для композера по крону или вручную, больше подробностей и готовый проект есть на <a href="https://github.com/ealebed/satis">github</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25BA%25D1%258D%25D1%2588-%25D0%25BF%25D0%25B0%25D0%25BA%25D0%25B5%25D1%2582%25D0%25BE%25D0%25B2-%25D0%25B4%25D0%25BB%25D1%258F-composer%2f - %d0%9a%d1%8d%d1%88%20%d0%bf%d0%b0%d0%ba%d0%b5%d1%82%d0%be%d0%b2%20%d0%b4%d0%bb%d1%8f%20Composer by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Практические примеры использования nmap"/>
+  <meta name="twitter:description" content="Nmap (сокращение от «Network Mapper») — это набор инструментов для сканирования сети. Зачастую используется для проверки безопасности, определения сервисов запущенных на узле, для идентификации ОС и приложений, определения типа фаерволла и т. д. Давайте разберемся с несколькими практическими примерами использования nmap!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Практические примеры использования nmap &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Практические примеры использования nmap
+                    </h1>
+                    <h2 class="headline">
+                    Jan 8, 2018 09:59
+                    · 971 words
+                    · 5 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/nmap">nmap</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><strong>Nmap</strong> (сокращение от «Network Mapper») — это набор инструментов для сканирования сети. Зачастую используется для проверки безопасности, определения сервисов запущенных на узле, для идентификации ОС и приложений, определения типа фаерволла и т. д. Давайте разберемся с несколькими <strong>практическими примерами использования <code>nmap</code></strong>!</p>
+
+<p></p>
+
+<p>Считаем, что в вашей системе уже установлен <code>nmap</code>.</p>
+
+<p>Синтаксис команды следующий:</p>
+
+<pre><code>nmap [параметры_сканирования] цель_сканирования
+</code></pre>
+
+<p>Простой пример сканирования хоста по ip-адресу или по имени:</p>
+
+<pre><code>nmap 192.168.0.12
+
+Starting Nmap 6.47 ( http://nmap.org ) at 2016-10-13 09:11 EEST
+Nmap scan report for saturn (192.168.0.12)
+Host is up (0.000080s latency).
+Not shown: 991 closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+25/tcp   open  smtp
+80/tcp   open  http
+111/tcp  open  rpcbind
+2000/tcp open  cisco-sccp
+3306/tcp open  mysql
+5061/tcp open  sip-tls
+8080/tcp open  http-proxy
+9100/tcp open  jetdirect
+MAC Address: 00:0C:29:9A:15:C7 (VMware)
+
+Nmap done: 1 IP address (1 host up) scanned in 1.65 seconds
+</code></pre>
+
+<p>Сканирование нескольких ip-адресов можно выполнить так:</p>
+
+<pre><code>nmap 192.168.0.1 192.168.0.2 192.168.0.3
+</code></pre>
+
+<p>или так:</p>
+
+<pre><code>nmap 192.168.0.1-20
+</code></pre>
+
+<p>Для сканирования всей подсети можно использовать такую команду:</p>
+
+<pre><code>nmap 192.168.0.*
+</code></pre>
+
+<p>или так:</p>
+
+<pre><code>nmap 192.168.0.0/24
+</code></pre>
+
+<p>При сканировании сетей можно пропускать некоторые ip-адреса:</p>
+
+<pre><code>nmap 192.168.0.0/24 --exclude 192.168.0.5,192.168.0.7,192.168.0.254
+</code></pre>
+
+<p>Список хостов для сканирование можно взять из файла (допустим, <code>/tmp/test.txt</code>):</p>
+
+<pre><code>nmap -iL /tmp/test.txt
+</code></pre>
+
+<p>Также из файла можно взять список исключений (допустим, <code>/tmp/exclude.txt</code>):</p>
+
+<pre><code>nmap -iL /tmp/test.txt --excludefile /tmp/exclude.txt
+</code></pre>
+
+<p>Получить больше информации можно с помощью опции <code>-v</code>:</p>
+
+<pre><code>nmap -v 192.168.0.12
+
+Starting Nmap 6.47 ( http://nmap.org ) at 2016-10-13 09:31 EEST
+Initiating ARP Ping Scan at 09:31
+Scanning 192.168.0.12 [1 port]
+Completed ARP Ping Scan at 09:31, 0.22s elapsed (1 total hosts)
+Initiating Parallel DNS resolution of 1 host. at 09:31
+Completed Parallel DNS resolution of 1 host. at 09:31, 0.00s elapsed
+Initiating SYN Stealth Scan at 09:31
+Scanning saturn.reactor-v3 (192.168.0.12) [1000 ports]
+Discovered open port 3306/tcp on 192.168.0.12
+Discovered open port 22/tcp on 192.168.0.12
+Discovered open port 25/tcp on 192.168.0.12
+Discovered open port 8080/tcp on 192.168.0.12
+Discovered open port 111/tcp on 192.168.0.12
+Discovered open port 80/tcp on 192.168.0.12
+Discovered open port 2000/tcp on 192.168.0.12
+Discovered open port 9100/tcp on 192.168.0.12
+Discovered open port 5061/tcp on 192.168.0.12
+Completed SYN Stealth Scan at 09:31, 1.23s elapsed (1000 total ports)
+Nmap scan report for saturn.reactor-v3 (192.168.0.12)
+Host is up (0.000095s latency).
+Not shown: 991 closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+25/tcp   open  smtp
+80/tcp   open  http
+111/tcp  open  rpcbind
+2000/tcp open  cisco-sccp
+3306/tcp open  mysql
+5061/tcp open  sip-tls
+8080/tcp open  http-proxy
+9100/tcp open  jetdirect
+MAC Address: 00:0C:29:9A:15:C7 (VMware)
+
+Read data files from: /usr/bin/../share/nmap
+Nmap done: 1 IP address (1 host up) scanned in 1.56 seconds
+           Raw packets sent: 1001 (44.028KB) | Rcvd: 1005 (40.970KB)
+</code></pre>
+
+<p>Определить ОС, установленную на хосте можно с помощью опции <code>-O</code>:</p>
+
+<pre><code>nmap -O 192.168.0.12
+...
+Device type: general purpose
+Running: Linux 3.X
+OS CPE: cpe:/o:linux:linux_kernel:3
+OS details: Linux 3.11 - 3.14
+Network Distance: 1 hop
+...
+</code></pre>
+
+<p>Проверить какие хосты доступны и вывести их в виде списка можно с помощью опции <code>-sP</code>:</p>
+
+<pre><code>nmap -sP 192.168.0.0/24
+
+Starting Nmap 6.47 ( http://nmap.org ) at 2016-10-13 09:47 EEST
+Nmap scan report for astra (192.168.0.1)
+Host is up (0.00022s latency).
+MAC Address: E8:40:F2:3B:CB:98 (Pegatron)
+Nmap scan report for sao (192.168.0.2)
+Host is up (0.00037s latency).
+MAC Address: 00:0C:29:BF:7F:93 (VMware)
+Nmap scan report for dao (192.168.0.5)
+Host is up (0.00021s latency).
+MAC Address: 00:0C:29:0E:17:0C (VMware)
+Nmap scan report for deimos (192.168.0.6)
+...
+</code></pre>
+
+<p>Узнать версии запущенных сервисов на хосте можно используя опцию <code>-sV</code>:</p>
+
+<pre><code>nmap -sV 192.168.0.13
+
+Starting Nmap 6.47 ( http://nmap.org ) at 2016-10-13 09:58 EEST
+Nmap scan report for mars (192.168.0.13)
+Host is up (0.0000070s latency).
+Not shown: 985 closed ports
+PORT     STATE SERVICE         VERSION
+22/tcp   open  ssh             OpenSSH 6.7p1 Debian 5+deb8u2 (protocol 2.0)
+80/tcp   open  http            Apache httpd 2.4.10 ((Debian))
+139/tcp  open  netbios-ssn     Samba smbd 3.X (workgroup: MARS)
+445/tcp  open  netbios-ssn     Samba smbd 3.X (workgroup: MARS)
+3306/tcp open  mysql           MySQL 5.5.49-0+deb8u1-log
+...
+</code></pre>
+
+<p>Осуществить быстрое сканирование:</p>
+
+<pre><code>nmap -F 192.168.0.1
+</code></pre>
+
+<p>Показать открытые порты на сканируемом узле:</p>
+
+<pre><code>nmap --open 192.168.0.1
+</code></pre>
+
+<p>Отобразить отправленные/полученные пакеты:</p>
+
+<pre><code>nmap --packet-trace 192.168.0.1
+</code></pre>
+
+<p>Вывести сетевые интерфейсы и маршруты хоста, с которого выполняется сканирование (весьма полезно для отладки):</p>
+
+<pre><code>nmap --iflist
+
+Starting Nmap 6.47 ( http://nmap.org ) at 2016-10-13 10:04 EEST
+************************INTERFACES************************
+DEV      (SHORT)    IP/MASK                     TYPE     UP   MTU   MAC
+eth0.101 (eth0.101) 192.168.2.13/24             ethernet up   1500  00:0C:29:8A:AC:3E
+eth0.101 (eth0.101) fe80::20c:29ff:fe8a:ac3e/64 ethernet up   1500  00:0C:29:8A:AC:3E
+eth0     (eth0)     192.168.0.13/23             ethernet up   1500  00:0C:29:8A:AC:3E
+eth0     (eth0)     fe80::20c:29ff:fe8a:ac3e/64 ethernet up   1500  00:0C:29:8A:AC:3E
+eth1     (eth1)     (none)/0                    ethernet down 1500  00:0C:29:8A:AC:48
+lo       (lo)       127.0.0.1/8                 loopback up   65536
+lo       (lo)       ::1/128                     loopback up   65536
+
+**************************ROUTES**************************
+DST/MASK                     DEV      METRIC GATEWAY
+192.168.2.0/24               eth0.101 0
+192.168.0.0/23               eth0     0
+0.0.0.0/0                    eth0     0      192.168.0.15
+::1/128                      lo       0
+fe80::20c:29ff:fe8a:ac3e/128 lo       0
+fe80::20c:29ff:fe8a:ac3e/128 lo       0
+ff02::1/128                  eth0     0
+::1/128                      lo       256
+fe80::/64                    eth0     256
+fe80::/64                    eth0.101 256
+ff00::/8                     eth0     256
+ff00::/8                     eth0.101 256
+</code></pre>
+
+<p>Выполнить сканирование определенно порта можно несколькими способами, например так:</p>
+
+<pre><code>nmap -p 80 192.168.0.1
+
+Starting Nmap 6.47 ( http://nmap.org ) at 2016-10-13 10:07 EEST
+Nmap scan report for astra (192.168.0.1)
+Host is up (0.00028s latency).
+PORT   STATE SERVICE
+80/tcp open  http
+MAC Address: E8:40:F2:3B:CB:98 (Pegatron)
+
+Nmap done: 1 IP address (1 host up) scanned in 0.63 seconds
+</code></pre>
+
+<p>или так:</p>
+
+<pre><code>nmap -p T:80 192.168.0.1
+</code></pre>
+
+<p>Можно также указывать для сканирование несколько портов через запятую:</p>
+
+<pre><code>nmap -p 80,443 192.168.0.1
+</code></pre>
+
+<p>или задавать диапазон портов:</p>
+
+<pre><code>nmap -p 80-200 192.168.0.1
+</code></pre>
+
+<p>Топ 5 портов можно увидеть так:</p>
+
+<pre><code>nmap --top-ports 5 192.168.0.1
+
+Starting Nmap 6.47 ( http://nmap.org ) at 2016-10-13 10:18 EEST
+Nmap scan report for astra (192.168.0.1)
+Host is up (0.00022s latency).
+PORT    STATE  SERVICE
+21/tcp  closed ftp
+22/tcp  open   ssh
+23/tcp  closed telnet
+80/tcp  open   http
+443/tcp open   https
+MAC Address: E8:40:F2:3B:CB:98 (Pegatron)
+
+Nmap done: 1 IP address (1 host up) scanned in 1.63 seconds
+</code></pre>
+
+<p>Выполнить сканирование узла используя <code>TCP ACK (PA)</code> и <code>TCP Syn (PS)</code>:</p>
+
+<pre><code>nmap -PS 192.168.0.1
+</code></pre>
+
+<pre><code>nmap -PS 80,443 192.168.0.1
+</code></pre>
+
+<pre><code>nmap -PA 192.168.0.1
+</code></pre>
+
+<pre><code>nmap -PA 80,200-400 192.168.0.1
+</code></pre>
+
+<p>Сканировать хост с использованием IP ping:</p>
+
+<pre><code>nmap -PO 192.168.0.1
+</code></pre>
+
+<p>Сканировать хост с использованием UDP ping:</p>
+
+<pre><code>nmap -PU 192.168.0.1
+</code></pre>
+
+<p>Мы рассмотрели несколько практических примеров, которые чаще всего используются в повседневной жизни. Больше вариантов и способов сканирования удаленных хостов можно найти <a href="https://svn.nmap.org/nmap/docs/nmap.usage.txt">здесь</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25BF%25D1%2580%25D0%25B0%25D0%25BA%25D1%2582%25D0%25B8%25D1%2587%25D0%25B5%25D1%2581%25D0%25BA%25D0%25B8%25D0%25B5-%25D0%25BF%25D1%2580%25D0%25B8%25D0%25BC%25D0%25B5%25D1%2580%25D1%258B-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D1%258F-nmap%2f - %d0%9f%d1%80%d0%b0%d0%ba%d1%82%d0%b8%d1%87%d0%b5%d1%81%d0%ba%d0%b8%d0%b5%20%d0%bf%d1%80%d0%b8%d0%bc%d0%b5%d1%80%d1%8b%20%d0%b8%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f%20nmap by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

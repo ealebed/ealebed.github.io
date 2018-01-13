@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Что делать, когда результат выполнения df и du отличается?"/>
+  <meta name="twitter:description" content="Известны случаи, когда вывод команды df значительно отличается от вывода команды du. Чаще всего такое случается с файлами логов — давайте разберемся с этим вопросом на конкретном примере!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Что делать, когда результат выполнения df и du отличается? &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Что делать, когда результат выполнения df и du отличается?
+                    </h1>
+                    <h2 class="headline">
+                    Jan 7, 2018 15:05
+                    · 274 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/df">df</a>
+                          
+                              <a href="https://ealebed.github.io/tags/du">du</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Известны случаи, когда <strong>вывод команды <code>df</code> значительно отличается от вывода команды <code>du</code></strong>. Чаще всего такое случается с файлами логов — давайте разберемся с этим вопросом на конкретном примере!</p>
+
+<p></p>
+
+<p>Итак, результат выполнения <code>df</code> выглядит так:</p>
+
+<pre><code>df -h | grep log
+/dev/mapper/sata-log           50G  9.0G   41G  19% /var/log
+</code></pre>
+
+<p>При этом результат выполнения <code>du</code> в каталоге <code>/var/log</code> следующий:</p>
+
+<pre><code>du -h
+4.0K	./chkrootkit
+1.4G	./sphinx
+144K	./zabbix
+224K	./apt
+12K	./fsck
+44K	./munin
+84K	./mysql
+416K	./exim4
+48K	./ConsoleKit
+20K	./gearman-job-server
+4.0K	./sysstat
+14M	./installer/cdebconf
+15M	./installer
+44K	./newrelic
+136K	./corosync
+4.0K	./ntpstats
+1.5G	.
+</code></pre>
+
+<p>С помощью команды <a href="https://letsclearitup.com.ua/ubuntu/prakticheskie-primeryi-ispolzovaniya-lsof.html"><code>lsof</code></a> посмотрим какие файлы в каталоге <code>/var/log</code> еще используются процессами, хотя на самом деле были удалены:</p>
+
+<pre><code>lsof | grep /var/log | grep deleted
+gearmand   2755             gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
+gearmand   2755  2759       gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
+gearmand   2755  2760       gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
+gearmand   2755  2761       gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
+gearmand   2755  2762       gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
+gearmand   2755  2763       gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
+gearmand   2755  2764       gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
+</code></pre>
+
+<p>Зная PID процесса (2755), который использует «удаленные» файлы, мы можем узнать файловый дескриптор этого «удаленного» файла:</p>
+
+<pre><code>find /proc/2755/fd -ls | grep  '(deleted)'
+562637320    0 l-wx------   1 gearman  gearman        64 Jul 20 09:14 /proc/2755/fd/4 -&gt; /var/log/gearman-job-server/gearman.log.1\ (deleted)
+</code></pre>
+
+<p>Для очистки (truncate) содержимого файла следует использовать команду <code>cat /dev/null &gt; /proc/$pid/fd/$fd</code>, где <code>$pid</code> и <code>$fd</code> соответственно PID процесса (2755) и файловый дескриптор (4):</p>
+
+<pre><code>cat /dev/null &gt; /proc/2755/fd/4
+</code></pre>
+
+<p>После проделанных действий проверим результат выполнения <code>df</code>:</p>
+
+<pre><code>df -h | grep log
+/dev/mapper/sata-log           50G  1.5G   48G   3% /var/log
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D1%2587%25D1%2582%25D0%25BE-%25D0%25B4%25D0%25B5%25D0%25BB%25D0%25B0%25D1%2582%25D1%258C-%25D0%25BA%25D0%25BE%25D0%25B3%25D0%25B4%25D0%25B0-%25D1%2580%25D0%25B5%25D0%25B7%25D1%2583%25D0%25BB%25D1%258C%25D1%2582%25D0%25B0%25D1%2582-%25D0%25B2%25D1%258B%25D0%25BF%25D0%25BE%25D0%25BB%25D0%25BD%25D0%25B5%25D0%25BD%25D0%25B8%25D1%258F-df-%25D0%25B8-du-%25D0%25BE%25D1%2582%25D0%25BB%25D0%25B8%25D1%2587%25D0%25B0%25D0%25B5%25D1%2582%25D1%2581%25D1%258F%2f - %d0%a7%d1%82%d0%be%20%d0%b4%d0%b5%d0%bb%d0%b0%d1%82%d1%8c%2c%20%d0%ba%d0%be%d0%b3%d0%b4%d0%b0%20%d1%80%d0%b5%d0%b7%d1%83%d0%bb%d1%8c%d1%82%d0%b0%d1%82%20%d0%b2%d1%8b%d0%bf%d0%be%d0%bb%d0%bd%d0%b5%d0%bd%d0%b8%d1%8f%20df%20%d0%b8%20du%20%d0%be%d1%82%d0%bb%d0%b8%d1%87%d0%b0%d0%b5%d1%82%d1%81%d1%8f%3f by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

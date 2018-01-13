@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Let’s Encrypt и Nginx: получаем максимум от ssllabs.com и securityheaders.io"/>
+  <meta name="twitter:description" content="Когда-то поддержка SSL-шифрования сервисами позиционировалась как «желательная» (nice-to-have feature), но не так давно она перешла в разряд «обязательных» (must-have). Пожалуй, переломный момент наступил когда Google начал использовать HTTPS в качестве фактора ранжирования в своей поисковой выдаче.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Let’s Encrypt и Nginx: получаем максимум от ssllabs.com и securityheaders.io &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Let’s Encrypt и Nginx: получаем максимум от ssllabs.com и securityheaders.io
+                    </h1>
+                    <h2 class="headline">
+                    Jan 9, 2018 11:14
+                    · 436 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/nginx">nginx</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ssl">ssl</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Когда-то поддержка SSL-шифрования сервисами позиционировалась как «желательная» (nice-to-have feature), но не так давно она перешла в разряд «обязательных» (must-have). Пожалуй, переломный момент наступил когда <a href="https://ssl.com.ua/clients/knowledgebase.php?action=displayarticle&amp;id=48">Google начал использовать HTTPS в качестве фактора ранжирования в своей поисковой выдаче</a>.</p>
+
+<p></p>
+
+<p>Однако время не стоит на месте — требования к безопасности меняются, повсеместно внедряется <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-openssl-1-0-2-dlya-http2-0.html">http2.0</a>, разрабатываются <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-podderzhkoy-brotli.html">новые алгоритмы сжатия</a> и уже недостаточно просто подключить SSL-сертификат на сайте. Что нужно сделать чтобы получить максимальную оценку от сервисов <a href="https://www.ssllabs.com/ssltest/">ssllabs.com</a> и <a href="https://securityheaders.io/">securityheaders.io</a> — давайте разберемся!</p>
+
+<p><strong>Примечание.</strong> Будьте внимательны и выполняйте предложенные действия на свой страх и риск.</p>
+
+<p>Считаем, что:</p>
+
+<ul>
+<li>у вас есть SSL-сертификат (от Let’s Encrypt или платный), о том как получить бесплатный сертификат и подключить его в Nginx читайте <a href="https://letsclearitup.com.ua/debian/nastroyka-nginx-ssl-ot-let-s-encrypt-na-debian-8.html">здесь</a> или <a href="https://letsclearitup.com.ua/ubuntu/nastroyka-nginx-ssl-ot-let-s-encrypt-variant-2-elegantnyiy.html">здесь</a>;</li>
+<li>у вас установлена версия Nginx с <a href="https://letsclearitup.com.ua/debian/kak-vklyuchit-http2-0-v-nginx.html">поддержкой http2.0</a>;</li>
+<li>желательно, чтобы ваша версия Nginx <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-openssl-1-0-2-dlya-http2-0.html">поддерживала APLN</a> (Application-Layer Protocol Negotiation);</li>
+<li>не повредит, если вы стараетесь быть «в теме» и добавили <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-podderzhkoy-brotli.html">поддержку модуля ngx_brotli</a> в Nginx.</li>
+</ul>
+
+<p>Итак, приступим. Ранее мы договаривались для удобства настройки хранить все специфические для SSL параметры в конфигурационном файле <code>/etc/nginx/ssl/ssl.conf</code> и с помощью директивы <code>include</code> подключать эти настройки в блоках server.</p>
+
+<p>Сейчас конфигурационный файл <code>/etc/nginx/ssl/ssl.conf</code> выглядит следующим образом:</p>
+
+<pre><code>ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+ssl_prefer_server_ciphers on;
+ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+ssl_ciphers &quot;EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4&quot;;
+ssl_session_timeout 1h;
+ssl_session_cache shared:SSL:128m;
+ssl_stapling on;
+ssl_stapling_verify on;
+ 
+resolver 127.0.0.1 valid=300s;
+resolver_timeout 10s;
+</code></pre>
+
+<p>Перед тем, как добавить новые параметры в этот файл, давайте изменим два уже существующих. Параметр <code>ssl_protocols</code> меняем на:</p>
+
+<pre><code>ssl_protocols TLSv1.2;
+</code></pre>
+
+<p>а параметр <code>ssl_ciphers</code> заменим на:</p>
+
+<pre><code>ssl_ciphers EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
+</code></pre>
+
+<p>Этими действиями мы усилили безопасность нашего сайта, но и запретили доступ к нему из старых браузеров (<a href="https://en.wikipedia.org/wiki/Template:TLS/SSL_support_history_of_web_browsers">подробнее о поддержке браузеров</a>). Следует хорошо изучить вопрос и точно знать, какую часть аудитории вы отсекаете такими настройками.</p>
+
+<p>Далее добавим несколько новых параметров — заголовков, которые будет добавлять Nginx, при ответе клиенту:</p>
+
+<pre><code>...
+    add_header Strict-Transport-Security max-age=15768000;
+    add_header Content-Security-Policy &quot;default-src 'self'; script-src https: 'self' 'unsafe-inline' 'unsafe-eval'; object-src https: 'self'; style-src https: 'self' 'unsafe-inline'; connect-src https: 'self'; frame-src https:; font-src https: data:; img-src data: *;&quot;;
+    add_header Public-Key-Pins 'pin-sha256=&quot;LQNaYu41ymuFBkht845oLTrkb4cPSaCIPphbJsZD8zk=&quot;; pin-sha256=&quot;SCq+r/MQCGRX6c/8OAszCPvJNITAJK//ekrlXOO7pcY=&quot;; pin-sha256=&quot;nGgctXlFLbcmoOfWZ7pQE0fB3q7GWa+FNGYkoKgkhoU=&quot;; max-age=5184000';
+    add_header X-Frame-Options &quot;SAMEORIGIN&quot; always;
+    add_header X-Xss-Protection &quot;1; mode=block&quot; always;
+    add_header X-Content-Type-Options &quot;nosniff&quot; always;
+...
+</code></pre>
+
+<p>Подробности и нюансы использования данных заголовков великолепно описал <a href="https://securityheaders.io/about/">Scott Helme</a>, от себя могу добавить только что самым неоднозначным и непростым в настройке из них является <code>add_header Public-Key-Pins ...</code> — в его правильной настройке мне помогли материалы из блогов <a href="https://www.rivy.org/2015/12/hpkp-letsencrypt/">Thomas Elsen</a>, <a href="https://ithenrik.com/blog/posts/activating-http-public-key-pinning-hpkp-on-lets-encrypt">Henrik Lilleengen</a> и <a href="https://jkphl.is/articles/certbot-http-public-key-pinning-hpkp/">Joschi Kuphal</a>, а после получения максимальной оценки от <a href="https://securityheaders.io/">securityheaders.io</a> я временно отключил его.</p>
+
+<p>После внесенных изменений перечитываем конфигурацию Nginx:</p>
+
+<pre><code>nginx -s reload
+</code></pre>
+
+<p>И проверяем сайт на ресурсах, указанных в начале статьи. На <a href="https://securityheaders.io/">securityheaders.io</a> вполне можно получить и оценку A+, если в заголовке <code>add_header Content-Security-Policy</code> убрать значение <code>'unsafe-inline'</code> из секции <code>script-src</code>, но тогда возникают проблемы с отображением рекламных баннеров на сайте.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2flets-encrypt-%25D0%25B8-nginx-%25D0%25BF%25D0%25BE%25D0%25BB%25D1%2583%25D1%2587%25D0%25B0%25D0%25B5%25D0%25BC-%25D0%25BC%25D0%25B0%25D0%25BA%25D1%2581%25D0%25B8%25D0%25BC%25D1%2583%25D0%25BC-%25D0%25BE%25D1%2582-ssllabs.com-%25D0%25B8-securityheaders.io%2f - Let%e2%80%99s%20Encrypt%20%d0%b8%20Nginx%3a%20%d0%bf%d0%be%d0%bb%d1%83%d1%87%d0%b0%d0%b5%d0%bc%20%d0%bc%d0%b0%d0%ba%d1%81%d0%b8%d0%bc%d1%83%d0%bc%20%d0%be%d1%82%20ssllabs.com%20%d0%b8%20securityheaders.io by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

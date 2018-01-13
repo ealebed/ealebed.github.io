@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Шпаргалка по утилите mysqldump"/>
+  <meta name="twitter:description" content="С помощью утилиты mysqldump можно получать дамп содержимого одной или нескольких баз данных — по сути делать резервную копию (бекап) баз данных. Развернуть базу данных из полученного дампа (sql-файла) можно также с помощью данной утилиты.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Шпаргалка по утилите mysqldump &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Шпаргалка по утилите mysqldump
+                    </h1>
+                    <h2 class="headline">
+                    Jan 4, 2018 10:03
+                    · 243 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/mysql">mysql</a>
+                          
+                              <a href="https://ealebed.github.io/tags/backup">backup</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>С помощью <strong>утилиты mysqldump</strong> можно получать дамп содержимого одной или нескольких баз данных — по сути делать резервную копию (бекап) баз данных. Развернуть базу данных из полученного дампа (sql-файла) можно также с помощью данной утилиты.</p>
+
+<p></p>
+
+<p>Давайте разберемся с основными параметрами и синтаксисом утилиты!</p>
+
+<p>Синтаксис команды следующий:</p>
+
+<pre><code>mysqldump [параметры] [база_данных] &gt; /[директория_для_дампа]/[имя_дампа].sql
+</code></pre>
+
+<p>Обязательными параметрами являются имя пользователя и пароль. Если пароль не указать в явном виде (с помощью ключа <code>-pPASSWORD</code>), то его необходимо будет ввести с клавиатуры.</p>
+
+<p>С полным перечнем параметров можно ознакомиться с помощью справки (<code>man mysqldump</code> в консоли Unix) или запустив <code>mysqldump --help</code>.</p>
+
+<p>Несколько наиболее часто встречающихся примеров использования <strong>утилиты mysqldump</strong>:</p>
+
+<ul>
+<li>создание дампа одной базы данных на удаленном хосте:</li>
+</ul>
+
+<pre><code>mysqldump -uroot -h8.8.8.8 -p database &gt; /tmp/database.sql
+</code></pre>
+
+<ul>
+<li>создание дампа одной базы данных на локальном хосте:</li>
+</ul>
+
+<pre><code>mysqldump -uroot -p database &gt; /tmp/database.sql
+</code></pre>
+
+<ul>
+<li>создание дампа нескольких баз данных:</li>
+</ul>
+
+<pre><code>mysqldump -uroot -p -B database1 database2 database3 &gt; /tmp/databases.sql
+</code></pre>
+
+<ul>
+<li>создание дампа всех баз данных:</li>
+</ul>
+
+<pre><code>mysqldump -uroot -p -A &gt; /tmp/databases.sql
+</code></pre>
+
+<ul>
+<li>создание дампа + сжатие полученного дампа в архив gz:</li>
+</ul>
+
+<pre><code>mysqldump uroot -p -A | gzip &gt; /tmp/databases.sql
+</code></pre>
+
+<ul>
+<li>развертывание sql-дампа базы:</li>
+</ul>
+
+<pre><code>mysql -uroot -p database &lt; /tmp/database.sql
+</code></pre>
+
+<ul>
+<li>развертывание gz архива с sql-дампом одной базы:</li>
+</ul>
+
+<pre><code>zcat /tmp/database.sql.gz | mysql -uroot -p database
+</code></pre>
+
+<p>развертывание gz архива с sql-дампом всех баз:</p>
+
+<pre><code>zcat /tmp/database.sql.gz | mysql -uroot -p
+</code></pre>
+
+<p>Пример bash-скрипта для создания резервной копии баз данных <strong>утилитой mysqldump</strong>:</p>
+
+<pre><code>#!/bin/bash
+DATE=&quot;$(date +%Y%m%d)&quot;
+logger -t mysql-backup 'start mysql backup'
+/usr/bin/mysqldump --user=USER --password=PASSWORD --all-databases | gzip &gt; /usr/local/backup/mysql$DATE.sql.gz 2&gt;&amp;1
+logger -t mysql-backup 'finish mysql backup'
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D1%2588%25D0%25BF%25D0%25B0%25D1%2580%25D0%25B3%25D0%25B0%25D0%25BB%25D0%25BA%25D0%25B0-%25D0%25BF%25D0%25BE-%25D1%2583%25D1%2582%25D0%25B8%25D0%25BB%25D0%25B8%25D1%2582%25D0%25B5-mysqldump%2f - %d0%a8%d0%bf%d0%b0%d1%80%d0%b3%d0%b0%d0%bb%d0%ba%d0%b0%20%d0%bf%d0%be%20%d1%83%d1%82%d0%b8%d0%bb%d0%b8%d1%82%d0%b5%20mysqldump by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

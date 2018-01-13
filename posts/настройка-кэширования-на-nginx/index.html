@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Настройка кэширования на Nginx"/>
+  <meta name="twitter:description" content="Суть кеширования на стороне сервера заключается в том, чтобы избавиться от постоянного запуска одних и те же скриптов (как пример, генерации ленты постов WordPress), выполнение которых может иногда занимать целые секунды.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Настройка кэширования на Nginx &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Настройка кэширования на Nginx
+                    </h1>
+                    <h2 class="headline">
+                    Jan 9, 2018 13:55
+                    · 497 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/nginx">nginx</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Суть кеширования на стороне сервера заключается в том, чтобы избавиться от постоянного запуска одних и те же скриптов (как пример, генерации ленты постов WordPress), выполнение которых может иногда занимать целые секунды.</p>
+
+<p></p>
+
+<p>С использованием кэширования приложение сгенерирует страницу один раз и сохранит результат в память на какое-то время (называемое TTL). Пока не истечет TTL, клиент будет получать сохраненную в памяти версию страницы. Давайте разберемся с <strong>настройкой кэширования на Nginx</strong>!</p>
+
+<p>Преимущества <strong>кэширования Nginx</strong> по сравнению с Varnish состоят прежде всего в простоте настройки. Оптимально использовать кэширование для сайтов с контентом, который доступен неавторизованным пользователям (публичный).</p>
+
+<p>Считаем, что Nginx у нас <a href="https://letsclearitup.com.ua/debian/ustanovka-nginx-versii-1-6-v-debian-wheezy.html">установлен из пакетов</a> (или <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-podderzhkoy-brotli.html">собран из исходников</a>) и настроен.</p>
+
+<p>Для <strong>включения кэширования в Nginx</strong> сначала необходимо определить максимальный размер кеша (общий размер всех страниц в кеше не может превышать это значение). Сделать это можно в конфигурационном файле <code>/etc/nginx/nginx.conf</code> с помощью директивы в секции <code>http</code>:</p>
+
+<pre><code>...
+proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=all:32m;
+...
+</code></pre>
+
+<p>Не забываем создать каталог для кеширования, который мы указали выше:</p>
+
+<pre><code>mkdir /var/cache/nginx
+</code></pre>
+
+<p>Далее следует изменить настройки сайта, создав еще одну секцию server. Переносим наш основной сервер на другой порт (например, 81), а на стандартном 80 у нас теперь будет работать кэширующий хост, который либо будет отдавать данные из кэша, либо перенаправлять запросы на основной хост. Это может выглядеть примерно так:</p>
+
+<pre><code>server {
+	listen 80;
+ 
+	location / {
+		proxy_pass http://127.0.0.1:81/;
+		proxy_cache all;
+		proxy_cache_valid any 1h; # Кешируем на 1 час 
+	
+}
+</code></pre>
+
+<p>Для основного сервера:</p>
+
+<pre><code>server {
+	listen 81;
+ 
+	location / {
+		try_files $uri $uri/ /index.php?$query_string;
+	}
+ 
+	location = /favicon.ico { access_log off; log_not_found off; }
+	location = /robots.txt  { access_log off; log_not_found off; }
+ 
+	access_log off;
+	access_log /var/log/nginx/letsclearitup.access.log;
+	error_log  /var/log/nginx/letsclearitup.error.log error;
+ 
+	location ~ \.php$ {
+		fastcgi_split_path_info ^(.+\.php)(/.+)$;
+		include fastcgi_params;
+		fastcgi_index index.php;
+		fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+		fastcgi_pass unix:/run/php/letsclearitup.sock;
+		fastcgi_hide_header X-Powered-By;
+	}
+ 
+	location /status {
+		fastcgi_pass unix:/run/php/letsclearitup.sock;
+ 		include fastcgi.conf;
+		allow 127.0.0.1;
+		deny all;
+	}
+}
+</code></pre>
+
+<p>Если у пользователя установлены какие-либо Cookies, кэширование можно отключить:</p>
+
+<pre><code>server {
+	listen 80;
+ 
+	location / {
+		if ($http_cookie ~* &quot;.+&quot; ) {
+			set $do_not_cache 1;
+		}
+		proxy_pass http://127.0.0.1:81/;
+		proxy_cache all;
+		proxy_cache_valid any 1h; # Кешируем на 1 час 
+	}
+}
+</code></pre>
+
+<p>Есть смысл включать кэширование также и для ошибочных запросов, чтобы снизить нагрузку от обращений к неработающей части сайта:</p>
+
+<pre><code>server {
+	listen 80;
+ 
+	location / {
+		if ($http_cookie ~* &quot;.+&quot; ) {
+			set $do_not_cache 1;
+		}
+		proxy_pass http://127.0.0.1:81/;
+		proxy_cache all;
+		proxy_cache_valid 404 502 503 1m;
+		proxy_cache_valid any 1h; # Кешируем на 1 час 
+	}
+}
+</code></pre>
+
+<p>У Nginx есть возможность кеширования ответов от <code>fastcgi</code>. Чтобы использовать данную возможность, в секции http файла <code>/etc/nginx/nginx.conf</code> добавляем:</p>
+
+<pre><code>...
+fastcgi_cache_path /var/cache/fpm levels=1:2 keys_zone=fcgi:100m;
+fastcgi_cache_key &quot;$scheme$request_method$host$request_uri&quot;;
+...
+</code></pre>
+
+<p>Создаем каталог:</p>
+
+<pre><code>mkdir /var/cache/fpm
+</code></pre>
+
+<p>После чего в настройках сайта (в секции server для основного хоста) добавим такие строки:</p>
+
+<pre><code>server {
+	listen 81;
+...
+	location ~ \.php$ {
+		fastcgi_split_path_info ^(.+\.php)(/.+)$;
+		include fastcgi_params;
+		fastcgi_index index.php;
+		fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+		fastcgi_pass unix:/run/php/letsclearitup.sock;
+		fastcgi_hide_header X-Powered-By;
+		fastcgi_cache fcgi;
+		fastcgi_cache_valid 200 60m; # кешировать ответы с кодом 200 на 1 час 
+	}
+...
+}
+</code></pre>
+
+<p><strong>Настройка кэширования на Nginx</strong> довольно проста, но если все сделать правильно, то можно получить десятикратное ускорение сайта и неплохую экономию ресурсов.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25BD%25D0%25B0%25D1%2581%25D1%2582%25D1%2580%25D0%25BE%25D0%25B9%25D0%25BA%25D0%25B0-%25D0%25BA%25D1%258D%25D1%2588%25D0%25B8%25D1%2580%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D1%258F-%25D0%25BD%25D0%25B0-nginx%2f - %d0%9d%d0%b0%d1%81%d1%82%d1%80%d0%be%d0%b9%d0%ba%d0%b0%20%d0%ba%d1%8d%d1%88%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f%20%d0%bd%d0%b0%20Nginx by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

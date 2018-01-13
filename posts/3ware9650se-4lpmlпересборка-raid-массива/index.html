@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="3ware 9650SE-4LPML — пересборка RAID-массива"/>
+  <meta name="twitter:description" content="На днях с одного из серверов пришло оповещение о развалившемся RAID-массиве. Давайте разберемся как исправить данную проблему и пересобрать RAID-массив на конкретном примере контроллера 3ware 9650SE-4LPML.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>3ware 9650SE-4LPML — пересборка RAID-массива &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        3ware 9650SE-4LPML — пересборка RAID-массива
+                    </h1>
+                    <h2 class="headline">
+                    Jan 4, 2018 17:29
+                    · 484 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/hardware">hardware</a>
+                          
+                              <a href="https://ealebed.github.io/tags/raid">raid</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>На днях с одного из серверов пришло оповещение о развалившемся RAID-массиве. Давайте разберемся как исправить данную проблему и <strong>пересобрать RAID-массив</strong> на конкретном примере <strong>контроллера 3ware 9650SE-4LPML</strong>.</p>
+
+<p></p>
+
+<p>Прежде всего подключаемся к серверу и проверяем состояние RAID-массива:</p>
+
+<pre><code>tw_cli /c0 show
+
+Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
+------------------------------------------------------------------------------
+u0    RAID-1    DEGRADED       -       -       -       465.651   ON     OFF    
+
+Port   Status           Unit   Size        Blocks        Serial
+---------------------------------------------------------------
+p0     NOT-PRESENT      -      -           -             -
+p1     NOT-PRESENT      -      -           -             -
+p2     DEGRADED         u0     465.76 GB   976773168     WD-WMAYP6626070     
+p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
+</code></pre>
+
+<p>Так и есть, статус нашего RAID-массива <code>DEGRADED</code>. Удалим проблемный диск, подключенный ко второму порту <strong>контроллера 3ware 9650SE-4LPML</strong> из массива:</p>
+
+<pre><code>tw_cli /c0/p2 remove
+Removing /c0/p2 will take the disk offline.
+Do you want to continue ? Y|N [N]: y
+Removing port /c0/p2 ... Done.
+</code></pre>
+
+<p>Еще раз проверяем состояние RAID-массива:</p>
+
+<pre><code>tw_cli /c0 show
+
+Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
+------------------------------------------------------------------------------
+u0    RAID-1    DEGRADED       -       -       -       465.651   ON     OFF    
+
+Port   Status           Unit   Size        Blocks        Serial
+---------------------------------------------------------------
+p0     NOT-PRESENT      -      -           -             -
+p1     NOT-PRESENT      -      -           -             -
+p2     NOT-PRESENT      -      -           -             -
+p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
+</code></pre>
+
+<p>Проблемный диск отсутствует. В данный момент мы его не будем менять, но точно так же, как и при установке нового жесткого диска нужно выполнить <code>rescan</code>:</p>
+
+<pre><code>tw_cli /c0 rescan
+Rescanning controller /c0 for units and drives ...Done.
+Found the following unit(s): [none].
+Found the following drive(s): [/c0/p2].
+</code></pre>
+
+<p>Проверяем состояние RAID-массива:</p>
+
+<pre><code>tw_cli /c0 show
+
+Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
+------------------------------------------------------------------------------
+u0    RAID-1    DEGRADED       -       -       -       465.651   ON     OFF    
+
+Port   Status           Unit   Size        Blocks        Serial
+---------------------------------------------------------------
+p0     NOT-PRESENT      -      -           -             -
+p1     NOT-PRESENT      -      -           -             -
+p2     OK               -      465.76 GB   976773168     WD-WMAYP6626070     
+p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
+</code></pre>
+
+<p>Как видим, у нас появился подключенный ко второму порту <strong>контроллера 3ware 9650SE-4LPML</strong> жесткий диск.</p>
+
+<p><strong>Примечание.</strong> Обратите внимание, что у «нового» диска в графе <code>Unit</code> должен быть прочерк.</p>
+
+<p>Теперь можно запустить <strong>пересборку RAID-массива</strong>:</p>
+
+<pre><code>tw_cli /c0/u0 start rebuild disk=2
+Sending rebuild start request to /c0/u0 on 1 disk(s) [2] ... Done.
+</code></pre>
+
+<p>Через некоторое время проверяем состояние RAID-массива:</p>
+
+<pre><code>tw_cli /c0 show
+
+Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
+------------------------------------------------------------------------------
+u0    RAID-1    REBUILDING     4%      -       -       465.651   ON     OFF    
+
+Port   Status           Unit   Size        Blocks        Serial
+---------------------------------------------------------------
+p0     NOT-PRESENT      -      -           -             -
+p1     NOT-PRESENT      -      -           -             -
+p2     DEGRADED         u0     465.76 GB   976773168     WD-WMAYP6626070     
+p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
+</code></pre>
+
+<p>Видим, что статус RAID-массива теперь <code>REBUILDING</code> вместо <code>DEGRADED</code>, как было ранее и рядом указан прогресс (4%). После завершения пересборки статус RAID-массива будет следующим:</p>
+
+<pre><code>tw_cli /c0 show
+
+Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
+------------------------------------------------------------------------------
+u0    RAID-1    OK             -       -       -       465.651   ON     OFF    
+
+Port   Status           Unit   Size        Blocks        Serial
+---------------------------------------------------------------
+p0     NOT-PRESENT      -      -           -             -
+p1     NOT-PRESENT      -      -           -             -
+p2     OK               u0     465.76 GB   976773168     WD-WMAYP6626070     
+p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f3ware9650se-4lpml%25D0%25BF%25D0%25B5%25D1%2580%25D0%25B5%25D1%2581%25D0%25B1%25D0%25BE%25D1%2580%25D0%25BA%25D0%25B0-raid-%25D0%25BC%25D0%25B0%25D1%2581%25D1%2581%25D0%25B8%25D0%25B2%25D0%25B0%2f - 3ware%209650SE-4LPML%20%e2%80%94%20%d0%bf%d0%b5%d1%80%d0%b5%d1%81%d0%b1%d0%be%d1%80%d0%ba%d0%b0%20RAID-%d0%bc%d0%b0%d1%81%d1%81%d0%b8%d0%b2%d0%b0 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="GitLab CI: Часть 4, этап spawn в .gitlab-ci.yml"/>
+  <meta name="twitter:description" content="В предыдущей статье цикла о настройке GitLab CI мы познакомились со специальным файлом .gitlab-ci.yml, в котором описываются инструкции для раннеров, рассмотрели несколько примеров и подготовили «скелет» для внедрения continuous integration в проекте.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>GitLab CI: Часть 4, этап spawn в .gitlab-ci.yml &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        GitLab CI: Часть 4, этап spawn в .gitlab-ci.yml
+                    </h1>
+                    <h2 class="headline">
+                    Jan 9, 2018 16:25
+                    · 623 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab">gitlab</a>
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab-ci">gitlab ci</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В <a href="https://letsclearitup.com.ua/gitlab/gitlab-ci-chast-3-vvedenie-v-gitlab-ci-yml.html">предыдущей статье</a> цикла о настройке <strong>GitLab CI</strong> мы познакомились со специальным файлом <code>.gitlab-ci.yml</code>, в котором описываются инструкции для раннеров, рассмотрели несколько примеров и подготовили «скелет» для внедрения continuous integration в проекте.</p>
+
+<p></p>
+
+<p>Как и обещал, каждый из этапов (<code>stage</code>) мы будем рассматривать отдельно, так что для начала давайте разберемся с этапом spawn из нашего файла <code>.gitlab-ci.yml</code>!</p>
+
+<p>Сразу стоит отметить, что названия этапов (<code>stage</code>) и задач (<code>jobs</code>) не являются зарезервированными или ключевыми словами, поэтому их можно называть как угодно (лишь бы вы понимали, что там написано).</p>
+
+<p>В данном случае самый первый этап из continuous integration я обозначил как <code>spawn</code> (порождение) — запуск всех контейнеров, необходимых при сборке проекта. В конфигурационном файле <code>.gitlab-ci.yml</code> этот этап выглядит следующим образом:</p>
+
+<pre><code>...
+spawn_containers:
+  stage: spawn
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - set -o allexport; . ./docker/.env.staging.lc
+    - docker-compose -f docker/docker-compose-build.yml up -d
+  only:
+    - develop
+    - docker
+...
+</code></pre>
+
+<p>Задачи, которые необходимо выполнить раннеру описываются в секции <code>script</code>. В нашем примере это две задачи — первая считывает переменные окружения из файла <code>/docker/.env.staging.lc</code>, вторая — создает и запускает контейнеры, описанные в конфигурационном файле <code>/docker/docker-compose-build.yml</code>.</p>
+
+<p><strong>Примечание.</strong> Обратите внимание, пути к конфигам указываются относительно корня проекта, ведь файл <code>.gitlab-ci.yml</code> должен лежать именно в корне проекта.</p>
+
+<p>Как оказалось в процессе тестирования, перед выполнением задач, описанных в секции <code>script</code> необходимо залогиниться в локальный Docker Registry, где хранятся нужные нам образы. Действия, которые необходимо выполнить перед основными задачами (из секции <code>script</code>) обозначить довольно легко с помощью ключевого слова <code>before_script</code>. Соответственно, действия которые выполняются после основных задач, должны описываться в секции <code>after_script</code>.</p>
+
+<p>Переменные <code>$CI_JOB_TOKEN</code> и <code>$CI_REGISTRY</code> — это специальные (предопределенные) переменные, весь список которых находится <a href="https://docs.gitlab.com/ce/ci/variables/">здесь</a>.</p>
+
+<p>С помощью ключевого слова <a href="https://docs.gitlab.com/ce/ci/yaml/#only-and-except"><code>only</code></a> мы также определяем для каких веток нужно производить все описанные действия (develop и docker), здесь можно также использовать регулярные выражения.</p>
+
+<p>Запускаемые контейнеры описаны в конфигурационном файле <code>docker-compose-build.yml</code> и выглядят так:</p>
+
+<pre><code>version: '2'
+services:
+### Applications Code Container #############################
+    applications:
+        container_name: application
+        image: tianon/true
+        volumes:
+            - ../:${PROJECT_PATH}
+### Workspace Utilities Container ###########################
+    workspace:
+        container_name: workspace
+        image: registry.gitlab.lc:5000/develop/ed:workspace-ed-sq
+        volumes_from:
+            - applications
+### PHP-FPM Container #######################################
+    php-fpm:
+        container_name: php-fpm
+        image: registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq
+        volumes_from:
+            - applications
+        expose:
+            - &quot;9000&quot;
+        links:
+            - workspace
+### Node+npm Container ######################################
+    node:
+        container_name: node
+        image: registry.gitlab.lc:5000/develop/ed:node-npm-ed-sq
+        volumes_from:
+            - applications
+        ports:
+            - &quot;${NODE_PORT}:${NODE_PORT}&quot;
+### Redis Container #########################################
+    redis:
+        container_name: redis
+        image: registry.gitlab.lc:5000/develop/ed:redis-ed-sq
+        volumes:
+            - redis:/data
+        ports:
+            - &quot;${REDIS_PORT}:${REDIS_PORT}&quot;
+        links:
+            - php-fpm
+### Memcached Container #####################################
+    memcached:
+        container_name: memcached
+        image: registry.gitlab.lc:5000/develop/ed:memcached-ed-sq
+        volumes:
+            - memcached:/var/lib/memcached
+        ports:
+            - &quot;${MC_PORT}:${MC_PORT}&quot;
+        links:
+            - php-fpm
+### Websocket Container #####################################
+    websocket:
+        container_name: websocket
+        restart: always
+        image: registry.gitlab.lc:5000/develop/ed:websocket-ed-sq
+        volumes_from:
+            - applications
+        ports:
+            - &quot;${WS_PORT}:${WS_PORT}&quot;
+### Volumes Setup ###########################################
+volumes:
+    memcached:
+        driver: &quot;local&quot;
+    redis:
+        driver: &quot;local&quot;
+</code></pre>
+
+<p>Все docker-образы были заранее собраны и загружены в локальный docker registry проекта. Самый первый запуск задачи <code>spawn_containers</code> в процессе continuous integration может занять до нескольких минут (раннер должен скачать образы), но при последующих запусках это время сократится до нескольких секунд.</p>
+
+<p>В моем случае, запуск контейнеров занимает 18 секунд, а на вкладке pipelines детали выполнения задачи выглядят следующим образом:</p>
+
+<pre><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
+Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
+Starting service registry.gitlab.lc/develop/ed:my-docker-dind ...
+Using locally found image version due to if-not-present pull policy
+Waiting for services to be up and running...
+Using locally found image version due to if-not-present pull policy
+Running on runner-9e68759f-project-8-concurrent-0 via c7662d5025ba...
+HEAD is now at 679227f2ed Merge branch 'feature/LK-7341' into 'develop'
+From http://gitlab.lc:10087/develop/ed
+  679227f2ed..635e14c14a  develop    -&gt; origin/develop
+Checking out 635e14c1 as develop...
+Skipping Git submodules setup
+$ docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+Login Succeeded
+$ set -o allexport; . ./docker/.env.staging.lc
+$ docker-compose -f docker/docker-compose-build.yml up -d
+Creating network &quot;docker_default&quot; with the default driver
+Creating application
+Creating websocket
+Creating workspace
+Creating node
+Creating php-fpm
+Creating redis
+Creating memcached
+Build succeeded
+</code></pre>
+
+<p>С первым этапом из файла <code>.gitlab-ci.yml</code> разобрались, в <a href="https://letsclearitup.com.ua/gitlab/gitlab-ci-chast-5-etap-build-v-gitlab-ci-yml-pervyiy-podhod.html">следующей статье</a> рассмотрим второй этап — процесс сборки проекта.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fgitlab-ci-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-4-%25D1%258D%25D1%2582%25D0%25B0%25D0%25BF-spawn-%25D0%25B2-.gitlab-ci.yml%2f - GitLab%20CI%3a%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%204%2c%20%d1%8d%d1%82%d0%b0%d0%bf%20spawn%20%d0%b2%20.gitlab-ci.yml by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

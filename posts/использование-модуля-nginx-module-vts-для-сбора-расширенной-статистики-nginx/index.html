@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Использование модуля nginx_module_vts для сбора расширенной статистики Nginx"/>
+  <meta name="twitter:description" content="Была поставлена задача замерять количество входящего/исходящего траффика для определенного сайта. Сделать это можно с помощью Nginx virtual host traffic status module (nginx-module-vts) — давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Использование модуля nginx_module_vts для сбора расширенной статистики Nginx &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Использование модуля nginx_module_vts для сбора расширенной статистики Nginx
+                    </h1>
+                    <h2 class="headline">
+                    Jan 11, 2018 08:37
+                    · 380 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/nginx">nginx</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Была поставлена задача замерять количество входящего/исходящего траффика для определенного сайта. Сделать это можно с помощью <strong>Nginx virtual host traffic status module</strong> (<code>nginx-module-vts</code>) — давайте разберемся!</p>
+
+<p></p>
+
+<p>Прежде всего, необходимо собрать Nginx с поддержкой модуля <code>nginx-module-vts</code> — мы уже многократно использовали самостоятельные сборки (<a href="https://letsclearitup.com.ua/debian/kak-vklyuchit-http2-0-v-nginx.html">с http2</a>, <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-openssl-1-0-2-dlya-http2-0.html">с APLN</a>, <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-podderzhkoy-brotli.html">с brotli</a>, <a href="https://letsclearitup.com.ua/nginx/peresborka-nginx-s-podderzhkoy-pagespeed.html">с PageSpeed</a> и <a href="https://letsclearitup.com.ua/debian/ispolzovanie-modulya-ngx_cache_purge-dlya-ochistki-kesha-fastcgi.html">с ngx_cache_purge</a>), поэтому никаких затруднений быть не должно.</p>
+
+<p>Скачиваем и распаковываем исходники актуальной версии Nginx:</p>
+
+<pre><code>cd /opt/ &amp;&amp; wget https://nginx.org/download/nginx-1.13.5.tar.gz &amp;&amp; tar xf nginx-1.13.5.tar.gz
+</code></pre>
+
+<p>Получаем код модуля <code>nginx-module-vts</code> актуальной версии:</p>
+
+<pre><code>curl -fSL https://github.com/vozlt/nginx-module-vts/archive/v0.1.15.tar.gz | tar xzf - -C /tmp
+</code></pre>
+
+<p>Находясь в каталоге с исходниками Nginx собираем его:</p>
+
+<pre><code>./configure --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx --modules-path=/usr/lib/nginx/modules \
+--conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log \
+--pid-path=/var/run/nginx.pid --lock-path=/var/run/nginx.lock --http-client-body-temp-path=/var/cache/nginx/client_temp \
+--http-proxy-temp-path=/var/cache/nginx/proxy_temp --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
+--http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
+--user=nginx --group=nginx --with-http_ssl_module --with-http_realip_module --with-http_addition_module \
+--with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_gunzip_module \
+--with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module \
+--with-http_stub_status_module --with-http_auth_request_module --with-threads --with-stream \
+--with-stream_ssl_module --with-http_slice_module --with-mail --with-mail_ssl_module --with-file-aio \
+--with-http_v2_module --with-cc-opt='-g -O2 -fstack-protector-strong -Wformat -Werror=format-security \
+-Wp,-D_FORTIFY_SOURCE=2' --with-ld-opt='-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed' \
+--add-module=/tmp/nginx-module-vts-0.1.15
+</code></pre>
+
+<pre><code>make
+</code></pre>
+
+<pre><code>make install
+</code></pre>
+
+<pre><code>service nginx restart
+</code></pre>
+
+<p>В секции <code>http</code> конфигурационного файла <code>/etc/nginx/nginx.conf</code> добавляем следующую строку:</p>
+
+<pre><code>...
+    vhost_traffic_status_zone;
+...
+</code></pre>
+
+<p>В настройки сайта (секция <code>server</code>) добавим еще один локейшн (это вариант базовой настройки, все доступные директивы и примеры использования <a href="https://github.com/vozlt/nginx-module-vts#use-cases">здесь</a>):</p>
+
+<pre><code>server {
+...
+  location /vhost_status {
+    vhost_traffic_status on;
+    vhost_traffic_status_display;
+    vhost_traffic_status_display_format html;
+  }
+...
+}
+</code></pre>
+
+<p>Применяем изменения:</p>
+
+<pre><code>nginx -s reload
+</code></pre>
+
+<p>Через некоторое время можно перейти по адресу http://имя_сервера/vhost_status и посмотреть на собранные данные.</p>
+
+<p>Статистика успешно собирается, но она ведется с момента старта веб-сервера Nginx. Если же нужно вывести данные за какой-то промежуток времени (час/день/неделя и т.д.), то следует перенаправлять данные метрики в систему мониторинга (например, <a href="https://letsclearitup.com.ua/debian/znakomstvo-s-prometheus-chast-1-ustanovka-i-nastroyka.html">Prometheus</a>) и на их основе строить дашборды/графики (например, в <a href="https://letsclearitup.com.ua/debian/grafana-deystvitelno-udobnyiy-dashbord.html">Grafana</a>).</p>
+
+<p>Экспортер метрик конечно же будем запускать в docker-контейнере. Более того, если вы уже настраивали <a href="https://letsclearitup.com.ua/monitoring/monitoring-docker-s-pomoshhyu-prometheus.html">мониторинг docker c помощью Prometheus</a>, то советую добавить описание еще одного сервиса (контейнера) в существующий файл <code>docker-compose.yml</code>:</p>
+
+<pre><code>version: '2'
+services:
+  ...
+  prodvtsexporter:
+    image: sophos/nginx-vts-exporter
+    container_name: prodvtsexporter
+    environment:
+      - NGINX_HOST=http://my.example.com/vhost_status/format/json
+    restart: unless-stopped
+    expose:
+      - 9913
+    ports:
+      - 9913:9913
+...
+</code></pre>
+
+<p>Обновляем сервисы из файла с помощью команды:</p>
+
+<pre><code>docker-compose up -d
+</code></pre>
+
+<p>В конфигурационный файл <code>prometheus.yml</code> (в debian-based дистрибутивах находится в каталоге <code>/etc/prometheus</code>) добавляем следующие строки:</p>
+
+<pre><code>- job_name: 'prod_nginx_vts_exporter'
+  static_configs:
+    - targets: ['prodvtsexporter:9913']
+</code></pre>
+
+<p>и перезапускаем <strong>Prometheus</strong> для применения изменений.</p>
+
+<p>Больше информации об экспортере можно найти <a href="https://github.com/hnlq715/nginx-vts-exporter">тут</a>, а готовый дашборд для Grafana находится <a href="https://grafana.com/dashboards/2949">здесь</a> (конечно же его придется доработать и расширить под свои нужды).</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D0%25B5-%25D0%25BC%25D0%25BE%25D0%25B4%25D1%2583%25D0%25BB%25D1%258F-nginx-module-vts-%25D0%25B4%25D0%25BB%25D1%258F-%25D1%2581%25D0%25B1%25D0%25BE%25D1%2580%25D0%25B0-%25D1%2580%25D0%25B0%25D1%2581%25D1%2588%25D0%25B8%25D1%2580%25D0%25B5%25D0%25BD%25D0%25BD%25D0%25BE%25D0%25B9-%25D1%2581%25D1%2582%25D0%25B0%25D1%2582%25D0%25B8%25D1%2581%25D1%2582%25D0%25B8%25D0%25BA%25D0%25B8-nginx%2f - %d0%98%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b5%20%d0%bc%d0%be%d0%b4%d1%83%d0%bb%d1%8f%20nginx_module_vts%20%d0%b4%d0%bb%d1%8f%20%d1%81%d0%b1%d0%be%d1%80%d0%b0%20%d1%80%d0%b0%d1%81%d1%88%d0%b8%d1%80%d0%b5%d0%bd%d0%bd%d0%be%d0%b9%20%d1%81%d1%82%d0%b0%d1%82%d0%b8%d1%81%d1%82%d0%b8%d0%ba%d0%b8%20Nginx by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-10-%D0%B0%D0%BB%D0%B8%D0%B0%D1%81%D1%8B-%D0%B4%D0%BB%D1%8F-%D1%87%D0%B0%D1%81%D1%82%D0%BE-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D1%8B%D1%85-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4/">Docker совет №10: Алиасы для часто используемых команд<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'your_google_analytics_id', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

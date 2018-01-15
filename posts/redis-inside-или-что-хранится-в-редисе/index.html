@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Redis Inside или что хранится в редисе?"/>
+  <meta name="twitter:description" content="На дашбордах в Grafana увидел заметный рост использования памяти Redis’ом (Total memory usage), и мне стало интересно узнать, что же хранится в БД.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="My blog">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Redis Inside или что хранится в редисе? &middot; ealebed.github.io</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Redis Inside или что хранится в редисе?
+                    </h1>
+                    <h2 class="headline">
+                    Jan 15, 2018 08:48
+                    · 797 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/redis">redis</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>На дашбордах в Grafana увидел заметный рост использования памяти Redis’ом (Total memory usage), и мне стало интересно узнать, <strong>что же хранится в БД</strong>.</p>
+
+<p></p>
+
+<p>Давайте разберемся и <strong>проанализируем содержимое <code>redis</code></strong> двумя способами (для верности)!</p>
+
+<p>На момент анализа БД redis занимала ~720 MB. Посмотреть что именно находится в redis’е можно с помощью утилиты Redis Desktop Manager, но мне также интересно узнать сколько какие ключи занимают в MB и процентном соотношении (данного функционала в RDM нет).</p>
+
+<p>На GitHub нашлось две утилиты, которые могут решить мою проблему. У каждой из них есть свои плюсы/минусы, у них совершенно разный принцип анализа содержимого БД и нет гарантий что результаты их выполнения будут 100% правильными — именно поэтому будем запускать обе утилиты и сравнивать результаты.</p>
+
+<p>Первая называется <a href="https://github.com/snmaynard/redis-audit">Redis-audit</a> — она выбирает для анализа часть БД redis, по умолчанию равную 10% от всего объема (эту часть разработчик называет sample и ее можно изменять с помощью опции <code>-s/--sample</code>). Из выбранного набора (sample) утилита группирует ключи по именам и выводит статистику по группам ключей.</p>
+
+<p>Разработчик не рекомендует запускать данную утилиту на «живой» БД <code>redis</code>:</p>
+
+<p><em>DO NOT run this with a lot of keys on a production master database. <code>Keys *</code> will block for a long time and cause timeouts</em></p>
+
+<p>Мы прислушаемся к его совету и запустим redis в docker-контейнере на локальном компьютере, предварительно «подсунув» ему файл <code>dump.rdb</code> c «живой» базы. При старте контейнера <code>redis</code> восстановит данные из файла в память и ними можно будет работать.</p>
+
+<p>Файл <code>docker-compose.yml</code> будет выглядеть так:</p>
+
+<pre><code>version: '3.1'
+services:
+  rds:
+    container_name: rds
+    image: redis:4.0-alpine
+    command:
+      - 'redis-server'
+      - '--loglevel warning'
+      - '--databases 2'
+      - '--maxmemory 800mb'
+      - '--requirepass password'
+    volumes:
+      - ./db:/data
+    ports:
+      - &quot;6379:6379&quot;
+</code></pre>
+
+<p>В папку db, находящуюся в одном каталоге с конфигурационным файлом <code>docker-compose.yml</code> ложим дамп базы (<code>dump.rdb</code>) и запускаем контейнер командой:</p>
+
+<pre><code>docker-compose up -d
+</code></pre>
+
+<p>Устанавливаем утилиту согласно инструкции в <a href="https://github.com/snmaynard/redis-audit/blob/master/README.md">Readme.md</a> проекта и запускаем анализатор с помощью команды (в опциях передаем хост / порт / пароль / номер БД / максимальное кол-во ключей в БД):</p>
+
+<pre><code>./redis-audit.rb -h 192.168.0.34 -p 6379 -a password -d 0 -s 2900606
+</code></pre>
+
+<p>Прогресс и результат выполнения команды в консоли будет выглядеть примерно так (вывод сокращен):</p>
+
+<pre><code>Auditing 192.168.0.34:6379 dbnum:0 sampling 2900606 keys
+Getting a list of all 2899366 keys...
+Auditing 2899366 keys...
+289936 keys sampled - 10% complete - 2017-12-04 14:36:00 +0200
+579872 keys sampled - 20% complete - 2017-12-04 14:36:47 +0200
+...
+2319488 keys sampled - 80% complete - 2017-12-04 14:41:53 +0200
+2609424 keys sampled - 90% complete - 2017-12-04 14:42:47 +0200
+DB has 2899366 keys
+...
+==============================================================================
+Found 938212 keys containing strings, like:
+user_lesson_177790_153, user_lesson_177118_133, user_lesson_167670_42, user_lesson_176796_95, user_lesson_176902_175, user_lesson_153220_19, user_lesson_41101_28, user_lesson_153097_44, user_lesson_110434_153, user_lesson_171883_9
+
+These keys use 0.54% of the total sampled memory (1.79 MB)
+100.0% of these keys expire (938212), with maximum ttl of 19 days, 11 hours, 11 minutes, 53 seconds
+Average last accessed time: 2 hours, 3 minutes, 47 seconds - (Max: 2 hours, 8 minutes, 12 seconds Min:1 hours, 59 minutes, 23 seconds)
+
+==============================================================================
+...
+Summary
+
+---------------------------------------------------+--------------+-------------------+---------------------------------------------------
+Key                                                | Memory Usage | Expiry Proportion | Last Access Time                                  
+---------------------------------------------------+--------------+-------------------+---------------------------------------------------
+session_9d3226ff0cc112b6c78299e2a6c9f894           | 90.8%        | 100.0%            | 1 hours, 59 minutes, 23 seconds                   
+user_175188                                        | 7.01%        | 0.0%              | 1 hours, 59 minutes, 23 seconds                   
+ebook-session:9771:lid-108                         | 0.78%        | 0.0%              | 1 hours, 59 minutes, 24 seconds                   
+user_lesson_177790_153                             | 0.54%        | 100.0%            | 1 hours, 59 minutes, 23 seconds                   
+session_6a07a5cbc9baa0edb1fefdbae63a62fe           | 0.15%        | 100.0%            | 1 hours, 59 minutes, 24 seconds                   
+...
+ebook:sid-10044:lid-85                             | 0.05%        | 100.0%            | 1 hours, 59 minutes, 23 seconds                   
+global_settings_banner                             | 0.0%         | 0.0%              | 2 hours, 5 minutes, 21 seconds                    
+---------------------------------------------------+--------------+-------------------+---------------------------------------------------
+</code></pre>
+
+<p>Вторая утилита называется <a href="https://github.com/sripathikrishnan/redis-rdb-tools">redis-rdb-tools</a> и она анализирует непосредственно дамп БД (файл <code>dump.rdb</code>) и выводит результат в формате <code>*.csv</code> (еще утилита умеет конвертировать дамп БД в JSON формат и сравнивать два дампа, но этот функционал сейчас нас не интересует).</p>
+
+<p>Устанавливаем утилиту согласно инструкциям в <a href="https://github.com/sripathikrishnan/redis-rdb-tools/blob/master/README.md">Readme.md</a> и запускаем анализатор командой:</p>
+
+<pre><code>rdb -c memory /home/e.lebed/20171201dump.rdb -f /home/e.lebed/redismemory.csv
+</code></pre>
+
+<p>После завершения анализа (стоит отметить, что процесс этот небыстрый) в указанном месте (<code>/home/e.lebed/</code>) появится файл (<code>redismemory.csv</code>). Содержимое файла выглядит примерно так:</p>
+
+<pre><code>database,type,key,size_in_bytes,encoding,num_elements,len_largest_element
+0,string,session_60f8b00e9be37602048a11d36b5287b5,504,string,336,336
+0,string,session_e9bd5f90b9df52488e3dcd159fb0c526,280,string,150,150
+0,string,ebook:sid-14197:lid-39,96,string,8,8
+0,string,session_791cd03862862a047a4f6278dcb3fe9f,280,string,152,152
+...
+</code></pre>
+
+<p>Как видим, у нас получились поля <code>Database Number</code>, <code>Data Type</code>, <code>Key</code>, <code>Memory Used in bytes</code> и т. д. разделенные запятыми. Из данного набора нас интересуют только поля <code>Key</code> и <code>Memory Used in bytes</code> — вырезаем их и записываем в другой файл:</p>
+
+<pre><code>cat redismemory.csv | cut -d ',' -f3,4 &gt; redis2fields.txt
+</code></pre>
+
+<p>В результате получаем файл с таким содержимым:</p>
+
+<pre><code>key,size_in_bytes
+session_60f8b00e9be37602048a11d36b5287b5,504
+session_e9bd5f90b9df52488e3dcd159fb0c526,280
+ebook:sid-14197:lid-39,96
+session_791cd03862862a047a4f6278dcb3fe9f,280
+...
+</code></pre>
+
+<p>Далее с помощью утилит <code>grep</code> и <code>awk</code> очень легко подсчитать сумму значений во втором столбце (<code>size_in_bytes</code>) по каждой группе ключей, например:</p>
+
+<pre><code>grep 'user_lesson_*' redis2fields.txt | awk -F ',' 'BEGIN {s = 0} {s += $2;} END {print s}'
+93669256
+</code></pre>
+
+<p>После этого можно внести полученные данные в Excel / Google таблицы, перевести полученные байты в мегабайты и построить диаграмму. Обе утилиты показывают примерно одинаковый результат — больше всего в БД <code>redis</code> занимают ключи вида <code>session_*</code>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fredis-inside-%25D0%25B8%25D0%25BB%25D0%25B8-%25D1%2587%25D1%2582%25D0%25BE-%25D1%2585%25D1%2580%25D0%25B0%25D0%25BD%25D0%25B8%25D1%2582%25D1%2581%25D1%258F-%25D0%25B2-%25D1%2580%25D0%25B5%25D0%25B4%25D0%25B8%25D1%2581%25D0%25B5%2f - Redis%20Inside%20%d0%b8%d0%bb%d0%b8%20%d1%87%d1%82%d0%be%20%d1%85%d1%80%d0%b0%d0%bd%d0%b8%d1%82%d1%81%d1%8f%20%d0%b2%20%d1%80%d0%b5%d0%b4%d0%b8%d1%81%d0%b5%3f by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/nginx-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D0%B0-24-too-many-open-files-%D0%B8-%D0%B5%D0%B5-%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5/">Nginx: ошибка (24: Too many open files) и ее решение<aside class="dates">Jan 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-dns-dhcp-%D1%81-%D0%B4%D0%B8%D0%BD%D0%B0%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%BC-%D0%BE%D0%B1%D0%BD%D0%BE%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5%D0%BC-%D0%B7%D0%BE%D0%BD-%D0%B2-ubuntu-16.04/">Установка и настройка DNS &#43; DHCP с динамическим обновлением зон в Ubuntu 16.04<aside class="dates">Jan 9 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 4 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 1 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

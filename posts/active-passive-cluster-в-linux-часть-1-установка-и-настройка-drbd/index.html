@@ -169,15 +169,23 @@ iface bond0 inet static
 <p>Выполняем:</p>
 
 <pre><code>modprobe drbd
-echo 'drbd' &gt;&gt; /etc/modules
+</code></pre>
+
+<pre><code>echo 'drbd' &gt;&gt; /etc/modules
 </code></pre>
 
 <p>Подготовка необходимых разделов (команды выполняются на обоих серверах одновременно):</p>
 
 <pre><code>pvcreate /dev/sda5
-vgcreate vg0 /dev/sda5
-lvcreate -L100G -n www vg0
-lvcreate -L100G -n mysql vg0
+</code></pre>
+
+<pre><code>vgcreate vg0 /dev/sda5
+</code></pre>
+
+<pre><code>lvcreate -L100G -n www vg0
+</code></pre>
+
+<pre><code>lvcreate -L100G -n mysql vg0
 </code></pre>
 
 <p>Создаем конфигурационные файлы <code>/etc/drbd.d/www.res</code> и <code>/etc/drbd.d/mysql.res</code> следующего содержания:</p>
@@ -259,20 +267,38 @@ lvcreate -L100G -n mysql vg0
 <p>После чего на обоих серверах выполняем:</p>
 
 <pre><code>drbdadm create-md www
-drbdadm create-md mysql
-drbdadm up all
+</code></pre>
+
+<pre><code>drbdadm create-md mysql
+</code></pre>
+
+<pre><code>drbdadm up all
 </code></pre>
 
 <p>На первом сервере (он будет основным, активным) выполняем:</p>
 
 <pre><code>drbdsetup /dev/drbd0 primary -o
-drbdsetup /dev/drbd2 primary -o
-mkfs.ext4 /dev/drbd0
-mkfs.ext4 /dev/drbd2
-tune2fs -m 0 /dev/drbd0
-tune2fs -m 0 /dev/drbd2
-/bin/mount -o noatime /dev/drbd0 /var/lib/mysql
-/bin/mount -o noatime /dev/drbd2 /srv/www
+</code></pre>
+
+<pre><code>drbdsetup /dev/drbd2 primary -o
+</code></pre>
+
+<pre><code>mkfs.ext4 /dev/drbd0
+</code></pre>
+
+<pre><code>mkfs.ext4 /dev/drbd2
+</code></pre>
+
+<pre><code>tune2fs -m 0 /dev/drbd0
+</code></pre>
+
+<pre><code>tune2fs -m 0 /dev/drbd2
+</code></pre>
+
+<pre><code>/bin/mount -o noatime /dev/drbd0 /var/lib/mysql
+</code></pre>
+
+<pre><code>/bin/mount -o noatime /dev/drbd2 /srv/www
 </code></pre>
 
 <p>Переносим необходимые данные на созданные разделы (<code>/var/lib/mysql</code> и <code>/srv/www</code>), дожидаемся завершения синхронизации ресурсов по сети.</p>
@@ -343,15 +369,15 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
         </li>
     
         <li>
-            <a href="/posts/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-dns-dhcp-%D1%81-%D0%B4%D0%B8%D0%BD%D0%B0%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%BC-%D0%BE%D0%B1%D0%BD%D0%BE%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5%D0%BC-%D0%B7%D0%BE%D0%BD-%D0%B2-ubuntu-16.04/">Установка и настройка DNS &#43; DHCP с динамическим обновлением зон в Ubuntu 16.04<aside class="dates">Jan 9 2018</aside></a>
-        </li>
-    
-        <li>
             <a href="/posts/prometheus-2.0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-alert-rules/">Prometheus 2.0: Новый формат Alert rules<aside class="dates">Jan 8 2018</aside></a>
         </li>
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-12-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F-redis-%D0%B1%D0%B5%D0%B7-%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%B0/">Docker совет №12: Установка пароля redis без правки конфига<aside class="dates">Jan 4 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-11-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D1%83%D0%B4%D0%B0%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B5%D0%BD%D1%83%D0%B6%D0%BD%D1%8B%D1%85-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-docker/">Docker совет №11: Автоматическое удаление ненужных данных docker<aside class="dates">Jan 1 2018</aside></a>
         </li>
     
 </ul>

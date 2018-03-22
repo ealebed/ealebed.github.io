@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Docker совет №18: Использование диска"/>
+  <meta name="twitter:description" content="Сегодня мы познакомимся с одной довольно простой но полезной командой, которая предоставит информацию о том, как много места на вашем диске занимают  docker образы, контейнеры, тома и кеш сборки - давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="Evgen Lebed&#39;s website">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Docker совет №18: Использование диска &middot; Evgen Lebed&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Docker совет №18: Использование диска
+                    </h1>
+                    <h2 class="headline">
+                    Mar 22, 2018 08:15
+                    · 311 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Сегодня мы познакомимся с одной довольно простой но полезной командой, которая предоставит информацию о том, как много места на вашем диске занимают  docker образы, контейнеры, тома и кеш сборки - давайте разберемся!</p>
+
+<p></p>
+
+<p>У Docker есть несколько весьма полезных подкоманд в группе <code>system</code> - одна из них <code>docker system df</code> - именно она выводит статистику об использованном дисковом пространстве вашей установкой docker.</p>
+
+<p>Вот так выглядит результат выполнения команды <code>docker system df</code> на моем macbook:</p>
+
+<pre><code class="language-bash">TYPE                TOTAL               ACTIVE              SIZE                RECLAIMABLE
+Images              73                  1                   12.18GB             12.14GB (99%)
+Containers          1                   1                   0B                  0B
+Local Volumes       287                 0                   4.726GB             4.726GB (100%)
+Build Cache                                                 0B                  0B
+</code></pre>
+
+<p>Здесь у меня около десятка &ldquo;докерезированных&rdquo; приложений - некоторые состоят из одного контейнера (например, <a href="https://hub.docker.com/r/ealebed/jb-license-server/">jb-license-server</a>), а некоторые из 10-15 штук, объединенных с помощью <code>docker-compose.yml</code> (по аналогии с <a href="https://github.com/laradock/laradock">laradock</a>).</p>
+
+<p>В моем случае кеш сборки (Build Cache) пуст, так как по расписанию запускается команда <code>docker system prune</code>, которая позволяет поддерживать в порядке рабочее место (подробнее в <a href="https://letsclearitup.com.ua/docker/docker-sovet-12-avtomaticheskoe-udalenie-nenuzhnyih-dannyih-docker.html">этой статье</a>).</p>
+
+<p>Вы можете получить еще больше информации, используя дополнительный флаг <code>-v</code> (verbose) - так можно узнать размер каждого отдельного docker-образа или другого объекта, например (вывод сокращен):</p>
+
+<pre><code class="language-bash">docker system df -v
+Images space usage:
+
+REPOSITORY                                                   TAG                     IMAGE ID            CREATED ago         SIZE                SHARED SIZE         UNIQUE SiZE         CONTAINERS
+registry.gitlab.lc:5000/develop/ed/crond                     latest                  2938a2495465        2 weeks ago ago     119.7MB             114.4MB             5.303MB             0
+php                                                          7.1-alpine              f13e5504677c        4 weeks ago ago     57.18MB             0B                  57.18MB             0
+ubuntu                                                       16.04                   0458a4468cbc        5 weeks ago ago     111.7MB             111.7MB             0B                  0
+redis                                                        4.0-alpine              cb1ec54b370d        6 weeks ago ago     27.07MB             4.148MB             22.92MB             0
+docker/kube-compose-controller                               v0.3.0-rc1              d099699fac52        6 weeks ago ago     25.81MB             4.599MB             21.21MB             0
+docker/kube-compose-api-server                               v0.3.0-rc1              6c13a6358efa        6 weeks ago ago     38.95MB             4.599MB             34.35MB             0
+ealebed/jb-license-server                                    latest                  59e104ca2839        6 weeks ago ago     105.9MB             68.03MB             37.87MB             1
+memcached                                                    1.5-alpine              a40880ef9c90        6 weeks ago ago     7.211MB             4.148MB             3.063MB             0
+php                                                          7.2-fpm-alpine          19d995aeba60        6 weeks ago ago     76.65MB             6.789MB             69.86MB             0
+gcr.io/google_containers/kube-controller-manager-amd64       v1.9.2                  769d889083b6        7 weeks ago ago     137.8MB             1.143MB             136.7MB             0
+...
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fdocker-%25D1%2581%25D0%25BE%25D0%25B2%25D0%25B5%25D1%2582-18-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D0%25B5-%25D0%25B4%25D0%25B8%25D1%2581%25D0%25BA%25D0%25B0%2f - Docker%20%d1%81%d0%be%d0%b2%d0%b5%d1%82%20%e2%84%9618%3a%20%d0%98%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b5%20%d0%b4%d0%b8%d1%81%d0%ba%d0%b0 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/letsencrypt-wildcard-%D1%81%D0%B5%D1%80%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%82%D1%8B-%D1%82%D0%B5%D0%BF%D0%B5%D1%80%D1%8C-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF%D0%BD%D1%8B/">Let&#39;s Encrypt: Wildcard-сертификаты теперь доступны!<aside class="dates">Mar 19 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-17-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D0%B0-docker-compose-config/">Docker совет №17: Команда docker-compose config<aside class="dates">Mar 15 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/sphinxsearch-%D0%B2-docker-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B5/">Sphinxsearch в docker-контейнере<aside class="dates">Mar 12 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-16-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%84%D0%BB%D0%B0%D0%B3%D0%B0--add-host/">Docker совет №16: Использование флага --add-host<aside class="dates">Mar 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-15-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%BE%D0%B2-%D0%B4%D0%BB%D1%8F-%D0%B4%D0%BB%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D1%8B%D1%85-%D0%B8-%D1%80%D0%B0%D0%B7%D0%BE%D0%B2%D1%8B%D1%85-%D0%B7%D0%B0%D0%B4%D0%B0%D1%87/">Docker совет №15: Использование контейнеров для длительных и разовых задач<aside class="dates">Mar 5 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

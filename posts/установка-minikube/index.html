@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Установка Minikube"/>
+  <meta name="twitter:description" content="Minikube - утилита командной строки для настройки и запуска однонодового кластера Kubernetes в виртуальной машине на локальном компьютере.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="Evgen Lebed&#39;s website">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Установка Minikube &middot; Evgen Lebed&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Установка Minikube
+                    </h1>
+                    <h2 class="headline">
+                    Mar 26, 2018 08:15
+                    · 444 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                              <a href="https://ealebed.github.io/tags/minikube">minikube</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><code>Minikube</code> - утилита командной строки для настройки и запуска однонодового кластера <code>Kubernetes</code> в виртуальной машине на локальном компьютере.</p>
+
+<p></p>
+
+<p>Данный вариант просто идеально подходит для первого знакомства с кластером под управлением <code>Kubernetes</code> и выполнения несложных лабораторных работ.</p>
+
+<p>Прежде чем приступить к установке <code>Minikube</code>, нужно убедиться, что в системе поддерживается виртуализация VT-x/AMD-v. В Linux сделать это можно так (результат выполнения команды не должен быть пустым):</p>
+
+<pre><code class="language-bash">cat /proc/cpuinfo | grep 'vmx\|svm'
+</code></pre>
+
+<p>Для Mac OS X можно воспользоваться такой командой:</p>
+
+<pre><code class="language-bash">sysctl -a | grep machdep.cpu.features | grep VMX
+</code></pre>
+
+<p><strong>Примечание.</strong> Если вы используете Docker for Mac версии 17.12 и новее, достаточно просто переключиться на Edge channel (нестабильная, экспериментальная ветка) и вы уже получите <code>Kubernetes</code> (<a href="https://docs.docker.com/docker-for-mac/#kubernetes">подробности</a>).</p>
+
+<p>Нам понадобятся следующие компоненты:</p>
+
+<ul>
+<li>VirtualBox</li>
+<li><code>minikube</code></li>
+<li><code>kubectl</code></li>
+</ul>
+
+<p>С VirtualBox не должно возникнуть никаких вопросов - на <a href="https://www.virtualbox.org/wiki/Downloads">официальном сайте</a> скачиваем установщик и следуем указаниям мастера установки.</p>
+
+<p>Для установки <code>Minikube</code> достаточно перейти на страницу с последним релизом (на момент написания статьи v0.25.0) и выполнить предложенные инструкции. Например, для Linux:</p>
+
+<pre><code class="language-bash">curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.25.0/minikube-linux-amd64 \
+    &amp;&amp; chmod +x minikube \
+    &amp;&amp; sudo mv minikube /usr/local/bin/
+</code></pre>
+
+<p>или для Mac OS X:</p>
+
+<pre><code class="language-bash">curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.25.0/minikube-darwin-amd64 \
+    &amp;&amp; chmod +x minikube \
+    &amp;&amp; sudo mv minikube /usr/local/bin/
+</code></pre>
+
+<p>Далее переходим к установке <code>kubectl</code> - утилиты командной строки для управления приложениями, развернутыми в кластере. Здесь может быть несколько вариантов, например, установка с помощью <code>curl</code>:</p>
+
+<ul>
+<li>Linux</li>
+</ul>
+
+<pre><code class="language-bash">curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
+    &amp;&amp; chmod +x ./kubectl \
+    &amp;&amp; sudo mv ./kubectl /usr/local/bin/kubectl
+</code></pre>
+
+<ul>
+<li>Mac OS X:</li>
+</ul>
+
+<pre><code class="language-bash">curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/darwin/amd64/kubectl \
+    &amp;&amp; chmod +x ./kubectl \
+    &amp;&amp; sudo mv ./kubectl /usr/local/bin/kubectl
+</code></pre>
+
+<p>Второй вариант - установка <code>kubectl</code> как часть <a href="https://cloud.google.com/sdk/">Google Cloud SDK</a> (считаем, что SDK уже установлен):</p>
+
+<pre><code class="language-bash">gcloud components install kubectl
+</code></pre>
+
+<p>Также можно установить <code>kubectl</code> используя специфический менеджер пакетов, для Linux:</p>
+
+<pre><code class="language-bash">sudo snap install kubectl --classic
+</code></pre>
+
+<p>Mac OS X:</p>
+
+<pre><code class="language-bash">brew install kubectl
+</code></pre>
+
+<p>Чтобы проверить корректность установки <code>kubectl</code>, не забудьте запустить команду:</p>
+
+<pre><code class="language-bash">kubectl version
+</code></pre>
+
+<p>Теперь можем приступать к работе с <code>minikube</code>:</p>
+
+<pre><code class="language-bash">minikube start
+Starting local Kubernetes cluster...
+Running pre-create checks...
+Creating machine...
+Starting local Kubernetes cluster...
+</code></pre>
+
+<p>Запуск пода из docker-образа hello-minikube, предназначенного для демонстрации:</p>
+
+<pre><code class="language-bash">kubectl run hello-minikube --image=k8s.gcr.io/echoserver:1.4 --port=8080
+deployment &quot;hello-minikube&quot; created
+</code></pre>
+
+<p>Смотрим запущенные поды в кластере (под запускается):</p>
+
+<pre><code class="language-bash">kubectl get pod
+NAME                              READY     STATUS              RESTARTS   AGE
+hello-minikube-3383150820-vctvh   0/1       ContainerCreating   0          3s
+</code></pre>
+
+<p>Проверяем еще раз через несколько секунд:</p>
+
+<pre><code class="language-bash">kubectl get pod
+NAME                              READY     STATUS    RESTARTS   AGE
+hello-minikube-3383150820-vctvh   1/1       Running   0          13s
+</code></pre>
+
+<p>Для организация доступа к поду hello-minikube извне запустим команду:</p>
+
+<pre><code class="language-bash">kubectl expose deployment hello-minikube --type=NodePort
+service &quot;hello-minikube&quot; exposed
+</code></pre>
+
+<p>Проверим работу пода с помощью утилиты <code>curl</code> из командной строки:</p>
+
+<pre><code class="language-bash">curl $(minikube service hello-minikube --url)
+CLIENT VALUES:
+client_address=192.168.99.1
+command=GET
+real path=/
+...
+</code></pre>
+
+<p>Убираем за собой - удаляем deployment и останавливаем <code>minikube</code>:</p>
+
+<pre><code class="language-bash">kubectl delete deployment hello-minikube
+deployment &quot;hello-minikube&quot; deleted
+</code></pre>
+
+<pre><code class="language-bash">minikube stop
+Stopping local Kubernetes cluster...
+Stopping &quot;minikube&quot;...
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D1%2583%25D1%2581%25D1%2582%25D0%25B0%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25BA%25D0%25B0-minikube%2f - %d0%a3%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%ba%d0%b0%20Minikube by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-18-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B8%D1%81%D0%BA%D0%B0/">Docker совет №18: Использование диска<aside class="dates">Mar 22 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/letsencrypt-wildcard-%D1%81%D0%B5%D1%80%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%82%D1%8B-%D1%82%D0%B5%D0%BF%D0%B5%D1%80%D1%8C-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF%D0%BD%D1%8B/">Let&#39;s Encrypt: Wildcard-сертификаты теперь доступны!<aside class="dates">Mar 19 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-17-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D0%B0-docker-compose-config/">Docker совет №17: Команда docker-compose config<aside class="dates">Mar 15 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/sphinxsearch-%D0%B2-docker-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B5/">Sphinxsearch в docker-контейнере<aside class="dates">Mar 12 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-16-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%84%D0%BB%D0%B0%D0%B3%D0%B0--add-host/">Docker совет №16: Использование флага --add-host<aside class="dates">Mar 8 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

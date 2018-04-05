@@ -13,8 +13,8 @@
     
   
   
-  <meta name="twitter:title" content="Анализ медленных запросов с помощью pt-query-digest"/>
-  <meta name="twitter:description" content="Найти и исправить медленные запросы к MySQL-серверу можно с помощью pt-query-digest — утилиты из пакета Percona-toolkit. Давайте разберемся как это сделать на примере ОС Debian Wheezy и Percona Server 5.5!
+  <meta name="twitter:title" content="Docker совет №20: Используйте WORKDIR"/>
+  <meta name="twitter:description" content="Если вы заметили, что часто меняете каталоги своем Dockerfile (инструкции по сборке docker-образа), то самое время познакомиться с использованием инструкции WORKDIR. Давайте разберемся!
 
 "/>
   
@@ -32,7 +32,7 @@
 		<meta name="author" content="Evgen Lebed">
 		<meta name="description" content="Evgen Lebed&#39;s website">
 		<meta name="generator" content="Hugo 0.32.2" />
-		<title>Анализ медленных запросов с помощью pt-query-digest &middot; Evgen Lebed&#39;s website</title>
+		<title>Docker совет №20: Используйте WORKDIR &middot; Evgen Lebed&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
@@ -60,21 +60,17 @@
             <article>
                 <header>
                     <h1>
-                        Анализ медленных запросов с помощью pt-query-digest
+                        Docker совет №20: Используйте WORKDIR
                     </h1>
                     <h2 class="headline">
-                    Mar 24, 2016 09:52
-                    · 209 words
+                    Apr 5, 2018 08:02
+                    · 192 words
                     · 1 minute read
                       <span class="tags">
                       
                       
                           
-                              <a href="https://ealebed.github.io/tags/percona">percona</a>
-                          
-                              <a href="https://ealebed.github.io/tags/percona-toolkit">percona-toolkit</a>
-                          
-                              <a href="https://ealebed.github.io/tags/debian">debian</a>
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
                           
                       
                       
@@ -82,53 +78,57 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>Найти и исправить медленные запросы к MySQL-серверу можно с помощью <code>pt-query-digest</code> — утилиты из пакета <a href="https://letsclearitup.com.ua/debian/ustanovka-percona-toolkit-v-debian-wheezy.html">Percona-toolkit</a>. Давайте разберемся как это сделать на примере ОС Debian Wheezy и Percona Server 5.5!</p>
+                    <p>Если вы заметили, что часто меняете каталоги своем <code>Dockerfile</code> (инструкции по сборке docker-образа), то самое время познакомиться с использованием инструкции <code>WORKDIR</code>. Давайте разберемся!</p>
 
 <p></p>
 
-<p>Для начала необходимо включить логирование медленных запросов (и запросов, которые не используют индексы) в конфигурационном файле <code>/etc/mysql/my.cnf</code>, для этого необходимо добавить следующие строки:</p>
+<p>Инструкция <code>WORKDIR</code> в <code>Dockerfile</code> позволяет один раз указать конкретный путь (каталог на диске), после чего большинство инструкций (например, <code>RUN</code> и <code>COPY</code>) будут выполняться в контексте этого каталога.</p>
 
-<pre><code>...
-slow-query-log = 1
-slow-query-log-file = /var/log/mysql/mysql-slow.log
-long_query_time = 1
-log-queries-not-using-indexes
-...
+<p>Пример инструкций по сборке docker-образа без использования <code>WORKDIR</code> может выглядеть так:</p>
+
+<pre><code class="language-Dockerfile">FROM python:2.7-alpine
+
+RUN mkdir /app
+
+COPY requirements.txt /app/requirements.txt
+RUN cd /app &amp;&amp; pip install -r requirements.txt
+
+COPY . /app
+
+CMD /app/gunicorn -b 0.0.0.0:8000 --access-logfile - &quot;foo.app:create_app()&quot;
 </code></pre>
 
-<p>или:</p>
+<p>Как видим, в данном <code>Dockerfile</code> пришлось несколько раз упомянуть <code>/app</code>. Можно значительно улучшить приведенный выше пример, используя <code>WORKDIR</code>:</p>
 
-<pre><code>...
-slow-query-log = 1
-log-output = TABLE
-long_query_time = 1
-log-queries-not-using-indexes
-...
+<pre><code class="language-Dockerfile">FROM python:2.7-alpine
+
+# We don't even need to run mkdir /app since WORKDIR will make it for us.
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD gunicorn -b 0.0.0.0:8000 --access-logfile - &quot;foo.app:create_app()&quot;
 </code></pre>
 
-<p><strong>Примечание.</strong> Во втором случае медленные запросы будут записываться в таблицу slow_log базы данных mysql.</p>
+<p>Ключевым моментом здесь является указание инструкции <code>WORKDIR /app</code> - все следующие шаги будут выполняться в каталоге <code>/app</code>.</p>
 
-<p>После того, как накопится достаточное для анализа количество запросов, можно использовать утилиту <code>pt-query-digest</code>. Синтаксис довольно прост:</p>
+<p>Вы даже можете указать более одной инструкции <code>WORKDIR</code> в своем <code>Dockerfile</code> (если вам это действительно нужно):</p>
 
-<pre><code>pt-query-digest /var/log/mysql/mysql-slow.log
+<pre><code class="language-Dockerfile">WORKDIR /foo/bar
+WORKDIR baz
+
+RUN pwd
 </code></pre>
 
-<p>Лучше результат анализа сразу сохранять в файл для последующего разбора:</p>
-
-<pre><code>pt-query-digest /var/log/mysql/mysql-slow.log &gt; slowlog.txt
-</code></pre>
-
-<p>Если в вашем случае медленные запросы записываются не в файл, а в таблицу в базе данных, то сначала используйте следующий запрос:</p>
-
-<pre><code>mysql -u &lt;ПОЛЬЗОВАТЕЛЬ&gt; -p&lt;ПАРОЛЬ&gt; -D mysql -s -r -e &quot;SELECT CONCAT( '# Time: ', DATE_FORMAT(start_time, '%y%m%d %H%i%s'), '\n', '# User@Host: ', user_host, '\n', '# Query_time: ', TIME_TO_SEC(query_time),  '  Lock_time: ', TIME_TO_SEC(lock_time), '  Rows_sent: ', rows_sent, '  Rows_examined: ', rows_examined, '\n', sql_text, ';' ) FROM mysql.slow_log&quot; &gt; mysql-slow.log
-</code></pre>
-
-<p>Ознакомиться со всеми опциями утилиты <code>pt-query-digest</code> и рассмотреть пример анализа запросов, которые попали в <code>mysql-slow.log</code> можно <a href="https://www.percona.com/doc/percona-toolkit/2.2/pt-query-digest.html">здесь</a>.</p>
+<p>В данном случае команда <code>pwd</code> выведет на экран каталог <code>/foo/bar/baz</code>.</p>
                 </section>
             </article>
 
             
-                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25B0%25D0%25BD%25D0%25B0%25D0%25BB%25D0%25B8%25D0%25B7-%25D0%25BC%25D0%25B5%25D0%25B4%25D0%25BB%25D0%25B5%25D0%25BD%25D0%25BD%25D1%258B%25D1%2585-%25D0%25B7%25D0%25B0%25D0%25BF%25D1%2580%25D0%25BE%25D1%2581%25D0%25BE%25D0%25B2-%25D1%2581-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-pt-query-digest%2f - %d0%90%d0%bd%d0%b0%d0%bb%d0%b8%d0%b7%20%d0%bc%d0%b5%d0%b4%d0%bb%d0%b5%d0%bd%d0%bd%d1%8b%d1%85%20%d0%b7%d0%b0%d0%bf%d1%80%d0%be%d1%81%d0%be%d0%b2%20%d1%81%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20pt-query-digest by @ealebed"><span class="icon-twitter"> tweet</span></a>
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fdocker-%25D1%2581%25D0%25BE%25D0%25B2%25D0%25B5%25D1%2582-20-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D1%2583%25D0%25B9%25D1%2582%25D0%25B5-workdir%2f - Docker%20%d1%81%d0%be%d0%b2%d0%b5%d1%82%20%e2%84%9620%3a%20%d0%98%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d1%83%d0%b9%d1%82%d0%b5%20WORKDIR by @ealebed"><span class="icon-twitter"> tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(
@@ -165,10 +165,6 @@ log-queries-not-using-indexes
     
     
         <li>
-            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-20-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B9%D1%82%D0%B5-workdir/">Docker совет №20: Используйте WORKDIR<aside class="dates">Apr 5 2018</aside></a>
-        </li>
-    
-        <li>
             <a href="/posts/%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5-dry-%D0%BA-docker-compose.yml/">Применение DRY к docker-compose.yml<aside class="dates">Apr 2 2018</aside></a>
         </li>
     
@@ -182,6 +178,10 @@ log-queries-not-using-indexes
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-18-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B8%D1%81%D0%BA%D0%B0/">Docker совет №18: Использование диска<aside class="dates">Mar 22 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/letsencrypt-wildcard-%D1%81%D0%B5%D1%80%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%82%D1%8B-%D1%82%D0%B5%D0%BF%D0%B5%D1%80%D1%8C-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF%D0%BD%D1%8B/">Let&#39;s Encrypt: Wildcard-сертификаты теперь доступны!<aside class="dates">Mar 19 2018</aside></a>
         </li>
     
 </ul>

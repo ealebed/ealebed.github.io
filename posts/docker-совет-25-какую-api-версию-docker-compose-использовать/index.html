@@ -13,8 +13,8 @@
     
   
   
-  <meta name="twitter:title" content="Portainer: WebUI для управления docker-контейнерами"/>
-  <meta name="twitter:description" content="Благодаря инструменту Portainer можно легко управлять контейнерами (образами, сетями, сервисами и пр.) на локальном или удаленном docker-хосте (в том числе Swarm-кластере).
+  <meta name="twitter:title" content="Docker совет №25: Какую API версию docker compose использовать?"/>
+  <meta name="twitter:description" content="На сегодняшний день Docker Compose имеет 3 основные версии API (v1, v2 и v3). В зависимости от используемой версии вам могут быть доступны (или недоступны) некоторые полезные функции и возможности.
 
 "/>
   
@@ -32,7 +32,7 @@
 		<meta name="author" content="Evgen Lebed">
 		<meta name="description" content="Evgen Lebed&#39;s website">
 		<meta name="generator" content="Hugo 0.38.2" />
-		<title>Portainer: WebUI для управления docker-контейнерами &middot; Evgen Lebed&#39;s website</title>
+		<title>Docker совет №25: Какую API версию docker compose использовать? &middot; Evgen Lebed&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
@@ -60,11 +60,11 @@
             <article>
                 <header>
                     <h1>
-                        Portainer: WebUI для управления docker-контейнерами
+                        Docker совет №25: Какую API версию docker compose использовать?
                     </h1>
                     <h2 class="headline">
-                    Aug 7, 2017 10:01
-                    · 246 words
+                    May 24, 2018 07:08
+                    · 248 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -72,7 +72,7 @@
                           
                               <a href="https://ealebed.github.io/tags/docker">docker</a>
                           
-                              <a href="https://ealebed.github.io/tags/portainer">portainer</a>
+                              <a href="https://ealebed.github.io/tags/docker-compose">docker-compose</a>
                           
                       
                       
@@ -80,47 +80,26 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>Благодаря инструменту <strong>Portainer</strong> можно легко управлять контейнерами (образами, сетями, сервисами и пр.) на локальном или удаленном docker-хосте (в том числе Swarm-кластере).</p>
+                    <p>На сегодняшний день Docker Compose имеет 3 основные версии API (v1, v2 и v3). В зависимости от используемой версии вам могут быть доступны (или недоступны) некоторые полезные функции и возможности.</p>
 
 <p></p>
 
-<p>Еще одна крайне полезная особенность <strong>Portainer</strong>&lsquo;а — поддержка шаблонов приложений (Application Templates), с помощью которых можно в один клик мышью развернуть все необходимые сервисы для WordPress или MySQL. Давайте разберемся!</p>
+<p>Наверняка вы обращали внимание, что в самом начале файла <code>docker-compose.yml</code> обычно присутствует строка <code>version: '2'</code> или <code>version: '3'</code>. Это и есть версия API Docker Compose!</p>
 
-<p>Эти и другие возможности инструмента <strong>Portainer</strong> можно получить без каких-либо настроек с помощью однострочной команды:</p>
+<p>Если вы не видите строки с явно заданной версии API, это означает что в вашем случае используется самая первая версия (<code>v1</code>). Эта версия уже признана устаревшей и больше не рекомендуется к использованию. Вкратце, в первой версии не поддерживаются именованные тома, сети и некоторые аргументы сборки (build), полный список ограничений можно найти <a href="https://docs.docker.com/compose/compose-file/compose-versioning/#version-1">здесь</a>.</p>
 
-<pre><code>docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer
-</code></pre>
+<p>Что касается второй и третьей версии API (<code>v2</code>/<code>v3</code>), то самая простая рекомендация - использовать самую последнюю (актуальную) версию, однако здесь уже нужно исходить из конкретных требований и особенностей вашего проекта. Например, если вы не можете (или не хотите) обойтись без конструкции <code>volume_from</code>, то третья версия API вам не подойдет, а если вы работаете с Docker Swarm, то нужно использовать только версию 3+.</p>
 
-<p>Поклонникам <code>docker-compose</code> можно воспользоваться файлом следующего содержания:</p>
+<p>Кроме того, в третьей версии API целая куча настроек использования CPU и памяти перенесена в свойство <code>deploy</code>. Полный список всех изменений и функционал версий <code>v2</code> и <code>v3</code> можно найти <a href="https://docs.docker.com/compose/compose-file/compose-versioning/#version-3">здесь</a>.</p>
 
-<pre><code>version: &quot;2&quot;
-services:
-  portainer:
-    image: portainer/portainer
-    volumes:
-      - ./data:/data
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - 9000:9000
-</code></pre>
+<p>Что касается исполняемого файла <code>docker-compose</code>, то его всегда нужно обновлять до последней актуальной версии - как минимум, они будут содержать исправление ошибок предыдущих версий.</p>
 
-<p>и, находясь в каталоге с конфигурационным файлом выполнить:</p>
-
-<pre><code>docker-compose up -d
-</code></pre>
-
-<p>После проделанных действий можно перейти в браузере по адресу <a href="http://ip_address:9000">http://ip_address:9000</a>, установить пароль администратора и выбрать docker-хост (в нашем примере — локальный), которым будет управлять Portainer.</p>
-
-<p>При логине первой отображается страница Dashboard с общей информацией о состоянии docker&rsquo;а. Следующая интересующая нас страница — Containers. Здесь можно выполнить базовые действия над контейнерами — запустить, остановить, удалить, создать новый и т. д.. При клике на отдельном контейнере можно получить о нем гораздо больше информации и дополнительные возможности, например, просмотр логов и подключение к консоли контейнера прямо из браузера.</p>
-
-<p>На странице Images можно удалять/искать/скачивать docker-образы — по умолчанию используется Docker Hub, но также можно добавить и свой личный docker registry.</p>
-
-<p>Стоит упомянуть, что при добавлении в Portainer Swarm-кластера (делается это на странице Endpoints), в меню слева появятся дополнительные пункты — Swarm (с подробной информацией о нодах кластера) и Services (для управления сервисами и масштабирования).</p>
+<p>На официальном сайте всегда можно просмотреть <a href="https://docs.docker.com/compose/compose-file/compose-versioning/#compatibility-matrix">матрицу совместимости</a>, чтобы узнать, совместима ли ваша версия API с конкретной бинарной версией <code>docker-compose</code> (да, это совершенно разные вещи).</p>
                 </section>
             </article>
 
             
-                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fportainer-webui-%25D0%25B4%25D0%25BB%25D1%258F-%25D1%2583%25D0%25BF%25D1%2580%25D0%25B0%25D0%25B2%25D0%25BB%25D0%25B5%25D0%25BD%25D0%25B8%25D1%258F-docker-%25D0%25BA%25D0%25BE%25D0%25BD%25D1%2582%25D0%25B5%25D0%25B9%25D0%25BD%25D0%25B5%25D1%2580%25D0%25B0%25D0%25BC%25D0%25B8%2f - Portainer%3a%20WebUI%20%d0%b4%d0%bb%d1%8f%20%d1%83%d0%bf%d1%80%d0%b0%d0%b2%d0%bb%d0%b5%d0%bd%d0%b8%d1%8f%20docker-%d0%ba%d0%be%d0%bd%d1%82%d0%b5%d0%b9%d0%bd%d0%b5%d1%80%d0%b0%d0%bc%d0%b8 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fdocker-%25D1%2581%25D0%25BE%25D0%25B2%25D0%25B5%25D1%2582-25-%25D0%25BA%25D0%25B0%25D0%25BA%25D1%2583%25D1%258E-api-%25D0%25B2%25D0%25B5%25D1%2580%25D1%2581%25D0%25B8%25D1%258E-docker-compose-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D1%2582%25D1%258C%2f - Docker%20%d1%81%d0%be%d0%b2%d0%b5%d1%82%20%e2%84%9625%3a%20%d0%9a%d0%b0%d0%ba%d1%83%d1%8e%20API%20%d0%b2%d0%b5%d1%80%d1%81%d0%b8%d1%8e%20docker%20compose%20%d0%b8%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d1%82%d1%8c%3f by @ealebed"><span class="icon-twitter"> tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(
@@ -157,10 +136,6 @@ services:
     
     
         <li>
-            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-25-%D0%BA%D0%B0%D0%BA%D1%83%D1%8E-api-%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8E-docker-compose-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D1%82%D1%8C/">Docker совет №25: Какую API версию docker compose использовать?<aside class="dates">May 24 2018</aside></a>
-        </li>
-    
-        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/">Знакомство с Kubernetes. Часть 4: Реплики (ReplicaSet)<aside class="dates">May 21 2018</aside></a>
         </li>
     
@@ -174,6 +149,10 @@ services:
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-23-%D0%B8%D0%BC%D0%BF%D0%BE%D1%80%D1%82-sql-%D1%84%D0%B0%D0%B9%D0%BB%D0%B0-%D1%81-docker-compose/">Docker совет №23: Импорт SQL-файла с docker-compose<aside class="dates">May 10 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F/">Знакомство с Kubernetes. Часть 2: Терминология<aside class="dates">Apr 30 2018</aside></a>
         </li>
     
 </ul>

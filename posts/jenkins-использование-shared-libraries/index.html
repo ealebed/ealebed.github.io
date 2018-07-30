@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Jenkins: использование shared libraries"/>
+  <meta name="twitter:description" content="При использовании Jenkins в компании с большим количеством проектов, рано или поздно вы заметите, что ваши описания пайплайнов (Pipeline) имеют много общего. И, возможно, вам захочется избавиться от избыточности и следовать принципу DRY (Don&rsquo;t Repeat Yourself) - давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="Evgen Lebed&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Jenkins: использование shared libraries &middot; Evgen Lebed&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Jenkins: использование shared libraries
+                    </h1>
+                    <h2 class="headline">
+                    Jul 30, 2018 07:04
+                    · 689 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/jenkins">jenkins</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ci">CI</a>
+                          
+                              <a href="https://ealebed.github.io/tags/scripts">scripts</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>При использовании Jenkins в компании с большим количеством проектов, рано или поздно вы заметите, что ваши описания пайплайнов (Pipeline) имеют много общего. И, возможно, вам захочется избавиться от избыточности и следовать принципу DRY (Don&rsquo;t Repeat Yourself) - давайте разберемся!</p>
+
+<p></p>
+
+<p>Помимо принципа DRY, важна также возможность внести изменения в код пайплайна один раз и автоматически использовать обновленный пайплайн в 50-100 других проектах.</p>
+
+<p>Для этой цели как нельзя лучше подходят <a href="https://jenkins.io/doc/book/pipeline/shared-libraries/">Shared Libraries</a> - общие библиотеки, которые могут быть определены в отдельном репозитории системы управления версиями и загружены в описании пайплайна.</p>
+
+<p>Структура каталогов в репозитории общих библиотек должна выглядеть следующим образом:</p>
+
+<pre><code class="language-bash">+- src                     # Source files
+|   +- org
+|       +- foo
+|           +- Bar.groovy  # for org.foo.Bar class
++- vars
+|   +- foo.groovy          # for global 'foo' variable
+|   +- foo.txt             # help for 'foo' variable
++- resources               # resource files (external libraries only)
+|   +- org
+|       +- foo
+|           +- bar.json    # static helper data for org.foo.Bar
+</code></pre>
+
+<p><strong>Примечание.</strong> В данной статье мы будем использовать только каталоги <code>vars</code> и <code>resources</code>.</p>
+
+<p>Для нас наибольший интерес представляет директория <code>vars</code> - в ней можно разместить глобальные функции и переменные, доступные в пайплайнах. Согласно документации, имена файлов должны быть в <code>camelCase</code> формате (без дефисов/подчеркиваний и т.д. - это важно), и иметь расширение <code>.groovy</code> (именно эти файлы нас и интересуют) или <code>.txt</code> (для документации).</p>
+
+<p>В каталоге <code>resources</code> можно разместить любые другие (не Java) файлы (например, <code>.yaml</code> или <code>.json</code>), которые будут загружаться в описании пайплайна с помощью шага <code>libraryResource</code>.</p>
+
+<p>Итак, рассмотрим несколько примеров. Допустим, у нас есть простенький проект, в котором описание пайплайна (файл <code>Jenkinsfile</code>) выглядит так:</p>
+
+<pre><code class="language-java">pipeline {
+  agent any
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Build') {
+      steps {
+        script {
+          sh '''
+            sudo docker version
+            sudo docker build -t ealebed/hellonode:latest .
+            sudo docker image ls
+          '''
+        }
+      }
+    }
+  }
+}
+</code></pre>
+
+<p>Кроме описания пайплайна в репозитории находится еще два файла - <code>Dockerfile</code>:</p>
+
+<pre><code class="language-Dockerfile">FROM node:6.9
+COPY server.js .
+EXPOSE 8080
+CMD node server.js
+</code></pre>
+
+<p>и файл <code>server.js</code> следующего содержания:</p>
+
+<pre><code class="language-javascript">var http = require('http');
+var handleRequest = function(request, response) {
+  response.writeHead(200);
+  response.end(&quot;Hello World!&quot;);
+}
+var www = http.createServer(handleRequest);
+www.listen(8080);
+</code></pre>
+
+<p>В первой итерации выделим в отдельные функции части пайплайна, которые можно будет использовать в других проектах. Для этого:</p>
+
+<ul>
+<li>создаем отдельный git-репозиторий для наших общих библиотек;</li>
+<li>в репозитории создаем каталог <code>vars</code>;</li>
+<li>в каталоге <code>vars</code> размещаем скрипт <code>dockerCmd.groovy</code>.</li>
+</ul>
+
+<p>Содержимое <code>dockerCmd.groovy</code>:</p>
+
+<pre><code class="language-java">def call(args) {
+  assert args != null
+  sh(script: &quot;sudo docker ${args}&quot;)
+}
+</code></pre>
+
+<p>Настраиваем использование Shared Libraries на Jenkins (<a href="https://jenkins.io/doc/book/pipeline/shared-libraries/#global-shared-libraries">пример с картинками</a>). Теперь в нашем проекте пайплайн можно переписать так:</p>
+
+<pre><code class="language-java">@Library('jenkins-shared-libs@master') _
+
+pipeline {
+  agent any
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Build') {
+      steps {
+        dockerCmd 'version'
+        dockerCmd 'build -t ealebed/hellonode:latest .'
+        dockerCmd 'image ls'
+      }
+    }
+  }
+}
+</code></pre>
+
+<p>Продолжаем. Во второй итерации избавимся от необходимости хранить <code>Dockerfile</code> в репозитории проекта. Для этого в git-репозитории с общими библиотеками создаем каталог <code>resources</code> и переносим в него <code>Dockerfile</code> из основного проекта. Далее, в каталоге <code>vars</code> размещаем скрипт <code>createDockerfile.groovy</code> следующего содержания:</p>
+
+<pre><code class="language-java">def call() {
+  def file = libraryResource 'Dockerfile'
+  writeFile file: 'Dockerfile', text: file
+}
+</code></pre>
+
+<p>Описание пайплайна в основном проекте изменяем на следующее:</p>
+
+<pre><code class="language-java">@Library('jenkins-shared-libs@master') _
+
+pipeline {
+  agent any
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Get Dockerfile') {
+      steps {
+        createDockerfile()
+      }
+    }
+    stage('Build') {
+      steps {
+        dockerCmd 'version'
+        dockerCmd 'build -t ealebed/hellonode:latest .'
+        dockerCmd 'image ls'
+      }
+    }
+  }
+}
+</code></pre>
+
+<p>Но что, если мы хотим использовать в других проектах не только отдельные функции, а весь пайплайн целиком? Нет ничего проще!</p>
+
+<p>В git-репозитории с общими библиотеками в каталоге <code>vars</code> создаем скрипт <code>allPipeline.groovy</code> следующего содержания:</p>
+
+<pre><code class="language-java">def call(body) {
+  def pipelineParams= [:]
+  body.resolveStrategy = Closure.DELEGATE_FIRST
+  body.delegate = pipelineParams
+  body()
+
+  pipeline {
+    agent any
+
+    stages {
+      stage('Checkout') {
+        steps {
+          checkout scm
+        }
+      }
+      stage('Get Dockerfile') {
+        steps {
+          script {
+            def tmpFile = libraryResource 'Dockerfile'
+            writeFile file: 'Dockerfile', text: tmpFile
+          }
+        }
+      }
+      stage('Build') {
+        steps {
+          script {
+            sh '''
+              docker version
+              docker build -t ealebed/hellonode:latest .
+              docker image ls
+            '''
+          }
+        }
+      }
+    }
+  }
+}
+</code></pre>
+
+<p>Теперь, в содержимое файла <code>Jenkinsfile</code> (описание пайплайна) в основном репозитории проекта невероятно упрощается:</p>
+
+<pre><code class="language-java">@Library('jenkins-shared-libs@master') _
+
+allPipeline {}
+</code></pre>
+
+<p>Больше интересных примеров можно найти в <a href="https://jenkins.io/doc/book/pipeline/shared-libraries/#writing-libraries">официальной документации</a>, а также <a href="https://dev.to/jalogut/centralise-jenkins-pipelines-configuration-using-shared-libraries">здесь</a>, <a href="https://automatingguy.com/2017/12/29/jenkins-pipelines-shared-libraries/">здесь</a> и <a href="https://jenkins.io/blog/2017/10/02/pipeline-templates-with-shared-libraries/">здесь</a>.</p>
+
+<p>Don&rsquo;t Repeat Yourself!</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fjenkins-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D0%25B5-shared-libraries%2f - Jenkins%3a%20%d0%b8%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b5%20shared%20libraries by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-32-%D1%80%D0%B0%D0%B7%D0%BD%D0%B8%D1%86%D0%B0-%D0%BC%D0%B5%D0%B6%D0%B4%D1%83-create-start-%D0%B8-run/">Docker совет №32: Разница между create, start и run<aside class="dates">Jul 26 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA-docker-compose-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-systemd-unit/">Запуск docker-compose с помощью systemd unit<aside class="dates">Jul 23 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-31-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-build-%D0%B8-image-%D0%B2-%D0%BE%D0%B4%D0%BD%D0%BE%D0%BC-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%B5-%D0%B2-docker-compose/">Docker совет №31: Использование build и image в одном сервисе в docker-compose<aside class="dates">Jul 19 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-12-%D0%B0%D0%BD%D0%BD%D0%BE%D1%82%D0%B0%D1%86%D0%B8%D0%B8/">Знакомство с Kubernetes. Часть 12: Аннотации<aside class="dates">Jul 16 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%BA%D0%B0%D0%BA-%D0%B8%D1%81%D0%BF%D1%80%D0%B0%D0%B2%D0%B8%D1%82%D1%8C-%D0%BE%D1%88%D0%B8%D0%B1%D0%BA%D1%83-getpwnam-nginx-failed/">Как исправить ошибку getpwnam(nginx) failed<aside class="dates">Jul 12 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Jenkins as a code. Часть 1"/>
+  <meta name="twitter:description" content="Идея &ldquo;инфраструктура как код&rdquo; далеко не нова и широко используется в повседневной жизни большинством компаний. В серии статей &ldquo;Jenkins as a code&rdquo; предлагаю разобраться с автоматическим развертыванием и настройкой сервера Jenkins!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="Evgen Lebed&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Jenkins as a code. Часть 1 &middot; Evgen Lebed&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Jenkins as a code. Часть 1
+                    </h1>
+                    <h2 class="headline">
+                    Aug 6, 2018 07:08
+                    · 750 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/jenkins">jenkins</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ci">CI</a>
+                          
+                              <a href="https://ealebed.github.io/tags/scripts">scripts</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Идея &ldquo;инфраструктура как код&rdquo; далеко не нова и широко используется в повседневной жизни большинством компаний. В серии статей &ldquo;Jenkins as a code&rdquo; предлагаю разобраться с автоматическим развертыванием и настройкой сервера Jenkins!</p>
+
+<p></p>
+
+<p>Казалось бы, зачем эти статьи, если можно взять готовую <a href="https://galaxy.ansible.com/geerlingguy/jenkins/">роль jenkins</a> для системы управления конфигурациями Ansible или <a href="https://supermarket.chef.io/cookbooks/jenkins">кукбук jenkins</a> для chef, или даже воспользоваться готовым <a href="https://hub.docker.com/r/jenkins/jenkins/">docker-образом</a>?</p>
+
+<p>Развертывание базовой конфигурации - это действительно несложный процесс (мы его рассматривать не будем, тут каждый волен выбирать свои инструменты), поэтому остановимся подробнее именно на настройке Jenkins под собственные нужды (данная статья), автоматической настройке общих библиотек (вторая часть) и импорте задач (третья часть).</p>
+
+<p>Для кастомизации и тонкой настройки вашего экземпляра Jenkins разработчики предлагают использовать хуков (groovy-скриптов), которые нужно размещать в каталоге <code>${JENKINS_HOME}/init.groovy.d/</code>.</p>
+
+<p>В зависимости от выбранного инструмента развертывания, способ, которым скрипты попадут в нужный каталог будет отличаться. Например, при использовании docker-образа, самым простым будет поместить нужные скрипты в каталог <code>/usr/share/jenkins/ref/init.groovy.d/</code>:</p>
+
+<pre><code class="language-Dockerfile">FROM jenkins/jenkins:lts
+COPY custom.groovy /usr/share/jenkins/ref/init.groovy.d/custom.groovy
+</code></pre>
+
+<p>При старте docker-контейнера все, что находится в каталоге <code>/usr/share/jenkins/ref/</code> копируется в каталог <code>${JENKINS_HOME}</code> (следовательно, каталог <code>init.groovy.d</code> со всем содержимым будет скопирован в нужное место).</p>
+
+<p>Стоит отметить, что скрипты из каталоге <code>${JENKINS_HOME}/init.groovy.d/</code> запускаются при старте Jenkins и выполняются в алфавитном порядке - это очень важный момент, если нужно соблюдать последовательность запуска.</p>
+
+<p>Чаще всего с помощью хуков в Jenkins устанавливают плагины, выполняют глобальную настройку, включают/выключают опции безопасности, добавляют ключи доступа к системе хранения версиями.</p>
+
+<p>В моем случае для тонкой настройки экземпляра Jenkins используется несколько скриптов. Для соблюдения порядка запуска в начале имени каждого скрипта присутствуют цифры.</p>
+
+<p>Скрипт <code>00-install-plugins.groovy</code> выполняет установку необходимых плагинов с зависимостями и выглядит следующим образом:</p>
+
+<pre><code class="language-java">/*
+    Install required plugins and their dependencies.
+*/
+import jenkins.model.*
+import hudson.model.*
+import org.jenkinsci.plugins.*
+import hudson.model.UpdateSite
+import hudson.PluginWrapper
+
+Set&lt;String&gt; plugins_to_install = [
+    &quot;github-pullrequest&quot;,
+    &quot;google-login&quot;,
+    &quot;workflow-aggregator&quot;,
+    &quot;htmlpublisher&quot;,
+    &quot;locale&quot;
+]
+
+Boolean hasConfigBeenUpdated = false
+UpdateSite updateSite = Jenkins.getInstance().getUpdateCenter().getById('default')
+List&lt;PluginWrapper&gt; plugins = Jenkins.instance.pluginManager.getPlugins()
+
+def install_plugin(shortName, UpdateSite updateSite) {
+    println &quot;Installing ${shortName} plugin.&quot;
+    UpdateSite.Plugin plugin = updateSite.getPlugin(shortName)
+    Throwable error = plugin.deploy(false).get().getError()
+    if(error != null) {
+        println &quot;ERROR installing ${shortName}, ${error}&quot;
+    }
+    null
+}
+
+// Check the update site(s) for latest plugins
+println 'Checking plugin updates via Plugin Manager.'
+Jenkins.instance.pluginManager.doCheckUpdatesServer()
+
+// Any plugins need updating?
+Set&lt;String&gt; plugins_to_update = []
+plugins.each {
+    if(it.hasUpdate()) {
+        plugins_to_update &lt;&lt; it.getShortName()
+    }
+}
+
+if(plugins_to_update.size() &gt; 0) {
+    println &quot;Updating plugins...&quot;
+    plugins_to_update.each {
+        install_plugin(it, updateSite)
+    }
+    println &quot;Done updating plugins.&quot;
+    hasConfigBeenUpdated = true
+}
+
+// Get a list of installed plugins
+Set&lt;String&gt; installed_plugins = []
+plugins.each {
+    installed_plugins &lt;&lt; it.getShortName()
+}
+
+// Check to see if there are missing plugins to install
+Set&lt;String&gt; missing_plugins = plugins_to_install - installed_plugins
+if(missing_plugins.size() &gt; 0) {
+    println &quot;Install missing plugins...&quot;
+    missing_plugins.each {
+        install_plugin(it, updateSite)
+    }
+    println &quot;Done installing missing plugins.&quot;
+    hasConfigBeenUpdated = true
+}
+
+if(hasConfigBeenUpdated) {
+    println &quot;Saving Jenkins configuration to disk.&quot;
+    Jenkins.instance.save()
+    Jenkins.instance.restart()
+} else {
+    println &quot;Jenkins up-to-date. Nothing to do.&quot;
+}
+</code></pre>
+
+<p>Вторым по счету запускается скрипт <code>01-global-settings.groovy</code>, устанавливающий количество исполнителей, локаль, глобальные настройки для системы контроля версий и протоколы взаимодействия:</p>
+
+<pre><code class="language-java">import jenkins.model.*
+import org.jenkinsci.plugins.*
+import hudson.security.csrf.DefaultCrumbIssuer
+import hudson.plugins.locale.PluginImpl
+
+def instance = Jenkins.getInstance()
+
+println(&quot;--- Configuring global getting&quot;)
+instance.setNumExecutors(5)
+instance.setCrumbIssuer(new DefaultCrumbIssuer(true))
+instance.setNoUsageStatistics(true)
+instance.save()
+
+println(&quot;--- Configuring locale&quot;)
+PluginImpl localePlugin = (PluginImpl)instance.getPlugin(&quot;locale&quot;)
+localePlugin.systemLocale = &quot;en_US&quot;
+localePlugin.@ignoreAcceptLanguage=true
+
+println(&quot;--- Configuring git global options&quot;)
+def desc = instance.getDescriptor(&quot;hudson.plugins.git.GitSCM&quot;)
+desc.setGlobalConfigName(&quot;jenkins&quot;)
+desc.setGlobalConfigEmail(&quot;jenkins@example.com&quot;)
+desc.save()
+
+println(&quot;--- Configuring protocols&quot;)
+Set&lt;String&gt; agentProtocolsList = ['JNLP4-connect', 'Ping']
+if(!instance.getAgentProtocols().equals(agentProtocolsList)) {
+    instance.setAgentProtocols(agentProtocolsList)
+    println &quot;Agent Protocols have changed.  Setting: ${agentProtocolsList}&quot;
+    instance.save()
+}
+else {
+    println &quot;Nothing changed.  Agent Protocols already configured: ${instance.getAgentProtocols()}&quot;
+}
+</code></pre>
+
+<p>Следующим будет выполнен скрипт с именем <code>02-disable-cli.groovy</code> (как несложно догадаться, отключающий CLI):</p>
+
+<pre><code class="language-java">import jenkins.*
+import jenkins.model.*
+import hudson.model.*
+import java.util.logging.Logger
+import org.jenkinsci.main.modules.sshd.*
+Logger logger = Logger.getLogger(&quot;&quot;)
+
+// Disable CLI access over TCP listener (separate port)
+def p = AgentProtocol.all()
+p.each { x -&gt;
+    if (x.name?.contains(&quot;CLI&quot;)) {
+        logger.info(&quot;Removing protocol ${x.name}&quot;)
+        p.remove(x)
+    }
+}
+
+// Disable CLI access over /cli URL
+def removal = { lst -&gt;
+    lst.each { x -&gt;
+        if (x.getClass().name.contains(&quot;CLIAction&quot;)) {
+            logger.info(&quot;Removing extension ${x.getClass().name}&quot;)
+            lst.remove(x)
+        }
+    }
+}
+
+def j = Jenkins.instance
+removal(j.getExtensionList(RootAction.class))
+removal(j.actions)
+
+// Disable CLI over Remoting
+jenkins.CLI.get().setEnabled(false)
+
+// Allow SSH connections
+def sshdExtension = Jenkins.instance.getExtensionList(SSHD.class)[0]
+sshdExtension.setPort(22222)
+sshdExtension.save()
+
+// Configure Slave-to-Master Access Control
+// https://wiki.jenkins-ci.org/display/JENKINS/Slave+To+Master+Access+Control
+
+def rule = Jenkins.instance.getExtensionList(jenkins.security.s2m.MasterKillSwitchConfiguration.class)[0].rule
+if(!rule.getMasterKillSwitch()) {
+    rule.setMasterKillSwitch(true);
+    logger.info('Disabled agent -&gt; master security for cobertura.');
+}
+else {
+    logger.info('Nothing changed.  Agent -&gt; master security already disabled.');
+}
+
+// Do not annoy with Slave-to-Master Access Control warning
+Jenkins.instance.getExtensionList(jenkins.security.s2m.MasterKillSwitchWarning.class)[0].disable(true);
+Jenkins.instance.save()
+</code></pre>
+
+<p>И, наконец, скрипт <code>03-user-service.groovy</code> создает пользователя и добавляет ему ssh-ключ для доступа к системе контроля версий:</p>
+
+<pre><code class="language-java">public_key = 'ssh-rsa AAAAB3N....TJChv jenkins'
+user = hudson.model.User.get('service')
+user.setFullName('Service User')
+keys = new org.jenkinsci.main.modules.cli.auth.ssh.UserPropertyImpl(public_key)
+user.addProperty(keys)
+user.save()
+</code></pre>
+
+<p>На этом с настройкой экземпляра Jenkins под собственные нужды все, в следующей статье рассмотрим автоматическую настройку общих библиотек (Shared Libraries) при запуске Jenkins.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fjenkins-as-a-code-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-1%2f - Jenkins%20as%20a%20code.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%201 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-33-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B2%D1%83%D1%85-dockerfile-%D0%B2-%D0%BE%D0%B4%D0%BD%D0%BE%D0%BC-compose-%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B5/">Docker совет №33: Использование двух Dockerfile в одном compose-проекте<aside class="dates">Aug 2 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/jenkins-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-shared-libraries/">Jenkins: использование shared libraries<aside class="dates">Jul 30 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-32-%D1%80%D0%B0%D0%B7%D0%BD%D0%B8%D1%86%D0%B0-%D0%BC%D0%B5%D0%B6%D0%B4%D1%83-create-start-%D0%B8-run/">Docker совет №32: Разница между create, start и run<aside class="dates">Jul 26 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA-docker-compose-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-systemd-unit/">Запуск docker-compose с помощью systemd unit<aside class="dates">Jul 23 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-31-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-build-%D0%B8-image-%D0%B2-%D0%BE%D0%B4%D0%BD%D0%BE%D0%BC-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%B5-%D0%B2-docker-compose/">Docker совет №31: Использование build и image в одном сервисе в docker-compose<aside class="dates">Jul 19 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

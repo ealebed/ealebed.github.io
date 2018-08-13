@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Kubernetes. Часть 13: Конфигмапы (ConfigMap)"/>
+  <meta name="twitter:description" content="Использование конфигмапов (ConfigMaps) позволяет разделять конфигурационные файлы и контейнеры с приложениями, избавляя от необходимости упаковывать конфиги в docker-образ. В данной статье рассмотрим несколько примеров использования конфигмапов - давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="Evgen Lebed&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Знакомство с Kubernetes. Часть 13: Конфигмапы (ConfigMap) &middot; Evgen Lebed&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Kubernetes. Часть 13: Конфигмапы (ConfigMap)
+                    </h1>
+                    <h2 class="headline">
+                    Aug 13, 2018 07:03
+                    · 801 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Использование конфигмапов (<code>ConfigMaps</code>) позволяет разделять конфигурационные файлы и контейнеры с приложениями, избавляя от необходимости упаковывать конфиги в docker-образ. В данной статье рассмотрим несколько примеров использования конфигмапов - давайте разберемся!</p>
+
+<p></p>
+
+<p>Для создания объекта <code>ConfigMap</code> в кластере <code>Kubernetes</code> используется команда:</p>
+
+<pre><code class="language-bash">kubectl create configmap &lt;map-name&gt; &lt;data-source&gt;
+</code></pre>
+
+<p>C помощью этой команды можно создавать конфигмапы из каталогов, файлов и аргументов командной строки. Разберем каждый из перечисленных вариантов на примерах.</p>
+
+<p>Создание конфигмапа (<code>ConfigMap</code>) из каталога подразумевает создание объекта из одного или нескольких файлов, расположенных в одной директории. Например, создаем каталог и скачиваем в него два файла с параметрами:</p>
+
+<pre><code class="language-bash">mkdir -p configmap-from-dir/
+wget https://k8s.io/docs/tasks/configure-pod-container/configmap/kubectl/game.properties -O configmap-from-dir/game.properties
+wget https://k8s.io/docs/tasks/configure-pod-container/configmap/kubectl/ui.properties -O configmap-from-dir/ui.properties
+</code></pre>
+
+<pre><code class="language-bash">ls configmap-from-dir/
+game.properties
+ui.properties
+</code></pre>
+
+<p>Создаем конфигмап из каталога:</p>
+
+<pre><code class="language-bash">kubectl create configmap game-config --from-file=configmap-from-dir/
+</code></pre>
+
+<p>Проверим, что созданный конфигмап действительно состоит из двух файлов:</p>
+
+<pre><code class="language-bash">kubectl describe configmaps game-config
+Name:           game-config
+Namespace:      default
+Labels:         &lt;none&gt;
+Annotations:    &lt;none&gt;
+
+Data
+====
+game.properties:        158 bytes
+ui.properties:          83 bytes
+</code></pre>
+
+<p>Проверим содержимое конфигмапа (секция <code>data:</code>), вывод сокращен:</p>
+
+<pre><code class="language-bash">kubectl get configmaps game-config -o yaml
+
+apiVersion: v1
+data:
+  game.properties: |
+    enemies=aliens
+    lives=3
+    enemies.cheat=true
+    enemies.cheat.level=noGoodRotten
+    secret.code.passphrase=UUDDLRLRBABAS
+    secret.code.allowed=true
+    secret.code.lives=30
+  ui.properties: |
+    color.good=purple
+    color.bad=yellow
+    allow.textmode=true
+    how.nice.to.look=fairlyNice
+kind: ConfigMap
+metadata:
+...
+</code></pre>
+
+<p>Создание конфигмапа из файла тоже не должно вызывать сложностей:</p>
+
+<pre><code class="language-bash">kubectl create configmap game-config-2 --from-file=configmap-from-dir/game.properties
+</code></pre>
+
+<p>Проверка:</p>
+
+<pre><code class="language-bash">kubectl describe configmaps game-config-2
+Name:           game-config-2
+Namespace:      default
+Labels:         &lt;none&gt;
+Annotations:    &lt;none&gt;
+
+Data
+====
+game.properties:        158 bytes
+</code></pre>
+
+<p>К слову, есть возможность несколько раз указывать параметр <code>--from-file</code> для данной команды - при этом будет создан конфигмап из нескольких файлов, например:</p>
+
+<pre><code class="language-bash">kubectl create configmap game-config-2 --from-file=configmap-from-dir/game.properties --from-file=configmap-from-dir/ui.properties
+</code></pre>
+
+<p>Есть возможность создавать конфигмапы из файлов с переменными (env-file). Эти файлы должны содержать информацию в формате ключ=значение (по одному на строку), пустые строки и строки, начинающиеся с символа <code>#</code> игнорируются. Например, создадим в нашем каталоге файл с именем <code>game-env-file.properties</code> и следующим содержимым:</p>
+
+<pre><code class="language-bash">enemies=aliens
+lives=3
+allowed=&quot;true&quot;
+</code></pre>
+
+<p>Теперь создадим из этого файла конфигмап командой:</p>
+
+<pre><code class="language-bash">kubectl create configmap game-config-env-file --from-env-file=configmap-from-dir/game-env-file.properties
+</code></pre>
+
+<p>Cодержимое конфигмапа:</p>
+
+<pre><code class="language-bash">kubectl get configmap game-config-env-file -o yaml
+
+apiVersion: v1
+data:
+  allowed: '&quot;true&quot;'
+  enemies: aliens
+  lives: &quot;3&quot;
+kind: ConfigMap
+metadata:
+...
+</code></pre>
+
+<p>Стоит отметить, что при передаче нескольких параметров <code>--from-env-file</code> для создания конфигмапа, будет использован <strong>только</strong> последний из указанных файлов.</p>
+
+<p>Также полезной может оказаться возможность указывать ключ, название которого отличается от имени файла с параметрами, при создании конфигмапа. Например:</p>
+
+<pre><code class="language-bash">kubectl create configmap game-config-3 --from-file=game-special-key=configmap-from-dir/game.properties
+</code></pre>
+
+<p>Обратите внимание на название ключа:</p>
+
+<pre><code class="language-bash">kubectl get configmaps game-config-3 -o yaml
+
+apiVersion: v1
+data:
+  game-special-key: |
+    enemies=aliens
+    lives=3
+    enemies.cheat=true
+    enemies.cheat.level=noGoodRotten
+    secret.code.passphrase=UUDDLRLRBABAS
+    secret.code.allowed=true
+    secret.code.lives=30
+kind: ConfigMap
+metadata:
+...
+</code></pre>
+
+<p>Еще одна возможность - создавать конфигмапы указывая параметры прямо в командной строке с помощью <code>--from-literal</code>:</p>
+
+<pre><code class="language-bash">kubectl create configmap special-config --from-literal=special.how=very --from-literal=special.type=charm
+</code></pre>
+
+<p>Проверим:</p>
+
+<pre><code class="language-bash">kubectl get configmaps special-config -o yaml
+
+apiVersion: v1
+data:
+  special.how: very
+  special.type: charm
+kind: ConfigMap
+metadata:
+...
+</code></pre>
+
+<p>Напоследок - самый удобный (на мой взгляд) вариант создания конфигмапов - описание их в отдельном yaml-файле (по аналогии с другими объектами <code>Kubernetes</code>). Создадим два таких файла:</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: special-config
+  namespace: default
+data:
+  special.how: very
+</code></pre>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-config
+  namespace: default
+data:
+  log_level: INFO
+</code></pre>
+
+<p>Теперь мы можем использовать созданные выше конфигмапы при описании пода (<code>Pod</code>):</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+    - name: test-container
+      image: k8s.gcr.io/busybox
+      command: [ &quot;/bin/sh&quot;, &quot;-c&quot;, &quot;env&quot; ]
+      env:
+        - name: SPECIAL_LEVEL_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: special-config
+              key: special.how
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: env-config
+              key: log_level
+  restartPolicy: Never
+</code></pre>
+
+<p>В данном примере для настройки пода мы явно указываем с каких конфигмапов и значения каких ключей необходимо брать.</p>
+
+<p>Можно создать конфигмап с несколькими парами ключ=значение, например:</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: special-config
+  namespace: default
+data:
+  SPECIAL_LEVEL: very
+  SPECIAL_TYPE: charm
+</code></pre>
+
+<p>Такой конфигмап в описании пода будет выглядеть несколько проще:</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+    - name: test-container
+      image: k8s.gcr.io/busybox
+      command: [ &quot;/bin/sh&quot;, &quot;-c&quot;, &quot;env&quot; ]
+      envFrom:
+      - configMapRef:
+          name: special-config
+  restartPolicy: Never
+</code></pre>
+
+<p>Еще одна важная (и самая востребованная) особенность - возможность монтировать конфигмапы в контейнеры в качестве томов. Пример с использованием созданного ранее конфигмапа <code>special-config</code>:</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: dapi-test-pod
+spec:
+  containers:
+    - name: test-container
+      image: k8s.gcr.io/busybox
+      command: [ &quot;/bin/sh&quot;, &quot;-c&quot;, &quot;ls /etc/config/&quot; ]
+      volumeMounts:
+      - name: config-volume
+        mountPath: /etc/config
+  volumes:
+    - name: config-volume
+      configMap:
+        # Provide the name of the ConfigMap containing the files you want
+        # to add to the container
+        name: special-config
+  restartPolicy: Never
+</code></pre>
+
+<p>При старте данного пода команда <code>ls /etc/config/</code> выведет на экран следующее:</p>
+
+<pre><code class="language-bash">special.level
+special.type
+</code></pre>
+
+<p>Можно указывать конкретный путь для монтирования данных из конфигмапа. Например, сущность <code>special.level</code> из конфигмапа с именем <code>special-config</code> может быть смонтирована в <code>/etc/config/keys</code> внутри контейнера:</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: dapi-test-pod
+spec:
+  containers:
+    - name: test-container
+      image: k8s.gcr.io/busybox
+      command: [ &quot;/bin/sh&quot;,&quot;-c&quot;,&quot;cat /etc/config/keys&quot; ]
+      volumeMounts:
+      - name: config-volume
+        mountPath: /etc/config
+  volumes:
+    - name: config-volume
+      configMap:
+        name: special-config
+        items:
+        - key: special.level
+          path: keys
+  restartPolicy: Never
+</code></pre>
+
+<p>При запуске пода команда <code>cat /etc/config/keys</code> выведет на экран:</p>
+
+<pre><code class="language-bash">very
+</code></pre>
+
+<p>Напоследок стоит отметить, что смонтированные внутрь контейнера конфигмапы будут обновляться автоматически (за исключением монтирования как <a href="https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath">subPath</a>). Период обновления, как указано в документации, составляет <code>kubelet sync period + ttl of ConfigMaps cache in kubelet</code>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-kubernetes-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-13-%25D0%25BA%25D0%25BE%25D0%25BD%25D1%2584%25D0%25B8%25D0%25B3%25D0%25BC%25D0%25B0%25D0%25BF%25D1%258B-configmap%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Kubernetes.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%2013%3a%20%d0%9a%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d0%bc%d0%b0%d0%bf%d1%8b%20%28ConfigMap%29 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-34-%D1%80%D0%B0%D0%B7%D0%BD%D0%B8%D1%86%D0%B0-%D0%BC%D0%B5%D0%B6%D0%B4%D1%83-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82%D0%B0%D0%BC%D0%B8-cmd/">Docker совет №33: Разница между форматами CMD<aside class="dates">Aug 9 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">Jenkins as a code. Часть 1<aside class="dates">Aug 6 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-33-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B2%D1%83%D1%85-dockerfile-%D0%B2-%D0%BE%D0%B4%D0%BD%D0%BE%D0%BC-compose-%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B5/">Docker совет №33: Использование двух Dockerfile в одном compose-проекте<aside class="dates">Aug 2 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/jenkins-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-shared-libraries/">Jenkins: использование shared libraries<aside class="dates">Jul 30 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-32-%D1%80%D0%B0%D0%B7%D0%BD%D0%B8%D1%86%D0%B0-%D0%BC%D0%B5%D0%B6%D0%B4%D1%83-create-start-%D0%B8-run/">Docker совет №32: Разница между create, start и run<aside class="dates">Jul 26 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

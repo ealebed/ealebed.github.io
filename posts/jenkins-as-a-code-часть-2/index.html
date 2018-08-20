@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Jenkins as a code. Часть 2"/>
+  <meta name="twitter:description" content="В первой статье цикла &ldquo;Jenkins as a code&rdquo; мы разобрали несколько примеров настройки экземпляра Jenkins под собственные нужды, в данной статье рассмотрим автоматическую настройку общих библиотек (Shared Libraries) - давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="Evgen Lebed&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Jenkins as a code. Часть 2 &middot; Evgen Lebed&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Jenkins as a code. Часть 2
+                    </h1>
+                    <h2 class="headline">
+                    Aug 20, 2018 07:04
+                    · 299 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/jenkins">jenkins</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ci">CI</a>
+                          
+                              <a href="https://ealebed.github.io/tags/scripts">scripts</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В <a href="https://letsclearitup.com.ua/scripts/jenkins-as-a-code-chast-1.html">первой статье</a> цикла &ldquo;Jenkins as a code&rdquo; мы разобрали несколько примеров настройки экземпляра Jenkins под собственные нужды, в данной статье рассмотрим автоматическую настройку общих библиотек (Shared Libraries) - давайте разберемся!</p>
+
+<p></p>
+
+<p><a href="https://letsclearitup.com.ua/scripts/jenkins-ispolzovanie-shared-libraries.html">Ранее</a> мы уже подробно рассматривали значение общих библиотек для большого количества однотипных проектов, поэтому повторяться не будем. Наша цель - сделать так, чтобы после старта Jenkins общая библиотека уже была подключена и настроена - это избавит от необходимости <a href="https://jenkins.io/doc/book/pipeline/shared-libraries/#global-shared-libraries">настройки через UI</a>.</p>
+
+<p>Как и в предыдущей статье, нам на помощь приходят хуки (groovy-скрипты) из каталога <code>${JENKINS_HOME}/init.groovy.d/</code>. Создадим новый файл <code>04-global-pipeline-library.groovy</code> следующего содержания:</p>
+
+<pre><code class="language-java">import jenkins.model.Jenkins
+import jenkins.plugins.git.GitSCMSource
+import jenkins.plugins.git.traits.BranchDiscoveryTrait
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration
+import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever
+
+List libraries = [] as ArrayList
+
+def instance = Jenkins.getInstance()
+
+println(&quot;--- Configuring global library getting&quot;)
+def githubRepo      = 'https://github.com/ealebed/jenkins-shared-libs.git'
+def libraryName     = 'jenkins-shared-libs'
+def githubBranch    = 'master'
+def credentialsId   = ''
+
+def scm             = new GitSCMSource(githubRepo)
+scm.credentialsId   = credentialsId
+scm.traits          = [new BranchDiscoveryTrait()]
+def retriever       = new SCMSourceRetriever(scm)
+
+def library         = new LibraryConfiguration(libraryName, retriever)
+library.defaultVersion          = githubBranch
+library.implicit                = true
+library.allowVersionOverride    = true
+library.includeInChangesets     = true
+
+libraries &lt;&lt; library
+
+def global_settings = instance.getExtensionList(GlobalLibraries.class)[0]
+global_settings.libraries = libraries
+global_settings.save()
+</code></pre>
+
+<p>Интересующие нас настройки задаются с помощью четырех параметров - <code>githubRepo</code>, <code>libraryName</code>, <code>githubBranch</code> и <code>credentialsId</code>.</p>
+
+<p>Здесь:</p>
+
+<ul>
+<li><code>githubRepo</code> - ссылка на репозиторий с общими библиотеками в системе контроля версий (может быть как https, так и git);</li>
+<li><code>libraryName</code> - имя подключаемой общей библиотеки. Именно это имя будет использоваться в пайплайнах (<code>Jenkinsfile</code>) в формате <code>@Library('jenkins-shared-libs@master') _</code>;</li>
+<li><code>githubBranch</code> - ветка в git-репозитории с общими библиотеками (Она же &ldquo;версия&rdquo;). Также используется в пайплайнах (<code>Jenkinsfile</code>);</li>
+<li><code>credentialsId</code> - креденшелы для подключения к git-репозиторию. Значение может быть пустым - помните скрипт <code>03-user-service.groovy</code> из первой части цикла, которым мы настраивали доступ к системе контроля версий?</li>
+</ul>
+
+<p>В зависимости от выбранного инструмента развертывания Jenkins, нужно добиться появления данного скрипта в каталоге <code>${JENKINS_HOME}/init.groovy.d/</code> - так он будет выполнен при запуске сервиса.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2fjenkins-as-a-code-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-2%2f - Jenkins%20as%20a%20code.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%202 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-35-%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%BA%D0%BE%D0%B4%D0%B0-%D0%B7%D0%B0%D0%B2%D0%B5%D1%80%D1%88%D0%B5%D0%BD%D0%B8%D1%8F-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%8B-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Docker совет №35: Проверка кода завершения работы контейнера<aside class="dates">Aug 16 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-13-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%BC%D0%B0%D0%BF%D1%8B-configmap/">Знакомство с Kubernetes. Часть 13: Конфигмапы (ConfigMap)<aside class="dates">Aug 13 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-34-%D1%80%D0%B0%D0%B7%D0%BD%D0%B8%D1%86%D0%B0-%D0%BC%D0%B5%D0%B6%D0%B4%D1%83-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82%D0%B0%D0%BC%D0%B8-cmd/">Docker совет №33: Разница между форматами CMD<aside class="dates">Aug 9 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">Jenkins as a code. Часть 1<aside class="dates">Aug 6 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-33-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B4%D0%B2%D1%83%D1%85-dockerfile-%D0%B2-%D0%BE%D0%B4%D0%BD%D0%BE%D0%BC-compose-%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B5/">Docker совет №33: Использование двух Dockerfile в одном compose-проекте<aside class="dates">Aug 2 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

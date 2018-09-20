@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Выводим список установленных пакетов в Linux по дате"/>
+  <meta name="twitter:description" content="Порой необходимо узнать когда тот или иной пакет был установлен в операционной системе (например, в целях аудита). В данной статье рассмотрим как вывести список установленных пакетов в Linux, отсортированный по дате установки - давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="Evgen Lebed&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Выводим список установленных пакетов в Linux по дате &middot; Evgen Lebed&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Выводим список установленных пакетов в Linux по дате
+                    </h1>
+                    <h2 class="headline">
+                    Sep 20, 2018 07:02
+                    · 536 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/tips">tips</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ubuntu">ubuntu</a>
+                          
+                              <a href="https://ealebed.github.io/tags/debian">debian</a>
+                          
+                              <a href="https://ealebed.github.io/tags/centos">centos</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Порой необходимо узнать когда тот или иной пакет был установлен в операционной системе (например, в целях аудита). В данной статье рассмотрим <strong>как вывести список установленных пакетов в Linux, отсортированный по дате установки</strong> - давайте разберемся!</p>
+
+<p></p>
+
+<p>Как всем известно, в разных дистрибутивах Linux используются различные пакетные менеджеры, поэтому, в зависимости от операционной системы, команды будут отличаться.</p>
+
+<p>Например, если вы используете дистрибутив Debian (и производные - Ubuntu, Kubuntu, Xubuntu и т.д.), то для вывода списка установленных пакетов достаточно запустить команду:</p>
+
+<pre><code class="language-bash">grep -i &quot;installed&quot; /var/log/dpkg.log
+</code></pre>
+
+<p>Как можно догадаться, данная команда выведет список пакетов, если их установка зафиксирована в файле <code>/var/log/dpkg.log</code>. Так как в Linux используется ротация логов с целью экономии места на диске, старые установочные логи хранятся в архивах. Если нужно узнать список вообще всех установленных пакетов в хронологическом порядке, то стоит воспользоваться командой:</p>
+
+<pre><code class="language-bash">zcat /var/log/dpkg.log.* | grep -i &quot;installed&quot;
+</code></pre>
+
+<p>Результат выполнения команды будет примерно следующим:</p>
+
+<pre><code class="language-bash">...
+
+2018-09-12 09:41:34 status installed libcryptsetup12:amd64 2:2.0.2-1ubuntu1.1
+2018-09-12 09:41:34 status installed libc-bin:amd64 2.27-3ubuntu1
+2018-09-12 09:42:02 status installed man-db:amd64 2.8.3-2
+2018-09-12 09:42:02 status installed initramfs-tools-bin:amd64 0.130ubuntu3.3
+2018-09-12 09:42:08 status installed google-cloud-sdk:all 216.0.0-0
+2018-09-12 09:42:08 status installed initramfs-tools-core:all 0.130ubuntu3.3
+2018-09-12 09:42:08 status installed initramfs-tools:all 0.130ubuntu3.3
+2018-09-12 09:42:21 status installed initramfs-tools:all 0.130ubuntu3.3
+</code></pre>
+
+<p>Команда <code>zcat</code> читает содержимое заархивированных файлов, после чего вывод перенаправляется на обработку команде <code>grep</code>. Если нужно найти время установки конкретного пакета, название (или хотя бы часть) которого вы знаете, можно сделать так:</p>
+
+<pre><code class="language-bash">zcat /var/log/dpkg.log.* | grep -i &quot;installed&quot; | grep &quot;google-cloud&quot;
+
+2018-09-12 09:42:08 status installed google-cloud-sdk:all 216.0.0-0
+</code></pre>
+
+<p>В качестве альтернативы еще можно использовать команду <code>zgrep</code>, например:</p>
+
+<pre><code class="language-bash">zgrep &quot;installed&quot; /var/log/dpkg.log*
+</code></pre>
+
+<p>Вывод команды будет несколько отличаться:</p>
+
+<pre><code class="language-bash">...
+
+/var/log/dpkg.log.9.gz:2018-01-15 08:35:54 status installed man-db:amd64 2.7.6.1-2
+/var/log/dpkg.log.9.gz:2018-01-15 08:35:54 status installed libpython2.7-stdlib:amd64 2.7.14-2ubuntu2
+/var/log/dpkg.log.9.gz:2018-01-15 08:35:55 status installed python2.7:amd64 2.7.14-2ubuntu2
+/var/log/dpkg.log.9.gz:2018-01-15 08:35:55 status installed libpython-stdlib:amd64 2.7.14-2ubuntu1
+/var/log/dpkg.log.9.gz:2018-01-15 08:36:00 status installed google-cloud-sdk:all 184.0.0-0
+/var/log/dpkg.log.9.gz:2018-01-15 08:36:00 status installed python:amd64 2.7.14-2ubuntu1
+/var/log/dpkg.log.9.gz:2018-01-15 08:36:00 status installed python-crcmod:amd64 1.7-2build4
+</code></pre>
+
+<p>Как видим, в данном примере в начале строки также присутствует имя файла, в котором нашлась соответствующая запись.</p>
+
+<p>Для RPM-based дистрибутивов (RedHat, CentOS, Scientific Linux, Fedora, SUSE) вывести список установленных пакетов по дате можно с помощью следующей команды:</p>
+
+<pre><code class="language-bash">rpm -qa --last
+</code></pre>
+
+<p>Команда покажет примерно следующий результат:</p>
+
+<pre><code class="language-bash">...
+
+libxml2-2.9.1-6.el7_2.3.x86_64 Sat 09 Dec 2017 10:15:00 AM EAT
+findutils-4.5.11-5.el7.x86_64 Sat 09 Dec 2017 10:15:00 AM EAT
+libgpg-error-1.12-3.el7.x86_64 Sat 09 Dec 2017 10:14:59 AM EAT
+libffi-3.0.13-18.el7.x86_64 Sat 09 Dec 2017 10:14:59 AM EAT
+libcap-ng-0.7.5-4.el7.x86_64 Sat 09 Dec 2017 10:14:59 AM EAT
+libattr-2.4.46-12.el7.x86_64 Sat 09 Dec 2017 10:14:59 AM EAT
+libacl-2.2.51-12.el7.x86_64 Sat 09 Dec 2017 10:14:59 AM EAT
+dbus-libs-1.6.12-17.el7.x86_64 Sat 09 Dec 2017 10:14:59 AM EAT
+sed-4.2.2-5.el7.x86_64 Sat 09 Dec 2017 10:14:58 AM EAT
+</code></pre>
+
+<p>Для поиска даты установки конкретного пакета, достаточно добавить его название в качестве параметра к команде выше, например:</p>
+
+<pre><code class="language-bash">rpm -qa --last postfix3
+
+postfix3-3.2.0-1.gf.el7.x86_64 Thu 25 May 2017 01:04:35 AM EAT
+</code></pre>
+
+<p>В дистрибутивах Arch Linux (в том числе Antergos, Manjaro, Apricity, Ninja OS) для решения нашей задачи можно воспользоваться утилитой <code>expac</code>. Для получения информации в понятном формате, вызывать данную утилиту необходимо с использованием параметра:</p>
+
+<pre><code class="language-bash">expac --timefmt='%F %T' '%l %n'
+</code></pre>
+
+<p>Можно дополнить данный вызов сортировкой и дополнительными фильтрами - все зависит только от ваших требований. Например, так можно вывести 5 последних установленных пакетов в системе:</p>
+
+<pre><code class="language-bash">expac --timefmt='%F %T' '%l %n' | sort -n | tail -n 5
+2018-01-15 14:41:15 webkitgtk
+2018-01-16 09:18:26 babl
+2018-01-16 09:18:26 gegl02
+2018-01-16 09:18:26 lcms
+2018-01-16 09:18:26 libspiro
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25B2%25D1%258B%25D0%25B2%25D0%25BE%25D0%25B4%25D0%25B8%25D0%25BC-%25D1%2581%25D0%25BF%25D0%25B8%25D1%2581%25D0%25BE%25D0%25BA-%25D1%2583%25D1%2581%25D1%2582%25D0%25B0%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25BB%25D0%25B5%25D0%25BD%25D0%25BD%25D1%258B%25D1%2585-%25D0%25BF%25D0%25B0%25D0%25BA%25D0%25B5%25D1%2582%25D0%25BE%25D0%25B2-%25D0%25B2-linux-%25D0%25BF%25D0%25BE-%25D0%25B4%25D0%25B0%25D1%2582%25D0%25B5%2f - %d0%92%d1%8b%d0%b2%d0%be%d0%b4%d0%b8%d0%bc%20%d1%81%d0%bf%d0%b8%d1%81%d0%be%d0%ba%20%d1%83%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%bb%d0%b5%d0%bd%d0%bd%d1%8b%d1%85%20%d0%bf%d0%b0%d0%ba%d0%b5%d1%82%d0%be%d0%b2%20%d0%b2%20Linux%20%d0%bf%d0%be%20%d0%b4%d0%b0%d1%82%d0%b5 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-16-%D1%80%D0%B0%D0%B7%D0%BB%D0%B8%D1%87%D0%B8%D1%8F-%D0%B2-replication-controller-replica-set-%D0%B8-deployments/">Знакомство с Kubernetes. Часть 16: Различия в Replication Controller, Replica Set и Deployments<aside class="dates">Sep 14 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-15-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-kubectl/">Знакомство с Kubernetes. Часть 15: Установка и настройка kubectl<aside class="dates">Sep 6 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-37-incorrect-username-or-password-%D0%BF%D1%80%D0%B8-%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B8-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%BE%D0%B2/">Docker совет №37: Incorrect Username or Password при скачивании образов<aside class="dates">Aug 30 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

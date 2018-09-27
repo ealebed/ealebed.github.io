@@ -82,24 +82,24 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>Теперь, когда мы успешно <a href="https://letsclearitup.com.ua/debian/active-passive-cluster-v-linux-chast-2-ustanovka-i-nastroyka-pacemaker-corosync.html">установили</a> и <a href="https://letsclearitup.com.ua/debian/active-passive-cluster-v-linux-chast-3-nastroyka-resursov-klastera.html">настроили</a> Active/Passive Cluster на базе <strong>Corosync и Pacemaker</strong> давайте протестируем его работоспособность!</p>
+                    <p>Теперь, когда мы успешно <a href="https://ealebed.github.io/posts/active-passive-cluster-%D0%B2-linux-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-pacemaker-%D0%B8-corosync/">установили</a> и <a href="https://ealebed.github.io/posts/active-passive-cluster-%D0%B2-linux-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D0%BE%D0%B2-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B0/">настроили</a> Active/Passive Cluster на базе <strong>Corosync и Pacemaker</strong> давайте протестируем его работоспособность!</p>
 
 <p></p>
 
 <p>Прежде всего, разберемся с миграцией ресурсов на конкретном примере. Смотрим, на какой ноде сейчас запущен ресурс <code>failover_ip</code>:</p>
 
-<pre><code>crm resource status failover_ip
+<pre><code class="language-bash">crm resource status failover_ip
 resource failover_ip is running on: db1
 </code></pre>
 
 <p>Ресурс сейчас запущен на db1, давайте выполним миграцию ресурса <code>failover_ip</code> на ноду db2:</p>
 
-<pre><code>crm resource migrate failover_ip
+<pre><code class="language-bash">crm resource migrate failover_ip
 </code></pre>
 
 <p>Проверяем:</p>
 
-<pre><code>crm resource status failover_ip
+<pre><code class="language-bash">crm resource status failover_ip
 resource failover_ip is running on: db2
 </code></pre>
 
@@ -107,7 +107,7 @@ resource failover_ip is running on: db2
 
 <p>Проверить текущий вес ресурса можно так:</p>
 
-<pre><code>crm resource constraints failover_ip
+<pre><code class="language-bash">crm resource constraints failover_ip
 * failover_ip
   : Node db1                      (score=-INFINITY, id=cli-ban-failover_ip-on-db1)
 loop failover_ip
@@ -115,22 +115,22 @@ loop failover_ip
 
 <p>Чтобы вернуть настройки ресурсов кластера в первоначальный вид, необходимо выполнить одну из трех команд (на ваш выбор):</p>
 
-<pre><code>crm_resource -U --resource failover_ip
+<pre><code class="language-bash">crm_resource -U --resource failover_ip
 </code></pre>
 
 <p>или:</p>
 
-<pre><code>crm resource unmigrate failover_ip
+<pre><code class="language-bash">crm resource unmigrate failover_ip
 </code></pre>
 
 <p>или:</p>
 
-<pre><code>crm configure delete cli-ban-failover_ip-on-db1
+<pre><code class="language-bash">crm configure delete cli-ban-failover_ip-on-db1
 </code></pre>
 
 <p>Теперь проверим зависимости ресурсов. Текущее состояние кластера:</p>
 
-<pre><code>crm status noheaders
+<pre><code class="language-bash">crm status noheaders
 Online: [ db1 db2 ]
 
  Master/Slave Set: ms_drbd_mysql [drbd_mysql]
@@ -157,12 +157,12 @@ Online: [ db1 db2 ]
 
 <p>Согласно настройкам нашего кластера, если не запущен ресурс <code>failover_ip</code>, то остальные зависимые от него ресурсы также должны быть остановлены. Давайте убедимся в этом:</p>
 
-<pre><code>crm resource stop failover_ip
+<pre><code class="language-bash">crm resource stop failover_ip
 </code></pre>
 
 <p>Проверяем:</p>
 
-<pre><code>crm status noheaders
+<pre><code class="language-bash">crm status noheaders
 Online: [ db1 db2 ]
 
  Master/Slave Set: ms_drbd_mysql [drbd_mysql]
@@ -189,17 +189,17 @@ Online: [ db1 db2 ]
 
 <p>Запускаем ресурс <code>failover_ip</code> командой:</p>
 
-<pre><code>crm resource start failover_ip
+<pre><code class="language-bash">crm resource start failover_ip
 </code></pre>
 
-<p>Еще может быть очень полезно выводить одну ноду из кластера, например для обновления ПО или апгрейда оборудования (для выполнения таких работ, как минимум, обязательно надо <a href="https://letsclearitup.com.ua/debian/obsluzhivanie-serverov-v-klastere-na-baze-pacemaker.html">переводить кластер в режим обслуживания</a>). При выводе активной ноды (db1) из кластера, ресурсы переезжают на вторую (db2):</p>
+<p>Еще может быть очень полезно выводить одну ноду из кластера, например для обновления ПО или апгрейда оборудования (для выполнения таких работ, как минимум, обязательно надо <a href="https://ealebed.github.io/posts/%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BE%D0%B2-%D0%B2-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B5-%D0%BD%D0%B0-%D0%B1%D0%B0%D0%B7%D0%B5-pacemaker/">переводить кластер в режим обслуживания</a>). При выводе активной ноды (db1) из кластера, ресурсы переезжают на вторую (db2):</p>
 
-<pre><code>crm node standby db1
+<pre><code class="language-bash">crm node standby db1
 </code></pre>
 
 <p>Проверяем:</p>
 
-<pre><code>crm status noheaders
+<pre><code class="language-bash">crm status noheaders
 Node db1: standby
 Online: [ db2 ]
 
@@ -225,7 +225,7 @@ Online: [ db2 ]
 
 <p>Вернуть ноду обратно в кластер можно командой (при этом ресурсы останутся запущенными на ноде db2):</p>
 
-<pre><code>crm node online db1
+<pre><code class="language-bash">crm node online db1
 </code></pre>
                 </section>
             </article>
@@ -268,6 +268,10 @@ Online: [ db2 ]
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -281,10 +285,6 @@ Online: [ db2 ]
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

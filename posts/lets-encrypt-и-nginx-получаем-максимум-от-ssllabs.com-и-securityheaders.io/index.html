@@ -84,17 +84,17 @@
 
 <p></p>
 
-<p>Однако время не стоит на месте — требования к безопасности меняются, повсеместно внедряется <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-openssl-1-0-2-dlya-http2-0.html">http2.0</a>, разрабатываются <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-podderzhkoy-brotli.html">новые алгоритмы сжатия</a> и уже недостаточно просто подключить SSL-сертификат на сайте. Что нужно сделать чтобы получить максимальную оценку от сервисов <a href="https://www.ssllabs.com/ssltest/">ssllabs.com</a> и <a href="https://securityheaders.io/">securityheaders.io</a> — давайте разберемся!</p>
+<p>Однако время не стоит на месте — требования к безопасности меняются, повсеместно внедряется <a href="https://ealebed.github.io/posts/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-openssl-1.0.2-%D0%B4%D0%BB%D1%8F-http2.0/">http2.0</a>, разрабатываются <a href="https://ealebed.github.io/posts/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">новые алгоритмы сжатия</a> и уже недостаточно просто подключить SSL-сертификат на сайте. Что нужно сделать чтобы получить максимальную оценку от сервисов <a href="https://www.ssllabs.com/ssltest/">ssllabs.com</a> и <a href="https://securityheaders.io/">securityheaders.io</a> — давайте разберемся!</p>
 
 <p><strong>Примечание.</strong> Будьте внимательны и выполняйте предложенные действия на свой страх и риск.</p>
 
 <p>Считаем, что:</p>
 
 <ul>
-<li>у вас есть SSL-сертификат (от Let’s Encrypt или платный), о том как получить бесплатный сертификат и подключить его в Nginx читайте <a href="https://letsclearitup.com.ua/debian/nastroyka-nginx-ssl-ot-let-s-encrypt-na-debian-8.html">здесь</a> или <a href="https://letsclearitup.com.ua/ubuntu/nastroyka-nginx-ssl-ot-let-s-encrypt-variant-2-elegantnyiy.html">здесь</a>;</li>
-<li>у вас установлена версия Nginx с <a href="https://letsclearitup.com.ua/debian/kak-vklyuchit-http2-0-v-nginx.html">поддержкой http2.0</a>;</li>
-<li>желательно, чтобы ваша версия Nginx <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-openssl-1-0-2-dlya-http2-0.html">поддерживала APLN</a> (Application-Layer Protocol Negotiation);</li>
-<li>не повредит, если вы стараетесь быть «в теме» и добавили <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-podderzhkoy-brotli.html">поддержку модуля ngx_brotli</a> в Nginx.</li>
+<li>у вас есть SSL-сертификат (от Let’s Encrypt или платный), о том как получить бесплатный сертификат и подключить его в Nginx читайте <a href="https://ealebed.github.io/posts/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-%D0%B8-ssl-%D0%BE%D1%82-lets-encrypt-%D0%BD%D0%B0-debian-8/">здесь</a> или <a href="https://ealebed.github.io/posts/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-ssl-%D0%BE%D1%82-lets-encrypt-%D0%B2%D0%B0%D1%80%D0%B8%D0%B0%D0%BD%D1%82-2-%D1%8D%D0%BB%D0%B5%D0%B3%D0%B0%D0%BD%D1%82%D0%BD%D1%8B%D0%B9/">здесь</a>;</li>
+<li>у вас установлена версия Nginx с <a href="https://ealebed.github.io/posts/%D0%BA%D0%B0%D0%BA-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C-http2.0-%D0%B2-nginx/">поддержкой http2.0</a>;</li>
+<li>желательно, чтобы ваша версия Nginx <a href="https://ealebed.github.io/posts/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-openssl-1.0.2-%D0%B4%D0%BB%D1%8F-http2.0/">поддерживала APLN</a> (Application-Layer Protocol Negotiation);</li>
+<li>не повредит, если вы стараетесь быть «в теме» и добавили <a href="https://ealebed.github.io/posts/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">поддержку модуля ngx_brotli</a> в Nginx.</li>
 </ul>
 
 <p>Итак, приступим. Ранее мы договаривались для удобства настройки хранить все специфические для SSL параметры в конфигурационном файле <code>/etc/nginx/ssl/ssl.conf</code> и с помощью директивы <code>include</code> подключать эти настройки в блоках server.</p>
@@ -187,6 +187,10 @@ resolver_timeout 10s;
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -200,10 +204,6 @@ resolver_timeout 10s;
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

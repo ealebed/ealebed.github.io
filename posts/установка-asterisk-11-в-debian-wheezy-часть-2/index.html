@@ -80,7 +80,7 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>Необходимые <a href="https://letsclearitup.com.ua/debian/ustanovka-asterisk-11-v-debian-wheezy-chast-1.html">подготовительные работы</a> выполнены, самое время скомпилировать и <strong>установить Asterisk 11</strong>. Давайте разберемся с этим!</p>
+                    <p>Необходимые <a href="https://ealebed.github.io/posts/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">подготовительные работы</a> выполнены, самое время скомпилировать и <strong>установить Asterisk 11</strong>. Давайте разберемся с этим!</p>
 
 <p></p>
 
@@ -88,21 +88,21 @@
 <li>переходим в каталог с исходниками <strong>Asterisk’а</strong>:</li>
 </ul>
 
-<pre><code>cd /usr/src/asterisk-scr/asterisk-11.12.1
+<pre><code class="language-bash">cd /usr/src/asterisk-scr/asterisk-11.12.1
 </code></pre>
 
 <ul>
 <li>запускаем скрипт <code>./configure</code>, который проверит системные требования, наличие всех необходимых библиотек и пакетов, а также подготовит исходники к компиляции:</li>
 </ul>
 
-<pre><code>./configure
+<pre><code class="language-bash">./configure
 </code></pre>
 
 <p><strong>Примечание.</strong> Для получения списка недостающих пакетов достаточно запустить скрипт <code>/usr/src/asterisk-scr/asterisk-11.12.1/contrib/scripts/install_prereq test</code></p>
 
 <p>Скрипт <code>./configure</code> может выполняться несколько минут, в зависимости от параметров сервера. Если при выполнении скрипта будут обнаружены недостающие библиотеки или неразрешенные зависимости, то выполнение будет прервано. В таком случае, после разрешения конфликтов потребуется запустить скрипт <code>./configure</code> еще раз. После успешного выполнения скрипта вы должны увидеть сообщение, похожее на это:</p>
 
-<pre><code>                .$$$$$$$$$$$$$$$=..      
+<pre><code class="language-text">                .$$$$$$$$$$$$$$$=..      
               .$7$7..        .7$$7:.    
             .$7$7..           .7$$7:.
           .$$:.                 ,$7.7
@@ -134,7 +134,7 @@ configure: Host CPU : x86_64
 <li>на следующем этапе нужно указать <strong>Asterisk’у</strong> какие модули мы будем использовать. Для этого запускаем <code>Menuselect</code>:</li>
 </ul>
 
-<pre><code>make menuselect
+<pre><code class="language-bash">make menuselect
 </code></pre>
 
 <ul>
@@ -142,14 +142,14 @@ configure: Host CPU : x86_64
 <li>теперь компилируем <strong>Asterisk</strong>:</li>
 </ul>
 
-<pre><code>make
+<pre><code class="language-bash">make
 </code></pre>
 
 <ul>
 <li>после успешного выполнения команды вы увидите вполне очевидное сообщение:</li>
 </ul>
 
-<pre><code>+--------- Asterisk Build Complete ---------+
+<pre><code class="language-bash">+--------- Asterisk Build Complete ---------+
 + Asterisk has successfully been built, and +
 + can be installed by running:              +
 +                                           +
@@ -162,14 +162,14 @@ configure: Host CPU : x86_64
 <li>запускаем установку:</li>
 </ul>
 
-<pre><code>make install
+<pre><code class="language-bash">make install
 </code></pre>
 
 <ul>
 <li>получаем еще одно сообщение после удачной установки:</li>
 </ul>
 
-<pre><code>+---- Asterisk Installation Complete -------+
+<pre><code class="language-text">+---- Asterisk Installation Complete -------+
 +                                           +
 +    YOU MUST READ THE SECURITY DOCUMENT    +
 +                                           +
@@ -188,21 +188,21 @@ configure: Host CPU : x86_64
 <li>далее нам понадобится набор базовых конфигов <strong>Asterisk’а</strong>. Чтобы установить их, достаточно выполнить команду:</li>
 </ul>
 
-<pre><code>make samples
+<pre><code class="language-bash">make samples
 </code></pre>
 
 <ul>
 <li>для установки init-скриптов (с их помощью будем запускать/останавливать/перезапускать <strong>Asterisk</strong> и перечитывать конфигурационные файлы) выполняем:</li>
 </ul>
 
-<pre><code>make config
+<pre><code class="language-bash">make config
 </code></pre>
 
 <ul>
 <li>для базовой настройки ротации логов запускаем:</li>
 </ul>
 
-<pre><code>make install-logrotate
+<pre><code class="language-bash">make install-logrotate
 </code></pre>
 
 <p>По умолчанию <strong>установленный Asterisk</strong> запускается от пользователя <code>root</code>, что небезопасно с моей точки зрения. Чтобы исправить это, выполним следующие шаги:</p>
@@ -211,21 +211,21 @@ configure: Host CPU : x86_64
 <li>в файле <code>/etc/default/asterisk</code> раскомментируем строки <code>AST_USER='asterisk'</code> и <code>AST_GROUP='asterisk'</code></li>
 </ul>
 
-<pre><code>nano /etc/default/asterisk
+<pre><code class="language-bash">nano /etc/default/asterisk
 </code></pre>
 
 <ul>
 <li>добавим пользователя <code>asterisk</code>:</li>
 </ul>
 
-<pre><code>adduser asterisk --disabled-password --no-create-home --gecos &quot;asterisk PBX user&quot;
+<pre><code class="language-bash">adduser asterisk --disabled-password --no-create-home --gecos &quot;asterisk PBX user&quot;
 </code></pre>
 
 <ul>
 <li>меняем права на следующие каталоги:</li>
 </ul>
 
-<pre><code>chown -R asterisk:asterisk /var/lib/asterisk
+<pre><code class="language-bash">chown -R asterisk:asterisk /var/lib/asterisk
 chown -R asterisk:asterisk /var/log/asterisk
 chown -R asterisk:asterisk /var/run/asterisk
 chown -R asterisk:asterisk /var/spool/asterisk
@@ -245,27 +245,27 @@ chmod -R u=rwX,g=rX,o= /etc/asterisk
 <li>примонтируем раздел для хранения записей звонков, созданный на подготовительном этапе:</li>
 </ul>
 
-<pre><code>mount /dev/vg0/calls /var/spool/asterisk/
+<pre><code class="language-bash">mount /dev/vg0/calls /var/spool/asterisk/
 </code></pre>
 
 <ul>
 <li>добавим в файл <code>/etc/fstab</code> для автомонтирования <code>/dev/vg0/calls /var/spool/asterisk ext4 defaults,noatime 0 0</code>:</li>
 </ul>
 
-<pre><code>nano /etc/fstab
+<pre><code class="language-bash">nano /etc/fstab
 </code></pre>
 
 <p>Проверить статус <strong>Asterisk’а</strong> можно так:</p>
 
-<pre><code>/etc/init.d/asterisk status
+<pre><code class="language-bash">/etc/init.d/asterisk status
 </code></pre>
 
 <p>Для запуска <strong>Asterisk’а</strong> используем:</p>
 
-<pre><code>/etc/init.d/asterisk start
+<pre><code class="language-bash">/etc/init.d/asterisk start
 </code></pre>
 
-<p>На этом <strong>базовая установка Asterisk 11</strong> в Debian Wheezy закончена, далее займемся <a href="https://letsclearitup.com.ua/debian/bazovaya-nastroyka-asterisk-11-v-debian-wheezy-obsluzhivanie-vnutrennih-zvonkov.html">настройкой Asterisk’а для обслуживания внутренних звонков</a>.</p>
+<p>На этом <strong>базовая установка Asterisk 11</strong> в Debian Wheezy закончена, далее займемся <a href="https://ealebed.github.io/posts/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B2%D0%BD%D1%83%D1%82%D1%80%D0%B5%D0%BD%D0%BD%D0%B8%D1%85-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%BE%D0%B2/">настройкой Asterisk’а для обслуживания внутренних звонков</a>.</p>
                 </section>
             </article>
 
@@ -307,6 +307,10 @@ chmod -R u=rwX,g=rX,o= /etc/asterisk
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -320,10 +324,6 @@ chmod -R u=rwX,g=rX,o= /etc/asterisk
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

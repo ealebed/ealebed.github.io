@@ -90,48 +90,48 @@
 
 <p><strong>Устанавливаем GlusterFS-server</strong> на всех серверах:</p>
 
-<pre><code>aptitude install -t wheezy-backports glusterfs-server
+<pre><code class="language-bash">aptitude install -t wheezy-backports glusterfs-server
 </code></pre>
 
 <p>Сразу после установки проверим состояние кластера:</p>
 
-<pre><code>gluster peer status
+<pre><code class="language-bash">gluster peer status
 Number of Peers: 0
 </code></pre>
 
 <p>Подключаемся на любой хост из нашего списка (например, 192.168.0.1) и создаем кластер:</p>
 
-<pre><code>gluster peer probe 192.168.0.3
+<pre><code class="language-bash">gluster peer probe 192.168.0.3
 peer probe: success.
 </code></pre>
 
-<pre><code>gluster peer probe 192.168.0.7
+<pre><code class="language-bash">gluster peer probe 192.168.0.7
 peer probe: failed: 192.168.0.7 is already part of another cluster
 </code></pre>
 
-<pre><code>gluster peer probe 192.168.0.13
+<pre><code class="language-bash">gluster peer probe 192.168.0.13
 peer probe: success.
 </code></pre>
 
-<pre><code>gluster peer probe 192.168.0.14
+<pre><code class="language-bash">gluster peer probe 192.168.0.14
 peer probe: success.
 </code></pre>
 
 <p>Добавлять в список хостов кластера «самого себя» не нужно:</p>
 
-<pre><code>gluster peer probe 192.168.0.1
+<pre><code class="language-bash">gluster peer probe 192.168.0.1
 peer probe: success. Probe on localhost not needed
 </code></pre>
 
 <p>Если вы ошибетесь и попробуете добавить один и тот же сервер дважды, то увидите примерно следующее:</p>
 
-<pre><code>gluster peer probe 192.168.0.3
+<pre><code class="language-bash">gluster peer probe 192.168.0.3
 peer probe: success. Host 192.168.0.3 port 24007 already in peer list
 </code></pre>
 
 <p>Как вы наверняка заметили, что-то пошло не так при добавлении узла с ip-адресом 192.168.0.7. Проверяем состояние нашего кластера:</p>
 
-<pre><code>gluster peer status
+<pre><code class="language-bash">gluster peer status
 Number of Peers: 4
 
 Hostname: 192.168.0.7
@@ -153,17 +153,17 @@ State: Peer in Cluster (Connected)
 
 <p>Мы не можем создать кластер, так как один из его узлов находится в состоянии <code>Accepted peer request</code>. В моем случае всему виной старые конфиги <strong>GlusterFS-server</strong> 3.2.7, поэтому делаем так:</p>
 
-<pre><code>gluster peer detach 192.168.0.7
+<pre><code class="language-bash">gluster peer detach 192.168.0.7
 peer detach: success
 </code></pre>
 
-<pre><code>gluster peer probe 192.168.0.7
+<pre><code class="language-bash">gluster peer probe 192.168.0.7
 peer probe: success.
 </code></pre>
 
 <p>Теперь состояние узлов соответствует нашим ожиданиям:</p>
 
-<pre><code>gluster peer status
+<pre><code class="language-bash">gluster peer status
 Number of Peers: 4
 
 Hostname: 192.168.0.13
@@ -185,19 +185,19 @@ State: Peer in Cluster (Connected)
 
 <p>Можно сделать аналогичные проверки со всех хостов кластера. Теперь создадим реплицируемый том (<code>volume</code>):</p>
 
-<pre><code>gluster volume create www replica 5 transport tcp 192.168.0.1:/var/www/testsite 192.168.0.7:/var/www/testsite 192.168.0.3:/var/www/testsite 192.168.0.13:/var/www/testsite 192.168.0.14:/var/www/testsite
+<pre><code class="language-bash">gluster volume create www replica 5 transport tcp 192.168.0.1:/var/www/testsite 192.168.0.7:/var/www/testsite 192.168.0.3:/var/www/testsite 192.168.0.13:/var/www/testsite 192.168.0.14:/var/www/testsite
 volume create: www: success: please start the volume to access data
 </code></pre>
 
 <p>Запускаем созданный том:</p>
 
-<pre><code>gluster volume start www
+<pre><code class="language-bash">gluster volume start www
 volume start: www: success
 </code></pre>
 
 <p>После чего проверим статус нашего тома:</p>
 
-<pre><code>gluster volume status
+<pre><code class="language-bash">gluster volume status
 Status of volume: www
 Gluster process						Port	Online	Pid
 ------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ There are no active volume tasks
 
 <p>Интересующую информацию о реплицируемом томе можно еще посмотреть так:</p>
 
-<pre><code>gluster volume info
+<pre><code class="language-bash">gluster volume info
 
 Volume Name: www
 Type: Replicate
@@ -242,14 +242,14 @@ Brick5: 192.168.0.14:/var/www/testsite
 
 <p>Добавляем в <code>/etc/fstab</code> на первом узле (192.168.0.1) следующую строку:</p>
 
-<pre><code>...
+<pre><code class="language-text">...
 localhost:/www    /var/www/svnup             glusterfs rw,nosuid,nodev,exec,nouser,async,_netdev  0 0
 ...
 </code></pre>
 
 <p>Монтируем:</p>
 
-<pre><code>mount /var/www/svnup
+<pre><code class="language-bash">mount /var/www/svnup
 </code></pre>
 
 <p>Теперь можно &lsquo;заливать&rsquo; данные в каталог <code>/var/www/svnup</code> на первом узле кластера и они будут легко и просто реплицироваться на все 5 хостов к каталог <code>/var/www/testsite</code>. Это очень удобно, например, для распределения web-контента на бэкэндах.</p>
@@ -294,6 +294,10 @@ localhost:/www    /var/www/svnup             glusterfs rw,nosuid,nodev,exec,nous
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -307,10 +311,6 @@ localhost:/www    /var/www/svnup             glusterfs rw,nosuid,nodev,exec,nous
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

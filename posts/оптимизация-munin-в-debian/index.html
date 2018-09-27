@@ -92,12 +92,12 @@
 
 <p>Установим необходимый пакет:</p>
 
-<pre><code>aptitude install rrdcached
+<pre><code class="language-bash">aptitude install rrdcached
 </code></pre>
 
 <p>Запустим следующую команду для создания сокета:</p>
 
-<pre><code>sudo -u munin /usr/bin/rrdcached \
+<pre><code class="language-bash">sudo -u munin /usr/bin/rrdcached \
   -p /run/munin/rrdcached.pid \
   -B -b /var/lib/munin/ \
   -F -j /var/lib/munin/rrdcached-journal/ \
@@ -117,19 +117,19 @@
 
 <p>Добавим в конфигурационный файл <code>/etc/munin/munin.conf</code> следующую строку:</p>
 
-<pre><code>rrdcached_socket /run/munin/rrdcached.sock
+<pre><code class="language-bash">rrdcached_socket /run/munin/rrdcached.sock
 </code></pre>
 
 <p>и перезапустим Munin для применения изменений.</p>
 
 <p>Скрипты <code>/usr/share/munin/munin-update</code> и <code>/usr/share/munin/munin-graph</code> по умолчанию запускаются по крону каждые 5 минут (одной задачей в кронтабе <code>/etc/cron.d/munin</code>). Эти скрипты лучше разделить, для этого создаем файл <code>/usr/bin/munin-graph</code>:</p>
 
-<pre><code>nano /usr/bin/munin-graph
+<pre><code class="language-bash">nano /usr/bin/munin-graph
 </code></pre>
 
 <p>Содержимое файла следующее:</p>
 
-<pre><code>#!/bin/bash
+<pre><code class="language-bash">#!/bin/bash
 # We always launch munin-html.
 # It is a noop if html_strategy is &amp;quot;cgi&amp;quot;
 nice /usr/share/munin/munin-html $@ || exit 1
@@ -141,12 +141,12 @@ nice /usr/share/munin/munin-graph --cron $@ || exit 1
 
 <p>Делаем файл исполняемым:</p>
 
-<pre><code>chmod +x /usr/bin/munin-graph
+<pre><code class="language-bash">chmod +x /usr/bin/munin-graph
 </code></pre>
 
 <p>Правим существующий файл <code>/usr/bin/munin-cron</code> (закомментируем строки, которые добавили в файл <code>/usr/bin/munin-graph</code>):</p>
 
-<pre><code>...
+<pre><code class="language-bash">...
 # We always launch munin-html.
 # It is a noop if html_strategy is &amp;quot;cgi&amp;quot;
 # nice /usr/share/munin/munin-html $@ || exit 1
@@ -175,7 +175,7 @@ nice /usr/share/munin/munin-graph --cron $@ || exit 1
 
 <p>При большом количестве хостов (&gt;200) можно снизить нагрузку на диск если Munin будет генеририровать html-страницы в памяти. Для этого, проверим параметр <code>htmldir</code> в конфигурационном файле <code>/etc/munin/munin.conf</code>:</p>
 
-<pre><code>cat /etc/munin/munin.conf | grep htmldir
+<pre><code class="language-bash">cat /etc/munin/munin.conf | grep htmldir
 htmldir /var/cache/munin/www
 </code></pre>
 
@@ -187,7 +187,7 @@ tmpfs  /var/cache/munin/www   tmpfs   rw,mode=755,uid=munin,gid=munin,size=150M 
 
 <p>и выполним:</p>
 
-<pre><code>mount -a
+<pre><code class="language-bash">mount -a
 </code></pre>
 
 <p><strong>Примечание.</strong> Эффект от предложенных шагов будет тем ощутимее, чем больше хостов мониторится с помощью Munin.</p>
@@ -232,6 +232,10 @@ tmpfs  /var/cache/munin/www   tmpfs   rw,mode=755,uid=munin,gid=munin,size=150M 
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -245,10 +249,6 @@ tmpfs  /var/cache/munin/www   tmpfs   rw,mode=755,uid=munin,gid=munin,size=150M 
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

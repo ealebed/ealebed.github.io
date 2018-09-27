@@ -88,7 +88,7 @@
 
 <p>Устанавливать <code>LogAnalyzer</code> будем на:</p>
 
-<pre><code>lsb_release -a
+<pre><code class="language-bash">lsb_release -a
 Distributor ID:	Debian
 Description:	Debian GNU/Linux 7.9 (wheezy)
 Release:	7.9
@@ -97,7 +97,7 @@ Codename:	wheezy
 
 <p>В файле <code>/etc/rsyslog.conf</code> должны быть раскоментированы следующие строки:</p>
 
-<pre><code>...
+<pre><code class="language-bash">...
 $ModLoad imudp
 $UDPServerAddress 192.168.0.13
 $UDPServerRun 514
@@ -109,14 +109,14 @@ $AllowedSender UDP, 192.168.0.0/24
 
 <p>Перезапускаем <code>rsyslog</code> командой:</p>
 
-<pre><code>/etc/init.d/rsyslog restart
+<pre><code class="language-bash">/etc/init.d/rsyslog restart
 </code></pre>
 
 <p>После этого наш сервер может принимать логи с удаленных хостов по протоколу UDP.</p>
 
 <p>Устанавливаем необходимые пакеты:</p>
 
-<pre><code>aptitude install mysql-server php5-mysql libapache2-mod-php5 rsyslog-mysql
+<pre><code class="language-bash">aptitude install mysql-server php5-mysql libapache2-mod-php5 rsyslog-mysql
 </code></pre>
 
 <p><strong>Примечание.</strong> Во время установки нужно будет ввести пароль пользователя <code>root</code> сервера MySQL, а также установить пароль для <code>rsyslog-mysql</code>.</p>
@@ -125,7 +125,7 @@ $AllowedSender UDP, 192.168.0.0/24
 
 <p>По умолчанию настройки в <code>/etc/rsyslog.d/mysql.conf</code> выглядят так:</p>
 
-<pre><code>### Configuration file for rsyslog-mysql
+<pre><code class="language-text">### Configuration file for rsyslog-mysql
 ### Changes are preserved
  
 $ModLoad ommysql
@@ -136,7 +136,7 @@ $ModLoad ommysql
 
 <p>На серверах, с которых будем принимать логи, также редактируем файл <code>/etc/rsyslog.conf</code> добавляя несколько строк в секцию <code>RULES</code>:</p>
 
-<pre><code>###############
+<pre><code class="language-text">###############
 #### RULES ####
 ###############
  
@@ -161,45 +161,45 @@ kern.*                          @192.168.0.13
 
 <p>Не забываем перезапустить <code>rsyslog</code>:</p>
 
-<pre><code>/etc/init.d/rsyslog restart
+<pre><code class="language-bash">/etc/init.d/rsyslog restart
 </code></pre>
 
 <p>Для пользователя <code>rsyslog</code> нужные права на базу <code>Syslog</code> должны быть установлены автоматически, если это не так, то подключаемся к MySQL-серверу:</p>
 
-<pre><code>mysql -u debian-sys-maint -p&lt;пароль_суперпользователя&gt;
+<pre><code class="language-bash">mysql -u debian-sys-maint -p&lt;пароль_суперпользователя&gt;
 </code></pre>
 
 <p>и выставляем права доступа:</p>
 
-<pre><code>grant all on Syslog.* to ‘rsyslog’@’localhost’ identified by ‘password’;
+<pre><code class="language-sql">grant all on Syslog.* to ‘rsyslog’@’localhost’ identified by ‘password’;
 Query OK, 0 rows affected (0.00 sec)
 </code></pre>
 
 <p>Правим конфигурационный файл <code>/etc/apache2/sites-enabled/default</code>, добавляя в него:</p>
 
-<pre><code>...
+<pre><code class="language-text">...
     Alias /loga &quot;/var/www/loga&quot;
 ...
 </code></pre>
 
 <p>С <a href="http://loganalyzer.adiscon.com/downloads/">сайта разработчиков</a> качаем последнюю стабильную версию <code>LogAnalyzer</code>:</p>
 
-<pre><code>wget http://download.adiscon.com/loganalyzer/loganalyzer-3.6.6.tar.gz
+<pre><code class="language-bash">wget http://download.adiscon.com/loganalyzer/loganalyzer-3.6.6.tar.gz
 </code></pre>
 
 <p>Распаковываем скачанный архив:</p>
 
-<pre><code>tar xpf loganalyzer-3.6.6.tar.gz
+<pre><code class="language-bash">tar xpf loganalyzer-3.6.6.tar.gz
 </code></pre>
 
 <p>Рекурсивно копируем содержимое директории <code>src</code> в директорию <code>/var/www/loga</code>:</p>
 
-<pre><code>cp -R loganalyzer-3.6.6/src/* /var/www/loga
+<pre><code class="language-bash">cp -R loganalyzer-3.6.6/src/* /var/www/loga
 </code></pre>
 
 <p>Далее переходим в каталог <code>/var/www/loga</code> и создаем пустой файл конфигурации (его заполнит мастер установки):</p>
 
-<pre><code>cd /var/www/loga
+<pre><code class="language-bash">cd /var/www/loga
 touch config.php
 chmod 666 config.php
 </code></pre>
@@ -246,6 +246,10 @@ chmod 666 config.php
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -259,10 +263,6 @@ chmod 666 config.php
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

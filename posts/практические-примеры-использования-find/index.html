@@ -84,152 +84,152 @@
 
 <p>Начнем с самых простых примеров. Регистрозависимый поиск по имени файла:</p>
 
-<pre><code>find -name &quot;Test_file.txt&quot;
+<pre><code class="language-bash">find -name &quot;Test_file.txt&quot;
 </code></pre>
 
 <p>Регистронезависимый поиск по имени файла:</p>
 
-<pre><code>find -iname &quot;Test_file.txt&quot;
+<pre><code class="language-bash">find -iname &quot;Test_file.txt&quot;
 </code></pre>
 
 <p>По умолчанию, <code>find</code> выполняет поиск в текущем каталоге и во всех вложенных каталогах. Ограничить «глубину» вложенных директорий можно так:</p>
 
-<pre><code>find / -maxdepth 2 -name passwd
+<pre><code class="language-bash">find / -maxdepth 2 -name passwd
 </code></pre>
 
 <p>или так:</p>
 
-<pre><code>find / -mindepth 2 -maxdepth 4 -name passwd
+<pre><code class="language-bash">find / -mindepth 2 -maxdepth 4 -name passwd
 </code></pre>
 
 <p>Получить md5sum найденных файлов можно с помощью такой конструкции:</p>
 
-<pre><code>find -iname &quot;Test_file.txt&quot; -exec md5sum {} \;
+<pre><code class="language-bash">find -iname &quot;Test_file.txt&quot; -exec md5sum {} \;
 </code></pre>
 
 <p>Инверсия поиска по имени файла выглядит так:</p>
 
-<pre><code>find -not -iname &quot;Test_file.txt&quot;
+<pre><code class="language-bash">find -not -iname &quot;Test_file.txt&quot;
 </code></pre>
 
 <p>Вывод всех файлов, в которых в правах доступа установлен бит чтения для группы:</p>
 
-<pre><code>find . -perm -g=r -type f -exec ls -l {} \;
+<pre><code class="language-bash">find . -perm -g=r -type f -exec ls -l {} \;
 </code></pre>
 
 <p>Вывод файлов, в которых в правах доступа установлен ТОЛЬКО бит чтения для группы:</p>
 
-<pre><code>find . -perm g=r -type f -exec ls -l {} \;
+<pre><code class="language-bash">find . -perm g=r -type f -exec ls -l {} \;
 </code></pre>
 
 <p>Тот же пример, но для использования восьмеричной системы счисления:</p>
 
-<pre><code>find . -perm 040 -type f -exec ls -l {} \;
+<pre><code class="language-bash">find . -perm 040 -type f -exec ls -l {} \;
 </code></pre>
 
 <p>Найти файлы и изменить права доступа с 777 на 644:</p>
 
-<pre><code>find / -type f -perm 0777 -print -exec chmod 644 {} \;
+<pre><code class="language-bash">find / -type f -perm 0777 -print -exec chmod 644 {} \;
 </code></pre>
 
 <p>Найти каталоги и изменить права доступа с 777 на 755:</p>
 
-<pre><code>find / -type d -perm 777 -print -exec chmod 755 {} \;
+<pre><code class="language-bash">find / -type d -perm 777 -print -exec chmod 755 {} \;
 </code></pre>
 
 <p>Найти файлы, принадлежащие определенному пользователю:</p>
 
-<pre><code>find / -user admin
+<pre><code class="language-bash">find / -user admin
 </code></pre>
 
 <p>Найти файлы, принадлежащие определенной группе:</p>
 
-<pre><code>find / -group dev
+<pre><code class="language-bash">find / -group dev
 </code></pre>
 
 <p>Поиск всех пустых файлов:</p>
 
-<pre><code>find ~ -empty
+<pre><code class="language-bash">find ~ -empty
 </code></pre>
 
 <p>Поиск всех пустых файлов, кроме скрытых (с точкой в начале имени):</p>
 
-<pre><code>find ~ -empty -not -name &quot;.*&quot;
+<pre><code class="language-bash">find ~ -empty -not -name &quot;.*&quot;
 </code></pre>
 
 <p>Вывод пяти найденных файлов наибольшего размера:</p>
 
-<pre><code>find . -type f -exec ls -s {} \; | sort -n -r | head -5
+<pre><code class="language-bash">find . -type f -exec ls -s {} \; | sort -n -r | head -5
 </code></pre>
 
 <p>Вывод пяти найденных файлов наименьшего размера (без пустых файлов):</p>
 
-<pre><code>find . -not -empty -type f -exec ls -s {} \; | sort -n  | head -5
+<pre><code class="language-bash">find . -not -empty -type f -exec ls -s {} \; | sort -n  | head -5
 </code></pre>
 
 <p>Поиск по типам файлов. Найти файлы-сокеты:</p>
 
-<pre><code>find . -type s
+<pre><code class="language-bash">find . -type s
 </code></pre>
 
 <p>Найти каталоги:</p>
 
-<pre><code>find . -type d
+<pre><code class="language-bash">find . -type d
 </code></pre>
 
 <p>Найти обычные файлы:</p>
 
-<pre><code>find . -type f
+<pre><code class="language-bash">find . -type f
 </code></pre>
 
 <p>Найти и вывести файлы, которые были созданы ПОСЛЕ указанного:</p>
 
-<pre><code>find -newer &quot;Test_file.txt&quot;
+<pre><code class="language-bash">find -newer &quot;Test_file.txt&quot;
 </code></pre>
 
 <p>Найти файлы больше указанного размера:</p>
 
-<pre><code>find ~ -size +500M
+<pre><code class="language-bash">find ~ -size +500M
 </code></pre>
 
 <p>Найти файлы меньше указанного размера:</p>
 
-<pre><code>find ~ -size -500M
+<pre><code class="language-bash">find ~ -size -500M
 </code></pre>
 
 <p>Найти файлы точно соответствующие указанному размеру:</p>
 
-<pre><code>find ~ -size 500M
+<pre><code class="language-bash">find ~ -size 500M
 </code></pre>
 
 <p>Найти и удалить <code>zip</code>-архивы, занимающие больше 100М:</p>
 
-<pre><code>find / -type f -name *.zip -size +100M -exec rm -i {} \;
+<pre><code class="language-bash">find / -type f -name *.zip -size +100M -exec rm -i {} \;
 </code></pre>
 
 <p>Найти и удалить <code>zip</code>-архивы старше 7 дней:</p>
 
-<pre><code>find / -type f -name *.zip -mtime +6 -delete
+<pre><code class="language-bash">find / -type f -name *.zip -mtime +6 -delete
 </code></pre>
 
 <p>Найти файлы, содержимое которых было изменено в течении последнего часа:</p>
 
-<pre><code>find . -mmin -60
+<pre><code class="language-bash">find . -mmin -60
 </code></pre>
 
 <p>Найти файлы, содержимое которых было изменено за последние сутки:</p>
 
-<pre><code>find . -mtime -1
+<pre><code class="language-bash">find . -mtime -1
 </code></pre>
 
 <p>Найти и заменить пробелы подчеркиваниями в именах файлов:</p>
 
-<pre><code>find . -type f -iname &quot;*.mp3&quot; -exec rename &quot;s/ /_/g&quot; {} \;
+<pre><code class="language-bash">find . -type f -iname &quot;*.mp3&quot; -exec rename &quot;s/ /_/g&quot; {} \;
 </code></pre>
 
 <p>Найти недавно измененные файлы, отсортированные в обратном порядке (файл, измененный последним, будет первым):</p>
 
-<pre><code>find / -type f -printf '%TY-%Tm-%Td %TT %p\n' | sort -r
+<pre><code class="language-bash">find / -type f -printf '%TY-%Tm-%Td %TT %p\n' | sort -r
 </code></pre>
                 </section>
             </article>
@@ -272,6 +272,10 @@
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -285,10 +289,6 @@
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

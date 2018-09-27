@@ -80,45 +80,45 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>В <a href="https://letsclearitup.com.ua/debian/znakomstvo-s-prometheus-chast-1-ustanovka-i-nastroyka.html">первой части</a> нашего знакомства с Prometheus мы успешно установили и настроили систему мониторинга.</p>
+                    <p>В <a href="https://ealebed.github.io/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">первой части</a> нашего знакомства с Prometheus мы успешно установили и настроили систему мониторинга.</p>
 
 <p></p>
 
-<p>Во <a href="https://letsclearitup.com.ua/debian/znakomstvo-s-prometheus-chast-2-sbor-metrik-ot-mysql-servera.html">второй части</a> научились собирать метрики от MySQL-сервера и строить по ним графики, теперь настало время организовать отдельные графики в дашборд. Давайте разберемся!</p>
+<p>Во <a href="https://ealebed.github.io/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%81%D0%B1%D0%BE%D1%80-%D0%BC%D0%B5%D1%82%D1%80%D0%B8%D0%BA-%D0%BE%D1%82-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0/">второй части</a> научились собирать метрики от MySQL-сервера и строить по ним графики, теперь настало время организовать отдельные графики в дашборд. Давайте разберемся!</p>
 
 <p>Как уже упоминалось ранее, для построения дашбордов в <strong>системе мониторинга Prometheus</strong> используется инструмент <a href="https://github.com/prometheus/promdash">PromDash</a>. <strong>Установка и настройка PromDash</strong> начинается с установки необходимых компонентов (Git, Ruby, MySQL, Bundler) и их зависимостей:</p>
 
-<pre><code>sudo aptitude install git ruby-full mysql-server libmysqlclient-dev
+<pre><code class="language-bash">sudo aptitude install git ruby-full mysql-server libmysqlclient-dev
 </code></pre>
 
 <p>далее:</p>
 
-<pre><code>gem install bundler
+<pre><code class="language-bash">gem install bundler
 </code></pre>
 
 <p>загружаем исходники:</p>
 
-<pre><code>git clone https://github.com/prometheus/promdash.git
+<pre><code class="language-bash">git clone https://github.com/prometheus/promdash.git
 </code></pre>
 
 <p>переходим в каталог с исходниками:</p>
 
-<pre><code>cd promdash
+<pre><code class="language-bahs">cd promdash
 </code></pre>
 
 <p>и выполняем:</p>
 
-<pre><code>bundle install --without sqlite3 postgresql
+<pre><code class="language-bash">bundle install --without sqlite3 postgresql
 </code></pre>
 
 <p>После успешного завершения скопируем настройки базы данных из файла-примера:</p>
 
-<pre><code>cp config/database.yml.example config/database.yml
+<pre><code class="language-bash">cp config/database.yml.example config/database.yml
 </code></pre>
 
 <p>Приведем конфигурационный файл <code>database.yml</code> к следующему виду:</p>
 
-<pre><code>production:
+<pre><code class="language-yaml">production:
   adapter: mysql2
   database: promdash_test
   host: localhost
@@ -131,7 +131,7 @@
 
 <p>Выполняем первичную настройку (инициализацию) базы данных:</p>
 
-<pre><code>RAILS_ENV=production bundle exec rake db:setup
+<pre><code class="language-bash">RAILS_ENV=production bundle exec rake db:setup
 /var/lib/gems/2.1.0/gems/bundler-1.11.2/lib/bundler/shared_helpers.rb:78: warning: Insecure world writable dir /usr/local/sbin in PATH, mode 042777
 /var/lib/gems/2.1.0/gems/bundler-1.11.2/lib/bundler/shared_helpers.rb:78: warning: Insecure world writable dir /usr/local/sbin in PATH, mode 042777
 (in /opt/promdash)
@@ -155,19 +155,19 @@
 
 <p>Следуя инструкции создаем Ruby-окружение:</p>
 
-<pre><code>make build
+<pre><code class="language-bash">make build
 </code></pre>
 
 <p>и запускаем сервер в режиме демона на 8000 порту:</p>
 
-<pre><code>bin/env bin/bundle exec bin/thin -p 8000 start -d
+<pre><code class="language-bash">bin/env bin/bundle exec bin/thin -p 8000 start -d
 </code></pre>
 
 <p>В браузере открываем адрес http://[IP-адрес сервера]:8000 и указываем параметры подключения к серверу Prometheus. Для этого переходим на вкладку Servers, жмем New Server, в открывшейся форме вводим имя сервера (на ваше усмотрение), URL — http://[IP-адрес сервера]:9090 и выбираем тип сервера Prometheus.</p>
 
 <p>После добавления сервера возвращаемся на вкладку Dashboards и создаем директорию для дашбордов нажатием на New Directory (имя директории на ваше усмотрение). Дальше приступаем к созданию дашборда — жмем New Dashboard.</p>
 
-<p>Давайте отобразим на графике 5 самых больших таблиц определенной базы (эту метрику мы уже использовали в <a href="https://letsclearitup.com.ua/debian/znakomstvo-s-prometheus-chast-2-sbor-metrik-ot-mysql-servera.html">предыдущей части</a> знакомства с Prometheus) — в поле Enter Expression введем <code>topk(5, sum(mysql_info_schema_table_size{schema='&lt;ИМЯ_БД&gt;'}) by (table))</code> и нажмем первую слева иконку в заголовку графика (Refresh).</p>
+<p>Давайте отобразим на графике 5 самых больших таблиц определенной базы (эту метрику мы уже использовали в <a href="https://ealebed.github.io/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%81%D0%B1%D0%BE%D1%80-%D0%BC%D0%B5%D1%82%D1%80%D0%B8%D0%BA-%D0%BE%D1%82-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0/">предыдущей части</a> знакомства с Prometheus) — в поле Enter Expression введем <code>topk(5, sum(mysql_info_schema_table_size{schema='&lt;ИМЯ_БД&gt;'}) by (table))</code> и нажмем первую слева иконку в заголовку графика (Refresh).</p>
 
 <p>Дашборд с одним графиком имеет мало смысла, добавить еще графики нажатием на кнопку Add Graph внизу. После внесения изменений не забываем нажимать кнопку Save Changes.</p>
 
@@ -213,6 +213,10 @@
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -226,10 +230,6 @@
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

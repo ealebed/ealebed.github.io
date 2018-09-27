@@ -84,12 +84,12 @@
 
 <p>В консоли при этом можно увидеть ошибку примерно следующего содержания:</p>
 
-<pre><code>Error response from daemon: Driver overlay failed to remove root filesystem 88189a16be60761a2c04a455206650048e784d750533ce2858bcabe2f528c92e: rename /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21 /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21-removing: device or resource busy
+<pre><code class="language-bash">Error response from daemon: Driver overlay failed to remove root filesystem 88189a16be60761a2c04a455206650048e784d750533ce2858bcabe2f528c92e: rename /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21 /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21-removing: device or resource busy
 </code></pre>
 
 <p>Информация об установленном docker’е:</p>
 
-<pre><code>docker version
+<pre><code class="language-bash">docker version
 Client:
  Version:      17.06.0-ce
  API version:  1.30
@@ -108,7 +108,7 @@ Server:
  Experimental: false
 </code></pre>
 
-<pre><code>docker info
+<pre><code class="language-bash">docker info
 Containers: 9
  Running: 8
  Paused: 0
@@ -163,7 +163,7 @@ Live Restore Enabled: false
 
 <p>Делаем следующим образом:</p>
 
-<pre><code>grep docker /proc/*/mountinfo | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21
+<pre><code class="language-bash">grep docker /proc/*/mountinfo | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21
 
 /proc/1495/mountinfo:634 537 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:244 - overlay overlay rw,lowerdir=/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir=/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir=/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
 /proc/7080/mountinfo:632 586 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:253 - overlay overlay rw,lowerdir=/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir=/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir=/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
@@ -174,25 +174,25 @@ Live Restore Enabled: false
 
 <p>Видим, что процессы 16447, 16446, 16445, 7080, 1495 все еще ссылаются на данный каталог и не дают нам его удалить. Подключаемся как суперпользователь в пространство имен (<code>namespace</code>) интересующего нас процесса с помощью команды:</p>
 
-<pre><code>nsenter -m -t 16447 /bin/bash
+<pre><code class="language-bash">nsenter -m -t 16447 /bin/bash
 </code></pre>
 
 <p>Смотрим список примонтированных каталогов (с помощью <code>grep</code> выбираем только интересующие):</p>
 
-<pre><code>[root@example /]# mount | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21
+<pre><code class="language-bash">[root@example /]# mount | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21
 overlay on /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged type overlay (rw,relatime,lowerdir=/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir=/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir=/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work)
 </code></pre>
 
 <p>Отмонтируем, проверяем результат и выходим из пространства имен процесса:</p>
 
-<pre><code>[root@example /]# umount /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged
+<pre><code class="language-bash">[root@example /]# umount /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged
 [root@example /]# mount | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21
 [root@example /]# exit
 </code></pre>
 
 <p>Повторяем данную процедуру для всех процессов, ссылающихся на данный каталог (16447, 16446, 16445, 7080, 1495). После проделанных действий можно удалить старый контейнер с помощью команды:</p>
 
-<pre><code>docker rm &lt;id_контейнера&gt;
+<pre><code class="language-bash">docker rm &lt;id_контейнера&gt;
 </code></pre>
                 </section>
             </article>
@@ -235,6 +235,10 @@ overlay on /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c88043
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -248,10 +252,6 @@ overlay on /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c88043
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

@@ -96,7 +96,7 @@
 
 <p>Итак, работать будем со следующим SSD-диском:</p>
 
-<pre><code>smartctl -i /dev/sdb
+<pre><code class="language-bash">smartctl -i /dev/sdb
 smartctl 6.4 2014-10-07 r4002 [x86_64-linux-3.16.0-4-amd64] (local build)
 Copyright (C) 2002-14, Bruce Allen, Christian Franke, www.smartmontools.org
 
@@ -120,7 +120,7 @@ SMART support is: Enabled
 
 <p>Получаем SMART-атрибуты диска:</p>
 
-<pre><code>smartctl -A /dev/sdb
+<pre><code class="language-bash">smartctl -A /dev/sdb
 smartctl 6.4 2014-10-07 r4002 [x86_64-linux-3.16.0-4-amd64] (local build)
 Copyright (C) 2002-14, Bruce Allen, Christian Franke, www.smartmontools.org
 
@@ -180,7 +180,7 @@ ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_
 
 <p>В нашем случае их значения выглядят следующим образом:</p>
 
-<pre><code>...
+<pre><code class="language-bash">...
 226 Workld_Media_Wear_Indic 0x0032   100   100   000    Old_age   Always       -       727
 227 Workld_Host_Reads_Perc  0x0032   100   100   000    Old_age   Always       -       50
 228 Workload_Minutes        0x0032   100   100   000    Old_age   Always       -       358724
@@ -191,31 +191,31 @@ ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_
 
 <p>Сбросить значения SMART-атрибутов можно следующей командой:</p>
 
-<pre><code>smartctl -t vendor,0x40 /dev/sdb
+<pre><code class="language-bash">smartctl -t vendor,0x40 /dev/sdb
 </code></pre>
 
 <p>Проведем расчеты на основании имеющихся у нас данных. Значение <code>Workld_Host_Reads_Perc</code> показывает нам, что за время работы твердотельного накопителя операций чтения было 50% (следовательно, записи тоже 50%).</p>
 
 <p>Для получения процента износа SSD-диска за все время работы следует разделить значение SMART-атрибута <code>Workld_Media_Wear_Indic</code> на 1024:</p>
 
-<pre><code>727/1024=0.7099609375(%)
+<pre><code class="language-bash">727/1024=0.7099609375(%)
 </code></pre>
 
 <p>Далее можно рассчитать, каким будет процент износа твердотельного накопителя за один час работы:</p>
 
-<pre><code>0.70996(%)/358724(мин)*60(мин)=0.00011874(%)
+<pre><code class="language-bash">0.70996(%)/358724(мин)*60(мин)=0.00011874(%)
 </code></pre>
 
 <p>Зная процент износа накопителя за один час, можно легко вычислить, когда износ станет 100% (диск станет неработоспособным):</p>
 
-<pre><code>100(%)*1(час)/0.00011874(%)=842176.18(часов)
+<pre><code class="language-bash">100(%)*1(час)/0.00011874(%)=842176.18(часов)
 </code></pre>
 
 <p>Если учесть, что в году ~8760 часов, а нагрузка будет неизменной и равномерной <sup>24</sup>&frasl;<sub>7</sub> (что крайне маловероятно), то диск станет абсолютно неработоспособным через <code>842176.18/8760=96</code> лет!</p>
 
 <p>Для упрощения вышеизложенных расчетов можно использовать следующий скрипт (назовем его <code>smartctsreport.sh</code>):</p>
 
-<pre><code>#!/bin/bash
+<pre><code class="language-bash">#!/bin/bash
 smartctl -A /dev/sdb | awk -v prev=0 '/^22[5-8]/{\
 if ($1==225) {
   value[1]=($10-prev)*65535*512/1000000000
@@ -235,7 +235,7 @@ if ($1==225) {
 
 <p>Таким будет результат его выполнения:</p>
 
-<pre><code>./smartctsreport.sh
+<pre><code class="language-bash">./smartctsreport.sh
 The workload took 358758 minutes (249.138 days) to complete with 50% reads and 50% writes. A total of 65058.7GB of data was written to the device, which increased the media wear in the drive by 0.709961%. At this point in time, this workload is causing a wear rate of 0.709961% for every 358758 minutes, or 0.000118736%/hour.
 </code></pre>
                 </section>
@@ -279,6 +279,10 @@ The workload took 358758 minutes (249.138 days) to complete with 50% reads and 5
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -292,10 +296,6 @@ The workload took 358758 minutes (249.138 days) to complete with 50% reads and 5
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

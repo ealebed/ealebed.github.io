@@ -82,7 +82,7 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>Ранее мы уже <a href="https://letsclearitup.com.ua/ubuntu/monitoring-serverov-s-pomoshhyu-new-relic.html">упоминали</a> о <strong>системе мониторинга New Relic</strong>, однако рассматривали пример лишь с мониторингом базовых сервисов. Давайте разберемся, как собирать и выводить метрики от <code>php-fpm</code>!</p>
+                    <p>Ранее мы уже <a href="https://ealebed.github.io/posts/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BE%D0%B2-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-new-relic/">упоминали</a> о <strong>системе мониторинга New Relic</strong>, однако рассматривали пример лишь с мониторингом базовых сервисов. Давайте разберемся, как собирать и выводить метрики от <code>php-fpm</code>!</p>
 
 <p></p>
 
@@ -108,27 +108,27 @@
 
 <p>Как видим, в этом списке присутствует <code>php-fpm</code> — то, что нам нужно! Устанавливаем агент следующей командой:</p>
 
-<pre><code>pip install newrelic-plugin-agent
+<pre><code class="language-bash">pip install newrelic-plugin-agent
 </code></pre>
 
 <p>Создаем необходимые для работы агента каталоги:</p>
 
-<pre><code>mkdir -p /var/log/newrelic
+<pre><code class="language-bash">mkdir -p /var/log/newrelic
 </code></pre>
 
-<pre><code>mkdir -p /var/run/newrelic
+<pre><code class="language-bash">mkdir -p /var/run/newrelic
 </code></pre>
 
 <p><strong>Примечание.</strong> Пользователь, определенный в конфигурационном файле, должен иметь право записи в это каталоги.</p>
 
 <p>Копируем пример конфигурационного файла агента в каталог <code>/etc/newrelic/</code>:</p>
 
-<pre><code>cp /opt/newrelic-plugin-agent/newrelic-plugin-agent.cfg /etc/newrelic/newrelic-plugin-agent.cfg
+<pre><code class="language-bash">cp /opt/newrelic-plugin-agent/newrelic-plugin-agent.cfg /etc/newrelic/newrelic-plugin-agent.cfg
 </code></pre>
 
 <p>И изменяем под свои нужды — вводим лицензионный ключ и определяем сервисы, которые нужно мониторить. В мое случае конфиг выглядит так:</p>
 
-<pre><code>%YAML 1.2
+<pre><code class="language-yaml">%YAML 1.2
 ---
 Application:
   license_key: ed36507db6a10fb33429637793735933e9a477aa
@@ -184,12 +184,12 @@ Logging:
 
 <p>Далее следует запустить <strong>New Relic Plugin Agent</strong>, в инструкции предлагается делать это следующим образом:</p>
 
-<pre><code>newrelic-plugin-agent -c PATH-TO-CONF-FILE [-f]
+<pre><code class="language-bash">newrelic-plugin-agent -c PATH-TO-CONF-FILE [-f]
 </code></pre>
 
 <p>На мой взгляд это не самый удобный способ, поэтому для управления агентом в каталоге <code>/etc/init.d/</code> создаем init-скрипт <code>newrelic_plugin_agent</code> следующего содержания:</p>
 
-<pre><code>#! /bin/sh
+<pre><code class="language-bash">#! /bin/sh
  
 ### BEGIN INIT INFO
 # Provides:          newrelic_plugin_agent
@@ -286,7 +286,7 @@ exit 0
 
 <p>Включаем и запускаем созданный сервис:</p>
 
-<pre><code>systemctl enable newrelic_plugin_agent.service
+<pre><code class="language-bash">systemctl enable newrelic_plugin_agent.service
 systemctl start newrelic_plugin_agent.service
 </code></pre>
 
@@ -332,6 +332,10 @@ systemctl start newrelic_plugin_agent.service
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -345,10 +349,6 @@ systemctl start newrelic_plugin_agent.service
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

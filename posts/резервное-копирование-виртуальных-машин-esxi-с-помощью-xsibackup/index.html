@@ -104,7 +104,7 @@
 
 <p>Подключаемся к консоли ESXI по ssh и вводим команды из письма для установки Xsibackup (повторяем данную процедуру на всех гипервизорах):</p>
 
-<pre><code>cd /vmfs/volumes/datastore1/xsi-dir 2&gt;/dev/null || mkdir /vmfs/volumes/datastore1/xsi-dir &amp;&amp; \
+<pre><code class="language-bash">cd /vmfs/volumes/datastore1/xsi-dir 2&gt;/dev/null || mkdir /vmfs/volumes/datastore1/xsi-dir &amp;&amp; \
 &gt; cd /vmfs/volumes/datastore1/xsi-dir &amp;&amp; \
 &gt; esxcli network firewall unload &amp;&amp; \
 &gt; wget http://a.33hops.com/downloads/?key= -O xsibackup.zip &amp;&amp; \
@@ -133,12 +133,12 @@ Archive:  xsibackup.zip
 
 <p>Создаем каталог для хранения резервных копий:</p>
 
-<pre><code>mkdir /vmfs/volumes/datastore2/backup
+<pre><code class="language-bash">mkdir /vmfs/volumes/datastore2/backup
 </code></pre>
 
 <p>Проверим возможность создания бекапов локально:</p>
 
-<pre><code>./xsibackup --backup-point=/vmfs/volumes/datastore2/backup --backup-type=running --test-mode=true
+<pre><code class="language-bash">./xsibackup --backup-point=/vmfs/volumes/datastore2/backup --backup-type=running --test-mode=true
 
 #####################################################################################
 #                                                                                   #
@@ -193,17 +193,17 @@ Killed
 
 <p>Тест успешен, для того чтобы сделать резервную копию всех запущенных виртуальных машин запускаем команду еще раз, но без опции <code>--test-mode=true</code>:</p>
 
-<pre><code>./xsibackup --backup-point=/vmfs/volumes/datastore2/backup --backup-type=running
+<pre><code class="language-bash">./xsibackup --backup-point=/vmfs/volumes/datastore2/backup --backup-type=running
 </code></pre>
 
 <p>Если же необходимо сделать бекап только одной виртуальной машины, то команда будет выглядеть так:</p>
 
-<pre><code>./xsibackup --backup-point=/vmfs/volumes/datastore2/backup --backup-type=custom --backup-vms=web1
+<pre><code class="language-bash">./xsibackup --backup-point=/vmfs/volumes/datastore2/backup --backup-type=custom --backup-vms=web1
 </code></pre>
 
 <p>Если планируем хранить резервные копии на другом хосте ESXI (или переносить виртуальные машины), то хосты необходимо «связать». Для этого нужно убедиться, что на гипервизоре в настройках файрвола включено правило «SSH Client» (открывает 22 порт для исходящих соединений), после чего в консоли выполнить:</p>
 
-<pre><code>./xsibackup --link-srv=31.42.119.138
+<pre><code class="language-bash">./xsibackup --link-srv=31.42.119.138
 
 #####################################################################################
 #                                                                                   #
@@ -233,12 +233,12 @@ Killed
 
 <p>Теперь можно выполнять резервное копирование виртуальных машин на удаленный хост, для этого используем следующую команду:</p>
 
-<pre><code>./xsibackup --backup-point=31.42.119.138:22:/vmfs/volumes/datastore2/backup --backup-type=running
+<pre><code class="language-bash">./xsibackup --backup-point=31.42.119.138:22:/vmfs/volumes/datastore2/backup --backup-type=running
 </code></pre>
 
 <p>Для настройки крона сначала нужно его установить командой:</p>
 
-<pre><code>./xsibackup --install-cron
+<pre><code class="language-bash">./xsibackup --install-cron
 
 #####################################################################################
 #                                                                                   #
@@ -300,6 +300,10 @@ cron service restarted
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -313,10 +317,6 @@ cron service restarted
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

@@ -86,13 +86,13 @@
 
 <p>Итак, результат выполнения <code>df</code> выглядит так:</p>
 
-<pre><code>df -h | grep log
+<pre><code class="language-bash">df -h | grep log
 /dev/mapper/sata-log           50G  9.0G   41G  19% /var/log
 </code></pre>
 
 <p>При этом результат выполнения <code>du</code> в каталоге <code>/var/log</code> следующий:</p>
 
-<pre><code>du -h
+<pre><code class="language-bash">du -h
 4.0K	./chkrootkit
 1.4G	./sphinx
 144K	./zabbix
@@ -112,9 +112,9 @@
 1.5G	.
 </code></pre>
 
-<p>С помощью команды <a href="https://letsclearitup.com.ua/ubuntu/prakticheskie-primeryi-ispolzovaniya-lsof.html"><code>lsof</code></a> посмотрим какие файлы в каталоге <code>/var/log</code> еще используются процессами, хотя на самом деле были удалены:</p>
+<p>С помощью команды <a href="https://ealebed.github.io/posts/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-lsof/"><code>lsof</code></a> посмотрим какие файлы в каталоге <code>/var/log</code> еще используются процессами, хотя на самом деле были удалены:</p>
 
-<pre><code>lsof | grep /var/log | grep deleted
+<pre><code class="language-bash">lsof | grep /var/log | grep deleted
 gearmand   2755             gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
 gearmand   2755  2759       gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
 gearmand   2755  2760       gearman    4w      REG              254,5  8013072051    1966085 /var/log/gearman-job-server/gearman.log.1 (deleted)
@@ -126,18 +126,18 @@ gearmand   2755  2764       gearman    4w      REG              254,5  801307205
 
 <p>Зная PID процесса (2755), который использует «удаленные» файлы, мы можем узнать файловый дескриптор этого «удаленного» файла:</p>
 
-<pre><code>find /proc/2755/fd -ls | grep  '(deleted)'
+<pre><code class="language-bash">find /proc/2755/fd -ls | grep  '(deleted)'
 562637320    0 l-wx------   1 gearman  gearman        64 Jul 20 09:14 /proc/2755/fd/4 -&gt; /var/log/gearman-job-server/gearman.log.1\ (deleted)
 </code></pre>
 
 <p>Для очистки (truncate) содержимого файла следует использовать команду <code>cat /dev/null &gt; /proc/$pid/fd/$fd</code>, где <code>$pid</code> и <code>$fd</code> соответственно PID процесса (2755) и файловый дескриптор (4):</p>
 
-<pre><code>cat /dev/null &gt; /proc/2755/fd/4
+<pre><code class="language-bash">cat /dev/null &gt; /proc/2755/fd/4
 </code></pre>
 
 <p>После проделанных действий проверим результат выполнения <code>df</code>:</p>
 
-<pre><code>df -h | grep log
+<pre><code class="language-bash">df -h | grep log
 /dev/mapper/sata-log           50G  1.5G   48G   3% /var/log
 </code></pre>
                 </section>
@@ -181,6 +181,10 @@ gearmand   2755  2764       gearman    4w      REG              254,5  801307205
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -194,10 +198,6 @@ gearmand   2755  2764       gearman    4w      REG              254,5  801307205
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

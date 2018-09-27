@@ -92,7 +92,7 @@
 <li>готовим раздел для хранения записей звонков. В моем случае звонки будут храниться на логическом томе размером 300 GB (подробнее о Linux LVM в этой статье):</li>
 </ul>
 
-<pre><code>lvcreate -L300G -n calls vg0
+<pre><code class="language-bash">lvcreate -L300G -n calls vg0
 mkfs.ext4 /dev/vg0/calls
 tune2fs -m 0 /dev/vg0/calls
 </code></pre>
@@ -101,7 +101,7 @@ tune2fs -m 0 /dev/vg0/calls
 <li>перед <strong>установкой Asterisk’а</strong> обновим все установленные пакеты:</li>
 </ul>
 
-<pre><code>aptitude update
+<pre><code class="language-bash">aptitude update
 aptitude safe-upgrade -y
 </code></pre>
 
@@ -109,7 +109,7 @@ aptitude safe-upgrade -y
 <li>установим несколько новых пакетов/библиотек:</li>
 </ul>
 
-<pre><code>aptitude update
+<pre><code class="language-bash">aptitude update
 aptitude install linux-headers-$(uname -r)
 aptitude install libxml2 libxml2-dev openssl libssl-dev libncurses5 libncurses5-dev libnewt0.52 libnewt-dev mpg123 libmysqlclient-dev libsqlite3-dev build-essential
 </code></pre>
@@ -118,28 +118,28 @@ aptitude install libxml2 libxml2-dev openssl libssl-dev libncurses5 libncurses5-
 <li>создадим каталог для исходников:</li>
 </ul>
 
-<pre><code>mkdir /usr/src/asterisk-src
+<pre><code class="language-bash">mkdir /usr/src/asterisk-src
 </code></pre>
 
 <ul>
 <li>переходим в созданный каталог:</li>
 </ul>
 
-<pre><code>cd /usr/src/asterisk-src
+<pre><code class="language-bash">cd /usr/src/asterisk-src
 </code></pre>
 
 <ul>
 <li>скачиваем архив с исходным кодом <strong>Asterisk’а</strong>:</li>
 </ul>
 
-<pre><code>wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-11-current.tar.gz
+<pre><code class="language-bash">wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-11-current.tar.gz
 </code></pre>
 
 <ul>
 <li>скачиваем исходный код (архив) PRI-библиотеки (<code>libpri</code>):</li>
 </ul>
 
-<pre><code>wget http://downloads.asterisk.org/pub/telephony/libpri/libpri-1.4-current.tar.gz
+<pre><code class="language-bash">wget http://downloads.asterisk.org/pub/telephony/libpri/libpri-1.4-current.tar.gz
 </code></pre>
 
 <p><strong>Примечание.</strong> Если вы не используете PRI-интерфейсы ISDN, такие как <code>T1/E1/J1/BRI</code>, то совершенно необязательно устанавливать данную библиотеку</p>
@@ -148,7 +148,7 @@ aptitude install libxml2 libxml2-dev openssl libssl-dev libncurses5 libncurses5-
 <li>скачиваем архив с исходным кодом модуля канала <code>DAHDI</code>:</li>
 </ul>
 
-<pre><code>wget http://downloads.asterisk.org/pub/telephony/dahdi-linux-complete/dahdi-linux-complete-current.tar.gz
+<pre><code class="language-bash">wget http://downloads.asterisk.org/pub/telephony/dahdi-linux-complete/dahdi-linux-complete-current.tar.gz
 </code></pre>
 
 <p><strong>Примечание.</strong> Модуль канала <code>DAHDI</code> служит для взаимодействия между интерфейсом <strong>Asterisk</strong> и аналоговым или цифровым оборудованием. Если вы не планируете использовать такое оборудование, этот шаг можно не выполнять</p>
@@ -157,7 +157,7 @@ aptitude install libxml2 libxml2-dev openssl libssl-dev libncurses5 libncurses5-
 <li>с помощью архиватора <code>tar</code> распакуем скачанные архивы:</li>
 </ul>
 
-<pre><code>tar -zxf asterisk-11-current.tar.gz
+<pre><code class="language-bash">tar -zxf asterisk-11-current.tar.gz
 tar -zxf dahdi-linux-complete-current.tar.gz
 tar -zxf libpri-1.4-current.tar.gz
 </code></pre>
@@ -166,7 +166,7 @@ tar -zxf libpri-1.4-current.tar.gz
 <li>если будут использоваться модуль канала <code>DAHDI</code> и PRI-библиотека <code>libpri</code>, то сначала устанавливаем <code>DAHDI</code>:</li>
 </ul>
 
-<pre><code>cd dahdi-linux-complete-2.10.0.1+2.10.0.1/
+<pre><code class="language-bash">cd dahdi-linux-complete-2.10.0.1+2.10.0.1/
 make
 make install
 make config
@@ -177,13 +177,13 @@ cd ..
 <li>затем PRI-библиотеку <code>libpri</code>:</li>
 </ul>
 
-<pre><code>cd libpri-1.4.15/
+<pre><code class="language-bash">cd libpri-1.4.15/
 make
 make install
 cd ..
 </code></pre>
 
-<p>Подготовительные работы выполнены и теперь можно приступать <a href="https://letsclearitup.com.ua/debian/ustanovka-asterisk-11-v-debian-wheezy-chast-2.html">непосредственно к установке Asterisk 11</a>.</p>
+<p>Подготовительные работы выполнены и теперь можно приступать <a href="https://ealebed.github.io/posts/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2/">непосредственно к установке Asterisk 11</a>.</p>
                 </section>
             </article>
 
@@ -225,6 +225,10 @@ cd ..
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -238,10 +242,6 @@ cd ..
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

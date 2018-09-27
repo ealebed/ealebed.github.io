@@ -64,7 +64,7 @@
                     </h1>
                     <h2 class="headline">
                     Jul 9, 2018 07:06
-                    · 657 words
+                    · 665 words
                     · 4 minute read
                       <span class="tags">
                       
@@ -82,11 +82,11 @@
 
 <p></p>
 
-<p>К примеру, <a href="https://letsclearitup.com.ua/kubernetes/znakomstvo-s-kubernetes-chast-4-repliki-replicaset.html"><code>ReplicaSet</code></a> может динамически изменять количество подов в кластере (путем масштабирования), при этом новые поды могут быть запущены на других узлах (нодах) кластера - в этом случае IP-адрес пода наверняка изменится.</p>
+<p>К примеру, <a href="https://ealebed.github.io/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>ReplicaSet</code></a> может динамически изменять количество подов в кластере (путем масштабирования), при этом новые поды могут быть запущены на других узлах (нодах) кластера - в этом случае IP-адрес пода наверняка изменится.</p>
 
 <p>Это порождает проблему: если некий набор подов (назовем их backends) предоставляют функционал другому набору подов (назовем их frontends) внутри кластера <code>Kubernetes</code>, то как frontend-поды узнают адреса backend-подов и взаимодействуют с ними?</p>
 
-<p>Сервис в <code>Kubernetes</code> - это абстракция, определяющая логический набор подов и политику доступа к ним (иногда такой набор подов еще называют микросервисом). Как правило, этот набор подов определяется на основе меток (присваиваются в момент создания подов) и селекторов.</p>
+<p>Сервис в <code>Kubernetes</code> - это абстракция, определяющая логический набор подов и политику доступа к ним (иногда такой набор подов еще называют микросервисом). Как правило, этот набор подов определяется на основе <a href="https://ealebed.github.io/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D0%BC%D0%B5%D1%82%D0%BA%D0%B8-%D0%B8-%D1%81%D0%B5%D0%BB%D0%B5%D0%BA%D1%82%D0%BE%D1%80%D1%8B/">меток</a> (присваиваются в момент создания подов) и селекторов.</p>
 
 <p>Например, backend - это 3 реплики подов, занимающихся обработкой изображений. Все три пода абсолютно идентичны с функциональной точки зрения (так как это реплики), поэтому frontend не должен беспокоиться на какой именно backend-под попадет запрос - это работа сервиса.</p>
 
@@ -105,7 +105,7 @@ spec:
     targetPort: 9376
 </code></pre>
 
-<p>Согласно данной спецификации, будет создан объект &ldquo;сервис&rdquo; (service) с именем <code>my-service</code>, перенаправляющий запросы на порт 9376 <strong>каждого</strong> пода, у которого присутствует метка <code>app=MyApp</code>. Этому сервису также будет назначен отдельный IP-адрес.</p>
+<p>Согласно данной спецификации, будет создан объект &ldquo;сервис&rdquo; (<code>service</code>) с именем <code>my-service</code>, перенаправляющий запросы на порт 9376 <strong>каждого</strong> пода, у которого присутствует метка <code>app=MyApp</code>. Этому сервису также будет назначен отдельный IP-адрес.</p>
 
 <p>Согласно указанному селектору, в кластере непрерывно будут проверяться поды на наличие метки <code>app=MyApp</code>, а результат такой проверки будет публиковаться (с помощью <code>POST</code>) в объект <code>Endpoints</code> с таким же именем - <code>my-service</code>.</p>
 
@@ -176,7 +176,7 @@ spec:
 <li><code>ExternalName</code>: особый случай - сопоставляет имя сервиса с содержимым поля <code>externalName</code> (например, foo.bar.example.com), возвращая CNAME запись. Никакого проксирования не происходит.</li>
 </ul>
 
-<p>Больше информации о сервисах можно найти в <a href="https://kubernetes.io/docs/concepts/services-networking/service/">официальной документации</a> или в статье <a href="https://medium.com/google-cloud/understanding-kubernetes-networking-services-f0cb48e4cc82">Understanding kubernetes networking: services</a>.</p>
+<p>Больше информации о сервисах можно найти в <a href="https://kubernetes.io/docs/concepts/services-networking/service/">официальной документации</a> или в статье <a href="https://medium.com/google-cloud/understanding-kubernetes-networking-services-f0cb48e4cc82">Understanding kubernetes networking: services</a>, а мы в <a href="https://ealebed.github.io/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-12-%D0%B0%D0%BD%D0%BD%D0%BE%D1%82%D0%B0%D1%86%D0%B8%D0%B8/">следующей статье</a> поговорим об аннотациях.</p>
                 </section>
             </article>
 
@@ -218,6 +218,10 @@ spec:
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -231,10 +235,6 @@ spec:
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

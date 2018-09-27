@@ -92,12 +92,12 @@
 
 <p>Включить <strong>режим обслуживания в кластере на базе <code>Pacemaker</code> и <code>Corosync</code></strong> можно следующей командой:</p>
 
-<pre><code>crm configure property maintenance-mode=true
+<pre><code class="language-bash">crm configure property maintenance-mode=true
 </code></pre>
 
 <p>При этом, возле ресурсов кластера в скобках появится надпись <code>unmanaged</code>:</p>
 
-<pre><code>...
+<pre><code class="language-bash">...
  Master/Slave Set: ms_drbd_mysql [drbd_mysql] (unmanaged)
      drbd_mysql:0	(ocf::linbit:drbd):	Master db1 (unmanaged)
      drbd_mysql:1	(ocf::linbit:drbd):	Started db2 (unmanaged)
@@ -111,35 +111,35 @@
 
 <p>Отключить режим обслуживания можно так:</p>
 
-<pre><code>crm configure property maintenance-mode=false
+<pre><code class="language-bash">crm configure property maintenance-mode=false
 </code></pre>
 
 <p>В случаях, когда изменения конфигурации могут занимать несколько часов (на такое время опасно оставлять кластер «без присмотра»), можно отключить мониторинг и восстановление только для одного ресурса — остальные ресурсы будут по прежнему под управлением кластера.</p>
 
 <p>Для этого открываем на редактирование настройки нужного ресурса кластера (например, отказоустойчивый ip-адрес):</p>
 
-<pre><code>crm configure edit failover_ip
+<pre><code class="language-bash">crm configure edit failover_ip
 </code></pre>
 
 <p>и добавляем/изменяем следующие meta-атрибуты:</p>
 
-<pre><code>meta is-managed=false
+<pre><code class="language-bash">meta is-managed=false
 op monitor interval=60 enabled=false
 </code></pre>
 
 <p>Эти значения переведут ресурс кластера <code>failover_ip</code> в режим обслуживания:</p>
 
-<pre><code> failover_ip	(ocf::heartbeat:IPaddr2):	Started db1 (unmanaged)
+<pre><code class="language-bash"> failover_ip	(ocf::heartbeat:IPaddr2):	Started db1 (unmanaged)
 </code></pre>
 
 <p>Включить мониторинг и передать ресурс под управление кластера можно так:</p>
 
-<pre><code>crm configure edit failover_ip
+<pre><code class="language-bash">crm configure edit failover_ip
 </code></pre>
 
 <p>и</p>
 
-<pre><code>meta is-managed=true
+<pre><code class="language-bash">meta is-managed=true
 op monitor interval=60 enabled=true
 </code></pre>
                 </section>
@@ -183,6 +183,10 @@ op monitor interval=60 enabled=true
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -196,10 +200,6 @@ op monitor interval=60 enabled=true
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

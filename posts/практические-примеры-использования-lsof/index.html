@@ -84,7 +84,7 @@
 
 <p>Если ввести команду <code>lsof</code> без аргументов, можно увидеть все файлы, принадлежащие процессам:</p>
 
-<pre><code>lsof
+<pre><code class="language-bash">lsof
 COMMAND    PID                 USER   FD      TYPE             DEVICE  SIZE/OFF       NODE NAME
 sudo       9003                root    0u      CHR              136,0       0t0          3 /dev/pts/0
 sudo       9003                root    1u      CHR              136,0       0t0          3 /dev/pts/0
@@ -126,14 +126,14 @@ bash       9004                root  mem       REG                8,1   2855152 
 
 <p>Увидеть процессы, использующие файл можно просто передав имя файла в качестве аргумента:</p>
 
-<pre><code>lsof /var/log/syslog
+<pre><code class="language-bash">lsof /var/log/syslog
 COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF   NODE NAME
 rsyslogd 3481 root    6w   REG    8,1    46052 131354 /var/log/syslog
 </code></pre>
 
 <p>Увидеть список процессов, использующие файлы в конкретном каталоге можно с помощью опции <code>+D</code>:</p>
 
-<pre><code>lsof +D /var/log/
+<pre><code class="language-bash">lsof +D /var/log/
 COMMAND     PID     USER   FD   TYPE DEVICE SIZE/OFF   NODE NAME
 monit       603     root    3u   REG    8,1    68554 132793 /var/log/monit.log
 munin-nod  2163     root    2w   REG    8,1    10583 262865 /var/log/munin/munin-node.log
@@ -149,7 +149,7 @@ rsyslogd   3481     root    6w   REG    8,1    47105 131354 /var/log/syslog
 
 <p>Увидеть список открытых файлов определенным процессом (или несколькими процессами) можно с помощью <code>-с</code> &lt;имя_процесса&gt;:</p>
 
-<pre><code>lsof -c ssh -c monit
+<pre><code class="language-bash">lsof -c ssh -c monit
 COMMAND   PID    USER   FD   TYPE             DEVICE SIZE/OFF       NODE NAME
 monit     603    root  cwd    DIR                8,1     4096          2 /
 monit     603    root  txt    REG                8,1   547088    1711150 /usr/bin/monit
@@ -165,7 +165,7 @@ sshd     8803    root  mem    REG                8,1    26856    1444961 /lib/x8
 
 <p>Увидеть процессы, использующие каталог (например, точку монтирования) можно так:</p>
 
-<pre><code>lsof /var/spool/asterisk
+<pre><code class="language-bash">lsof /var/spool/asterisk
 COMMAND    PID     USER   FD   TYPE DEVICE SIZE/OFF    NODE NAME
 asterisk 20263 asterisk   35w   REG   8,17  5505068 3651513 /var/spool/asterisk/monitor/20160908-1473316827.190.wav
 asterisk 20263 asterisk   44w   REG   8,17   163884 3651422 /var/spool/asterisk/monitor/20160908-1473317161.257.wav
@@ -173,7 +173,7 @@ asterisk 20263 asterisk   44w   REG   8,17   163884 3651422 /var/spool/asterisk/
 
 <p>Список файлов, открытых определенным пользователем можно так:</p>
 
-<pre><code>lsof -u e.lebed
+<pre><code class="language-bash">lsof -u e.lebed
 COMMAND   PID    USER   FD      TYPE             DEVICE SIZE/OFF       NODE NAME
 systemd  8821 e.lebed  cwd       DIR                8,1     4096          2 /
 systemd  8821 e.lebed  txt       REG                8,1  1309064    1445800 /lib/systemd/systemd
@@ -186,7 +186,7 @@ systemd  8821 e.lebed    4u     0000                0,9        0       6621 anon
 
 <p>Просмотреть список файлов, использующихся конкретным процессом:</p>
 
-<pre><code>lsof -p 20263
+<pre><code class="language-bash">lsof -p 20263
 COMMAND    PID     USER   FD   TYPE             DEVICE SIZE/OFF       NODE NAME
 asterisk 20263 asterisk  cwd    DIR                8,1     4096          2 /
 asterisk 20263 asterisk  rtd    DIR                8,1     4096          2 /
@@ -199,18 +199,18 @@ asterisk 20263 asterisk  mem    REG                8,1   227282    1723461 /usr/
 
 <p>Вывести только <code>PID</code> процесса, использующего файл:</p>
 
-<pre><code>lsof -t /var/log/syslog
+<pre><code class="language-bash">lsof -t /var/log/syslog
 3481
 </code></pre>
 
 <p>Зная PID процесса, можно послать ему сигнал <code>SIGKILL</code>. Например, чтобы убить все процессы конкретного пользователя делаем так:</p>
 
-<pre><code>kill -9 `lsof -t -u admin`
+<pre><code class="language-bash">kill -9 `lsof -t -u admin`
 </code></pre>
 
 <p>Использовать <code>lsof</code> можно в цикле. Этот режим включается с помощью опции <code>-r</code> или <code>+r</code>, причем дополнительно можно указать таймаут между выполнениями цикла (в секундах). Результат вывода каждого цикла будет отделен символами «=======»:</p>
 
-<pre><code>lsof -c rsyslogd -r5
+<pre><code class="language-bash">lsof -c rsyslogd -r5
 COMMAND   PID USER   FD   TYPE             DEVICE SIZE/OFF       NODE NAME
 rsyslogd 3481 root  cwd    DIR                8,1     4096          2 /
 rsyslogd 3481 root  rtd    DIR                8,1     4096          2 /
@@ -228,7 +228,7 @@ rsyslogd 3481 root  rtd    DIR                8,1     4096          2 /
 
 <p>Посмотреть список окрытых сетевых соединений можно с помощью опций <code>-i</code> (все), <code>-i4</code> (IPV4) и <code>-i6</code> (IPV6):</p>
 
-<pre><code>lsof -i4
+<pre><code class="language-bash">lsof -i4
 COMMAND     PID        USER   FD   TYPE     DEVICE SIZE/OFF NODE NAME
 monit       603        root    6u  IPv4 1600503444      0t0  TCP *:2812 (LISTEN)
 rpcbind    3355        root    6u  IPv4      12697      0t0  UDP *:sunrpc
@@ -246,7 +246,7 @@ asterisk  20263    asterisk    8u  IPv4 1820763379      0t0  TCP *:5038 (LISTEN)
 
 <p>Список сетевых соединений, использующих определенный порт можно увидеть так:</p>
 
-<pre><code>lsof -i :25
+<pre><code class="language-bash">lsof -i :25
 COMMAND   PID        USER   FD   TYPE     DEVICE SIZE/OFF NODE NAME
 exim4   10289 Debian-exim    4u  IPv6 3585448189      0t0  TCP *:smtp (LISTEN)
 exim4   10289 Debian-exim    5u  IPv4 3585448190      0t0  TCP *:smtp (LISTEN)
@@ -254,7 +254,7 @@ exim4   10289 Debian-exim    5u  IPv4 3585448190      0t0  TCP *:smtp (LISTEN)
 
 <p>Отфильтровать открытые сетевые соединения по протоколу TCP:</p>
 
-<pre><code>lsof -i tcp
+<pre><code class="language-bash">lsof -i tcp
 COMMAND     PID          USER   FD   TYPE     DEVICE SIZE/OFF NODE NAME
 monit       603          root    6u  IPv4 1600503444      0t0  TCP *:2812 (LISTEN)
 apache2    1254      www-data    4u  IPv6 1421913521      0t0  TCP *:http (LISTEN)
@@ -268,7 +268,7 @@ rpcbind    3355          root    8u  IPv4      12701      0t0  TCP *:sunrpc (LIS
 
 <p>Список всех NFS-файлов можно получить так:</p>
 
-<pre><code>lsof -N
+<pre><code class="language-bash">lsof -N
 COMMAND     PID          USER   FD   TYPE     DEVICE SIZE/OFF NODE     NAME
 nginx     10927      www-data  710r   REG       0,21     5328 20321383 /var/www/design/610704_company_logo_1.png (192.168.0.20:/srv/www)
 nginx     10927      www-data  723r   REG       0,21    10754 20447333 /var/www/design/505720_company_logo_1.png (192.168.0.20:/srv/www)
@@ -316,6 +316,10 @@ nginx     10927      www-data  745r   REG       0,21    40864 20451592 /var/www/
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -329,10 +333,6 @@ nginx     10927      www-data  745r   REG       0,21    40864 20451592 /var/www/
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

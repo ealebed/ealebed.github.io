@@ -100,21 +100,21 @@
 <li>если пакет <code>tcl</code> не установлен, устанавливаем его (тесты написаны на <code>tcl</code>):</li>
 </ul>
 
-<pre><code>aptitude install tcl
+<pre><code class="language-bash">aptitude install tcl
 </code></pre>
 
 <ul>
 <li>установим <code>ruby</code> (скрипт управления кластером написан на <code>ruby</code>):</li>
 </ul>
 
-<pre><code>aptitude install ruby
+<pre><code class="language-bash">aptitude install ruby
 </code></pre>
 
 <ul>
 <li>еще нам потребуется Redis-rb-клиент:</li>
 </ul>
 
-<pre><code>gem install redis
+<pre><code class="language-bash">gem install redis
 </code></pre>
 
 <p>Приступим к <strong>установке Redis</strong>. Так как нам нужна версия не ниже 3.0, то воспользуемся рекомендациями разработчиков и разберемся <strong>как установить Redis из исходников</strong>:</p>
@@ -123,7 +123,7 @@
 <li>установка Redis:</li>
 </ul>
 
-<pre><code>wget http://download.redis.io/releases/redis-3.0.3.tar.gz
+<pre><code class="language-bash">wget http://download.redis.io/releases/redis-3.0.3.tar.gz
 tar xzf redis-3.0.3.tar.gz
 cd redis-3.0.3
 make
@@ -134,7 +134,7 @@ make install
 <li>установка PHP-клиента:</li>
 </ul>
 
-<pre><code>git clone https://github.com/phpredis/phpredis.git
+<pre><code class="language-bash">git clone https://github.com/phpredis/phpredis.git
 cd phpredis
 phpize
 ./configure
@@ -145,7 +145,7 @@ make &amp;&amp; make install
 
 <p>Для генерации конфигурационных файлов воспользуемся скриптом <code>../redis-3.0.3/utils/install_server.sh</code> из архива с исходниками. Запускаем скрипт, вводим порт (7000-7005), на котором будет запущен Redis, остальные параметры оставляем по умолчанию.</p>
 
-<pre><code>./install_server.sh 
+<pre><code class="language-bash">./install_server.sh 
 Welcome to the redis service installer
 This script will help you easily set up a running redis server
 
@@ -175,21 +175,21 @@ Is this ok? Then press ENTER to go on or Ctrl-C to abort.
 <li>останавливаем все запущенные процессы Redis:</li>
 </ul>
 
-<pre><code>/etc/init.d/redis_&lt;номер_порта&gt; stop
+<pre><code class="language-bash">/etc/init.d/redis_&lt;номер_порта&gt; stop
 </code></pre>
 
 <ul>
 <li>переходим в каталог <code>/etc/redis/</code>:</li>
 </ul>
 
-<pre><code>cd /etc/redis/
+<pre><code class="language-bash">cd /etc/redis/
 </code></pre>
 
 <ul>
 <li>в сгенерированных конфигах изменяем значения параметров на следующие:</li>
 </ul>
 
-<pre><code>appendonly yes
+<pre><code class="language-text">appendonly yes
 ...
 cluster-enabled yes
 ...
@@ -204,12 +204,12 @@ cluster-node-timeout 5000
 <li>запускаем процессы Redis:</li>
 </ul>
 
-<pre><code>/etc/init.d/redis_&lt;номер_порта&gt; start
+<pre><code class="language-bash">/etc/init.d/redis_&lt;номер_порта&gt; start
 </code></pre>
 
 <p>Убедиться, что все процессы Redis запущены, можно командой:</p>
 
-<pre><code>ps ax | grep redis
+<pre><code class="language-bash">ps ax | grep redis
 </code></pre>
 
 <p>Приступаем к созданию кластера — воспользуемся скриптом <code>../redis-3.0.3/src/redis-trib.rb</code> из архива с исходниками.</p>
@@ -218,12 +218,12 @@ cluster-node-timeout 5000
 <li><strong>создание Redis Cluster</strong> из отдельных инстансов:</li>
 </ul>
 
-<pre><code>./redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
+<pre><code class="language-bash">./redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
 </code></pre>
 
 <p>Скрипт <code>redis-trib</code> предложит конфигурацию кластера и попросит с ней согласиться (ввести yes):</p>
 
-<pre><code>./redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
+<pre><code class="language-bash">./redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
 &gt;&gt;&gt; Creating cluster
 Connecting to node 127.0.0.1:7000: OK
 Connecting to node 127.0.0.1:7001: OK
@@ -256,7 +256,7 @@ Can I set the above configuration? (type 'yes' to accept):
 
 <p>После подтверждения конфигурации <strong>Redis Cluster будет настроен</strong>, ноды(инстансы) будут объединены и начнут общаться друг с другом:</p>
 
-<pre><code>&gt;&gt;&gt; Nodes configuration updated
+<pre><code class="language-bash">&gt;&gt;&gt; Nodes configuration updated
 &gt;&gt;&gt; Assign a different config epoch to each node
 &gt;&gt;&gt; Sending CLUSTER MEET messages to join the cluster
 Waiting for the cluster to join.
@@ -284,12 +284,12 @@ M: f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98 127.0.0.1:7005
 
 <p>Redis создает 16384 слота и равномерно их распределяет по нодам-мастерам. Проверить распределение можно командой:</p>
 
-<pre><code>redis-cli -p 7000 cluster nodes | grep master
+<pre><code class="language-bash">redis-cli -p 7000 cluster nodes | grep master
 </code></pre>
 
 <p>Проверить работу созданного кластера можно с помощью <code>redis-cli</code>:</p>
 
-<pre><code>redis-cli -c -p 7000
+<pre><code class="language-bash">redis-cli -c -p 7000
 redis 127.0.0.1:7000&gt; set foo bar
 -&gt; Redirected to slot [12182] located at 127.0.0.1:7002
 OK
@@ -312,29 +312,29 @@ redis 127.0.0.1:7000&gt; get hello
 <li>используем <code>redis-trib</code> со следующими параметрами:</li>
 </ul>
 
-<pre><code>./redis-trib.rb add-node 127.0.0.1:7006 127.0.0.1:7000
+<pre><code class="language-bash">./redis-trib.rb add-node 127.0.0.1:7006 127.0.0.1:7000
 </code></pre>
 
 <p><strong>Примечание.</strong> Параметр 127.0.0.1:7006 — это новая созданная нода, параметр 127.0.0.1:7000 — уже созданный ранее кластер.</p>
 
 <p>В примере выше новая нода будет добавлена в кластер в роли мастера. Для того, чтобы добавить в кластер ноду в роли слейва, необходимо указать дополнительный ключ <code>--slave</code>, например:</p>
 
-<pre><code>./redis-trib.rb add-node --slave 127.0.0.1:7006 127.0.0.1:7000
+<pre><code class="language-bash">./redis-trib.rb add-node --slave 127.0.0.1:7006 127.0.0.1:7000
 </code></pre>
 
 <p>В этом случае новая нода будет добавлена в кластер как слейв к случайно выбранному мастеру. Добавить ноду в роли слейва к конкретному мастеру можно указав <code>--master-id</code> мастера:</p>
 
-<pre><code>./redis-trib.rb add-node --slave --master-id 27474fd9d23ed041242d9fd6a4b39e261a277f85 127.0.0.1:7006 127.0.0.1:7000
+<pre><code class="language-bash">./redis-trib.rb add-node --slave --master-id 27474fd9d23ed041242d9fd6a4b39e261a277f85 127.0.0.1:7006 127.0.0.1:7000
 </code></pre>
 
 <p>Для удаления ноды из Redis Cluster воспользуемся следующей командой:</p>
 
-<pre><code>./redis-trib del-node 127.0.0.1:7000 f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98
+<pre><code class="language-bash">./redis-trib del-node 127.0.0.1:7000 f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98
 </code></pre>
 
 <p><strong>Примечание.</strong> Параметр 127.0.0.1:7000 — созданный кластер, f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98 — id ноды для удаления</p>
 
-<p>На этом <strong>установка и настройка Redis Cluster в Debian Wheezy</strong> закончена, в следующей статье рассмотрим <a href="https://letsclearitup.com.ua/debian/redis-cluster-v-debian-wheezy-migratsiya-i-resharding.html">миграцию слотов между нодами и решардинг</a>.</p>
+<p>На этом <strong>установка и настройка Redis Cluster в Debian Wheezy</strong> закончена, в следующей статье рассмотрим <a href="https://ealebed.github.io/posts/redis-cluster-%D0%B2-debian-wheezy-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D1%8F-%D0%B8-%D1%80%D0%B5%D1%88%D0%B0%D1%80%D0%B4%D0%B8%D0%BD%D0%B3/">миграцию слотов между нодами и решардинг</a>.</p>
                 </section>
             </article>
 
@@ -376,6 +376,10 @@ redis 127.0.0.1:7000&gt; get hello
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -389,10 +393,6 @@ redis 127.0.0.1:7000&gt; get hello
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

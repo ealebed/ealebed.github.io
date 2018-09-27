@@ -86,17 +86,17 @@
 
 <p>При попытке удалить записи из таблицы <code>slow_log</code> базы <code>mysql</code> получаем сообщение об ошибке:</p>
 
-<pre><code>#1556 - You can't use locks with log tables
+<pre><code class="language-text">#1556 - You can't use locks with log tables
 </code></pre>
 
 <p>Для решения это проблемы подключаемся к MySQL с привилегиями суперпользователя, отключаем лог медленных запросов, переименовываем таблицу, удаляем из нее записи, переименовываем обратно и включаем лог:</p>
 
-<pre><code>mysql -uroot -p&lt;СЛОЖНЫЙ_ПАРОЛЬ&gt;
+<pre><code class="language-bash">mysql -uroot -p&lt;СЛОЖНЫЙ_ПАРОЛЬ&gt;
 </code></pre>
 
 <p>и выполняем следующие запросы:</p>
 
-<pre><code>use mysql;
+<pre><code class="language-sql">use mysql;
 SET GLOBAL slow_log='OFF';
 RENAME TABLE slow_log TO slow_log_temp;
 DELETE FROM `slow_log_temp` WHERE `start_time` &lt; DATE(NOW());;
@@ -108,7 +108,7 @@ SET GLOBAL slow_log='ON';
 
 <p>Если же вы используете Amazon rds, то удалить записи из таблицы <code>mysql.slow_log</code> значительно проще — достаточно воспользоваться встроенной процедурой <code>rotate</code>:</p>
 
-<pre><code>CALL mysql.rds_rotate_slow_log;
+<pre><code class="language-sql">CALL mysql.rds_rotate_slow_log;
 DELETE FROM mysql.slow_log_backup;
 </code></pre>
                 </section>
@@ -152,6 +152,10 @@ DELETE FROM mysql.slow_log_backup;
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -165,10 +169,6 @@ DELETE FROM mysql.slow_log_backup;
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

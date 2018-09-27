@@ -80,7 +80,7 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>Ранее мы уже рассматривали процесс <a href="https://letsclearitup.com.ua/debian/znakomstvo-s-prometheus-chast-1-ustanovka-i-nastroyka.html">установки и настройки</a> инструмента для мониторинга и сбора метрик под названием <strong>Prometheus</strong> и его дополнительного компонента — <code>node_exporter</code> в операционной системе Debian Jessie.</p>
+                    <p>Ранее мы уже рассматривали процесс <a href="https://ealebed.github.io/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">установки и настройки</a> инструмента для мониторинга и сбора метрик под названием <strong>Prometheus</strong> и его дополнительного компонента — <code>node_exporter</code> в операционной системе Debian Jessie.</p>
 
 <p></p>
 
@@ -90,22 +90,22 @@
 
 <p>Создаем новый каталог <code>node_exporter</code> в каталоге <code>/opt</code>:</p>
 
-<pre><code>mkdir -p /opt/node_exporter
+<pre><code class="language-bash">mkdir -p /opt/node_exporter
 </code></pre>
 
 <p>Скачиваем последнюю сборку <code>node_exporter</code> с GitHub:</p>
 
-<pre><code>curl -LO &quot;https://github.com/prometheus/node_exporter/releases/download/0.14.0/node_exporter-0.14.0.linux-amd64.tar.gz&quot;
+<pre><code class="language-bash">curl -LO &quot;https://github.com/prometheus/node_exporter/releases/download/0.14.0/node_exporter-0.14.0.linux-amd64.tar.gz&quot;
 </code></pre>
 
 <p>Распаковываем архив и копируем исполняемый файл <code>node_exporter</code> в ранее созданный каталог:</p>
 
-<pre><code>tar -xvzf ~/node_exporter-0.14.0.linux-amd64.tar.gz &amp;&amp; cp ~/node_exporter-0.14.0.linux-amd64/node_exporter /opt/node_exporter
+<pre><code class="language-bash">tar -xvzf ~/node_exporter-0.14.0.linux-amd64.tar.gz &amp;&amp; cp ~/node_exporter-0.14.0.linux-amd64/node_exporter /opt/node_exporter
 </code></pre>
 
 <p>В каталоге <code>/etc/systemd/system/</code> создаем конфигурационный файл <code>node_exporter.service</code> следующего содержания:</p>
 
-<pre><code>[Unit]
+<pre><code class="language-text">[Unit]
 Description=Node Exporter
  
 [Service]
@@ -117,20 +117,20 @@ WantedBy=default.target
 
 <p>Далее выполняем:</p>
 
-<pre><code>sudo systemctl daemon-reload
+<pre><code class="language-bash">sudo systemctl daemon-reload
 </code></pre>
 
-<pre><code>sudo systemctl enable node_exporter.service
+<pre><code class="language-bash">sudo systemctl enable node_exporter.service
 </code></pre>
 
-<pre><code>sudo systemctl start node_exporter.service
+<pre><code class="language-bash">sudo systemctl start node_exporter.service
 </code></pre>
 
 <p>Через мгновение, как только <code>node_exporter</code>соберет данные, они будут доступны в веб-интерфейсе по адресу http://[IP-адрес сервера]:9100.</p>
 
 <p>Не забываем добавить в конфигурационный файл <strong>Prometheus</strong> (<code>/etc/prometheus/prometheus.yml</code>) новую задачу, например так:</p>
 
-<pre><code>...
+<pre><code class="language-yaml">...
   - job_name: &quot;node&quot;
     target_groups:
     - targets:
@@ -178,6 +178,10 @@ WantedBy=default.target
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -191,10 +195,6 @@ WantedBy=default.target
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

@@ -86,7 +86,7 @@
 
 <p>Действия производятся на:</p>
 
-<pre><code>lsb_release -a
+<pre><code class="language-bash">lsb_release -a
 No LSB modules are available.
 Distributor ID:    Ubuntu
 Description:    Ubuntu 16.04.2 LTS
@@ -96,7 +96,7 @@ Codename:    xenial
 
 <p>Используемая версия docker-engine:</p>
 
-<pre><code>docker version
+<pre><code class="language-bash">docker version
 Client:
  Version:      17.03.0-ce
  API version:  1.26
@@ -115,11 +115,11 @@ Server:
  Experimental: false
 </code></pre>
 
-<p>В примере рассмотрим сборку docker-образа для контейнера с Nginx (как полагается, с <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-podderzhkoy-brotli.html">поддержкой Brotli</a> и свеженьким <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-openssl-1-0-2-dlya-http2-0.html">OpenSSL для HTTP2.0</a>). Кроме этого, при запуске контейнера из шаблонов будут генерироваться конфигурационные файлы сайтов (в зависимости от параметров из <code>.env</code>-файла).</p>
+<p>В примере рассмотрим сборку docker-образа для контейнера с Nginx (как полагается, с <a href="https://ealebed.github.io/posts/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">поддержкой Brotli</a> и свеженьким <a href="https://ealebed.github.io/posts/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-openssl-1.0.2-%D0%B4%D0%BB%D1%8F-http2.0/">OpenSSL для HTTP2.0</a>). Кроме этого, при запуске контейнера из шаблонов будут генерироваться конфигурационные файлы сайтов (в зависимости от параметров из <code>.env</code>-файла).</p>
 
 <p>Dockerfile (инструкции по сборке образа) выглядит так:</p>
 
-<pre><code>FROM debian:jessie
+<pre><code class="language-Dockerfile">FROM debian:jessie
  
 ENV NGINX_VERSION=1.11.10
 ENV OPENSSL_VERSION=1.0.2g
@@ -232,12 +232,12 @@ CMD dockerize -template /opt/nginx/conf.d/main.tmpl:/opt/nginx/conf.d/main-gen.c
 
 <p>Для сборки образа, находясь в каталоге с Dockerfile, запускаем команду:</p>
 
-<pre><code>docker build -t nginx-test:latest .
+<pre><code class="language-bash">docker build -t nginx-test:latest .
 </code></pre>
 
 <p>Проверим наличие нового образа после сборки:</p>
 
-<pre><code>docker images nginx-test 
+<pre><code class="language-bash">docker images nginx-test 
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
 nginx-test          latest              43bf91aeb416        3 minutes ago       732 MB
 </code></pre>
@@ -246,14 +246,14 @@ nginx-test          latest              43bf91aeb416        3 minutes ago       
 
 <p>Для оптимизации docker-образов можно воспользоваться утилитой <a href="https://github.com/goldmann/docker-squash"><code>docker-squash</code></a>. Установить ее довольно просто:</p>
 
-<pre><code>pip install docker-squash
+<pre><code class="language-bash">pip install docker-squash
 </code></pre>
 
 <p>Данная утилита позволяет объединять слои docker-образов (не забываем о том, что каждая инструкция в Dockerfile создает новый слой, и в нашем образе содержится аж 16 слоев). Слои можно объединять частично (например, N последних или с X по Y) или полностью (как мы и поступим).</p>
 
 <p>Запускаем команду:</p>
 
-<pre><code>docker-squash -t nginx-test:squashed nginx-test:latest
+<pre><code class="language-bash">docker-squash -t nginx-test:squashed nginx-test:latest
 2017-03-20 13:42:39,562 root         INFO     docker-squash version 1.0.5, Docker 60ccb22, API 1.26...
 2017-03-20 13:42:39,562 root         INFO     Using v2 image format
 2017-03-20 13:42:39,582 root         INFO     Old image has 16 layers
@@ -279,7 +279,7 @@ nginx-test          latest              43bf91aeb416        3 minutes ago       
 
 <p>Проверим информацию о docker-образах с именем nginx-test (теперь их станет 2):</p>
 
-<pre><code>docker images nginx-test 
+<pre><code class="language-bash">docker images nginx-test 
 REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
 nginx-test          squashed            3c1cfae6f24c        About a minute ago   399 MB
 nginx-test          latest              43bf91aeb416        9 minutes ago        732 MB
@@ -289,7 +289,7 @@ nginx-test          latest              43bf91aeb416        9 minutes ago       
 
 <p>Следует отметить, что docker-engine начиная с версии 1.13 в <strong>экспериментальном режиме</strong> содержит возможность сборки уже сжатых образов. Для этого в команду сборки необходимо добавить параметр <code>--squash</code>, например:</p>
 
-<pre><code>docker build --squash -t nginx-test:late .
+<pre><code class="language-bash">docker build --squash -t nginx-test:late .
 Error response from daemon: squash is only supported with experimental mode
 </code></pre>
 
@@ -330,15 +330,15 @@ WantedBy=multi-user.target
 
 <p>После изменения конфигурационного файла выполняем:</p>
 
-<pre><code>sudo systemctl daemon-reload
+<pre><code class="language-bash">sudo systemctl daemon-reload
 </code></pre>
 
-<pre><code>sudo systemctl restart docker
+<pre><code class="language-bash">sudo systemctl restart docker
 </code></pre>
 
 <p>Проверим информацию о версии docker-engine (следует обратить внимание на последнюю строку):</p>
 
-<pre><code>docker version
+<pre><code class="language-bash">docker version
 Client:
  Version:      17.03.0-ce
  API version:  1.26
@@ -359,7 +359,7 @@ Server:
 
 <p>Теперь можно сразу собирать сжатые docker-образы командой:</p>
 
-<pre><code>docker build --squash -t nginx-test:late .
+<pre><code class="language-bash">docker build --squash -t nginx-test:late .
 </code></pre>
                 </section>
             </article>
@@ -402,6 +402,10 @@ Server:
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -415,10 +419,6 @@ Server:
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

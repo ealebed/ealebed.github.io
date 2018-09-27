@@ -64,7 +64,7 @@
                     </h1>
                     <h2 class="headline">
                     Oct 26, 2017 08:37
-                    · 380 words
+                    · 407 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -82,54 +82,81 @@
 
 <p></p>
 
-<p>Прежде всего, необходимо собрать Nginx с поддержкой модуля <code>nginx-module-vts</code> — мы уже многократно использовали самостоятельные сборки (<a href="https://letsclearitup.com.ua/debian/kak-vklyuchit-http2-0-v-nginx.html">с http2</a>, <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-openssl-1-0-2-dlya-http2-0.html">с APLN</a>, <a href="https://letsclearitup.com.ua/debian/peresborka-nginx-s-podderzhkoy-brotli.html">с brotli</a>, <a href="https://letsclearitup.com.ua/nginx/peresborka-nginx-s-podderzhkoy-pagespeed.html">с PageSpeed</a> и <a href="https://letsclearitup.com.ua/debian/ispolzovanie-modulya-ngx_cache_purge-dlya-ochistki-kesha-fastcgi.html">с ngx_cache_purge</a>), поэтому никаких затруднений быть не должно.</p>
+<p>Прежде всего, необходимо собрать Nginx с поддержкой модуля <code>nginx-module-vts</code> — мы уже многократно использовали самостоятельные сборки (<a href="https://ealebed.github.io/posts/%D0%BA%D0%B0%D0%BA-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C-http2.0-%D0%B2-nginx/">с http2</a>, <a href="https://ealebed.github.io/posts/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-openssl-1.0.2-%D0%B4%D0%BB%D1%8F-http2.0/">с ALPN</a>, <a href="https://ealebed.github.io/posts/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">с brotli</a>, <a href="https://ealebed.github.io/posts/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-pagespeed/">с PageSpeed</a> и <a href="https://ealebed.github.io/posts/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D1%8F-ngx_cache_purge-%D0%B4%D0%BB%D1%8F-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D0%BA%D1%8D%D1%88%D0%B0-fastcgi/">с ngx_cache_purge</a>), поэтому никаких затруднений быть не должно.</p>
 
 <p>Скачиваем и распаковываем исходники актуальной версии Nginx:</p>
 
-<pre><code>cd /opt/ &amp;&amp; wget https://nginx.org/download/nginx-1.13.5.tar.gz &amp;&amp; tar xf nginx-1.13.5.tar.gz
+<pre><code class="language-bash">cd /opt/ \
+    &amp;&amp; wget https://nginx.org/download/nginx-1.13.5.tar.gz \
+    &amp;&amp; tar xf nginx-1.13.5.tar.gz
 </code></pre>
 
 <p>Получаем код модуля <code>nginx-module-vts</code> актуальной версии:</p>
 
-<pre><code>curl -fSL https://github.com/vozlt/nginx-module-vts/archive/v0.1.15.tar.gz | tar xzf - -C /tmp
+<pre><code class="language-bash">curl -fSL https://github.com/vozlt/nginx-module-vts/archive/v0.1.15.tar.gz | tar xzf - -C /tmp
 </code></pre>
 
 <p>Находясь в каталоге с исходниками Nginx собираем его:</p>
 
-<pre><code>./configure --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx --modules-path=/usr/lib/nginx/modules \
---conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log \
---pid-path=/var/run/nginx.pid --lock-path=/var/run/nginx.lock --http-client-body-temp-path=/var/cache/nginx/client_temp \
---http-proxy-temp-path=/var/cache/nginx/proxy_temp --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
---http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
---user=nginx --group=nginx --with-http_ssl_module --with-http_realip_module --with-http_addition_module \
---with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_gunzip_module \
---with-http_gzip_static_module --with-http_random_index_module --with-http_secure_link_module \
---with-http_stub_status_module --with-http_auth_request_module --with-threads --with-stream \
---with-stream_ssl_module --with-http_slice_module --with-mail --with-mail_ssl_module --with-file-aio \
---with-http_v2_module --with-cc-opt='-g -O2 -fstack-protector-strong -Wformat -Werror=format-security \
--Wp,-D_FORTIFY_SOURCE=2' --with-ld-opt='-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed' \
---add-module=/tmp/nginx-module-vts-0.1.15
+<pre><code class="language-bash">./configure \
+    --prefix=/etc/nginx \
+    --sbin-path=/usr/sbin/nginx \
+    --modules-path=/usr/lib/nginx/modules \
+    --conf-path=/etc/nginx/nginx.conf \
+    --error-log-path=/var/log/nginx/error.log \
+    --http-log-path=/var/log/nginx/access.log \
+    --pid-path=/var/run/nginx.pid \
+    --lock-path=/var/run/nginx.lock \
+    --http-client-body-temp-path=/var/cache/nginx/client_temp \
+    --http-proxy-temp-path=/var/cache/nginx/proxy_temp \
+    --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
+    --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
+    --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
+    --user=nginx \
+    --group=nginx \
+    --with-http_ssl_module \
+    --with-http_realip_module \
+    --with-http_addition_module \
+    --with-http_sub_module \
+    --with-http_dav_module \
+    --with-http_flv_module \
+    --with-http_gunzip_module \
+    --with-http_gzip_static_module \
+    --with-http_random_index_module \
+    --with-http_secure_link_module \
+    --with-http_stub_status_module \
+    --with-http_auth_request_module \
+    --with-threads --with-stream \
+    --with-stream_ssl_module \
+    --with-http_slice_module \
+    --with-mail \
+    --with-mail_ssl_module \
+    --with-file-aio \
+    --with-http_v2_module \
+    --with-cc-opt='-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2' \
+    --with-ld-opt='-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed' \
+    --add-module=/tmp/nginx-module-vts-0.1.15
 </code></pre>
 
-<pre><code>make
+<pre><code class="language-bash">make
 </code></pre>
 
-<pre><code>make install
+<pre><code class="language-bash">make install
 </code></pre>
 
-<pre><code>service nginx restart
+<pre><code class="language-bash">service nginx restart
 </code></pre>
 
 <p>В секции <code>http</code> конфигурационного файла <code>/etc/nginx/nginx.conf</code> добавляем следующую строку:</p>
 
-<pre><code>...
+<pre><code class="language-text">...
     vhost_traffic_status_zone;
 ...
 </code></pre>
 
 <p>В настройки сайта (секция <code>server</code>) добавим еще один локейшн (это вариант базовой настройки, все доступные директивы и примеры использования <a href="https://github.com/vozlt/nginx-module-vts#use-cases">здесь</a>):</p>
 
-<pre><code>server {
+<pre><code class="language-text">server {
 ...
   location /vhost_status {
     vhost_traffic_status on;
@@ -142,16 +169,16 @@
 
 <p>Применяем изменения:</p>
 
-<pre><code>nginx -s reload
+<pre><code class="language-bash">nginx -s reload
 </code></pre>
 
 <p>Через некоторое время можно перейти по адресу http://имя_сервера/vhost_status и посмотреть на собранные данные.</p>
 
-<p>Статистика успешно собирается, но она ведется с момента старта веб-сервера Nginx. Если же нужно вывести данные за какой-то промежуток времени (час/день/неделя и т.д.), то следует перенаправлять данные метрики в систему мониторинга (например, <a href="https://letsclearitup.com.ua/debian/znakomstvo-s-prometheus-chast-1-ustanovka-i-nastroyka.html">Prometheus</a>) и на их основе строить дашборды/графики (например, в <a href="https://letsclearitup.com.ua/debian/grafana-deystvitelno-udobnyiy-dashbord.html">Grafana</a>).</p>
+<p>Статистика успешно собирается, но она ведется с момента старта веб-сервера Nginx. Если же нужно вывести данные за какой-то промежуток времени (час/день/неделя и т.д.), то следует перенаправлять данные метрики в систему мониторинга (например, <a href="https://ealebed.github.io/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">Prometheus</a>) и на их основе строить дашборды/графики (например, в <a href="https://ealebed.github.io/posts/grafana-%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE-%D1%83%D0%B4%D0%BE%D0%B1%D0%BD%D1%8B%D0%B9-%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4/">Grafana</a>).</p>
 
-<p>Экспортер метрик конечно же будем запускать в docker-контейнере. Более того, если вы уже настраивали <a href="https://letsclearitup.com.ua/monitoring/monitoring-docker-s-pomoshhyu-prometheus.html">мониторинг docker c помощью Prometheus</a>, то советую добавить описание еще одного сервиса (контейнера) в существующий файл <code>docker-compose.yml</code>:</p>
+<p>Экспортер метрик конечно же будем запускать в docker-контейнере. Более того, если вы уже настраивали <a href="https://ealebed.github.io/posts/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-docker-c-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-prometheus/">мониторинг docker c помощью Prometheus</a>, то советую добавить описание еще одного сервиса (контейнера) в существующий файл <code>docker-compose.yml</code>:</p>
 
-<pre><code>version: '2'
+<pre><code class="language-yaml">version: '2'
 services:
   ...
   prodvtsexporter:
@@ -169,12 +196,12 @@ services:
 
 <p>Обновляем сервисы из файла с помощью команды:</p>
 
-<pre><code>docker-compose up -d
+<pre><code class="language-bash">docker-compose up -d
 </code></pre>
 
 <p>В конфигурационный файл <code>prometheus.yml</code> (в debian-based дистрибутивах находится в каталоге <code>/etc/prometheus</code>) добавляем следующие строки:</p>
 
-<pre><code>- job_name: 'prod_nginx_vts_exporter'
+<pre><code class="language-yaml">- job_name: 'prod_nginx_vts_exporter'
   static_configs:
     - targets: ['prodvtsexporter:9913']
 </code></pre>
@@ -223,6 +250,10 @@ services:
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -236,10 +267,6 @@ services:
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

@@ -86,7 +86,7 @@
 
 <p>В нашем примере для решения задачи будем использовать два сервера под управлением ОС Debian Wheezy. Настройки сети на первом:</p>
 
-<pre><code>cat /etc/network/interfaces
+<pre><code class="language-bash">cat /etc/network/interfaces
 auto eth0
 iface eth0 inet static
 	address 192.168.0.23
@@ -97,7 +97,7 @@ iface eth0 inet static
 
 <p>на втором:</p>
 
-<pre><code>cat /etc/network/interfaces
+<pre><code class="language-bash">cat /etc/network/interfaces
 auto eth0
 iface eth0 inet static
 	address 192.168.0.11
@@ -108,12 +108,12 @@ iface eth0 inet static
 
 <p>Прежде всего установим необходимый пакет <code>ucarp</code> на оба сервера:</p>
 
-<pre><code>aptitude install ucarp
+<pre><code class="language-bash">aptitude install ucarp
 </code></pre>
 
 <p>Теперь приведем конфигурационный файл <code>/etc/network/interfaces</code> на первом сервере к следующему виду:</p>
 
-<pre><code>auto eth0
+<pre><code class="language-bash">auto eth0
 iface eth0 inet static
 	address 192.168.0.23
 	netmask 255.255.255.0
@@ -133,7 +133,7 @@ iface eth0:ucarp inet static
 
 <p>На втором сервера конфигурационный файл <code>/etc/network/interfaces</code> должен выглядеть так:</p>
 
-<pre><code>auto eth0
+<pre><code class="language-bash">auto eth0
 iface eth0 inet static
 	address 192.168.0.11
 	netmask 255.255.255.0
@@ -153,7 +153,7 @@ iface eth0:ucarp inet static
 
 <p>И выполняем:</p>
 
-<pre><code>/etc/init.d/networking restart
+<pre><code class="language-bash">/etc/init.d/networking restart
 </code></pre>
 
 <p>Подробнее об использованных параметрах:</p>
@@ -178,27 +178,27 @@ iface eth0:ucarp inet static
 <p>Проверка правильности настройки отказоустойчивости ip-адреса.
 Убедиться, что на обоих серверах запущен экземпляр процесса <code>ucarp</code> можно с помощью команды:</p>
 
-<pre><code>ps axww | grep ucarp
+<pre><code class="language-bash">ps axww | grep ucarp
 </code></pre>
 
 <p>Убедиться, что на первом сервере появился новый интерфейс можно с помощью команд:</p>
 
-<pre><code>ip a
+<pre><code class="language-bash">ip a
 </code></pre>
 
 <p>или</p>
 
-<pre><code>ifconfig
+<pre><code class="language-bash">ifconfig
 </code></pre>
 
 <p>Далее на тестовом компьютере запускаем</p>
 
-<pre><code>ping 192.168.0.15
+<pre><code class="language-bash">ping 192.168.0.15
 </code></pre>
 
 <p>и при наличии доступа к физической консоли первого сервера выполняем на нем:</p>
 
-<pre><code>/etc/init.d/networking stop
+<pre><code class="language-bash">/etc/init.d/networking stop
 </code></pre>
 
 <p>На тестовом компьютере пинг возобновится спустя пару секунд.</p>
@@ -245,6 +245,10 @@ iface eth0:ucarp inet static
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -258,10 +262,6 @@ iface eth0:ucarp inet static
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

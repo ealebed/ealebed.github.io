@@ -90,20 +90,20 @@
 
 <p>Итак, для начала установим утилиту (в примере используется ОС Ubuntu 16.04.3 LTS x86_64):</p>
 
-<pre><code>git clone https://www.agwa.name/git/git-crypt.git
+<pre><code class="language-bash">git clone https://www.agwa.name/git/git-crypt.git
 </code></pre>
 
-<pre><code>cd git-crypt &amp;&amp; make &amp;&amp; make install
+<pre><code class="language-bash">cd git-crypt &amp;&amp; make &amp;&amp; make install
 </code></pre>
 
 <p>Ознакомиться с использованием утилиты можно вызвав команду:</p>
 
-<pre><code>git-crypt help
+<pre><code class="language-bash">git-crypt help
 </code></pre>
 
-<p>Клонируем реозиторий, над которым будем проводить тесты (в данном примере используется репозиторий из «локального» <strong>Gitlab</strong>, <a href="https://letsclearitup.com.ua/bash/gitlab-gitlab-ci-docker-registry-s-pomoshhyu-docker-compose.html">развернутого в docker-контейнерах</a>):</p>
+<p>Клонируем реозиторий, над которым будем проводить тесты (в данном примере используется репозиторий из «локального» <strong>Gitlab</strong>, <a href="https://ealebed.github.io/posts/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">развернутого в docker-контейнерах</a>):</p>
 
-<pre><code>git clone ssh://git@gitlab.lc:23/develop/test.git test
+<pre><code class="language-bash">git clone ssh://git@gitlab.lc:23/develop/test.git test
 Cloning into 'test'...
 remote: Counting objects: 1832, done.
 remote: Compressing objects: 100% (1430/1430), done.
@@ -115,10 +115,10 @@ Checking connectivity... done.
 
 <p>Настраиваем git-репозиторий на использование <code>git-crypt</code>:</p>
 
-<pre><code>cd test
+<pre><code class="language-bash">cd test
 </code></pre>
 
-<pre><code>git-crypt init
+<pre><code class="language-bash">git-crypt init
 Generating key...
 </code></pre>
 
@@ -126,41 +126,41 @@ Generating key...
 
 <p>Данный симметричный ключ можно просто скопировать (через <code>cp</code>) в отдельное хранилище или «извлечь» с помощью команды (ключ будет сохранен в файл <code>secret</code> в домашнем каталоге пользователя):</p>
 
-<pre><code>git-crypt export-key ~/secret
+<pre><code class="language-bash">git-crypt export-key ~/secret
 </code></pre>
 
 <p>Содержимое файла выглядит примерно так:</p>
 
-<pre><code>cat secret 
+<pre><code class="language-bash">cat secret 
 GITCRYPTKEY ��Z���UWwެ[w&gt;W�L_&amp;�v�k���&quot;q�a�@��ԃ�#ȶ�c6ZGfl�-Sk}�D�Ճ�@,\O�S�%������6Ɲ �$����$�w��h��
 </code></pre>
 
 <p>В корне git-репозитория создаем файл <code>.gitattributes</code>, в котором будут перечислены файлы для шифрования:</p>
 
-<pre><code>touch .gitattributes
+<pre><code class="language-bash">touch .gitattributes
 </code></pre>
 
 <p>Содержимое файла будет примерно таким (как и в файле <code>.gitignore</code>, можно использовать wildcards):</p>
 
-<pre><code>secret filter=git-crypt diff=git-crypt
+<pre><code class="language-bash">secret filter=git-crypt diff=git-crypt
 *.key filter=git-crypt diff=git-crypt
 .env.* filter=git-crypt diff=git-crypt
 </code></pre>
 
 <p>Создаем файл, в котором будут храниться «секреты»:</p>
 
-<pre><code>touch secret
+<pre><code class="language-bash">touch secret
 </code></pre>
 
 <p>В этот файл я для примера записал свой номер телефона:</p>
 
-<pre><code>cat secret
+<pre><code class="language-bash">cat secret
 +380976601216
 </code></pre>
 
 <p>Фиксируем изменения и пушим их в репозиторий:</p>
 
-<pre><code>git status
+<pre><code class="language-bash">git status
 On branch master
 Your branch is up-to-date with 'origin/master'.
 Untracked files:
@@ -172,17 +172,17 @@ Untracked files:
 nothing added to commit but untracked files present (use &quot;git add&quot; to track)
 </code></pre>
 
-<pre><code>git add .
+<pre><code class="language-bash">git add .
 </code></pre>
 
-<pre><code>git commit -m &quot;test commit&quot;
+<pre><code class="language-bash">git commit -m &quot;test commit&quot;
 [master d6fa879] test commit
  2 files changed, 1 insertion(+)
  create mode 100644 .gitattributes
  create mode 100644 secret
 </code></pre>
 
-<pre><code>git push
+<pre><code class="language-bash">git push
 Counting objects: 4, done.
 Delta compression using up to 4 threads.
 Compressing objects: 100% (2/2), done.
@@ -194,7 +194,7 @@ To ssh://git@gitlab.lc:23/develop/test.git
 
 <p>Теперь опять клонируем репозиторий но уже в другой каталог (моделируем работу с репозиторием на машине другого разработчика):</p>
 
-<pre><code>git clone ssh://git@gitlab.lc:23/develop/test.git test1
+<pre><code class="language-bash">git clone ssh://git@gitlab.lc:23/develop/test.git test1
 Cloning into 'test1'...
 remote: Counting objects: 1853, done.
 remote: Compressing objects: 100% (1440/1440), done.
@@ -206,22 +206,22 @@ Checking connectivity... done.
 
 <p>Проверяем содержимое нашего «секретного» файла:</p>
 
-<pre><code>cd test1
+<pre><code class="language-bash">cd test1
 </code></pre>
 
-<pre><code>cat secret 
+<pre><code class="language-bash">cat secret 
 GITCRYPTb���!��y��M��J[][G��
 B⏎
 </code></pre>
 
 <p>Расшифруем все зашифрованные файлы в репозитории командой (в качестве аргумента команды <code>unlock</code> указываем путь к извлеченному ранее симметричному ключу):</p>
 
-<pre><code>git-crypt unlock ~/secret
+<pre><code class="language-bash">git-crypt unlock ~/secret
 </code></pre>
 
 <p>Проверяем теперь содержимое нашего «секретного» файла:</p>
 
-<pre><code>cat secret 
+<pre><code class="language-bash">cat secret 
 +380976601216
 </code></pre>
 
@@ -229,7 +229,7 @@ B⏎
 
 <p>Можно также собрать docker-образ с утилитой <code>git-crypt</code> по такому набору инструкций (Dockerfile):</p>
 
-<pre><code>FROM alpine:edge
+<pre><code class="language-Dockerfile">FROM alpine:edge
  
 ENV VERSION 0.5.0-2
  
@@ -248,12 +248,12 @@ CMD [&quot;/bin/bash&quot;]
 
 <p>Собираем образ командой:</p>
 
-<pre><code>docker build --squash -t docker-gc -f Dockerfile .
+<pre><code class="language-bash">docker build --squash -t docker-gc -f Dockerfile .
 </code></pre>
 
 <p>Расшифровать «секретные» файлы в репозитории теперь можно и с помощью собранного docker-образа, например так:</p>
 
-<pre><code>docker run -it --rm -v $(pwd):/repo -v /home/e.lebed/secret:/repo/.git/.git-crypt/keys/default --user ${id} docker-gc:latest git-crypt unlock /repo/.git/.git-crypt/keys/default
+<pre><code class="language-bash">docker run -it --rm -v $(pwd):/repo -v /home/e.lebed/secret:/repo/.git/.git-crypt/keys/default --user ${id} docker-gc:latest git-crypt unlock /repo/.git/.git-crypt/keys/default
 </code></pre>
 
 <p>Здесь <code>$(pwd)</code> — текущая директория, <code>${id}</code> — UID пользователя, под которым был склонирован git-репозиторий (в данном примере e.lebed).</p>
@@ -300,6 +300,10 @@ CMD [&quot;/bin/bash&quot;]
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -313,10 +317,6 @@ CMD [&quot;/bin/bash&quot;]
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

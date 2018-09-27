@@ -86,66 +86,66 @@
 
 <p>Синтаксис команды следующий:</p>
 
-<pre><code>cp [параметры] источник приемник
+<pre><code class="language-bash">cp [параметры] источник приемник
 </code></pre>
 
 <p>Скопировать файл из одного каталога в другой без изменения имени можно так:</p>
 
-<pre><code>cp ~/ansible/hosts ~/backup/
+<pre><code class="language-bash">cp ~/ansible/hosts ~/backup/
 </code></pre>
 
 <p>Изменить имя файла при копировании довольно просто:</p>
 
-<pre><code>cp ~/ansible/hosts ~/backup/hosts.old
+<pre><code class="language-bash">cp ~/ansible/hosts ~/backup/hosts.old
 </code></pre>
 
 <p>Скопировать каталог со всем его содержимым можно с помощью опции <code>-r</code>, например:</p>
 
-<pre><code>cp -r ~/ansible/ ~/backup/
+<pre><code class="language-bash">cp -r ~/ansible/ ~/backup/
 </code></pre>
 
 <p>Скопировать несколько файлов, соответствующих некоторому шаблону тоже довольно просто:</p>
 
-<pre><code>cp *.yml ~/ansible/playbooks/ ~/backup/playbooks/
+<pre><code class="language-bash">cp *.yml ~/ansible/playbooks/ ~/backup/playbooks/
 </code></pre>
 
 <p>Используя опцию <code>--backup</code> при копировании вы не затрете существующий в каталоге-приемнике файл. Если файл с таким именем уже существует, то к его имени будет добавлен символ <code>~</code>.</p>
 
-<pre><code>cp --backup ~/ansible/hosts ~/backup/
+<pre><code class="language-bash">cp --backup ~/ansible/hosts ~/backup/
 </code></pre>
 
-<pre><code>ls -l ~/backup/
+<pre><code class="language-bash">ls -l ~/backup/
 -rw-r--r-- 1 admin staff 1020 Oct  8 13:36 hosts
 -rw-r--r-- 1 admin staff 1038 Oct  8 13:15 hosts~
 </code></pre>
 
 <p>Конечно, можно такие файлы просто не копировать из источника в приемник, для этого следует использовать опцию <code>-n</code>:</p>
 
-<pre><code>cp -n ~/ansible/hosts ~/backup/hosts
+<pre><code class="language-bash">cp -n ~/ansible/hosts ~/backup/hosts
 </code></pre>
 
-<pre><code>ls -l ~/backup/
+<pre><code class="language-bash">ls -l ~/backup/
 -rw-r--r-- 1 admin staff 1020 Oct  8 13:15 hosts
 </code></pre>
 
 <p>А еще разумнее использовать &lsquo;интерактивный&rsquo; режим — за это отвечает опция <code>-i</code>:</p>
 
-<pre><code>cp -i ~/ansible/hosts ~/backup/
+<pre><code class="language-bash">cp -i ~/ansible/hosts ~/backup/
 cp: overwrite `/home/admin/backup/hosts'? y
 </code></pre>
 
 <p>Если вы попробуете с помощью команды <code>cp</code> скопировать ссылку, указывающую на файл, то в результате будет скопирован сам файл. Чтобы копировать именно ссылки на файлы, следует воспользоваться опцией <code>-d</code>:</p>
 
-<pre><code>cp -d ~/speedtest ~/backup/
+<pre><code class="language-bash">cp -d ~/speedtest ~/backup/
 </code></pre>
 
-<pre><code>ls -l ~/backup/
+<pre><code class="language-bash">ls -l ~/backup/
 lrwxrwxrwx 1 root    root      27 Oct  3 14:56 speedtest -&gt; /usr/local/bin/speedtest.sh
 </code></pre>
 
 <p>Также можно вместо копирования файла создавать &lsquo;жесткую&rsquo; ссылку на него с помощью <code>-l</code>. Делается это так:</p>
 
-<pre><code>cp -l convert.sh backup/
+<pre><code class="language-bash">cp -l convert.sh backup/
 
 ls -li backup/convert.sh
 2503465 -rwxr-xr-x 2 admin staff 246 Oct 10  2014 backup/convert.sh
@@ -153,41 +153,41 @@ ls -li backup/convert.sh
 
 <p>А создание &lsquo;мягкой&rsquo; ссылки с использованием опции <code>-s</code> выглядит так:</p>
 
-<pre><code>ls -la libsvn_ra_serf-1.so.1.0.0
+<pre><code class="language-bash">ls -la libsvn_ra_serf-1.so.1.0.0
 -rw-r--r-- 1 root root 196608 Apr 26 15:34 libsvn_ra_serf-1.so.1.0.0
 </code></pre>
 
-<pre><code>cp -s libsvn_ra_serf-1.so.1.0.0 libsvn.so
+<pre><code class="language-bash">cp -s libsvn_ra_serf-1.so.1.0.0 libsvn.so
 </code></pre>
 
-<pre><code>ls -la libsvn.so
+<pre><code class="language-bash">ls -la libsvn.so
 lrwxrwxrwx 1 root root 25 Oct  3 16:58 libsvn.so -&gt; libsvn_ra_serf-1.so.1.0.0
 </code></pre>
 
 <p>Сохранить атрибуты файла при копировании можно благодаря опции <code>-p</code>:</p>
 
-<pre><code>ls -la hosts
+<pre><code class="language-bash">ls -la hosts
 -rw-r--r-- 1 root root 28 Oct  3 16:42 hosts
 </code></pre>
 
-<pre><code>cp -p ~/ansible/hosts ~/backup/
+<pre><code class="language-bash">cp -p ~/ansible/hosts ~/backup/
 </code></pre>
 
-<pre><code>ls -la backup/hosts
+<pre><code class="language-bash">ls -la backup/hosts
 -rw-r--r-- 1 root root 28 Oct  3 16:42 backup/hosts
 </code></pre>
 
 <p>Иногда требуется скопировать только файлы, версия которых в источнике более новая, чем в приемнике. Для этого используется опция <code>-u</code> (еще можно добавить опцию <code>-v</code>, чтобы видеть имена обновляемых файлов):</p>
 
-<pre><code>ls -la backup/hosts
+<pre><code class="language-bash">ls -la backup/hosts
 -rw-r--r-- 1 root root 28 Oct  3 16:42 backup/hosts
 </code></pre>
 
-<pre><code>cp -u -v ansible/* backup/
+<pre><code class="language-bash">cp -u -v ansible/* backup/
 'ansible/hosts.bak' -&gt; 'backup/hosts.bak'
 </code></pre>
 
-<pre><code>ls -la backup/hosts*
+<pre><code class="language-bash">ls -la backup/hosts*
 -rw-r--r-- 1 root root 28 Oct  3 16:42 backup/hosts
 -rw-r--r-- 1 root root 28 Oct  3 17:09 backup/hosts.bak
 </code></pre>
@@ -232,6 +232,10 @@ lrwxrwxrwx 1 root root 25 Oct  3 16:58 libsvn.so -&gt; libsvn_ra_serf-1.so.1.0.0
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -245,10 +249,6 @@ lrwxrwxrwx 1 root root 25 Oct  3 16:58 libsvn.so -&gt; libsvn_ra_serf-1.so.1.0.0
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

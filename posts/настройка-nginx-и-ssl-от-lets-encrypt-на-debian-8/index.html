@@ -99,7 +99,7 @@
 
 <p>Итак, приступим. Действия производятся на:</p>
 
-<pre><code>sb_release -a
+<pre><code class="language-bash">sb_release -a
 No LSB modules are available.
 Distributor ID:	Debian
 Description:	Debian GNU/Linux 8.4 (jessie)
@@ -109,7 +109,7 @@ Codename:	jessie
 
 <p>Загружаем репозиторий:</p>
 
-<pre><code>git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
+<pre><code class="language-bash">git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
 </code></pre>
 
 <p>Подключать сертификаты будем с помощью плагина Webroot. Для этого открываем файл настроек хоста (например, <code>/etc/nginx/conf.d/example.com.conf</code>) и в блок <code>server</code> добавляем следующие строки:</p>
@@ -124,24 +124,24 @@ Codename:	jessie
 
 <p>Проверяем:</p>
 
-<pre><code>nginx -t
+<pre><code class="language-bash">nginx -t
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 </code></pre>
 
 <p>Перечитываем конфиг веб-сервера:</p>
 
-<pre><code>service nginx reload
+<pre><code class="language-bash">service nginx reload
 </code></pre>
 
 <p>Переходим к созданию сертификата с помощью клиента Let’s Encrypt:</p>
 
-<pre><code>cd /opt/letsencrypt
+<pre><code class="language-bash">cd /opt/letsencrypt
 </code></pre>
 
 <p>Запускаем следующую команду:</p>
 
-<pre><code>./letsencrypt-auto certonly -a webroot --webroot-path=/var/www/example --email webmaster@example.com -d example.com -d www.example.com
+<pre><code class="language-bash">./letsencrypt-auto certonly -a webroot --webroot-path=/var/www/example --email webmaster@example.com -d example.com -d www.example.com
 </code></pre>
 
 <p>В данном примере используются следующие опции:</p>
@@ -155,7 +155,7 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 
 <p>После создания сертификатов вы увидите примерно следующее:</p>
 
-<pre><code>...
+<pre><code class="language-bash">...
 IMPORTANT NOTES:
  - Congratulations! Your certificate and chain have been saved at
    /etc/letsencrypt/live/example.com/fullchain.pem. Your cert will
@@ -169,7 +169,7 @@ IMPORTANT NOTES:
 
 <p>Генерируем ключ Diffie–Hellman:</p>
 
-<pre><code>mkdir /etc/nginx/ssl &amp;&amp; openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048
+<pre><code class="language-bash">mkdir /etc/nginx/ssl &amp;&amp; openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048
 Generating DH parameters, 2048 bit long safe prime, generator 2
 This is going to take a long time
 ...
@@ -218,19 +218,19 @@ This is going to take a long time
 
 <p>Проверяем:</p>
 
-<pre><code>nginx -t
+<pre><code class="language-bash">nginx -t
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 </code></pre>
 
 <p>Перезапускаем:</p>
 
-<pre><code>service nginx restart
+<pre><code class="language-bash">service nginx restart
 </code></pre>
 
 <p>Процесс обновления сертификатов можно запустить с помощью следующей команды:</p>
 
-<pre><code>./letsencrypt-auto renew
+<pre><code class="language-bash">./letsencrypt-auto renew
 Checking for new version...
 Requesting root privileges to run letsencrypt...
    /root/.local/share/letsencrypt/bin/letsencrypt renew
@@ -247,12 +247,12 @@ No renewals were attempted.
 <p>Сейчас продление не требуется — сертификат был получен только сегодня.
 Для автоматизации добавляем следующую задачу в <code>crontab</code>:</p>
 
-<pre><code>@monthly /opt/letsencrypt/letsencrypt-auto renew &gt;&gt; /var/log/le-renew.log
+<pre><code class="language-bash">@monthly /opt/letsencrypt/letsencrypt-auto renew &gt;&gt; /var/log/le-renew.log
 </code></pre>
 
-<p>А еще теперь можно <a href="https://letsclearitup.com.ua/debian/kak-vklyuchit-http2-0-v-nginx.html">включить поддержку протокола HTTP2.0 в Nginx</a>!</p>
+<p>А еще теперь можно <a href="https://ealebed.github.io/posts/%D0%BA%D0%B0%D0%BA-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C-http2.0-%D0%B2-nginx/">включить поддержку протокола HTTP2.0 в Nginx</a>!</p>
 
-<p>С опытом пришел более <a href="https://letsclearitup.com.ua/ubuntu/nastroyka-nginx-ssl-ot-let-s-encrypt-variant-2-elegantnyiy.html">элегантный вариант настройки Nginx + SSL от Let’s Encrypt</a>.</p>
+<p>С опытом пришел более <a href="https://ealebed.github.io/posts/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-ssl-%D0%BE%D1%82-lets-encrypt-%D0%B2%D0%B0%D1%80%D0%B8%D0%B0%D0%BD%D1%82-2-%D1%8D%D0%BB%D0%B5%D0%B3%D0%B0%D0%BD%D1%82%D0%BD%D1%8B%D0%B9/">элегантный вариант настройки Nginx + SSL от Let’s Encrypt</a>.</p>
                 </section>
             </article>
 
@@ -294,6 +294,10 @@ No renewals were attempted.
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -307,10 +311,6 @@ No renewals were attempted.
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

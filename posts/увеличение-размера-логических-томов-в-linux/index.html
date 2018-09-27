@@ -86,17 +86,17 @@
 
 <p>Исходные данные:</p>
 
-<pre><code>df -h | grep sphinx
+<pre><code class="language-bash">df -h | grep sphinx
 /dev/mapper/sata-sphinx   30G   18G   13G  60% /var/spool/sphinx
 </code></pre>
 
 <p>Как видим, сейчас размер <code>/dev/mapper/sata-sphinx</code> 30 ГБ и он заполнен на 60%. При полной переиндексации заполненность раздела доходит до 95%.</p>
 
-<p><strong>Примечание.</strong> При этом, с помощью утилиты <code>tune2fs</code>, мы уже <a href="https://letsclearitup.com.ua/ubuntu/utilita-tune2fs-v-linux.html">установили размер зарезервированного пространства</a> файловой системы для суперпользователя в 0%.</p>
+<p><strong>Примечание.</strong> При этом, с помощью утилиты <code>tune2fs</code>, мы уже <a href="https://ealebed.github.io/posts/%D1%83%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D0%B0-tune2fs-%D0%B2-linux/">установили размер зарезервированного пространства</a> файловой системы для суперпользователя в 0%.</p>
 
 <p>Просмотрим информацию о присутствующих логических томах:</p>
 
-<pre><code>lvdisplay
+<pre><code class="language-bash">lvdisplay
 ...
   --- Logical volume ---
   LV Path                /dev/sata/sphinx
@@ -119,7 +119,7 @@
 
 <p>Просмотрим информацию о группах томов в системе:</p>
 
-<pre><code>vgdisplay
+<pre><code class="language-bash">vgdisplay
 ...
   --- Volume group ---
   VG Name               sata
@@ -146,21 +146,21 @@
 
 <p>Отлично, у нас есть 20 ГБ свободного (неиспользуемого) места:</p>
 
-<pre><code>...
+<pre><code class="language-bash">...
 Free  PE / Size       5301 / 20.71 GiB
 ...
 </code></pre>
 
 <p>Значит можем <strong>увеличить размер логического тома</strong> <code>/dev/sata/sphinx</code> на 20 ГБ. Для начала, расширим сам логический том:</p>
 
-<pre><code>lvextend -L+20G /dev/sata/sphinx
+<pre><code class="language-bash">lvextend -L+20G /dev/sata/sphinx
   Extending logical volume sphinx to 50.00 GiB
   Logical volume sphinx successfully resized
 </code></pre>
 
 <p>Просмотрим информацию о логических томах:</p>
 
-<pre><code>lvdisplay
+<pre><code class="language-bash">lvdisplay
 ...
 --- Logical volume ---
   LV Path                /dev/sata/sphinx
@@ -183,7 +183,7 @@ Free  PE / Size       5301 / 20.71 GiB
 
 <p>Видим, что размер логического тома увеличился с 30 ГБ до 50 ГБ. Теперь необходимо расширить файловую систему:</p>
 
-<pre><code>resize2fs /dev/sata/sphinx
+<pre><code class="language-bash">resize2fs /dev/sata/sphinx
 resize2fs 1.42.5 (29-Jul-2012)
 Filesystem at /dev/sata/sphinx is mounted on /var/spool/sphinx; on-line resizing required
 old_desc_blocks = 2, new_desc_blocks = 4
@@ -193,7 +193,7 @@ The filesystem on /dev/sata/sphinx is now 13107200 blocks long.
 
 <p>Убедимся, что размер файловой системы изменился:</p>
 
-<pre><code>df -h | grep sphinx
+<pre><code class="language-bash">df -h | grep sphinx
 /dev/mapper/sata-sphinx   50G   18G   32G  36% /var/spool/sphinx
 </code></pre>
 
@@ -239,6 +239,10 @@ The filesystem on /dev/sata/sphinx is now 13107200 blocks long.
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -252,10 +256,6 @@ The filesystem on /dev/sata/sphinx is now 13107200 blocks long.
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

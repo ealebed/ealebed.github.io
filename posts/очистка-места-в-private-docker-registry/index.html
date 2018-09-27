@@ -78,7 +78,7 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p><a href="https://letsclearitup.com.ua/bash/gitlab-gitlab-ci-docker-registry-s-pomoshhyu-docker-compose.html">Ранее</a> мы рассматривали вариант docker-установки Gitlab-сервера с расширенной функциональностью (в том числе с использованием приватного docker-registry), которая стала фундаментом для организации процесса CI (continuous integration).</p>
+                    <p><a href="https://ealebed.github.io/posts/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">Ранее</a> мы рассматривали вариант docker-установки Gitlab-сервера с расширенной функциональностью (в том числе с использованием приватного docker-registry), которая стала фундаментом для организации процесса CI (continuous integration).</p>
 
 <p></p>
 
@@ -90,7 +90,7 @@
 
 <p>Например, у образа <code>master/lebed/test:latest</code> на самом деле на жестком диске хранится 2 версии:</p>
 
-<pre><code>ls -la /srv/gitlab/shared/registry/docker/registry/v2/repositories/master/lebed/test/_manifests/tags/latest/index/sha256
+<pre><code class="language-bash">ls -la /srv/gitlab/shared/registry/docker/registry/v2/repositories/master/lebed/test/_manifests/tags/latest/index/sha256
 total 16
 drwxr-xr-x 4 root root 4096 Jun 15 12:20 .
 drwxr-xr-x 3 root root 4096 Jun 15 09:25 ..
@@ -117,17 +117,17 @@ drwxr-xr-x 2 root root 4096 Jun 15 09:25 e1f5741ced3f0280bd372baa6ca293d1033dfef
 
 <p>После удаления вышеуказанных файлов запускаем процесс «уборки мусора» командой:</p>
 
-<pre><code>docker exec -it {имя_контейнера_c_registry} bin/registry garbage-collect {путь_к_конфигу_внутри_контейнера} 
+<pre><code class="language-bash">docker exec -it {имя_контейнера_c_registry} bin/registry garbage-collect {путь_к_конфигу_внутри_контейнера} 
 </code></pre>
 
 <p>В нашем случае команда выглядит так:</p>
 
-<pre><code>docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
+<pre><code class="language-bash">docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
 </code></pre>
 
 <p>Для чистки места также можно использовать скрипт <code>clean_docker_registry.sh</code> следующего содержания:</p>
 
-<pre><code>#!/bin/sh
+<pre><code class="language-bash">#!/bin/sh
 REPOPATH=/srv/gitlab/shared/registry/docker/registry/v2/repositories/
 echo Docker image name is $1
 echo Docker image tag is $2
@@ -145,10 +145,10 @@ docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registr
 
 <p>Запускаем скрипт с параметрами, первый из которых — имя docker-образа, второй — тэг docker-образа, например:</p>
 
-<pre><code>./clean_docker_registry.sh master/lebed/test latest
+<pre><code class="language-bash">./clean_docker_registry.sh master/lebed/test latest
 </code></pre>
 
-<p>Не забывайте также освобождать место от неиспользуемых более docker-образов и томов, как описано <a href="https://letsclearitup.com.ua/docker/ochistka-mesta-na-diske-posle-docker.html">здесь</a>.</p>
+<p>Не забывайте также освобождать место от неиспользуемых более docker-образов и томов, как описано <a href="https://ealebed.github.io/posts/%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0-%D0%BC%D0%B5%D1%81%D1%82%D0%B0-%D0%BD%D0%B0-%D0%B4%D0%B8%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D1%81%D0%BB%D0%B5-docker/">здесь</a>.</p>
                 </section>
             </article>
 
@@ -190,6 +190,10 @@ docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registr
     
     
         <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
             <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
         </li>
     
@@ -203,10 +207,6 @@ docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registr
     
         <li>
             <a href="/posts/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-38-%D1%82%D0%BE%D0%BF-10-%D0%BE%D0%BF%D1%86%D0%B8%D0%B9-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-docker-run/">Docker совет №38: Топ-10 опций команды docker run<aside class="dates">Sep 13 2018</aside></a>
-        </li>
-    
-        <li>
-            <a href="/posts/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">Jenkins as a code. Часть 4<aside class="dates">Sep 10 2018</aside></a>
         </li>
     
 </ul>

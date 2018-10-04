@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Проверка занятости порта сервисом в Linux"/>
+  <meta name="twitter:description" content="Однажды вам обязательно понадобится проверить используемый порт определенного сервиса (или наоборот, найти сервисы, слушающие конкретный порт) - в Linux существует несколько утилит командной строки, которые могут с этим помочь. Давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="Evgen Lebed&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Проверка занятости порта сервисом в Linux &middot; Evgen Lebed&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Проверка занятости порта сервисом в Linux
+                    </h1>
+                    <h2 class="headline">
+                    Oct 4, 2018 06:09
+                    · 637 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/lsof">lsof</a>
+                          
+                              <a href="https://ealebed.github.io/tags/netstat">netstat</a>
+                          
+                              <a href="https://ealebed.github.io/tags/fuser">fuser</a>
+                          
+                              <a href="https://ealebed.github.io/tags/tips">tips</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Однажды вам обязательно понадобится проверить используемый порт определенного сервиса (или наоборот, найти сервисы, слушающие конкретный порт) - в Linux существует несколько утилит командной строки, которые могут с этим помочь. Давайте разберемся!</p>
+
+<p></p>
+
+<p>Первым делом на ум приходит утилита <code>netstat</code>, с помощью которой можно проверить сетевые соединения, статистику сетевых интерфейсов, таблицу маршрутизации и т. д.</p>
+
+<p>Устанавливается данная утилита в разных дистрибутивах по-разному, например, для RedHat и CentOS:</p>
+
+<pre><code class="language-bash">sudo yum install net-tools
+</code></pre>
+
+<p>Fedora 22+:</p>
+
+<pre><code class="language-bash">dnf install net-tools
+</code></pre>
+
+<p>Debian/Ubuntu:</p>
+
+<pre><code class="language-bash">sudo apt-get install net-tools
+</code></pre>
+
+<p>Для вывода детальной информации о всех TCP и UDP ендпоинтах можно воспользоваться следующей командой:</p>
+
+<pre><code class="language-bash">netstat -pnltu
+</code></pre>
+
+<p>Вывод будет примерно следующим:</p>
+
+<pre><code>Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      1323/systemd-resolv
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1661/sshd
+tcp        0      0 127.0.0.1:17123         0.0.0.0:*               LISTEN      1753/python
+tcp6       0      0 :::31341                :::*                    LISTEN      30068/java
+tcp6       0      0 :::22222                :::*                    LISTEN      30068/java
+tcp6       0      0 :::80                   :::*                    LISTEN      30068/java
+tcp6       0      0 :::10769                :::*                    LISTEN      126755/docker-proxy
+tcp6       0      0 :::10770                :::*                    LISTEN      129459/docker-proxy
+tcp6       0      0 :::10771                :::*                    LISTEN      129540/docker-proxy
+tcp6       0      0 :::10772                :::*                    LISTEN      130172/docker-proxy
+tcp6       0      0 :::10773                :::*                    LISTEN      130187/docker-proxy
+tcp6       0      0 :::10774                :::*                    LISTEN      130545/docker-proxy
+tcp6       0      0 :::22                   :::*                    LISTEN      1661/sshd
+tcp6       0      0 :::10775                :::*                    LISTEN      7406/docker-proxy
+</code></pre>
+
+<p>Здесь:</p>
+
+<ul>
+<li><code>-p</code> - вывод ID процесса и его имени;</li>
+<li><code>-n</code> - вывод адресов;</li>
+<li><code>-l</code> - вывод сокетов;</li>
+<li><code>-t</code> - вывод TCP соединений;</li>
+<li><code>-u</code> - вывод UDP соединений.</li>
+</ul>
+
+<p>Найти сервис, запущенный на определенном порту можно так:</p>
+
+<pre><code class="language-bash">netstat -pnltu | grep -i &quot;22&quot;
+</code></pre>
+
+<p>Аналогично можно найти на каком порту запущен определенный сервис:</p>
+
+<pre><code class="language-bash">netstat -pnltu | grep -i &quot;sshd&quot;
+</code></pre>
+
+<p>Также для наших целей подойдет утилита командной строки <code>fuser</code>. По умолчанию она не установлена в большинстве операционных систем, чтобы установить ее в Centos/RedHat делаем так:</p>
+
+<pre><code class="language-bash">yum install psmisc
+</code></pre>
+
+<p>Fedora 22+</p>
+
+<pre><code class="language-bash">dnf install psmisc
+</code></pre>
+
+<p>Debian/Ubuntu</p>
+
+<pre><code class="language-bash">apt-get install psmisc
+</code></pre>
+
+<p>Например, чтобы найти идентификаторы процессов (PIDs), запущенных на 80-м порту, выполняем команду:</p>
+
+<pre><code class="language-bash">fuser 22/tcp
+</code></pre>
+
+<p>Результат выполнения будет примерно следующим:</p>
+
+<pre><code class="language-bash">22/tcp:               1661 105268 105302
+</code></pre>
+
+<p>Далее можем найти имя процесса по его идентификатору (PID):</p>
+
+<pre><code class="language-bash">ps -p 1661 -o comm=
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code class="language-bash">sshd
+</code></pre>
+
+<p>Еще один способ - использование утилиты <a href="https://ealebed.github.io/posts/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-lsof/"><code>lsof</code></a>. Установка ее в RedHat/CentOS выглядит так:</p>
+
+<pre><code class="language-bash">yum install lsof
+</code></pre>
+
+<p>Fedora 22+</p>
+
+<pre><code class="language-bash">dnf install lsof
+</code></pre>
+
+<p>Debian/Ubuntu:</p>
+
+<pre><code class="language-bash">apt-get install lsof
+</code></pre>
+
+<p>Вывод всех активных TCP и UPD соединений:</p>
+
+<pre><code class="language-bash">lsof -i
+</code></pre>
+
+<p>Результатом будет примерно следующее:</p>
+
+<pre><code>COMMAND      PID            USER   FD   TYPE    DEVICE SIZE/OFF NODE NAME
+systemd-r   1323 systemd-resolve   12u  IPv4     20197      0t0  UDP 127.0.0.53:domain
+systemd-r   1323 systemd-resolve   13u  IPv4     20198      0t0  TCP 127.0.0.53:domain (LISTEN)
+sshd        1661            root    3u  IPv4     29741      0t0  TCP *:ssh (LISTEN)
+sshd        1661            root    4u  IPv6     29743      0t0  TCP *:ssh (LISTEN)
+python      1754        dd-agent    4u  IPv6     39499      0t0  UDP localhost.localdomain:8125
+docker-pr   7406            root    4u  IPv6 287933991      0t0  TCP *:10775 (LISTEN)
+docker-pr   7459            root    4u  IPv6 287906596      0t0  TCP *:10776 (LISTEN)
+docker-pr   7792            root    4u  IPv6 287937795      0t0  TCP *:10777 (LISTEN)
+docker-pr   8435            root    4u  IPv6 287955267      0t0  TCP *:10778 (LISTEN)
+docker-pr   8447            root    4u  IPv6 287915222      0t0  TCP *:10779 (LISTEN)
+docker-pr   9060            root    4u  IPv6 287891442      0t0  TCP *:10780 (LISTEN)
+docker-pr   9429            root    4u  IPv6 287957044      0t0  TCP *:10781 (LISTEN)
+docker-pr   9463            root    4u  IPv6 287921075      0t0  TCP *:10782 (LISTEN)
+ntpd       10594             ntp   16u  IPv6  35365570      0t0  UDP *:ntp
+</code></pre>
+
+<p>Проверить использование конкретного порта можно так:</p>
+
+<pre><code class="language-bash">lsof -i :22
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code class="language-bash">COMMAND    PID   USER   FD   TYPE    DEVICE SIZE/OFF NODE NAME
+sshd      1661   root    3u  IPv4     29741      0t0  TCP *:ssh (LISTEN)
+sshd      1661   root    4u  IPv6     29743      0t0  TCP *:ssh (LISTEN)
+</code></pre>
+
+<p>Напоследок можно также воспользоваться утилитой <code>whatportis</code>. Ее установка в RedHat/Centos требует чуть больше действий:</p>
+
+<pre><code class="language-bash">yum install epel-release
+</code></pre>
+
+<pre><code class="language-bash">yum install python34-setuptools
+</code></pre>
+
+<pre><code class="language-bash">easy_install-3.4 pip
+</code></pre>
+
+<pre><code class="language-bash">pip install whatportis
+</code></pre>
+
+<p>В Debian/Ubuntu все гораздо проще:</p>
+
+<pre><code class="language-bash">apt install python-pip
+</code></pre>
+
+<pre><code class="language-bash">pip install whatportis
+</code></pre>
+
+<p>В общем виде использование утилиты выглядит так:</p>
+
+<pre><code class="language-bash">whatportis [номер_порта | имя_сервиса]
+</code></pre>
+
+<p>Если вам неизвестно точное имя сервиса, можно воспользоваться опцией <code>--like</code>, например:</p>
+
+<pre><code class="language-bash">whatportis ssh --like
+</code></pre>
+
+<p>Также доступен вывод информации в json-формате:</p>
+
+<pre><code class="language-bash">whatportis 22 --json
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25BF%25D1%2580%25D0%25BE%25D0%25B2%25D0%25B5%25D1%2580%25D0%25BA%25D0%25B0-%25D0%25B7%25D0%25B0%25D0%25BD%25D1%258F%25D1%2582%25D0%25BE%25D1%2581%25D1%2582%25D0%25B8-%25D0%25BF%25D0%25BE%25D1%2580%25D1%2582%25D0%25B0-%25D1%2581%25D0%25B5%25D1%2580%25D0%25B2%25D0%25B8%25D1%2581%25D0%25BE%25D0%25BC-%25D0%25B2-linux%2f - %d0%9f%d1%80%d0%be%d0%b2%d0%b5%d1%80%d0%ba%d0%b0%20%d0%b7%d0%b0%d0%bd%d1%8f%d1%82%d0%be%d1%81%d1%82%d0%b8%20%d0%bf%d0%be%d1%80%d1%82%d0%b0%20%d1%81%d0%b5%d1%80%d0%b2%d0%b8%d1%81%d0%be%d0%bc%20%d0%b2%20Linux by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-18-podpresets/">Знакомство с Kubernetes. Часть 18: PodPresets<aside class="dates">Oct 1 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B2%D1%8B%D0%B2%D0%BE%D0%B4%D0%B8%D0%BC-%D1%81%D0%BF%D0%B8%D1%81%D0%BE%D0%BA-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BB%D0%B5%D0%BD%D0%BD%D1%8B%D1%85-%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%BE%D0%B2-%D0%B2-linux-%D0%BF%D0%BE-%D0%B4%D0%B0%D1%82%D0%B5/">Выводим список установленных пакетов в Linux по дате<aside class="dates">Sep 20 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-16-%D1%80%D0%B0%D0%B7%D0%BB%D0%B8%D1%87%D0%B8%D1%8F-%D0%B2-replication-controller-replica-set-%D0%B8-deployments/">Знакомство с Kubernetes. Часть 16: Различия в Replication Controller, Replica Set и Deployments<aside class="dates">Sep 14 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

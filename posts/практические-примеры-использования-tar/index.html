@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Практические примеры использования tar"/>
+  <meta name="twitter:description" content="Для создания и манипуляций с архивами в Linux-дистрибутивах используется утилита командной строки tar. C помощью этой утилиты можно как извлечь данные из файлов tar, pax, cpio, zip, jar, ar и даже ISO (образы cdrom), так и создать соотвествующие архивы.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Evgen Lebed"/>
+  
+
+
+
+		
+		<meta name="author" content="Evgen Lebed">
+		<meta name="description" content="Evgen Lebed&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Практические примеры использования tar &middot; Evgen Lebed&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Практические примеры использования tar
+                    </h1>
+                    <h2 class="headline">
+                    Oct 11, 2018 07:03
+                    · 385 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/tar">tar</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ubuntu">ubuntu</a>
+                          
+                              <a href="https://ealebed.github.io/tags/debian">debian</a>
+                          
+                              <a href="https://ealebed.github.io/tags/centos">centos</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Для создания и манипуляций с архивами в Linux-дистрибутивах используется утилита командной строки <code>tar</code>. C помощью этой утилиты можно как извлечь данные из файлов <code>tar</code>, <code>pax</code>, <code>cpio</code>, <code>zip</code>, <code>jar</code>, <code>ar</code> и даже <code>ISO</code> (образы cdrom), так и создать соотвествующие архивы.</p>
+
+<p></p>
+
+<p>Чаще всего используются следующие опции данной утилиты:</p>
+
+<ul>
+<li><code>-j</code> - использовать сжатие архива с помощью <code>bzip2</code>;</li>
+<li><code>-v</code> - запуск команды в режиме verbose - для просмотра прогресса выполнения;</li>
+<li><code>-f</code> - указание имени архива;</li>
+<li><code>-W</code> - верификация архива;</li>
+<li><code>-z</code> - использовать сжатие архива с помощью <code>gzip</code>;</li>
+<li><code>-t</code> - просмотр содержимого архива;</li>
+<li><code>-c</code> - создание нового архива;</li>
+<li><code>-r</code> - добавление или обновление файлов или каталогов в уже существующий архив;</li>
+<li><code>-u</code> - аналог опции <code>-r</code>, но данные добавляются только если у них более поздняя дата модификации;</li>
+<li><code>-x</code> - извлечение данных из архива.</li>
+</ul>
+
+<p>В общем виде команда выглядит так <code>tar -[ОПЦИИ] имя_архива архивируемые_файлы</code>. Рассмотрим несколько конкретных примеров.</p>
+
+<p>1) Создание несжатого архива (с расширением <code>.tar</code>):</p>
+
+<pre><code class="language-bash">tar -cvf /path/to/foo.tar /path/to/foo/
+</code></pre>
+
+<p><strong>Примечание.</strong> Можно использовать абсолютные пути к файлам, вместо относительных, как в примере выше.</p>
+
+<p>2) Создание сжатого gzip-архива (с расширением <code>.tgz</code>):</p>
+
+<pre><code class="language-bash">tar -czvf /path/to/foo.tgz /path/to/foo/
+</code></pre>
+
+<p>3) Создание сжатого bzip2-архива (с расширением <code>.bz2</code>):</p>
+
+<pre><code class="language-bash">tar -cjvf /path/to/foo.tgz /path/to/foo/
+</code></pre>
+
+<p>4) Создание сжатого gzip-архива (с расширением <code>.tgz</code>) без файлов с расширением <code>jpg</code>, <code>gif</code>, <code>png</code>, <code>wmv</code>, <code>flv</code>, <code>tar</code>, <code>gz</code>, <code>zip</code>:</p>
+
+<pre><code class="language-bash">tar -czvf /path/to/foo.tgz --exclude=\*.{jpg,gif,png,wmv,flv,tar.gz,zip} /path/to/foo/.
+</code></pre>
+
+<p>5) Создание архива без добавления абсолютного пути в метаданные (может быть полезно при извлечении данных из архива):</p>
+
+<pre><code class="language-bash">tar -zcvf /path/to/foo.tgz -C/path/to/foo .
+</code></pre>
+
+<p>6) Создание архива всех файлов в текущей директории, начинающихся на <code>i</code>:</p>
+
+<pre><code class="language-bash">tar -cvf fullbackup.tar i*
+</code></pre>
+
+<p>7) Добавление файла в существующий архив:</p>
+
+<pre><code class="language-bash">tar --append --file=backup.tar anaconda-ks.cfg
+</code></pre>
+
+<p>8) Слияние содержимого двух архивов в один (добавляет содержимое <code>fullbackup.tar</code> в архив <code>backup.tar</code>):</p>
+
+<pre><code class="language-bash">tar --concatenate --file=backup.tar fullbackup.tar
+</code></pre>
+
+<p>9) Извлечение содержимого несжатого архива:</p>
+
+<pre><code class="language-bash">tar -xvf /path/to/foo.tar
+</code></pre>
+
+<p>10) Извлечение содержимого сжатого архива (формат <code>.tgz</code>):</p>
+
+<pre><code class="language-bash">tar -xzvf /path/to/foo.tgz
+</code></pre>
+
+<p>11) Извлечение содержимого сжатого архива (формат <code>.bz2</code>):</p>
+
+<pre><code class="language-bash">tar -xjvf /path/to/foo.bz2
+</code></pre>
+
+<p>12) Извлечение содержимого несжатого архива в определенный каталог на диске:</p>
+
+<pre><code class="language-bash">tar -xvf /path/to/foo.tar -C /path/to/destination/
+</code></pre>
+
+<p>13) Извлечение конкретного файла из архива:</p>
+
+<pre><code class="language-bash">tar --extract -vv --occurrence --file=./backup.tar anaconda-ks.cfg
+</code></pre>
+
+<p>14) Просмотр содержимого gzip-архива:</p>
+
+<pre><code class="language-bash">tar -ztvf /path/to/foo.tgz
+</code></pre>
+
+<p>15) Просмотр содержимого bzip2-архива:</p>
+
+<pre><code class="language-bash">tar -jtvf /path/to/foo.tgz
+</code></pre>
+
+<p>16) Сохранение символьных ссылок при создании архива (дополнительная опция <code>-h</code>):</p>
+
+<pre><code class="language-bash">tar -cvhf /path/to/foo.tar /path/to/foo/
+</code></pre>
+
+<p>Консольная утилита <code>tar</code> - одна из наиболее часто используемых в мире Linux - будет полезна при создании резервных копий, установке пакетов, обмене файлами, шифровании и дешифровке данных.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f%25D0%25BF%25D1%2580%25D0%25B0%25D0%25BA%25D1%2582%25D0%25B8%25D1%2587%25D0%25B5%25D1%2581%25D0%25BA%25D0%25B8%25D0%25B5-%25D0%25BF%25D1%2580%25D0%25B8%25D0%25BC%25D0%25B5%25D1%2580%25D1%258B-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D1%258F-tar%2f - %d0%9f%d1%80%d0%b0%d0%ba%d1%82%d0%b8%d1%87%d0%b5%d1%81%d0%ba%d0%b8%d0%b5%20%d0%bf%d1%80%d0%b8%d0%bc%d0%b5%d1%80%d1%8b%20%d0%b8%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f%20tar by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-18-podpresets/">Знакомство с Kubernetes. Часть 18: PodPresets<aside class="dates">Oct 1 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/6-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%BE%D0%B2-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D0%B0-%D0%B2-linux/">6 способов очистки терминала в Linux<aside class="dates">Sep 27 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-17-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-yaml/">Знакомство с Kubernetes. Часть 17: Введение в YAML<aside class="dates">Sep 24 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Evgen Lebed
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

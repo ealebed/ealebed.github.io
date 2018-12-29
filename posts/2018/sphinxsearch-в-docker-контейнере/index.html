@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Sphinxsearch в docker-контейнере"/>
+  <meta name="twitter:description" content="В данной статье рассмотрим процесс сборки docker-образа включающего в себя систему полнотекстового поиска Sphinxsearch с возможностью переиндексации - давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Sphinxsearch в docker-контейнере &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Sphinxsearch в docker-контейнере
+                    </h1>
+                    <h2 class="headline">
+                    Mar 12, 2018 08:50
+                    · 459 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/sphinxsearch">sphinxsearch</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В данной статье рассмотрим процесс сборки docker-образа включающего в себя систему полнотекстового поиска Sphinxsearch с возможностью переиндексации - давайте разберемся!</p>
+
+<p></p>
+
+<p>Несмотря на то, что в данный момент уже есть <a href="http://sphinxsearch.com/blog/2017/12/18/sphinx-3-0-1-released/">Sphinxsearch версии 3.0.1</a>, в данном примере мы будем использовать стабильную и &ldquo;обкатанную&rdquo; версию поискового движка - 2.2.11.</p>
+
+<p>За основу для нашего docker-образа возьмем ubuntu:16.04, и наш Dockerfile будет выглядеть следующим образом:</p>
+
+<pre><code class="language-Dockerfile">FROM ubuntu:16.04
+
+ARG APP_ENV=dev
+RUN apt-get update \
+    &amp;&amp; apt-get -y install \
+        software-properties-common
+
+RUN add-apt-repository ppa:builds/sphinxsearch-rel22 \
+    &amp;&amp; apt-get update \
+    &amp;&amp; apt-get -y install \
+        mysql-client \
+        unixodbc \
+        libpq5 \
+        sphinxsearch \
+    &amp;&amp; apt-get remove -y software-properties-common \
+    &amp;&amp; apt-get autoremove -y \
+    &amp;&amp; apt-get autoclean \
+    &amp;&amp; rm -r /var/lib/apt/lists/*
+
+RUN ln -sf /dev/stdout /var/log/sphinxsearch/searchd.log \
+    &amp;&amp; ln -sf /dev/stderr /var/log/sphinxsearch/query.log
+
+COPY start.sh /start.sh
+COPY sphinx.conf.${APP_ENV} /etc/sphinxsearch/sphinx.conf
+
+VOLUME [&quot;/etc/sphinxsearch&quot;]
+VOLUME [&quot;/var/lib/sphinxsearch/data&quot;]
+
+EXPOSE 9312 9306
+
+CMD [&quot;/start.sh&quot;]
+</code></pre>
+
+<p>В зависимости от переданного при сборке docker-образа значения аргумента <code>APP_ENV</code> (по умолчанию это dev), в образ будет скопирован соответствующий конфигурационный файл <code>sphinx.conf.${APP_ENV}</code>.</p>
+
+<p>При старте docker-контейнера будет выполнен bash-скрипт <code>start.sh</code>, который выполняет переиндексацию и запуск поискового движка. Содержимое скрипта довольно простое:</p>
+
+<pre><code class="language-bash">#!/usr/bin/env bash
+
+indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
+searchd --config /etc/sphinxsearch/sphinx.conf --nodetach
+</code></pre>
+
+<p>Пример конфигурационного файла <code>sphinx.conf</code>:</p>
+
+<pre><code class="language-text">source parent_source
+{
+    type			= mysql
+
+    sql_host			= db1.lc
+    sql_user			= testuser
+    sql_pass			= password
+    sql_db		    	= test
+    sql_port			= 3306
+
+    mysql_connect_flags		= 32 # enable compression
+    sql_query_pre		= SET NAMES utf8
+    sql_query_pre       	= SET CHARACTER SET utf8
+}
+
+source src_blog_posts:parent_source
+{
+    sql_query = \
+        SELECT blog_post_id as id, title, content, tags \
+        FROM blog_posts \
+        WHERE visible = 1 \
+        AND dt_published &lt;= NOW()
+
+    sql_ranged_throttle = 0
+    sql_field_string = title
+    sql_field_string = content
+    sql_field_string = tags
+}
+
+index blog_posts
+{
+    source = src_blog_posts
+    path = /var/lib/sphinxsearch/data/blog_posts
+    docinfo = extern
+    mlock = 0
+    morphology = stem_enru
+    index_exact_words = 1
+    charset_table = 0..9, A..Z-&gt;a..z, _, a..z, U+410..U+42F-&gt;U+430..U+44F, U+430..U+44F
+    min_word_len = 1
+    min_infix_len = 1
+    html_strip = 1
+}
+
+indexer
+{
+    mem_limit = 256M
+}
+
+searchd
+{
+    listen			= 9312
+    listen			= 9306:mysql41
+    log 			= /var/log/sphinxsearch/searchd.log
+    query_log			= /var/log/sphinxsearch/query.log
+    read_timeout		= 5
+    client_timeout		= 300
+    max_children		= 30
+    pid_file			= /var/run/sphinxsearch/searchd.pid
+    seamless_rotate		= 1
+    preopen_indexes		= 1
+    unlink_old			= 1
+    workers			= threads
+    binlog_path			= /var/lib/sphinxsearch/data
+    collation_server		= utf8_general_ci
+    watchdog			= 1
+}
+</code></pre>
+
+<p>Собираем docker-образ находясь в каталоге с Dockerfile с помощью следующей команды:</p>
+
+<pre><code class="language-bash">docker build -t sphinx:latest .
+</code></pre>
+
+<p>Запустить docker-контейнер из созданного нами образа можно так:</p>
+
+<pre><code class="language-bash">docker run -d \
+	--name sphinxsearch \
+	-v $(pwd)/sphinx.conf:/etc/sphinxsearch/sphinx.conf \
+	-v $(pwd)/sphinxdata:/var/lib/sphinxsearch/data \
+sphinx:latest
+</code></pre>
+
+<p>Или с помощью <code>docker-compose.yml</code> (для удобства редактирования конфиг sphinx монтируем с хост-машины в docker-контейнер):</p>
+
+<pre><code class="language-yml">...
+### Sphinxsearch Container ##################################
+  sphinxsearch:
+    container_name: sphinxsearch
+    image: sphinx:latest
+    volumes:
+      - ./sphinx/sphinx.conf:/etc/sphinxsearch/sphinx.conf
+      - sphinx:/var/lib/sphinxsearch/data
+...
+### Volumes Setup ###########################################
+volumes:
+  sphinx:
+    driver: &quot;local&quot;
+</code></pre>
+
+<p>При необходимости можно запустить переиндексацию с помощью команды:</p>
+
+<pre><code class="language-bash">docker exec -it sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2fsphinxsearch-%25D0%25B2-docker-%25D0%25BA%25D0%25BE%25D0%25BD%25D1%2582%25D0%25B5%25D0%25B9%25D0%25BD%25D0%25B5%25D1%2580%25D0%25B5%2f - Sphinxsearch%20%d0%b2%20docker-%d0%ba%d0%be%d0%bd%d1%82%d0%b5%d0%b9%d0%bd%d0%b5%d1%80%d0%b5 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

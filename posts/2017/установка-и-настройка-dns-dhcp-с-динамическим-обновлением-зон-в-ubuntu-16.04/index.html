@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Установка и настройка DNS &#43; DHCP с динамическим обновлением зон в Ubuntu 16.04"/>
+  <meta name="twitter:description" content="Даже в небольших организациях для упрощения администрирования локальной сети необходимы один или несколько DNS (Domain Name System — система доменных имён) и DHCP (Dynamic Host Configuration Protocol — протокол динамической настройки узла) серверов.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Установка и настройка DNS &#43; DHCP с динамическим обновлением зон в Ubuntu 16.04 &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Установка и настройка DNS &#43; DHCP с динамическим обновлением зон в Ubuntu 16.04
+                    </h1>
+                    <h2 class="headline">
+                    Apr 6, 2017 13:56
+                    · 719 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/dns">dns</a>
+                          
+                              <a href="https://ealebed.github.io/tags/dhcp">dhcp</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Даже в небольших организациях для упрощения администрирования локальной сети необходимы один или несколько <strong>DNS</strong> (Domain Name System — система доменных имён) и <strong>DHCP</strong> (Dynamic Host Configuration Protocol — протокол динамической настройки узла) серверов.</p>
+
+<p></p>
+
+<p>Давайте рассмотрим процесс <strong>установки DNS и DHCP серверов</strong>, а также разберемся с настройкой динамического обновления DNS-зон в операционной системе Ubuntu 16.04!</p>
+
+<p>Установка DNS-сервера выполняется командой:</p>
+
+<pre><code class="language-bash">sudo apt install bind9
+</code></pre>
+
+<p>DHCP-сервер устанавливаем следующим образом:</p>
+
+<pre><code class="language-bash">sudo apt install isc-dhcp-server
+</code></pre>
+
+<p>Редактируем конфигурационный файл <code>/etc/bind/named.conf.options</code> и приводим его к следующему виду:</p>
+
+<pre><code class="language-text">options {
+    directory &quot;/var/cache/bind&quot;;
+    listen-on {
+        192.168.0.0/22;
+        127.0.0.1;
+    };
+ 
+    forwarders {
+        8.8.8.8;
+        8.8.4.4;
+    };
+ 
+    dnssec-validation auto;
+ 
+    auth-nxdomain no;    # conform to RFC1035
+    listen-on-v6 { any; };
+};
+</code></pre>
+
+<p>Здесь важными являются директивы <code>forwarders</code> (вышестоящие DNS-сервера, на которые будет переадресован запрос при отсутствии информации о хосте на локальном сервере) и <code>listen-on</code> (с каких сетей или IP адресов локальный DNS-сервер будет обслуживать запросы).</p>
+
+<p>Далее создадим файлы зон (прямого и обратного просмотра) и добавить их в конфигурацию DNS-сервера. По умолчанию предлагается создавать файлы зон в каталоге <code>/etc/bind/zones/</code>, но в будущем это вызовет проблемы с их динамическим обновлением, поэтому мы будем создавать файлы зон в папке <code>/var/lib/bind/</code>.</p>
+
+<p>Исходные данные для создания зон:</p>
+
+<ul>
+<li>имя домена — <code>lc</code>;</li>
+<li>имя DNS-сервера — <code>ns.lc</code>;</li>
+<li>ip-адрес DNS-сервера — <code>192.168.0.218</code>.</li>
+</ul>
+
+<p>Создаем файл зоны прямого просмотра:</p>
+
+<pre><code class="language-bash">touch /var/lib/bind/db.lc
+</code></pre>
+
+<p>Содержимое файла следующее:</p>
+
+<pre><code class="language-text">$TTL 604800     ; 1 week
+@          IN            SOA      ns.lc. root.ns.lc. (
+                                201703271  ; serial
+                                604800     ; refresh (1 week)
+                                86400      ; retry (1 day)
+                                2419200    ; expire (4 weeks)
+                                604800     ; minimum (1 week)
+                                )
+@		IN	NS	ns.lc.
+@		IN	A	192.168.0.218
+ns		IN	A	192.168.0.218
+ 
+labs				IN    A    192.168.0.218
+*.labs				IN    A    192.168.0.218
+jira.labs			IN    A    192.168.0.3
+confluence.labs		IN    A    192.168.0.3
+gitlab				IN    A    192.168.0.3
+router 				IN    A    192.168.0.1
+zabbix				IN    A    192.168.0.3
+grafana				IN    A    192.168.0.3
+e-lebed				IN    A    192.168.0.80
+</code></pre>
+
+<p>Создаем файл зоны обратного просмотра:</p>
+
+<pre><code class="language-bash">touch /var/lib/bind/db.192.168.0
+</code></pre>
+
+<p>Содержимое файла выглядит следующим образом:</p>
+
+<pre><code class="language-text">$TTL 604800     ; 1 week
+@  IN  SOA    ns.lc. root.ns.lc. (
+                                201703271 ; serial
+                                604800    ; refresh (1 week)
+                                86400     ; retry (1 day)
+                                2419200   ; expire (4 weeks)
+                                604800    ; minimum (1 week)
+                                )
+@		IN	NS	ns.lc.
+218		IN	PTR	lc.
+ 
+218		IN    PTR    labs.lc.
+218		IN    PTR    git.labs.lc.
+218		IN    PTR    develop.labs.lc.
+218		IN    PTR    gocd.labs.lc.
+80		IN    PTR    e-lebed.lc.
+3		IN    PTR    jira.labs.lc.
+3		IN    PTR    confluence.labs.lc.
+3		IN    PTR    gitlab.lc
+3		IN    PTR    zabbix.lc.
+3		IN    PTR    grafana.lc.
+1		IN    PTR    router.lc.
+</code></pre>
+
+<p>Добавляем ссылки на только что созданные зоны в конфигурационный файл <code>/etc/bind/named.conf.local</code>:</p>
+
+<pre><code class="language-text">...
+zone &quot;lc&quot; {
+    type master;
+    file &quot;/var/lib/bind/db.lc&quot;;
+    allow-update { key rndc-key; };
+};
+ 
+zone &quot;0.168.192.in-addr.arpa&quot; {
+    type master;
+    file &quot;/var/lib/bind/db.192.168.0&quot;;
+    allow-update { key rndc-key; };
+};
+...
+</code></pre>
+
+<p>Здесь именно благодаря строке <code>allow-update { key rndc-key; };</code> будет возможно динамическое обновление зон.</p>
+
+<p>Можно просмотреть содержимое файла <code>rndc-key</code>:</p>
+
+<pre><code class="language-bash">cat rndc.key 
+key &quot;rndc-key&quot; {
+    algorithm hmac-md5;
+    secret &quot;/NjKY+BwOtgxBbpsmAp0Cg==&quot;;
+};
+</code></pre>
+
+<p>Теперь проверим правильность синтаксиса конфигурационных файлов DNS-сервера:</p>
+
+<pre><code class="language-bash">named-checkconf
+</code></pre>
+
+<p>Если все выполнено правильно, то вывод этой команды должен быть пуст.</p>
+
+<p>Перезапускаем DNS-сервер командой:</p>
+
+<pre><code class="language-bash">/etc/init.d/bind9 restart
+</code></pre>
+
+<p>Далее приступаем к настройке DHCP-сервера, приводим конфигурационный файл <code>/etc/dhcp/dhcpd.conf</code> к следующему виду:</p>
+
+<pre><code class="language-text">ddns-updates on;
+ddns-update-style interim;
+update-static-leases on;
+ 
+key rndc-key {
+        algorithm hmac-md5;
+        secret &quot;/NjKY+BwOtgxBbpsmAp0Cg==&quot;;
+}
+ 
+zone lc. {
+    primary 192.168.0.218;
+    key rndc-key;
+}
+ 
+zone 0.168.192.in-addr.arpa. {
+    primary 192.168.0.218;
+    key rndc-key;
+}
+ 
+authoritative;
+log-facility local7;
+  
+subnet 192.168.0.0 netmask 255.255.252.0 {
+    range 192.168.0.100 192.168.0.199;
+    option domain-name-servers 192.168.0.218;
+    option domain-name &quot;lc&quot;;
+    option routers 192.168.0.1;
+    option broadcast-address 192.168.3.255;
+    default-lease-time 604800;
+    max-lease-time 604800; 
+}
+  
+host e-lebed {
+    hardware ethernet 90:2b:34:ac:3a:d2;
+    fixed-address 192.168.0.80;
+}
+</code></pre>
+
+<p>Для применения изменений перезапускаем службу DHCP:</p>
+
+<pre><code class="language-bash">/etc/init.d/isc-dhcp-server restart
+</code></pre>
+
+<p>или</p>
+
+<pre><code class="language-bash">service isc-dhcp-server restart
+</code></pre>
+
+<p>Теперь, при появлении нового компьютера в локальной сети, DHCP-сервер выдаст ему свободный ip-адрес из определенного диапазона и обновит DNS-зоны (при этом в каталоге с зонами также будут созданы два файла с расширением <code>.jnl</code>).</p>
+
+<p>Если бы мы создавали файлы зон в каталоге по умолчанию (<code>/etc/bind/zones/</code>), то столкнулись бы со следующими ошибками в логах:</p>
+
+<pre><code class="language-text">...
+Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: signer &quot;rndc-key&quot; approved
+Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone 'lc/IN': adding an RR at 'Olesya.lc' A 192.168.0.142
+Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone 'lc/IN': adding an RR at 'Olesya.lc' TXT &quot;31863aeb2d49662304b5e70f4d291ca2c4&quot;
+Mar 28 05:45:07 labs named[16662]: /etc/bind/zones/db.lc.jnl: create: permission denied
+Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone 'lc/IN': error: journal open failed: unexpected error
+...
+</code></pre>
+
+<p>На этом все, <strong>установка и настройка DNS и DHCP серверов с динамическим обновлением зон</strong> в Ubuntu 16.04 закончена.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2f%25D1%2583%25D1%2581%25D1%2582%25D0%25B0%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25BA%25D0%25B0-%25D0%25B8-%25D0%25BD%25D0%25B0%25D1%2581%25D1%2582%25D1%2580%25D0%25BE%25D0%25B9%25D0%25BA%25D0%25B0-dns-dhcp-%25D1%2581-%25D0%25B4%25D0%25B8%25D0%25BD%25D0%25B0%25D0%25BC%25D0%25B8%25D1%2587%25D0%25B5%25D1%2581%25D0%25BA%25D0%25B8%25D0%25BC-%25D0%25BE%25D0%25B1%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25BB%25D0%25B5%25D0%25BD%25D0%25B8%25D0%25B5%25D0%25BC-%25D0%25B7%25D0%25BE%25D0%25BD-%25D0%25B2-ubuntu-16.04%2f - %d0%a3%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%ba%d0%b0%20%d0%b8%20%d0%bd%d0%b0%d1%81%d1%82%d1%80%d0%be%d0%b9%d0%ba%d0%b0%20DNS%20%2b%20DHCP%20%d1%81%20%d0%b4%d0%b8%d0%bd%d0%b0%d0%bc%d0%b8%d1%87%d0%b5%d1%81%d0%ba%d0%b8%d0%bc%20%d0%be%d0%b1%d0%bd%d0%be%d0%b2%d0%bb%d0%b5%d0%bd%d0%b8%d0%b5%d0%bc%20%d0%b7%d0%be%d0%bd%20%d0%b2%20Ubuntu%2016.04 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

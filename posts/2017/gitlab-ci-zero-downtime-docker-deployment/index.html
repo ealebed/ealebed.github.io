@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="GitLab CI: zero downtime docker deployment"/>
+  <meta name="twitter:description" content="Не так много времени прошло с момента завершения цикла статей о настройке процесса CI (continuous integration) с помощью Gitlab в реальном проекте, как мы вновь возвращаемся к данной теме.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>GitLab CI: zero downtime docker deployment &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        GitLab CI: zero downtime docker deployment
+                    </h1>
+                    <h2 class="headline">
+                    Jul 13, 2017 09:58
+                    · 889 words
+                    · 5 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab">gitlab</a>
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab-ci">gitlab ci</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Не так много времени прошло с момента завершения цикла статей о настройке процесса <strong>CI (continuous integration) с помощью Gitlab</strong> в реальном проекте, как мы вновь возвращаемся к данной теме.</p>
+
+<p></p>
+
+<p>Как говорится, нет предела совершенству, поэтому этой статье мы значительно улучшим <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D1%8D%D1%82%D0%B0%D0%BF-deploy-%D0%B2-.gitlab-ci.yml/">описанный ранее этап деплоя</a> — давайте разберемся!</p>
+
+<p>После публикации статьи с описанием моего варианта деплоя контейнеров, один из читателей написал мне следующее:</p>
+
+<p><em>&ldquo;…if we want to make some changes to our app, there is no reason that we need to restart all of the containers. Instead we should just update the container running our web app and then update the Nginx upstream directive…&rdquo;</em></p>
+
+<p>И действительно, я не могу с ним не согласиться. Тем более, что используя <code>docker-compose down &amp;&amp; docker-compose up -d</code> мы неминуемо получаем время простоя (downtime). Для улучшения ситуации необходимо проделать несколько шагов:</p>
+
+<ul>
+<li>немного подправить файл <code>docker-compose-staging.yml</code> (используется для создания и запуска docker-контейнеров на ревью);</li>
+<li>изменить конфигурационные файлы web-сервера Nginx;</li>
+<li>изменить Dockerfile (инструкции по сборке) для контейнера Nginx;</li>
+<li>полностью переписать скрипт деплоя.</li>
+</ul>
+
+<p>Начнем с первого пункта. Для всех сервисов, кроме <code>php-fpm</code> заменяем строки</p>
+
+<pre><code class="language-yaml">volumes_from:
+    - applications
+    - applications1
+</code></pre>
+
+<p>на строки:</p>
+
+<pre><code class="language-yaml">volumes_from:
+    - php-fpm
+</code></pre>
+
+<p>Строки вида</p>
+
+<pre><code class="language-yaml">links:
+    - php-fpm
+</code></pre>
+
+<p>нам больше не понадобятся, удаляем.</p>
+
+<p>Также для сервиса <code>php-fpm</code> удаляем строку</p>
+
+<pre><code class="language-yaml">container_name: php-fpm
+</code></pre>
+
+<p>В итоге теперь наш конфигурационный файл <code>docker-compose-staging.yml</code> выглядит так:</p>
+
+<pre><code class="language-yaml">version: '2'
+services:
+### Applications Code Container #############################
+    applications:
+        container_name: application
+        image: registry.gitlab.lc:5000/develop/ed:develop.sources.last
+### Applications1 Code Container ############################
+    applications1:
+        container_name: application1
+        image: registry.gitlab.lc:5000/develop/ed:docker.sources.last
+### PHP-FPM Container #######################################
+    php-fpm:
+        image: registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq
+        volumes_from:
+            - applications
+            - applications1
+        expose:
+            - &quot;9000&quot;
+### Nginx Server Container ##################################
+    nginx:
+        container_name: nginx
+        image: registry.gitlab.lc:5000/develop/ed:nginx-ed-sq
+        volumes_from:
+            - php-fpm
+        depends_on:
+            - &quot;websocket&quot;
+        ports:
+            - &quot;${HTTP_PORT}:80&quot;
+            - &quot;443:443&quot;
+### Redis Container #########################################
+    redis:
+        container_name: redis
+        image: registry.gitlab.lc:5000/develop/ed:redis-ed-sq
+        volumes:
+            - redis:/data
+        ports:
+            - &quot;6379:6379&quot;
+### Memcached Container #####################################
+    memcached:
+        container_name: memcached
+        image: registry.gitlab.lc:5000/develop/ed:memcached-ed-sq
+        volumes:
+            - memcached:/var/lib/memcached
+        ports:
+            - &quot;11211:11211&quot;
+### Websocket Container ######################################
+    websocket:
+        container_name: websocket
+        restart: always
+        image: registry.gitlab.lc:5000/develop/ed:websocket-ed-sq
+        depends_on:
+            - &quot;redis&quot;
+        environment:
+            - WS_PORT=${WS_PORT}
+            - REDIS_HOST=${REDIS_HOST}
+            - REDIS_PORT=${REDIS_PORT}
+            - REDIS_PASS=${REDIS_PASS}
+        volumes_from:
+            - php-fpm
+        ports:
+            - &quot;${WS_PORT}:${WS_PORT}&quot;
+### SDCV Container ##########################################
+    sdcv:
+        container_name: sdcv
+        image: registry.gitlab.lc:5000/develop/ed:sdcv-ed-sq
+        ports:
+            - &quot;9095:9095&quot;
+### Volumes Setup ###########################################
+volumes:
+    memcached:
+        driver: &quot;local&quot;
+    redis:
+        driver: &quot;local&quot;
+</code></pre>
+
+<p>Правим конфигурационные файлы web-сервера Nginx. Ранее в настройках сайта, в локейшене (<code>location</code>) который занимается обработкой php, директива <code>fastcgi_pass</code> выглядела так:</p>
+
+<pre><code>...
+      fastcgi_pass php-fpm:9000;
+...
+</code></pre>
+
+<p>Меняем ее на такую:</p>
+
+<pre><code>...
+      fastcgi_pass backend;
+...
+</code></pre>
+
+<p>В основном конфигурационном файле (<code>nginx.conf</code>) в секции <code>http</code> добавляем строку:</p>
+
+<pre><code>...
+      include include/upstream.include;
+...
+</code></pre>
+
+<p>Создаем файл <code>include/upstream.include</code> следующего содержания:</p>
+
+<pre><code>upstream backend {
+      server docker_php-fpm_1:9000;
+}
+</code></pre>
+
+<p>Создаем bash-скрипт (назовем его <code>update_upstream_directive.sh</code>), который будет по нашему требованию обновлять директиву <code>upstream</code> (содержимое файла <code>include/upstream.include</code>). Выглядеть он будет так:</p>
+
+<pre><code class="language-bash">#!/bin/bash
+NGINX_INCLUDE_PATH=/opt/nginx/include
+ 
+echo &quot;Updating nginx upsteam directive...&quot;
+# change string of ip addresses separated by / into an array
+IFS=&quot;/&quot; read -r -a addresses &lt;&lt;&lt; $CONTAINERS
+ 
+# update the upsteam directive contained within the upstream.include file
+echo &quot;upstream backend {&quot; &gt; $NGINX_INCLUDE_PATH/upstream.include
+for container in $addresses; do
+  echo &quot;  server $container:9000;&quot; &gt;&gt; $NGINX_INCLUDE_PATH/upstream.include
+done
+echo &quot;}&quot; &gt;&gt; $NGINX_INCLUDE_PATH/upstream.include
+</code></pre>
+
+<p>Данный скрипт (как и новые конфиги) должен находиться внутри docker-контейнера, поэтому правим Dockerfile, добавляя в него строки:</p>
+
+<pre><code class="language-Dockerfile">...
+COPY ./nginx.conf /opt/nginx/nginx.conf
+COPY ./conf.d/site.conf /opt/nginx/conf.d/site.conf
+COPY ./include/upstream.include /opt/nginx/include/upstream.include
+COPY ./update_upstream_directive.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh
+...
+</code></pre>
+
+<p>После внесенных изменений пересобираем docker-контейнер и пушим его в локальный docker registry.</p>
+
+<p>Наконец, переписываем скрипт деплоя <code>deploy.sh</code> (или, что лучше, создаем новый с именем <code>update_containers_staging.sh</code>). Выглядеть он будет так:</p>
+
+<pre><code class="language-bash">#!/bin/bash
+DIRECTORY=~/docker
+DC_FILE=docker-compose-staging.yml
+ENV_FILE=.env.staging.lc
+PROJECT_NETWORK=docker_default
+SERVICES=&quot;applications applications1 php-fpm&quot;
+ 
+cd $DIRECTORY;
+set -o allexport; . $ENV_FILE;
+docker-compose -f $DC_FILE pull;
+ 
+for service in $SERVICES; do
+  # split needed container names that are already running into an array
+  old_cont=($(docker-compose -f $DC_FILE ps $service | awk '{ print $1 }' | tail -n +3))
+ 
+  # create the new containers with latest code changes
+  docker-compose -f $DC_FILE up --scale $service=2 -d --no-deps $service
+ 
+  if [ &quot;$service&quot; == &quot;php-fpm&quot; ]; then
+    # create array with new containers only
+    all_cont=($(docker-compose -f $DC_FILE ps $service | awk '{ print $1 }' | tail -n +3))
+    new_cont=($(echo ${old_cont[*]} ${all_cont[*]} | tr ' ' '\n' | sort | uniq -u))
+ 
+    # loop through containers and get IP addresses separated by / so they can be exported below
+    IP_ADDRESSES=&quot;&quot;
+    for element in ${new_cont[*]}; do
+      IP_ADDRESSES+=&quot;$(docker inspect -f {{.NetworkSettings.Networks.$PROJECT_NETWORK.IPAddress}} $element)/&quot;
+    done
+ 
+    # run script to update the upstream.include file in nginx container
+    docker-compose -f $DC_FILE exec -T nginx bash -c &quot;export CONTAINERS=$IP_ADDRESSES &amp;&amp; /usr/local/bin/update_upstream_directive.sh&quot;
+    sleep 5
+    # Reload nginx service to update the upstream.include file in nginx container
+    docker-compose -f $DC_FILE exec -T nginx bash -c &quot;nginx -s reload&quot;
+  fi
+  # stops the old containers
+  for container in $old_cont; do
+    docker kill $container
+  done
+ 
+  # deletes the old containers
+  docker rm $(docker ps -aqf status=exited)
+ 
+  # rename new containers to start at 1 and go up sequentially
+  newly_started_cont=($(docker-compose -f $DC_FILE ps $service | awk '{ print $1 }' | tail -n +3))
+  counter=0
+  while [ $counter -lt ${#newly_started_cont[*]} ]; do
+    for container in $newly_started_cont; do
+      new_name=$(echo &quot;${container%?}$(($counter+1))&quot;)
+      docker rename $container $new_name
+    done
+    let counter=counter+1
+  done
+done
+docker-compose -f $DC_FILE up -d --force-recreate --no-deps nginx
+</code></pre>
+
+<p>Скрипт на первый взгляд выглядит страшно, но на самом деле здесь нет никакой магии — просто запускается еще один, обновленный экземпляр сервиса <code>php-fpm</code>, выясняется его ip-адрес, который затем используется для обновления директивы <code>upstream</code> в docker-контейнере Nginx. После проделанных действий более старый экземпляр сервиса <code>php-fpm</code> удаляется, а новый переименовывается.</p>
+
+<p>Таким образом, пусть и не самым элегантным способом, можно избавиться от простоя (downtime) при деплое docker-контейнеров.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2fgitlab-ci-zero-downtime-docker-deployment%2f - GitLab%20CI%3a%20zero%20downtime%20docker%20deployment by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Шифрование файлов в git-репозитории с помощью git-crypt"/>
+  <meta name="twitter:description" content="Иногда возникает необходимость в шифровании определенных файлов в репозитории (например, ключи или пароли), особенно если нет возможности/желания хранить эти файлы отдельно.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Шифрование файлов в git-репозитории с помощью git-crypt &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Шифрование файлов в git-репозитории с помощью git-crypt
+                    </h1>
+                    <h2 class="headline">
+                    Nov 20, 2017 10:37
+                    · 694 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/git">git</a>
+                          
+                              <a href="https://ealebed.github.io/tags/git-crypt">git-crypt</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Иногда возникает необходимость в шифровании определенных файлов в репозитории (например, ключи или пароли), особенно если нет возможности/желания хранить эти файлы отдельно.</p>
+
+<p></p>
+
+<p>Давайте разберемся с использованием утилиты <code>git-crypt</code>, которая обеспечивает прозрачное шифрование и дешифрование файлов в git-репозитории!</p>
+
+<p>С помощью <code>git-crypt</code> выбранные файлы шифруются при их фиксации и дешифруются при извлечении, таким образом можно свободно работать с репозиторием, содержащим публичный и частный контент (даже разработчики без секретного ключа все еще могут клонировать и фиксировать изменения в репозитории с зашифрованными файлами). Это дает возможность хранить «секретные» материалы в том же хранилище, что и код, без необходимости ограничения доступа на весь репозиторий.</p>
+
+<p>Итак, для начала установим утилиту (в примере используется ОС Ubuntu 16.04.3 LTS x86_64):</p>
+
+<pre><code class="language-bash">git clone https://www.agwa.name/git/git-crypt.git
+</code></pre>
+
+<pre><code class="language-bash">cd git-crypt &amp;&amp; make &amp;&amp; make install
+</code></pre>
+
+<p>Ознакомиться с использованием утилиты можно вызвав команду:</p>
+
+<pre><code class="language-bash">git-crypt help
+</code></pre>
+
+<p>Клонируем реозиторий, над которым будем проводить тесты (в данном примере используется репозиторий из «локального» <strong>Gitlab</strong>, <a href="https://ealebed.github.io/posts/2017/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">развернутого в docker-контейнерах</a>):</p>
+
+<pre><code class="language-bash">git clone ssh://git@gitlab.lc:23/develop/test.git test
+Cloning into 'test'...
+remote: Counting objects: 1832, done.
+remote: Compressing objects: 100% (1430/1430), done.
+remote: Total 1832 (delta 276), reused 1824 (delta 275)
+Receiving objects: 100% (1832/1832), 179.14 MiB | 91.22 MiB/s, done.
+Resolving deltas: 100% (276/276), done.
+Checking connectivity... done.
+</code></pre>
+
+<p>Настраиваем git-репозиторий на использование <code>git-crypt</code>:</p>
+
+<pre><code class="language-bash">cd test
+</code></pre>
+
+<pre><code class="language-bash">git-crypt init
+Generating key...
+</code></pre>
+
+<p>При этом, в репозитории в каталоге <code>.git/git-crypt/keys</code> будет создан симметричный ключ (файл <code>default</code>), который и будет использоваться при шифровании/расшифровке файлов.</p>
+
+<p>Данный симметричный ключ можно просто скопировать (через <code>cp</code>) в отдельное хранилище или «извлечь» с помощью команды (ключ будет сохранен в файл <code>secret</code> в домашнем каталоге пользователя):</p>
+
+<pre><code class="language-bash">git-crypt export-key ~/secret
+</code></pre>
+
+<p>Содержимое файла выглядит примерно так:</p>
+
+<pre><code class="language-bash">cat secret 
+GITCRYPTKEY ��Z���UWwެ[w&gt;W�L_&amp;�v�k���&quot;q�a�@��ԃ�#ȶ�c6ZGfl�-Sk}�D�Ճ�@,\O�S�%������6Ɲ �$����$�w��h��
+</code></pre>
+
+<p>В корне git-репозитория создаем файл <code>.gitattributes</code>, в котором будут перечислены файлы для шифрования:</p>
+
+<pre><code class="language-bash">touch .gitattributes
+</code></pre>
+
+<p>Содержимое файла будет примерно таким (как и в файле <code>.gitignore</code>, можно использовать wildcards):</p>
+
+<pre><code class="language-bash">secret filter=git-crypt diff=git-crypt
+*.key filter=git-crypt diff=git-crypt
+.env.* filter=git-crypt diff=git-crypt
+</code></pre>
+
+<p>Создаем файл, в котором будут храниться «секреты»:</p>
+
+<pre><code class="language-bash">touch secret
+</code></pre>
+
+<p>В этот файл я для примера записал свой номер телефона:</p>
+
+<pre><code class="language-bash">cat secret
++380976601216
+</code></pre>
+
+<p>Фиксируем изменения и пушим их в репозиторий:</p>
+
+<pre><code class="language-bash">git status
+On branch master
+Your branch is up-to-date with 'origin/master'.
+Untracked files:
+  (use &quot;git add ...&quot; to include in what will be committed)
+
+	.gitattributes
+	secret
+
+nothing added to commit but untracked files present (use &quot;git add&quot; to track)
+</code></pre>
+
+<pre><code class="language-bash">git add .
+</code></pre>
+
+<pre><code class="language-bash">git commit -m &quot;test commit&quot;
+[master d6fa879] test commit
+ 2 files changed, 1 insertion(+)
+ create mode 100644 .gitattributes
+ create mode 100644 secret
+</code></pre>
+
+<pre><code class="language-bash">git push
+Counting objects: 4, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (2/2), done.
+Writing objects: 100% (4/4), 1.08 KiB | 0 bytes/s, done.
+Total 4 (delta 0), reused 0 (delta 0)
+To ssh://git@gitlab.lc:23/develop/test.git
+   4d2bff3..d6fa879  master -&gt; master
+</code></pre>
+
+<p>Теперь опять клонируем репозиторий но уже в другой каталог (моделируем работу с репозиторием на машине другого разработчика):</p>
+
+<pre><code class="language-bash">git clone ssh://git@gitlab.lc:23/develop/test.git test1
+Cloning into 'test1'...
+remote: Counting objects: 1853, done.
+remote: Compressing objects: 100% (1440/1440), done.
+remote: Total 1853 (delta 281), reused 1849 (delta 280)
+Receiving objects: 100% (1853/1853), 179.15 MiB | 94.35 MiB/s, done.
+Resolving deltas: 100% (281/281), done.
+Checking connectivity... done.
+</code></pre>
+
+<p>Проверяем содержимое нашего «секретного» файла:</p>
+
+<pre><code class="language-bash">cd test1
+</code></pre>
+
+<pre><code class="language-bash">cat secret 
+GITCRYPTb���!��y��M��J[][G��
+B⏎
+</code></pre>
+
+<p>Расшифруем все зашифрованные файлы в репозитории командой (в качестве аргумента команды <code>unlock</code> указываем путь к извлеченному ранее симметричному ключу):</p>
+
+<pre><code class="language-bash">git-crypt unlock ~/secret
+</code></pre>
+
+<p>Проверяем теперь содержимое нашего «секретного» файла:</p>
+
+<pre><code class="language-bash">cat secret 
++380976601216
+</code></pre>
+
+<p>Дальше с репозиторием можно работать в обычном режиме.</p>
+
+<p>Можно также собрать docker-образ с утилитой <code>git-crypt</code> по такому набору инструкций (Dockerfile):</p>
+
+<pre><code class="language-Dockerfile">FROM alpine:edge
+ 
+ENV VERSION 0.5.0-2
+ 
+RUN apk --update add bash curl git g++ make openssh openssl openssl-dev \
+   &amp;&amp; curl -L https://github.com/AGWA/git-crypt/archive/debian/$VERSION.tar.gz | tar zxv -C /var/tmp \
+   &amp;&amp; cd /var/tmp/git-crypt-debian-${VERSION} &amp;&amp; make &amp;&amp; make install PREFIX=/usr/local \
+   &amp;&amp; apk del curl \
+   &amp;&amp; rm -rf /var/cache/apk/*
+ 
+WORKDIR /repo
+VOLUME /repo
+CMD [&quot;/bin/bash&quot;]
+</code></pre>
+
+<p><strong>Примечание.</strong> Можно даже добавить извлеченный ранее симметричный ключ в этот docker-образ, но не стоит забывать о безопасности.</p>
+
+<p>Собираем образ командой:</p>
+
+<pre><code class="language-bash">docker build --squash -t docker-gc -f Dockerfile .
+</code></pre>
+
+<p>Расшифровать «секретные» файлы в репозитории теперь можно и с помощью собранного docker-образа, например так:</p>
+
+<pre><code class="language-bash">docker run -it --rm -v $(pwd):/repo -v /home/e.lebed/secret:/repo/.git/.git-crypt/keys/default --user ${id} docker-gc:latest git-crypt unlock /repo/.git/.git-crypt/keys/default
+</code></pre>
+
+<p>Здесь <code>$(pwd)</code> — текущая директория, <code>${id}</code> — UID пользователя, под которым был склонирован git-репозиторий (в данном примере e.lebed).</p>
+
+<p>Больше информации об утилите <code>git-crypt</code> можно найти <a href="https://www.agwa.name/projects/git-crypt/">здесь</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2f%25D1%2588%25D0%25B8%25D1%2584%25D1%2580%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D0%25B5-%25D1%2584%25D0%25B0%25D0%25B9%25D0%25BB%25D0%25BE%25D0%25B2-%25D0%25B2-git-%25D1%2580%25D0%25B5%25D0%25BF%25D0%25BE%25D0%25B7%25D0%25B8%25D1%2582%25D0%25BE%25D1%2580%25D0%25B8%25D0%25B8-%25D1%2581-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-git-crypt%2f - %d0%a8%d0%b8%d1%84%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b5%20%d1%84%d0%b0%d0%b9%d0%bb%d0%be%d0%b2%20%d0%b2%20git-%d1%80%d0%b5%d0%bf%d0%be%d0%b7%d0%b8%d1%82%d0%be%d1%80%d0%b8%d0%b8%20%d1%81%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20git-crypt by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

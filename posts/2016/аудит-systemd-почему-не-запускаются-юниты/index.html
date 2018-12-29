@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Аудит systemd: почему не запускаются юниты?"/>
+  <meta name="twitter:description" content="Systemd — альтернативный менеджер служб для Linux, совместимый со скриптами инициализации LSB и SysV.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Аудит systemd: почему не запускаются юниты? &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Аудит systemd: почему не запускаются юниты?
+                    </h1>
+                    <h2 class="headline">
+                    Jan 28, 2016 17:27
+                    · 431 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/debian">debian</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ubuntu">ubuntu</a>
+                          
+                              <a href="https://ealebed.github.io/tags/systemd">systemd</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><code>Systemd</code> — альтернативный менеджер служб для Linux, совместимый со скриптами инициализации <code>LSB</code> и <code>SysV</code>.</p>
+
+<p></p>
+
+<p>По сравнению с <code>System V init</code> обладает некоторыми преимуществами и дополнительными возможностями, по умолчанию установлен в ОС Debian 8 (Jessie). Давайте разберемся, что делать, если не запускаются юниты!</p>
+
+<p>При старте системы юниты должны запускаться в определенном порядке. Если по какой-либо причине юнит не может запуститься, это может повлечь за собой некорректный старт остальных юнитов и всей системы.</p>
+
+<p><strong>Примечание.</strong> C точки зрения <code>systemd</code> юнит это — служба (<code>.service</code>), точка монтирования (<code>.mount</code>), устройство (<code>.device</code>) или сокет (<code>.socket</code>).</p>
+
+<p>Наиболее частые проблемы с запуском юнитов — отсутствие необходимых зависимостей (например точки монтирования), настроек или неправильные права доступа.</p>
+
+<p>Список юнитов смотрим так:</p>
+
+<pre><code>systemctl
+ UNIT                                     LOAD   ACTIVE SUB       DESCRIPTION
+ -.mount                                  loaded active mounted   /
+ boot.mount                               loaded active mounted   /boot
+ dev-hugepages.mount                      loaded active mounted   Huge Pages File System
+ ● dev-mqueue.mount                       loaded failed failed    POSIX Message Queue File System
+ tmp.mount                                loaded active mounted   Temporary Directory
+ mnt-exchange.mount                       loaded active mounted   /mnt/exchange
+ proc-fs-nfsd.mount                       loaded active mounted   /proc/fs/nfsd
+ usr-local-backup.mount                   loaded active mounted   /usr/local/backup
+ var-lib-mysql.mount                      loaded active mounted   /var/lib/mysql
+ var-www.mount                            loaded active mounted   /var/www
+ ...
+ ● sphinxsearch.service                   loaded failed failed LSB: Fast standalone full-text SQL search engine
+</code></pre>
+
+<p>Список проблемных юнитов смотрим так:</p>
+
+<pre><code>systemctl --failed
+ ● dev-mqueue.mount                       loaded failed failed    POSIX Message Queue File System
+ ● sphinxsearch.service                   loaded failed failed LSB: Fast standalone full-text SQL search engine
+</code></pre>
+
+<p>Узнать подробности о незапущенном юните можно так:</p>
+
+<pre><code>systemctl status dev-mqueue.mount
+ ● dev-mqueue.mount - POSIX Message Queue File System
+   Loaded: loaded (/usr/lib/systemd/system/dev-mqueue.mount; static)
+   Active: failed (Result: exit-code) since Sun 2015-11-23 17:53:10 CET; 4min 12s ago
+    Where: /dev/mqueue
+     What: mqueue
+     Docs: man:mq_overview(7)
+           http://www.freedesktop.org/wiki/Software/systemd/APIFileSystems
+  Process: 446 ExecMount=/bin/mount -n mqueue /dev/mqueue -t mqueue (code=exited, status=32)
+
+Nov 23 17:53:10 localhost.localdomain systemd[1]: dev-mqueue.mount mount process exited, code=exited status=32
+Nov 23 17:53:10 localhost.localdomain systemd[1]: Failed to mount POSIX Message Queue File System.
+Nov 23 17:53:10 localhost.localdomain systemd[1]: Unit dev-mqueue.mount entered failed state.
+</code></pre>
+
+<p>Из этого примера видно, что устройство <code>/dev/mqueue</code> отсутствует в системе.</p>
+
+<pre><code>systemctl status sphinxsearch.service
+● sphinxsearch.service - LSB: Fast standalone full-text SQL search engine
+   Loaded: loaded (/etc/init.d/sphinxsearch)
+   Active: failed (Result: exit-code) since Sun 2015-11-23 17:51:17 CET; 6min 5s ago
+
+Process: 568 ExecStart=/etc/init.d/sphinxsearch start (code=exited, status=1/FAILURE)
+
+Nov 23 17:51:17 astra sphinxsearch[568]: Starting sphinxsearch: /usr/bin/searchd already running.
+Nov 23 17:51:17 astra systemd[1]: sphinxsearch.service: control process exited, code=exited status=1
+Nov 23 17:51:17 astra systemd[1]: Failed to start LSB: Fast standalone full-text SQL search engine.
+Nov 23 17:51:17 astra systemd[1]: Unit sphinxsearch.service entered failed state.
+</code></pre>
+
+<p>А данный пример — это пока не решенный <a href="http://sphinxsearch.com/bugs/view.php?id=2321">баг</a> <code>sphinxsearch</code>.</p>
+
+<p>Также для выяснения проблем с запуском юнитов можно изучить логи с помощью команды:</p>
+
+<pre><code>journalctl
+</code></pre>
+
+<p>или</p>
+
+<pre><code>journalctl _PID=идентификатор процесса
+</code></pre>
+
+<p>После того, как проблема будет найдена, устранить ее будет несложно.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D0%25B0%25D1%2583%25D0%25B4%25D0%25B8%25D1%2582-systemd-%25D0%25BF%25D0%25BE%25D1%2587%25D0%25B5%25D0%25BC%25D1%2583-%25D0%25BD%25D0%25B5-%25D0%25B7%25D0%25B0%25D0%25BF%25D1%2583%25D1%2581%25D0%25BA%25D0%25B0%25D1%258E%25D1%2582%25D1%2581%25D1%258F-%25D1%258E%25D0%25BD%25D0%25B8%25D1%2582%25D1%258B%2f - %d0%90%d1%83%d0%b4%d0%b8%d1%82%20systemd%3a%20%d0%bf%d0%be%d1%87%d0%b5%d0%bc%d1%83%20%d0%bd%d0%b5%20%d0%b7%d0%b0%d0%bf%d1%83%d1%81%d0%ba%d0%b0%d1%8e%d1%82%d1%81%d1%8f%20%d1%8e%d0%bd%d0%b8%d1%82%d1%8b%3f by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

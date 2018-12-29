@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Утилиты для анализа серверной нагрузки"/>
+  <meta name="twitter:description" content="Своевременный анализ нагрузки на сервер позволяет выявить и устранить причины медленной работоспособности, а также спланировать покупку и ввод в эксплуатацию дополнительных серверных мощностей.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Утилиты для анализа серверной нагрузки &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Утилиты для анализа серверной нагрузки
+                    </h1>
+                    <h2 class="headline">
+                    Jul 28, 2016 15:07
+                    · 985 words
+                    · 5 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/hardware">hardware</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Своевременный анализ нагрузки на сервер позволяет выявить и устранить причины медленной работоспособности, а также спланировать покупку и ввод в эксплуатацию дополнительных серверных мощностей.</p>
+
+<p></p>
+
+<p>Анализировать необходимо 4 основных «кита» — процессор, память, дисковую и сетевую подсистему. Давайте разберемся!</p>
+
+<p>Прежде всего следует обратить внимание на процессор. Чаще всего для этого используется утилита <code>top</code>:</p>
+
+<pre><code class="language-bash">top - 10:57:05 up 21 days,  1:55,  3 users,  load average: 0.95, 0.83, 0.87
+Tasks: 212 total,   1 running, 211 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 14.9 us,  3.1 sy,  0.0 ni, 80.9 id,  0.1 wa,  0.0 hi,  1.1 si,  0.0 st
+KiB Mem:  12334660 total,  9825568 used,  2509092 free,   737240 buffers
+KiB Swap:  3880956 total,   221236 used,  3659720 free.  4285304 cached Mem
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+ 1516 mysql     20   0 4616644 2.346g   8788 S  17.3 19.9   6069:34 mysqld
+30502 www-data  20   0  125848   9572   4960 S   3.3  0.1   5:35.14 nginx
+11934 www-data  20   0  551548 186760  39692 S   2.0  1.5   0:40.68 apache2
+14066 www-data  20   0  549132 177820  28576 S   2.0  1.4   0:01.66 apache2
+ 1324 root      20   0  507240  13936   5388 S   1.7  0.1 323:58.69 fail2ban-server
+</code></pre>
+
+<p>Наиболее важными здесь являются следующие показатели:</p>
+
+<ul>
+<li><code>us</code> — время обработки пользовательских процессов;</li>
+<li><code>id</code> — время простоя (неиспользуемые ресурсы);</li>
+<li><code>wa</code> — время ожидания операций ввода/вывода.</li>
+</ul>
+
+<p>Аналогичную информацию в удобочитаемом виде можно получить утилитой <code>htop</code>:</p>
+
+<pre><code class="language-bash">  1  [||||||||                                                                  8.8%]     Tasks: 128, 80 thr; 2 running
+  2  [||||||||                                                                  9.0%]     Load average: 1.37 1.05 0.96
+  3  [|||||||||||||||                                                          18.0%]     Uptime: 21 days, 02:07:35
+  4  [||||||                                                                    6.2%]
+  Mem[||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||  4699/12045MB]
+  Swp[|||||                                                               216/3789MB]
+
+  PID USER      PRI  NI  VIRT   RES   SHR S CPU% MEM%   TIME+  Command
+ 1516 mysql      20   0 4508M 2402M  8788 S 33.9 19.9     101h /usr/sbin/mysqld
+13146 mysql      20   0 4508M 2402M  8788 S 17.7 19.9  9:36.63 /usr/sbin/mysqld
+</code></pre>
+
+<p>Более подробную статистику использования процессора можно получить с помощью утилиты <code>mpstat</code>:</p>
+
+<pre><code class="language-bash">Linux 3.16.0-4-amd64 (example.com) 	06/14/2016 	_x86_64_	(4 CPU)
+
+11:02:57 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+11:02:57 AM  all    9.77    0.00    1.85    0.24    0.00    0.48    0.00    0.00    0.00   87.66
+11:02:57 AM    0    9.26    0.00    1.90    0.21    0.00    1.71    0.00    0.00    0.00   86.93
+11:02:57 AM    1    9.60    0.00    1.84    0.25    0.00    0.10    0.00    0.00    0.00   88.20
+11:02:57 AM    2   10.14    0.00    1.86    0.25    0.00    0.06    0.00    0.00    0.00   87.69
+11:02:57 AM    3   10.09    0.00    1.81    0.26    0.00    0.06    0.00    0.00    0.00   87.79
+</code></pre>
+
+<p>Утилита выводит детальную информацию по всем процессорам (ядрам) на сервере.</p>
+
+<p>Определить количество используемой и занятой оперативной памяти можно утилитой <code>free</code>, например так:</p>
+
+<pre><code class="language-bash">free -h
+             total       used       free     shared    buffers     cached
+Mem:           11G       9.4G       2.3G       403M       725M       4.1G
+-/+ buffers/cache:       4.6G       7.2G
+Swap:         3.7G       216M       3.5G
+</code></pre>
+
+<p>Для получения всей доступной информации об оперативной памяти используйте команду <code>cat /proc/meminfo</code>:</p>
+
+<pre><code class="language-bash">cat /proc/meminfo
+MemTotal:       12334660 kB
+MemFree:         2464328 kB
+MemAvailable:    8056308 kB
+Buffers:          742876 kB
+Cached:          4327512 kB
+SwapCached:       153412 kB
+Active:          5711008 kB
+Inactive:        2798280 kB
+...
+SwapTotal:       3880956 kB
+SwapFree:        3659720 kB
+...
+</code></pre>
+
+<p><strong>Примечание.</strong> В нормальном случае использование свопа должно стремиться к нулю.</p>
+
+<p>Анализ дисковой подсистемы обычно начинают с проверки используемого/свободного места на носителях с помощью <code>df -h</code>:</p>
+
+<pre><code class="language-bash">Filesystem                                  Size  Used Avail Use% Mounted on
+/dev/sda1                                    16G  3.9G   12G  26% /
+udev                                         10M     0   10M   0% /dev
+tmpfs                                       2.4G  265M  2.1G  11% /run
+tmpfs                                       5.9G  1.6M  5.9G   1% /dev/shm
+tmpfs                                       5.0M     0  5.0M   0% /run/lock
+tmpfs                                       5.9G     0  5.9G   0% /sys/fs/cgroup
+/dev/mapper/vg0-www                          30G   23G  6.9G  77% /var/www
+/dev/mapper/vg0-mysql                        15G   10G  4.7G  69% /var/lib/mysql
+/dev/mapper/vg0-home                         15G   48M   15G   1% /home
+/dev/mapper/vg0-log                         9.8G  3.2G  6.6G  33% /var/log
+</code></pre>
+
+<p>Утилита <code>iotop</code> выведет развернутую информацию о текущем использовании диска запущенными процессами:</p>
+
+<pre><code class="language-bash">Total DISK READ :       7.79 K/s | Total DISK WRITE :      23.38 K/s
+Actual DISK READ:       7.79 K/s | Actual DISK WRITE:       0.00 B/s
+  TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN     IO&gt;    COMMAND
+27650 be/4 mysql       7.79 K/s    0.00 B/s  0.00 %  0.04 % mysqld --basedir=/usr --datadir=/var/lib/mysql/
+14520 be/4 www-data    0.00 B/s    3.90 K/s  0.00 %  0.00 % apache2 -k start
+ 4716 be/4 www-data    0.00 B/s    3.90 K/s  0.00 %  0.00 % apache2 -d /etc/apache2 -k start
+30501 be/4 www-data    0.00 B/s   11.69 K/s  0.00 %  0.00 % nginx: worker process
+30502 be/4 www-data    0.00 B/s    3.90 K/s  0.00 %  0.00 % nginx: worker process
+</code></pre>
+
+<p>Тут интересными являются показатели <code>Actual DISK READ</code> (объем данных, читаемых с диска) и <code>Actual DISK WRITE</code> (объем данных, записываемых на диск). Эти значения могут отличаться от показателей <code>Total DISK READ</code> и <code>Total DISK WRITE</code> из-за использования дискового кеша и низкоуровневой оптимизации.</p>
+
+<p>Оценить сетевой трафик в реальном времени поможет утилита <code>cbm</code>:</p>
+
+<pre><code class="language-bash">Interface                    Receive                    Transmit                    Total
+eth0                         30.04 kB/s                 245.36 kB/s                 275.39 kB/s
+eth1                         1.44 kB/s                  456.55 B/s                  1.90 kB/s
+lo                           86.62 kB/s                 86.62 kB/s                  173.24 kB/s
+</code></pre>
+
+<p>Увидеть «все и сразу» позволяет утилита <code>dstat</code>:</p>
+
+<pre><code class="language-bash">dstat
+You did not select any stats, using -cdngy by default.
+----total-cpu-usage---- -dsk/total- -net/total- ---paging-- ---system--
+usr sys idl wai hiq siq| read  writ| recv  send|  in   out | int   csw
+ 10   2  88   0   0   0| 211k  435k|   0     0 | 187B  156B|1328  1718
+ 30   5  62   0   0   2|   0   100k|  99k 1041k|   0     0 |2628  2662
+ 49  12  37   0   0   2|   0    32k|  97k 1194k|   0     0 |2863  2947
+ 29   1  69   1   0   1|   0  6940k|  81k  410k|   0     0 |1897  2187
+ 24   2  73   0   0   1|   0   132k| 168k  338k|   0     0 |2104  2356
+  6   2  92   0   0   1|  48k  156k|  90k  458k|   0     0 |2120  2673
+ 13   1  86   0   0   1|   0    88k|  72k  383k|   0     0 |1568  2001
+ 27   1  71   1   0   1|   0    56k|  54k  270k|   0     0 |1364  1279
+ 16   1  83   0   0   0|   0   176k|  68k  126k|   0     0 |1323  1600
+  1   0  99   0   0   0|   0   144k|  34k  180k|   0     0 | 684   744
+  6   1  93   0   0   1|   0    56k|  81k  303k|   0     0 |1495  1968
+</code></pre>
+
+<p>Общая статистика сервера — использование процессора (<code>total-cpu-usage</code>), использование дисковой (<code>dsk/total</code>) и сетевой (<code>net/total</code>) подсистемы выводится в реальном времени, данные обновляются ежесекундно.</p>
+
+<p>Для автоматического отслеживания указанных параметров лучше использовать системы мониторинга, например <a href="https://ealebed.github.io/posts/2016/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BE%D0%B2-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-new-relic/">New Relic</a> и <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">Prometheus</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D1%2583%25D1%2582%25D0%25B8%25D0%25BB%25D0%25B8%25D1%2582%25D1%258B-%25D0%25B4%25D0%25BB%25D1%258F-%25D0%25B0%25D0%25BD%25D0%25B0%25D0%25BB%25D0%25B8%25D0%25B7%25D0%25B0-%25D1%2581%25D0%25B5%25D1%2580%25D0%25B2%25D0%25B5%25D1%2580%25D0%25BD%25D0%25BE%25D0%25B9-%25D0%25BD%25D0%25B0%25D0%25B3%25D1%2580%25D1%2583%25D0%25B7%25D0%25BA%25D0%25B8%2f - %d0%a3%d1%82%d0%b8%d0%bb%d0%b8%d1%82%d1%8b%20%d0%b4%d0%bb%d1%8f%20%d0%b0%d0%bd%d0%b0%d0%bb%d0%b8%d0%b7%d0%b0%20%d1%81%d0%b5%d1%80%d0%b2%d0%b5%d1%80%d0%bd%d0%be%d0%b9%20%d0%bd%d0%b0%d0%b3%d1%80%d1%83%d0%b7%d0%ba%d0%b8 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

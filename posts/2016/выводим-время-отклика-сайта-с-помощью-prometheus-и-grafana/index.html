@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Выводим время отклика сайта с помощью Prometheus и Grafana"/>
+  <meta name="twitter:description" content="Мы уже рассматривали как узнать время отклика сайта из командной строки Linux и с помощью написанного плагина для munin визуализировали полученные данные.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Выводим время отклика сайта с помощью Prometheus и Grafana &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Выводим время отклика сайта с помощью Prometheus и Grafana
+                    </h1>
+                    <h2 class="headline">
+                    Oct 3, 2016 22:37
+                    · 367 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/prometheus">prometheus</a>
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                              <a href="https://ealebed.github.io/tags/grafana">grafana</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Мы уже рассматривали <a href="https://ealebed.github.io/posts/2015/%D0%BA%D0%B0%D0%BA-%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C-%D0%B2%D1%80%D0%B5%D0%BC%D1%8F-%D0%BE%D1%82%D0%BA%D0%BB%D0%B8%D0%BA%D0%B0-%D1%81%D0%B0%D0%B9%D1%82%D0%B0-%D0%B8%D0%B7-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D0%BD%D0%BE%D0%B9-%D1%81%D1%82%D1%80%D0%BE%D0%BA%D0%B8-linux/">как узнать время отклика сайта из командной строки Linux</a> и с помощью написанного <a href="https://ealebed.github.io/posts/2015/%D0%BF%D0%B8%D1%88%D0%B5%D0%BC-%D1%81%D0%B2%D0%BE%D0%B9-%D0%BF%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD-%D0%B4%D0%BB%D1%8F-muninhttp_response_median/">плагина для munin</a> визуализировали полученные данные.</p>
+
+<p></p>
+
+<p>Давайте разберемся как отобразить <strong>время отклика сайта с помощью Prometheus и Grafana</strong>!</p>
+
+<p>Для решения задачи нам потребуется минимум — установленный Prometheus и <code>node-exporter</code> (<a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">установка и базовая настройка</a>), а также <a href="https://ealebed.github.io/posts/2016/grafana-%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE-%D1%83%D0%B4%D0%BE%D0%B1%D0%BD%D1%8B%D0%B9-%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4/">установленная <strong>Grafana</strong> с настроенным источником данных</a> (Data source).</p>
+
+<p>Убедитесь, что в <code>node-exporter</code> включен коллектор <code>textfile</code> и проверьте значение параметра <code>-collector.textfile.directory</code> (обычно это <code>/var/lib/node_exporter/textfile_collector</code>). Коллектор будет брать данные из всех файлов с расширением <code>*.prom</code> в этой директории, содержимое файлов должно соответствовать определенному формату.</p>
+
+<p>В каталоге <code>/usr/local/sbin</code> создаем файл <code>http_response_time_ms</code> и делаем его исполняемым:</p>
+
+<pre><code class="language-bash">touch http_response_time_ms
+</code></pre>
+
+<pre><code class="language-bash">chmod +x http_response_time_ms
+</code></pre>
+
+<p>Скрипт <code>http_response_time_ms</code>, выполняющий замеры данных и записывающий их в нужном формате в файл, выглядит так:</p>
+
+<pre><code class="language-perl">#!/usr/bin/perl
+use strict;
+ 
+my @domains = (&quot;web1.example.com&quot;,&quot;web2.example.com&quot;,&quot;web3.example.com&quot;);
+my @urls = (&quot;/&quot;,&quot;/jobs/348443/&quot;,&quot;/resumes/329829/&quot;,&quot;/about-us/&quot;);
+my $filename = &quot;/var/lib/node_exporter/textfile_collector/http_response_time_ms.prom&quot;;
+ 
+sub get_url {
+  my $cur_url = $_[0];
+  my $content = `/usr/bin/curl -s -w %{time_total}\\n -o /dev/null &quot;$cur_url&quot;`;
+}
+ 
+open(my $fh, '&gt;', $filename);
+print $fh &quot;# HELP http_response_time_ms The HTTPS response time single page in miliseconds\n# TYPE http_response_time_ms gauge\n&quot;;
+ 
+foreach (@domains){
+    my $domain = $_;
+    foreach (@urls){
+  my $value = $_;
+  my $url = &quot;https://&quot;.$domain.$value;
+  my @time;
+  for (my $i=0; $i&lt;3;$i++){
+      $time[$i] = get_url($url);
+        }
+        my @sorted = sort { $a &lt;=&gt; $b } @time;
+        my $counter = 1000 * $sorted[1];
+  print $fh 'http_response_time_ms{domain=&quot;'.$domain.'&quot;,url=&quot;'.$value.'&quot;} '.$counter.&quot;\n&quot;;
+    };
+};
+close $fh;
+exit 0;
+</code></pre>
+
+<p>В результате выполнения скрипта сформируется файл <code>/var/lib/node_exporter/textfile_collector/http_response_time_ms.prom</code> с таким содержимым:</p>
+
+<pre><code># HELP http_response_time_ms The HTTPS response time single page in miliseconds
+# TYPE http_response_time_ms gauge
+http_response_time_ms{domain=&quot;web1.example.com&quot;,url=&quot;/&quot;} 54
+http_response_time_ms{domain=&quot;web1.example.com&quot;,url=&quot;/jobs/348443/&quot;} 124
+http_response_time_ms{domain=&quot;web1.example.com&quot;,url=&quot;/resumes/329829/&quot;} 116
+http_response_time_ms{domain=&quot;web1.example.com&quot;,url=&quot;/about-us/&quot;} 46
+http_response_time_ms{domain=&quot;web2.example.com&quot;,url=&quot;/&quot;} 53
+http_response_time_ms{domain=&quot;web2.example.com&quot;,url=&quot;/jobs/348443/&quot;} 129
+http_response_time_ms{domain=&quot;web2.example.com&quot;,url=&quot;/resumes/329829/&quot;} 122
+http_response_time_ms{domain=&quot;web2.example.com&quot;,url=&quot;/about-us/&quot;} 53
+http_response_time_ms{domain=&quot;web3.example.com&quot;,url=&quot;/&quot;} 55
+http_response_time_ms{domain=&quot;web3.example.com&quot;,url=&quot;/jobs/348443/&quot;} 127
+http_response_time_ms{domain=&quot;web3.example.com&quot;,url=&quot;/resumes/329829/&quot;} 105
+http_response_time_ms{domain=&quot;web3.example.com&quot;,url=&quot;/about-us/&quot;} 50
+</code></pre>
+
+<p>Проверим наличие метрик — в браузере переходим по адресу http://[IP-адрес сервера]:9100/metrics, новые метрики должны появиться через несколько секунд после выполнения скрипта.</p>
+
+<p>Переходим в <strong>Grafana</strong> и создаем новый дашборд для графиков. В данном примере будем использовать шаблоны для имен хостов (ранее мы уже использовали шаблоны для интервалов времени).</p>
+
+<p>Добавляем новый график, в поле Query вводим интересующую нас метрику — <code>http_response_time_ms{domain=&quot;$host&quot;}</code>, а в поле Legend format вводим <code>{{ domain }}{{ url }}</code>. По сути, этого уже достаточно для отображения графика, для более тонкой настройки можно воспользоваться меню, которое расположено прямо под графиком.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D0%25B2%25D1%258B%25D0%25B2%25D0%25BE%25D0%25B4%25D0%25B8%25D0%25BC-%25D0%25B2%25D1%2580%25D0%25B5%25D0%25BC%25D1%258F-%25D0%25BE%25D1%2582%25D0%25BA%25D0%25BB%25D0%25B8%25D0%25BA%25D0%25B0-%25D1%2581%25D0%25B0%25D0%25B9%25D1%2582%25D0%25B0-%25D1%2581-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-prometheus-%25D0%25B8-grafana%2f - %d0%92%d1%8b%d0%b2%d0%be%d0%b4%d0%b8%d0%bc%20%d0%b2%d1%80%d0%b5%d0%bc%d1%8f%20%d0%be%d1%82%d0%ba%d0%bb%d0%b8%d0%ba%d0%b0%20%d1%81%d0%b0%d0%b9%d1%82%d0%b0%20%d1%81%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20Prometheus%20%d0%b8%20Grafana by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

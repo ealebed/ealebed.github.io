@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Аудит системных событий в Linux"/>
+  <meta name="twitter:description" content="Чтобы ОС отвечала требованиям безопасности и стабильности нужно неотрывно следить за ее состоянием — этого можно достичь с помощью систем мониторинга и анализа логов.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Аудит системных событий в Linux &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Аудит системных событий в Linux
+                    </h1>
+                    <h2 class="headline">
+                    Jun 6, 2016 12:41
+                    · 389 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/auditd">auditd</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Чтобы ОС отвечала требованиям безопасности и стабильности нужно неотрывно следить за ее состоянием — этого можно достичь с помощью систем мониторинга и анализа логов.</p>
+
+<p></p>
+
+<p>Но порой все же нельзя обойтись без <strong>аудита системных событий</strong> — постоянного и подробного протоколирования действий, происходящих в операционной системе. Давайте разберемся!</p>
+
+<p>В интернете доступно множество инструкций по установке, настройке и использованию системы аудита (<a href="https://xakep.ru/2011/03/30/54897/">раз</a>, <a href="https://habrahabr.ru/company/selectel/blog/267833/">два</a> и т.д.), поэтому в эту тему углубляться не будем, а рассмотрим конкретный пример.</p>
+
+<p>Возникла необходимость с помощью системного аудита узнать подробности вызова процесса <code>gs</code> (с какими параметрами запускается, какой процесс запускает, как завершается и т.д.) .</p>
+
+<p>Устанавливаем демон <code>auditd</code> и вспомогательные утилиты:</p>
+
+<pre><code>apt-get install auditd
+</code></pre>
+
+<p>Посмотрим информацию о расположении файлов приложения <code>gs</code>:</p>
+
+<pre><code>whereis gs
+gs: /usr/bin/gs /usr/bin/X11/gs /usr/share/man/man1/gs.1.gz
+</code></pre>
+
+<p>В конфигурационный файл <code>/etc/audit/audit.rules</code> добавим следующее правило:</p>
+
+<pre><code>-a exit,always -F arch=b64 -S all -F path=/usr/bin/gs
+</code></pre>
+
+<p>Перезапускаем демон для применения изменений:</p>
+
+<pre><code>/etc/init.d/auditd restart
+</code></pre>
+
+<p>Для просмотра журнальных файлов, созданных демоном <code>auditd</code> будем использовать утилиту <code>aureport</code>. Для сокращения вывода будем запрашивать информацию только за определенный период времени (например 10 минут):</p>
+
+<pre><code>aureport -f --start recent
+
+File Report
+===============================================
+# date time file syscall success exe auid event
+===============================================
+1. 05/11/2016 12:13:05 /usr/bin/gs 59 yes /usr/bin/gs -1 3020
+</code></pre>
+
+<p>Зная номер события (последнее число в предыдущем выводе команды), можно его проанализировать более детально:</p>
+
+<pre><code>ausearch -a 3020
+----
+time-&gt;Wed May 11 12:13:05 2016
+type=PATH msg=audit(1462957985.049:3020): item=1 name=(null) inode=811245 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00
+type=PATH msg=audit(1462957985.049:3020): item=0 name=&quot;/usr/bin/gs&quot; inode=889571 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00
+type=CWD msg=audit(1462957985.049:3020):  cwd=&quot;/var/www/work-utf&quot;
+type=EXECVE msg=audit(1462957985.049:3020): argc=17 a0=&quot;gs&quot; a1=&quot;-q&quot; a2=&quot;-dQUIET&quot; a3=&quot;-dSAFER&quot; a4=&quot;-dBATCH&quot; a5=&quot;-dNOPAUSE&quot; a6=&quot;-dNOPROMPT&quot; a7=&quot;-dMaxBitmap=500000000&quot; a8=&quot;-dAlignToPixels=0&quot; a9=&quot;-dGridFitTT=2&quot; a10=&quot;-sDEVICE=pngalpha&quot; a11=&quot;-dTextAlphaBits=4&quot; a12=&quot;-dGraphicsAlphaBits=4&quot; a13=&quot;-r300x300&quot; a14=&quot;-sOutputFile=/tmp/magick-mxX1zRa2-%08d&quot; a15=&quot;-f/tmp/magick-NjsmJhEA&quot; a16=&quot;-f/tmp/magick-CDT6PCa9&quot;
+type=SYSCALL msg=audit(1462957985.049:3020): arch=c000003e syscall=59 success=yes exit=0 a0=7fff414c9094 a1=7fc6c1050a88 a2=7fff414d9578 a3=7fc6be0dd240 items=2 ppid=23481 pid=4367 auid=4294967295 uid=33 gid=33 euid=33 suid=33 fsuid=33 egid=33 sgid=33 fsgid=33 tty=(none) ses=4294967295 comm=&quot;gs&quot; exe=&quot;/usr/bin/gs&quot; key=(null)
+</code></pre>
+
+<p><strong>Примечание.</strong> Типы системных вызовов можно узнать <a href="https://filippo.io/linux-syscall-table/">здесь</a>.</p>
+
+<p>Вывести информацию в человекочитаемой форме можно при помощи опции <code>-i</code> или <code>−−interpret</code>, например:</p>
+
+<pre><code>ausearch -a 3020 -i
+----
+type=PATH msg=audit(05/11/2016 12:13:05.049:3020) : item=1 name=(null) inode=811245 dev=08:02 mode=file,755 ouid=root ogid=root rdev=00:00
+type=PATH msg=audit(05/11/2016 12:13:05.049:3020) : item=0 name=/usr/bin/gs inode=889571 dev=08:02 mode=file,755 ouid=root ogid=root rdev=00:00
+type=CWD msg=audit(05/11/2016 12:13:05.049:3020) :  cwd=/var/www/work-utf
+type=EXECVE msg=audit(05/11/2016 12:13:05.049:3020) : argc= a0=gs a1=-q a2=-dQUIET a3=-dSAFER a4=-dBATCH a5=-dNOPAUSE a6=-dNOPROMPT a7=-dMaxBitmap=500000000 a8=-dAlignToPixels=0 a9=-dGridFitTT=2 a10=-sDEVICE=pngalpha a11=-dTextAlphaBits=4 a12=-dGraphicsAlphaBits=4 a13=-r300x300 a14=-sOutputFile=/tmp/magick-mxX1zRa2-%08d a15=-f/tmp/magick-NjsmJhEA a16=-f/tmp/magick-CDT6PCa9
+type=SYSCALL msg=audit(05/11/2016 12:13:05.049:3020) : arch=x86_64 syscall=execve success=yes exit=0 a0=7fff414c9094 a1=7fc6c1050a88 a2=7fff414d9578 a3=7fc6be0dd240 items=2 ppid=23481 pid=4367 auid=unset uid=www-data gid=www-data euid=www-data suid=www-data fsuid=www-data egid=www-data sgid=www-data fsgid=www-data tty=(none) ses=4294967295 comm=gs exe=/usr/bin/gs key=(null)
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D0%25B0%25D1%2583%25D0%25B4%25D0%25B8%25D1%2582-%25D1%2581%25D0%25B8%25D1%2581%25D1%2582%25D0%25B5%25D0%25BC%25D0%25BD%25D1%258B%25D1%2585-%25D1%2581%25D0%25BE%25D0%25B1%25D1%258B%25D1%2582%25D0%25B8%25D0%25B9-%25D0%25B2-linux%2f - %d0%90%d1%83%d0%b4%d0%b8%d1%82%20%d1%81%d0%b8%d1%81%d1%82%d0%b5%d0%bc%d0%bd%d1%8b%d1%85%20%d1%81%d0%be%d0%b1%d1%8b%d1%82%d0%b8%d0%b9%20%d0%b2%20Linux by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

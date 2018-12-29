@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Kubernetes. Часть 1: Установка"/>
+  <meta name="twitter:description" content="Только ленивый еще не писал об установке, настройке и использовании Kubernetes - будь-то в облаке (AWS, GCE, Azure) или на bare-metal серверах.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Знакомство с Kubernetes. Часть 1: Установка &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Kubernetes. Часть 1: Установка
+                    </h1>
+                    <h2 class="headline">
+                    Apr 23, 2018 07:35
+                    · 741 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                              <a href="https://ealebed.github.io/tags/flannel">flannel</a>
+                          
+                              <a href="https://ealebed.github.io/tags/k8s">k8s</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Только ленивый еще не писал об установке, настройке и использовании <code>Kubernetes</code> - будь-то в облаке (AWS, GCE, Azure) или на bare-metal серверах.</p>
+
+<p></p>
+
+<p>Так как я не ленивый, настал и мой черед - в данном цикле рассмотрим важные особенности и разберемся с несколькими примерами использования <code>Kubernetes</code>. Начнем с установки.</p>
+
+<p>Считаем, что есть один или несколько серверов под управлением Ubuntu 16.04 или Centos 7 (вариант с несколькими серверами предпочтительнее, но для ознакомления можно обойтись и одним).</p>
+
+<p><strong>Важно:</strong> <code>swap</code> должен быть выключен (если это новый сервер - просто не создавайте раздел для свопа). Выключить можно так (не забудьте удалить соответствующую строку в файле <code>/etc/fstab</code>):</p>
+
+<pre><code class="language-bash">swapoff -a
+</code></pre>
+
+<p>Прежде всего устанавливаем docker на каждом из серверов. Как написано в документации, рекомендуемая версия v1.12, но версии v1.11, v1.13 и 17.03 также работают хорошо. Версии 17.06+ также могут работать, но они пока не протестированы надлежащим образом командой Kubernetes (в моем варианте установлен docker версии 17.12.0-ce).</p>
+
+<p>Установка рекомендуемой версии довольно проста, для Ubuntu:</p>
+
+<pre><code class="language-bash">apt-get update
+apt-get install -y docker.io
+</code></pre>
+
+<p>Если есть желание установить более свежую версию docker, можно воспользоваться следующими командами:</p>
+
+<pre><code class="language-bash">apt-get update
+apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+add-apt-repository \
+   &quot;deb https://download.docker.com/linux/$(. /etc/os-release; echo &quot;$ID&quot;) \
+   $(lsb_release -cs) \
+   stable&quot;
+apt-get update &amp;&amp; apt-get install -y docker-ce=$(apt-cache madison docker-ce | grep 17.03 | head -1 | awk '{print $3}')
+</code></pre>
+
+<p>Или воспользоваться <a href="https://docs.docker.com/engine/installation/">официальным руководством</a> по установке docker.</p>
+
+<p>Установка docker в ОС Centos также не должна вызывать вопросов:</p>
+
+<pre><code class="language-bash">yum install -y docker
+systemctl enable docker &amp;&amp; systemctl start docker
+</code></pre>
+
+<p><strong>Примечание.</strong> Убедитесь, что и <code>docker</code> и <code>kubelet</code> используют один и тот же <code>cgroup</code> драйвер. Проще всего сделать так:</p>
+
+<pre><code class="language-bash">cat &lt;&lt; EOF &gt; /etc/docker/daemon.json
+{
+  &quot;exec-opts&quot;: [&quot;native.cgroupdriver=systemd&quot;]
+}
+EOF
+</code></pre>
+
+<p>И перезапустить docker командой:</p>
+
+<pre><code class="language-bash">service docker restart
+</code></pre>
+
+<p>Далее на всех серверах устанавливаем <code>kubeadm</code>, <code>kubelet</code> и <code>kubectl</code> - необходимые компоненты для создания и управления кластером <code>Kubernetes</code>. Для Ubuntu это можно сделать с помощью команд:</p>
+
+<pre><code class="language-bash">apt-get update &amp;&amp; apt-get install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+cat &lt;&lt;EOF &gt;/etc/apt/sources.list.d/kubernetes.list
+deb http://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+apt-get update
+apt-get install -y kubelet kubeadm kubectl
+</code></pre>
+
+<p>Для Centos:</p>
+
+<pre><code class="language-bash">cat &lt;&lt;EOF &gt; /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+setenforce 0
+yum install -y kubelet kubeadm kubectl
+systemctl enable kubelet &amp;&amp; systemctl start kubelet
+</code></pre>
+
+<p><strong>Примечание.</strong> Отключение SELinux  командой <code>setenforce 0</code> необходимо для корректного доступа контейнеров к файловой системе хоста, что, в свою очередь, требуется для работы сети у подов (pod networks).</p>
+
+<p>Для организации сети в нашем кластере <code>Kubernetes</code> будем использовать <code>Flannel</code> - программно определяемую сеть (Software Defined Network, SDN), при инициализации кластера нужно добавить параметр <code>--pod-network-cidr=10.244.0.0/16</code>.</p>
+
+<p><strong>Примечание.</strong> Ключ <code>--pod-network-cidr</code> позволяет выбрать нужный сетевой плагин (Pod Network Plugin), в зависимости от выбранного провайдера значение этого параметра будет отличаться.</p>
+
+<p>Выбираем один из серверов (в дальнейшем он будет мастером и все операции будем выполнять на нем) и инициализируем кластер:</p>
+
+<pre><code class="language-bash">kubeadm init --pod-network-cidr=10.244.0.0/16
+</code></pre>
+
+<p>При выполнении данной команды в консоли могут появиться ошибки (их нужно обязательно устранить) и предупреждения (warning), которые можно игнорировать (если это не production-окружение). В случае успеха на экран будет выведена команда для присоединения остальных нод кластера к мастеру - скопируйте и сохраните ее. Результат команды будет примерно следующим:</p>
+
+<pre><code class="language-bash">...
+Your Kubernetes master has initialized successfully!
+
+To start using your cluster, you need to run (as a regular user):
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run &quot;kubectl apply -f [podnetwork].yaml&quot; with one of the options listed at:
+  http://kubernetes.io/docs/admin/addons/
+
+You can now join any number of machines by running the following on each node
+as root:
+
+  kubeadm join --token &lt;token&gt; &lt;master-ip&gt;:&lt;master-port&gt; --discovery-token-ca-cert-hash sha256:&lt;hash&gt;
+</code></pre>
+
+<p>Как и советуют, мы будем работать с кластером под отдельным, непривилегированным пользователем. Для этого выполняем команды (не под рутом):</p>
+
+<pre><code class="language-bash">mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+</code></pre>
+
+<p>По умолчанию на мастер-ноде контейнеры не запускаются, мастер только следит за состоянием кластера и размещает ресурсы. Разрешить запуск контейнеров на мастере (особенно если в кластере только одна нода) можно так:</p>
+
+<pre><code class="language-bash">kubectl taint nodes --all node-role.kubernetes.io/master-
+</code></pre>
+
+<p>Перед запуском приложений в кластере необходимо настроить сеть, причем обязательно с поддержкой Container Network Interface (CNI) - в нашем примере это <code>Flannel</code> (подробнее о вариантах настройки CNI и доступных плагинах в отдельной статье). <strong>Важно:</strong> в кластере может быть только одна сеть для подов.</p>
+
+<p>Устанавливаем <code>Flannel</code>:</p>
+
+<pre><code class="language-bash">kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+</code></pre>
+
+<p>Убедиться, что кластер стартовал и корректно работает можно с помощью команды:</p>
+
+<pre><code class="language-bash">kubectl -n kube-system get pods
+</code></pre>
+
+<p>На этом с установкой <code>Kubernetes</code> все, далее будем знакомиться с <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%82%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F/">терминологией</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-kubernetes-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-1-%25D1%2583%25D1%2581%25D1%2582%25D0%25B0%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25BA%25D0%25B0%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Kubernetes.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%201%3a%20%d0%a3%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%ba%d0%b0 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

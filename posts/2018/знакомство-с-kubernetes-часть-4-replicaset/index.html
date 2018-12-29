@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Kubernetes. Часть 4: Реплики (ReplicaSet)"/>
+  <meta name="twitter:description" content="ReplicaSet гарантирует, что определенное количество экземпляров подов (Pods) будет запущено в кластере Kubernetes в любой момент времени. Давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Знакомство с Kubernetes. Часть 4: Реплики (ReplicaSet) &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Kubernetes. Часть 4: Реплики (ReplicaSet)
+                    </h1>
+                    <h2 class="headline">
+                    May 21, 2018 07:02
+                    · 781 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                              <a href="https://ealebed.github.io/tags/replicaset">replicaset</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><code>ReplicaSet</code> гарантирует, что определенное количество экземпляров подов (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) будет запущено в кластере <code>Kubernetes</code> в любой момент времени. Давайте разберемся!</p>
+
+<p></p>
+
+<p>Сразу стоит сказать, что деплоймент (<code>Deployment</code>), который мы рассмотрим в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/">следующей статье</a>, представляет собой абстракцию <strong>более высокого уровня</strong>, которая управляет <code>ReplicaSets</code> и предоставляет расширенный функционал управления контейнерами. Разработчики <code>Kubernetes</code> советуют использовать именно <code>Deployments</code>, если не нужна специфическая настройка оркестрации (или если вообще не требуется обновление подов). При использовании <code>Deployments</code>, вам не нужно беспокоиться об управлении создаваемыми <code>ReplicaSets</code> - деплоймент все сделает за вас.</p>
+
+<p>Фактически это значит, что вам (возможно) и не придется манипулировать объектами <code>ReplicaSet</code>: достаточно будет деплоймента с описанием свойств приложения в разделе <code>spec</code>.</p>
+
+<p><code>ReplicaSet</code> - это следующее поколение <a href="https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/">Replication Controller</a>. Единственная разница между <code>ReplicaSet</code> и <code>Replication Controller</code> - это поддержка селектора. <code>ReplicaSet</code> поддерживает множественный выбор в селекторе, тогда как <code>Replication Controller</code> поддерживает в селекторе только выбор на основе равенства.</p>
+
+<p>Различия между <code>Replication Controller</code>, <code>ReplicaSet</code> и <code>Deployment</code> рассмотрены в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-16-%D1%80%D0%B0%D0%B7%D0%BB%D0%B8%D1%87%D0%B8%D1%8F-%D0%B2-replication-controller-replica-set-%D0%B8-deployments/">отдельной статье</a>.</p>
+
+<p>Как и для всех других API-объектов <code>Kubernetes</code>, для определения <code>ReplicaSet</code> в yaml-файле нужны поля <code>apiVersion</code>, <code>kind</code> и <code>metadata</code>.  Кроме того, в <code>ReplicaSet</code> также должна присутствовать секция <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#spec-and-status"><code>.spec</code></a>.</p>
+
+<p>Далее, в секции <code>.spec</code> обязательно должна присутствовать вложенная секция <code>.spec.template</code> - шаблон пода (<code>Pod</code>). Он имеет точно такой же формат, как описание пода (<code>Pod</code>) без секций <code>apiVersion</code> и <code>kind</code>. Кроме обязательных полей, в секции <code>.spec.template</code> при описании <code>ReplicaSet</code> нужно указывать соответствующие метки (<code>.spec.template.metadata.labels</code>) и политику перезапуска (единственным допустимым значением для <code>.spec.template.spec.restartPolicy</code> является <strong>Always</strong>, которое соответствует значению по умолчанию).</p>
+
+<p>Секция <code>.spec.selector</code> описывает селектор меток. <code>ReplicaSet</code> управляет всеми подами (<code>Pods</code>) с метками, которые соответствуют описанному селектору - неважно, создавались ли эти поды самим <code>ReplicaSet</code>, другим процессом (например, деплойментом) или администратором вручную. Такой подход позволяет изменять <code>ReplicaSet</code>, не затрагивая запущенные поды в кластере.</p>
+
+<p>При описании <code>ReplicaSet</code> стоит указать, сколько экземпляров подов должно работать одновременно (а иначе какой смысл в использовании <code>ReplicaSet</code>), установив параметр <code>.spec.replicas</code>. Если этого не сделать, то будет запущен только один экземпляр пода -  <code>.spec.replicas</code> по умолчанию равно единице.</p>
+
+<p><code>ReplicaSet</code> может сам иметь метки - они должны быть установлены в разделе <code>.metadata.labels</code>. Как правило, их нужно устанавливать по аналогии с установкой меток в секции <code>.spec.template.metadata.labels</code>, но сами метки могут быть разными, потому что <code>.metadata.labels</code> не влияют на поведение <code>ReplicaSet</code>.</p>
+
+<p>Пример описания <code>ReplicaSet</code>:</p>
+
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: frontend
+  labels:
+    app: guestbook
+    tier: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: frontend
+    matchExpressions:
+      - {key: tier, operator: In, values: [frontend]}
+  template:
+    metadata:
+      labels:
+        app: guestbook
+        tier: frontend
+    spec:
+      containers:
+      - name: php-redis
+        image: gcr.io/google_samples/gb-frontend:v3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        env:
+        - name: GET_HOSTS_FROM
+          value: env
+        ports:
+        - containerPort: 80
+</code></pre>
+
+<p>Предложенный манифест можно сохранить в файл <code>frontend.yaml</code> и запустить в кластере <code>Kubernetes</code> с помощью утилиты командной строки:</p>
+
+<pre><code class="language-bash">kubectl create -f frontend.yaml
+</code></pre>
+
+<p>Просмотреть детальное состояние запущенного выше <code>ReplicaSet</code> можно с помощью команды <code>kubectl describe rs/frontend</code>, результат выполнения команды будет примерно следующим:</p>
+
+<pre><code class="language-bash">Name:		frontend
+Namespace:	default
+Selector:	tier=frontend,tier in (frontend)
+Labels:		app=guestbook
+		tier=frontend
+Annotations:	&lt;none&gt;
+Replicas:	3 current / 3 desired
+Pods Status:	3 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:       app=guestbook
+                tier=frontend
+  Containers:
+   php-redis:
+    Image:      gcr.io/google_samples/gb-frontend:v3
+    Port:       80/TCP
+    Requests:
+      cpu:      100m
+      memory:   100Mi
+    Environment:
+      GET_HOSTS_FROM:   env
+    Mounts:             &lt;none&gt;
+  Volumes:              &lt;none&gt;
+Events:
+  FirstSeen    LastSeen    Count    From                SubobjectPath    Type        Reason            Message
+  ---------    --------    -----    ----                -------------    --------    ------            -------
+  1m           1m          1        {replicaset-controller }             Normal      SuccessfulCreate  Created pod: frontend-qhloh
+  1m           1m          1        {replicaset-controller }             Normal      SuccessfulCreate  Created pod: frontend-dnjpy
+  1m           1m          1        {replicaset-controller }             Normal      SuccessfulCreate  Created pod: frontend-9si5l
+</code></pre>
+
+<p>Для удаления <code>ReplicaSet</code> и всех его подов, нужно использовать команду <code>kubectl delete ...</code>. При этом <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-15-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-kubectl/">утилита <code>kubectl</code></a> выполнит масштабирование количества реплик до нуля, дождется удаления каждого пода и удалит сам <code>ReplicaSet</code>. При использовании REST API все три шага нужно выполнять отдельно и в правильной очередности.</p>
+
+<p>Есть возможность удалить <code>ReplicaSet</code>, не затрагивая ни один из его подов, для этого следует использовать <code>kubectl delete</code> с дополнительным параметром <code>--cascade=false</code>.</p>
+
+<p>Поды (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) могут быть удалены из набора <code>ReplicaSet</code> путем изменения их меток - этот вариант может пригодиться при отладке, восстановлении данных и т. д. Поды, которые удаляются таким образом, будут автоматически заменены (при условии, что количество реплик в наборе <code>ReplicaSet</code> также не изменяется).</p>
+
+<p><code>ReplicaSet</code> можно легко масштабировать (вверх или вниз), просто меняя значение поля <code>.spec.replicas</code>.</p>
+
+<p>Стоит отметить, что наборы <code>ReplicaSet</code> могут использоваться для горизонтального масштабирования подов (автоскейлинга, <a href="https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/">HPA</a>). Пример настройки такого масштабирования (в зависимости от использования CPU) для созданного ранее <code>ReplicaSet</code> будет выглядеть так:</p>
+
+<pre><code class="language-yaml">apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-scaler
+spec:
+  scaleTargetRef:
+    kind: ReplicaSet
+    name: frontend
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+</code></pre>
+
+<p>Сохраняем предложенный манифест в файл <code>hpa-rs.yaml</code> и запускаем его в кластере <code>Kubernetes</code>:</p>
+
+<pre><code class="language-bash">kubectl create -f hpa-rs.yaml
+</code></pre>
+
+<p>Альтернативы использования <code>ReplicaSet</code>:</p>
+
+<ul>
+<li>Deployment (рекомендуемый);</li>
+<li>Job (для подов, которые должны &ldquo;завершаться&rdquo; самостоятельно после выполнения определенной задачи);</li>
+<li>DaemonSet (для запуска подов на каждой ноде кластера).</li>
+</ul>
+
+<p>На этом с наборами реплик (<code>ReplicaSet</code>) все, в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/">следующей статье</a> рассмотрим особенности деплоймента (<code>Deployment</code>).</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-kubernetes-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-4-replicaset%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Kubernetes.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%204%3a%20%d0%a0%d0%b5%d0%bf%d0%bb%d0%b8%d0%ba%d0%b8%20%28ReplicaSet%29 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

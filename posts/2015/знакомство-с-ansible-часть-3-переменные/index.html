@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Ansible. Часть 3: переменные"/>
+  <meta name="twitter:description" content="В первой части знакомства с Ansible мы успешно установили систему управления конфигурациями и написали первый playbook, во второй части разобрали результат выполнения нашего набора инструкций и научились повторно использовать playbook’и.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Знакомство с Ansible. Часть 3: переменные &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Ansible. Часть 3: переменные
+                    </h1>
+                    <h2 class="headline">
+                    Nov 2, 2015 18:55
+                    · 610 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/ansible">ansible</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В <a href="https://ealebed.github.io/posts/2015/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-ansible-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5/">первой части</a> знакомства с <code>Ansible</code> мы успешно установили систему управления конфигурациями и написали первый playbook, во <a href="https://ealebed.github.io/posts/2015/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-ansible-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%80%D0%B0%D0%B7%D0%B1%D0%BE%D1%80-%D0%B2%D1%8B%D0%B2%D0%BE%D0%B4%D0%B0-playbook/">второй части</a> разобрали результат выполнения нашего набора инструкций и научились повторно использовать playbook’и.</p>
+
+<p></p>
+
+<p>В этой части давайте разберемся с использованием переменных в <code>Ansible</code>.</p>
+
+<p>В системе управления конфигурациями <code>Ansible</code> переменные хранят значения, которые могут использоваться в наборах инструкций (playbook). Информация об удаленных хостах из файла inventory также может быть использована в качестве переменных.</p>
+
+<p>Лучше всего важность и полезность использования переменных может показать очень простой пример — установка web-сервера <code>apache</code>.</p>
+
+<p><strong>Примечание.</strong> Дело в том, что пакет Apache имеет разное название в различных дистрибутивах — <code>httpd</code> для RedHat и <code>apache2</code> для Debian.</p>
+
+<p>Создадим файл <code>/etc/ansible/playbooks/install_apache.yml</code>:</p>
+
+<pre><code class="language-bash">touch /etc/ansible/playbooks/install_apache.yml
+</code></pre>
+
+<p>Содержимое файла следующее:</p>
+
+<pre><code class="language-yaml">---
+- hosts: test
+  tasks:
+ 
+  - name: Debug
+    debug: msg={{ ansible_os_family }}
+ 
+  - set_fact: package_name=httpd
+    when: ansible_os_family == &quot;Redhat&quot;
+ 
+  - set_fact: package_name=apache2
+    when: ansible_os_family == &quot;Debian&quot;
+ 
+  - name: Install httpd package
+    yum: name={{ package_name }} state=latest
+    sudo: yes
+    when: ansible_os_family == &quot;Redhat&quot;
+   
+  - name: Debug1
+    debug: msg={{ package_name }}
+ 
+  - name: Install apache2 package
+    apt: name={{ package_name }} state=latest
+    sudo: yes
+    when: ansible_os_family == &quot;Debian&quot;
+</code></pre>
+
+<p>Таким будет результат выполнения данного набора инструкций:</p>
+
+<pre><code class="language-yaml">ansible-playbook install_apache.yml 
+
+PLAY [test] ******************************************************************* 
+
+GATHERING FACTS *************************************************************** 
+ok: [test-1]
+
+TASK: [Debug] ***************************************************************** 
+ok: [test-1] =&gt; {
+    &quot;msg&quot;: &quot;Debian&quot;
+}
+
+TASK: [set_fact package_name=httpd] ******************************************* 
+skipping: [test-1]
+
+TASK: [set_fact package_name=apache2] ***************************************** 
+ok: [test-1]
+
+TASK: [Install httpd package] ************************************************* 
+skipping: [test-1]
+
+TASK: [Debug1] **************************************************************** 
+ok: [test-1] =&gt; {
+    &quot;msg&quot;: &quot;apache2&quot;
+}
+
+TASK: [Install apache2 package] *********************************************** 
+changed: [test-1]
+
+PLAY RECAP ******************************************************************** 
+test-1                 : ok=5    changed=1    unreachable=0    failed=0   
+</code></pre>
+
+<p><strong>Примечание.</strong> Дополнительные задачи Debug и Debug1 позволяют увидеть, что на удаленном хосте установлена ОС Debian, и в переменную <code>package_name</code> записано значение <code>apache2</code>.</p>
+
+<p>Благодаря успешному использованию переменной <code>package_name</code> данный набор инструкций правильно установит web-сервер <code>apache</code> и на RedHat, и на Debian.</p>
+
+<p>В <code>Ansible</code> переменные можно задавать в отдельном (глобальном) файле, а потом включать этот файл в playbook с помощью ключевого слова <code>vars_files:</code>. Например, у нас есть файл с переменными <code>/etc/ansible/vars/test_var.yml</code> с таким содержанием:</p>
+
+<pre><code class="language-yaml">---
+package_name: &quot;apache2&quot;
+</code></pre>
+
+<p>В наборе инструкций включение этого файла с переменными будет выглядеть следующим образом:</p>
+
+<pre><code class="language-yaml">---
+- hosts: test
+  vars_files:
+    - /etc/ansible/vars/test_var.yml
+  tasks:
+    ...
+</code></pre>
+
+<p>Также есть возможность устанавливать переменные непосредственно в playbook с помощью ключевого слова <code>vars:</code>, выглядит это так:</p>
+
+<pre><code class="language-yaml">---
+- hosts: test
+  vars:
+    - package_name: &quot;apache2&quot;
+  tasks:
+    ...
+</code></pre>
+
+<p>Как уже упоминалось во <a href="https://ealebed.github.io/posts/2015/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-ansible-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%80%D0%B0%D0%B7%D0%B1%D0%BE%D1%80-%D0%B2%D1%8B%D0%B2%D0%BE%D0%B4%D0%B0-playbook/">второй части</a> знакомства с <code>Ansible</code>, в качестве переменных можно использовать данные, полученные при выполнении задачи <code>GATHERING FACTS</code>.</p>
+
+<p>Посмотреть переменные и их значения можно командой:</p>
+
+<pre><code class="language-bash">ansible -m setup test
+</code></pre>
+
+<p>В <a href="https://ealebed.github.io/posts/2015/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-ansible-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5/">первой части</a> мы создали инвентарный (inventory) файл <code>/etc/ansible/hosts</code>, в котором описали группу test и два хоста (test-1 и test-2), входящие в эту группу. Использование групп в инвентарном файле позволяет группировать удаленные хосты по регионам размещения или по ролям серверов — это чрезвычайно удобно при работе с сотнями и тысячами серверов.</p>
+
+<p>Также в inventory файле можно использовать регулярные выражения, например запись:</p>
+
+<pre><code>[test]
+test-[01:99]
+</code></pre>
+
+<p>будет соответствовать группе хостов test, в которую входят хосты test-01, test-02, test-03, … test-99.</p>
+
+<p>Для конкретного хоста или группы хостов из инвентарного файла можно установить специфические переменные при необходимости. Например, хосту test-1 можно назначить ssh порт таким образом:</p>
+
+<pre><code>[test]
+test-1 ssh_port=5555
+test-2
+</code></pre>
+
+<p>Изменить ssh порт для всей группы хостов можно так:</p>
+
+<pre><code>[test]
+test-1
+test-2
+[test:vars]
+ssh_port=5555
+</code></pre>
+
+<p><strong>Примечание.</strong> Конечно же, можно создавать отдельные файлы переменных для хостов и для групп — в директории <code>host_vars</code> и в директории <code>group_vars</code> соответственно. Единственное условие — каталоги с этими файлами переменных должны находиться в одной директории с инвентарным (inventory) файлом.</p>
+
+<p>Стоит помнить об иерархии переменных: переменные из глобального файла переопределяют хост-переменные, групповые переменные и переменные в инвентарном файле. Групповые переменные переопределяют переменные из инвентарного файла, а хост-переменные переопределяют групповые переменные.</p>
+
+<p>С переменными в <code>Ansible</code> мы разобрались, в <a href="https://ealebed.github.io/posts/2015/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-ansible-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D0%B8/">следующей статье</a> поговорим об использовании модулей при настройке удаленных хостов.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2015%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-ansible-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-3-%25D0%25BF%25D0%25B5%25D1%2580%25D0%25B5%25D0%25BC%25D0%25B5%25D0%25BD%25D0%25BD%25D1%258B%25D0%25B5%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Ansible.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%203%3a%20%d0%bf%d0%b5%d1%80%d0%b5%d0%bc%d0%b5%d0%bd%d0%bd%d1%8b%d0%b5 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

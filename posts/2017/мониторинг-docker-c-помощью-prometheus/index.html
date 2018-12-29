@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Мониторинг docker c помощью Prometheus"/>
+  <meta name="twitter:description" content="Мониторинг docker-контейнеров не менее важен, чем мониторинг физических серверов, виртуальных машин или отдельных сервисов и устройств. Но помимо настройки самого мониторинга, необходимо правильно выбрать систему, с помощью которой вы будете хранить данные, визуализировать метрики и отправлять оповещения.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Мониторинг docker c помощью Prometheus &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Мониторинг docker c помощью Prometheus
+                    </h1>
+                    <h2 class="headline">
+                    Jul 17, 2017 09:58
+                    · 672 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/prometheus">prometheus</a>
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Мониторинг docker-контейнеров не менее важен, чем мониторинг физических серверов, виртуальных машин или отдельных сервисов и устройств. Но помимо настройки самого мониторинга, необходимо правильно выбрать систему, с помощью которой вы будете хранить данные, визуализировать метрики и отправлять оповещения.</p>
+
+<p></p>
+
+<p>В данной статье рассмотрим пример быстрой настройки мониторинга docker-хостов и запущенных на них docker-контейнеров с помощью уже известной нам <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/"><strong>системы мониторинга Prometheus</strong></a> — давайте разберемся!</p>
+
+<p>Считаем, что у вас уже установлен <strong>Prometheus</strong> со всеми необходимыми компонентами (<a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/"><code>node_exporter</code></a>, alertmanager и <a href="https://ealebed.github.io/posts/2016/grafana-%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE-%D1%83%D0%B4%D0%BE%D0%B1%D0%BD%D1%8B%D0%B9-%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4/">Grafana</a>).</p>
+
+<p><strong>Примечание.</strong> К слову, все эти компоненты можно устанавливать в docker-контейнерах и объединять весь стек с помощью <code>docker-compose</code>.</p>
+
+<p>Если с мониторингом docker-хоста все просто и понятно — как и на любом другом физическом сервере метрики собирает <code>node_exporter</code> и передает их в <strong>Prometheus</strong>, то для мониторинга docker-контейнеров придется воспользоваться инструментом <a href="https://github.com/google/cadvisor">cAdvisor</a> (Container Advisor) от google.</p>
+
+<p>Для запуска cAdvisor воспользуемся файлом <code>docker-compose.yml</code> следующего содержания:</p>
+
+<pre><code class="language-yaml">version: '2'
+services:
+    cadvisor-exporter:
+        container_name: &quot;cadvisor-exporter&quot;
+        image: google/cadvisor
+        ports:
+          - &quot;9200:8080&quot;
+        volumes:
+          - &quot;/:/rootfs:ro&quot;
+          - &quot;/var/run:/var/run:rw&quot;
+          - &quot;/sys:/sys:ro&quot;
+          - &quot;/var/lib/docker/:/var/lib/docker:ro&quot;
+        restart: unless-stopped
+</code></pre>
+
+<p>Запускаем контейнер с помощью команды:</p>
+
+<pre><code class="language-bash">docker-compose up -d
+</code></pre>
+
+<p>Далее в уже хорошо известный нам конфигурационный файл <code>prometheus.yml</code> (в debian-based дистрибутивах находится в каталоге <code>/etc/prometheus</code>) нужно добавить следующие строки:</p>
+
+<pre><code class="language-yaml">- job_name: 'cadvisor-exporter'
+  scrape_interval: 1s
+  target_groups:
+      - targets: ['cadvisor-exporter:9200']
+</code></pre>
+
+<p>и перезапустить <strong>Prometheus</strong> для применения изменений.</p>
+
+<p>Следующим шагом нужно импортировать (или создать самостоятельно) в Grafana дашборд для отображения собираемых метрик по docker-контейнерам — взять готовые можно <a href="https://grafana.com/dashboards?dataSource=prometheus&amp;search=docker">здесь</a>. В некоторых случаях потребуется внести небольшие правки в зависимости от используемого вами <a href="https://docs.docker.com/engine/userguide/storagedriver/selectadriver/">docker storage driver</a> — в готовых дашбордах используется <code>aufs</code>, если же у вас <code>overlay/overlay2</code>, то некоторые графики будут пустыми.</p>
+
+<p>Например, в моем случае используется <code>overlay</code>, поэтому правильная метрика для отображения используемого места на системном диске будет выглядеть так:</p>
+
+<pre><code>sum((node_filesystem_size{fstype=&quot;overlay&quot;} - node_filesystem_free{fstype=&quot;overlay&quot;})) / sum(node_filesystem_size{fstype=&quot;overlay&quot;})  * 100
+</code></pre>
+
+<p>Далее следует настроить уведомления, по умолчанию данные настройки находятся в <code>/etc/prometheus/alert.rules</code>, но для удобства их можно разделить на несколько файлов в зависимости от типа оповещения.</p>
+
+<p>Например, для оповещения о проблемах с контейнерами, можем использовать файл <code>containers.rules</code>, а для оповещений о проблемах с docker-хостом — файл <code>docker.rules</code>.</p>
+
+<p>Содержимое файла правил <code>containers.rules</code> следующее:</p>
+
+<pre><code># Контейнер не запущен более 30 секунд
+ALERT test_container_down
+  IF absent(container_memory_usage_bytes{name=&quot;test_container&quot;})
+  FOR 30s
+  LABELS { severity = &quot;critical&quot; }
+  ANNOTATIONS {
+    summary= &quot;test_container down&quot;,
+    description= &quot;test_container container is down for more than 30 seconds.&quot;
+  }
+# Контейнер использует более 10% CPU более 30 секунд подряд
+ ALERT test_container_high_cpu
+  IF sum(rate(container_cpu_usage_seconds_total{name=&quot;test_container&quot;}[1m])) / count(node_cpu{mode=&quot;system&quot;}) * 100 &gt; 10
+  FOR 30s
+  LABELS { severity = &quot;warning&quot; }
+  ANNOTATIONS {
+    summary= &quot;test_container high CPU usage&quot;,
+    description= &quot;test_container CPU usage is {{ humanize $value}}%.&quot;
+  }
+# Контейнер использует более 1,2GB RAM более 30 секунд подряд
+ALERT test_container_high_memory
+  IF sum(container_memory_usage_bytes{name=&quot;test_container&quot;}) &gt; 1200000000
+  FOR 30s
+  LABELS { severity = &quot;warning&quot; }
+  ANNOTATIONS {
+      summary = &quot;test_container high memory usage&quot;,
+      description = &quot;test_container memory consumption is at {{ humanize $value}}.&quot;,
+  }
+</code></pre>
+
+<p>В конфигурационном файле <code>docker.rules</code> следующие строки:</p>
+
+<pre><code># LA выше определенного лимита (1.5) более 30 секунд
+ALERT high_cpu_load
+  IF node_load1 &gt; 1.5
+  FOR 30s
+  LABELS { severity = &quot;warning&quot; }
+  ANNOTATIONS {
+      summary = &quot;Server under high load&quot;,
+      description = &quot;Docker host is under high load, the LA 1m is at {{ $value}}.&quot;,
+  }
+# Использование памяти превышает 85%
+ALERT high_memory_load
+  IF (sum(node_memory_MemTotal) - sum(node_memory_MemFree + node_memory_Buffers + node_memory_Cached) ) / sum(node_memory_MemTotal) * 100 &gt; 85
+  FOR 30s
+  LABELS { severity = &quot;warning&quot; }
+  ANNOTATIONS {
+      summary = &quot;Server memory is almost full&quot;,
+      description = &quot;Docker host memory usage is {{ humanize $value}}%.&quot;,
+  }
+# Использование системного диска превышает 85%
+ALERT hight_storage_load
+  IF (node_filesystem_size{fstype=&quot;aufs&quot;} - node_filesystem_free{fstype=&quot;aufs&quot;}) / node_filesystem_size{fstype=&quot;aufs&quot;}  * 100 &gt; 85
+  FOR 30s
+  LABELS { severity = &quot;warning&quot; }
+  ANNOTATIONS {
+      summary = &quot;Server storage is almost full&quot;,
+      description = &quot;Docker host storage usage is {{ humanize $value}}%.&quot;,
+  }
+</code></pre>
+
+<p>Alertmanager также умеет оправлять оповещения о проблемах с помощью e-mail, Pushover, Slack, HipChat. Пример интеграции alertmanager&rsquo;а и slack подробно расписан <a href="https://www.robustperception.io/using-slack-with-the-alertmanager/">здесь</a>, поэтому воспользуемся данным примером.</p>
+
+<p>Конфигурационный файл с настройками отправки уведомлений выглядит так:</p>
+
+<pre><code class="language-yaml">route:
+    receiver: 'slack'
+receivers:
+    - name: 'slack'
+      slack_configs:
+          - send_resolved: true
+            username: 'Prometheus'
+            channel: '#random'
+            api_url: 'https://hooks.slack.com/services/&lt;your&gt;/&lt;stuff&gt;/&lt;here&gt;'
+</code></pre>
+
+<p>На этом все, а для быстрой настройки всего стека мониторинга «с нуля» могу порекомендовать <a href="https://github.com/stefanprodan/dockprom">готовый проект</a> от Stefan Prodan.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2f%25D0%25BC%25D0%25BE%25D0%25BD%25D0%25B8%25D1%2582%25D0%25BE%25D1%2580%25D0%25B8%25D0%25BD%25D0%25B3-docker-c-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-prometheus%2f - %d0%9c%d0%be%d0%bd%d0%b8%d1%82%d0%be%d1%80%d0%b8%d0%bd%d0%b3%20docker%20c%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20Prometheus by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

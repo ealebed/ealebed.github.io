@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Практические примеры использования netstat"/>
+  <meta name="twitter:description" content="Netstat - утилита командной строки для мониторинга сетевой статистики - входящих и исходящих сетевых подключений, просмотра таблиц маршрутизации, статистики интерфейсов и т.д. Netstat доступен не только во всех Unix-подобных операционных системах, но и в ОС Windows.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Практические примеры использования netstat &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Практические примеры использования netstat
+                    </h1>
+                    <h2 class="headline">
+                    Oct 8, 2018 06:00
+                    · 822 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/netstat">netstat</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><code>Netstat</code> - утилита командной строки для мониторинга сетевой статистики - входящих и исходящих сетевых подключений, просмотра таблиц маршрутизации, статистики интерфейсов и т.д. <code>Netstat</code> доступен не только во всех Unix-подобных операционных системах, но и в ОС Windows.</p>
+
+<p></p>
+
+<p>Это один из самых базовых инструментов отладки сетевых сервисов - давайте рассмотрим несколько практических примеров использования <code>netstat</code>.</p>
+
+<p>1) Вывод всех активных подключений и портов (и TCP, и UDP):</p>
+
+<pre><code class="language-bash">netstat -a
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 127.0.0.53:domain       0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:ssh             0.0.0.0:*               LISTEN
+tcp        0      0 localhost.localdo:17123 0.0.0.0:*               LISTEN
+tcp        0      0 localhost.localdo:52526 localhost.localdo:17123 TIME_WAIT
+tcp        0      0 localhost.localdo:52534 localhost.localdo:17123 TIME_WAIT
+tcp6       0      0  *.63865                *.*                    LISTEN
+</code></pre>
+
+<p>2) Вывод всех активных TCP-подключений и портов:</p>
+
+<pre><code class="language-bash">netstat -at
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 127.0.0.53:domain       0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:ssh             0.0.0.0:*               LISTEN
+tcp        0      0 localhost.localdo:17123 0.0.0.0:*               LISTEN
+tcp        0      0 localhost.localdo:52434 localhost.localdo:17123 TIME_WAIT
+tcp        0      0 localhost.localdo:52480 localhost.localdo:17123 TIME_WAIT
+tcp        0      0 localhost.localdo:52470 localhost.localdo:17123 TIME_WAIT
+tcp        0      0 localhost.localdo:52440 localhost.localdo:17123 TIME_WAIT
+tcp        0      0 localhost.localdo:52462 localhost.localdo:17123 TIME_WAIT
+tcp6       0      0 jenkins1:25546          2600:1f18:63f7:b9:https TIME_WAIT
+...
+</code></pre>
+
+<p>3) Вывод всех активных UDP-подключений и портов:</p>
+
+<pre><code class="language-bash">netstat -au
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+udp        0      0 127.0.0.53:domain       0.0.0.0:*
+udp        0      0 172.17.0.1:ntp          0.0.0.0:*
+udp        0      0 172.28.0.1:ntp          0.0.0.0:*
+udp        0      0 172.30.0.1:ntp          0.0.0.0:*
+udp        0      0 172.20.0.1:ntp          0.0.0.0:*
+udp        0      0 localhost.localdoma:ntp 0.0.0.0:*
+udp        0      0 0.0.0.0:ntp             0.0.0.0:*
+udp6       0      0 fe80::6eb3:11ff:fe2:ntp [::]:*
+udp6    4608      0 jenkins1:ntp            [::]:*
+udp6       0      0 [::]:ntp                [::]:*
+...
+</code></pre>
+
+<p>4) Вывод всех активных подключений в состоянии &ldquo;LISTEN&rdquo;:</p>
+
+<pre><code class="language-bash">netstat -l
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 127.0.0.53:domain       0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:ssh             0.0.0.0:*               LISTEN
+tcp        0      0 localhost.localdo:17123 0.0.0.0:*               LISTEN
+...
+Active UNIX domain sockets (only servers)
+Proto RefCnt Flags       Type       State         I-Node   Path
+unix  2      [ ACC ]     STREAM     LISTENING     287855182 @/containerd-shim/moby/c26626153296b60e270298d3d304e7cffa650211cefad437fb359efaa5d0303a/shim.sock@
+unix  2      [ ACC ]     STREAM     LISTENING     287880017 @/containerd-shim/moby/076e711bbc42eccce198d6f9c5533a71e12a93c94fd5c690fc9562e89a81c6ac/shim.sock@
+unix  2      [ ACC ]     STREAM     LISTENING     66640    /opt/datadog-agent/run/datadog-supervisor.sock.1583
+</code></pre>
+
+<p>5) Вывод таблицы маршрутизации:</p>
+
+<pre><code class="language-bash">netstat -r
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+default         static.65.18.13 0.0.0.0         UG        0 0          0 enp98s0f0
+static.65.18.13 0.0.0.0         255.255.255.255 UH        0 0          0 enp98s0f0
+172.17.0.0      0.0.0.0         255.255.0.0     U         0 0          0 docker0
+172.20.0.0      0.0.0.0         255.255.0.0     U         0 0          0 br-31cf77692364
+172.28.0.0      0.0.0.0         255.255.0.0     U         0 0          0 br-ff4281540cec
+172.30.0.0      0.0.0.0         255.255.0.0     U         0 0          0 br-acff358cb41e
+</code></pre>
+
+<p>6) Вывод сетевых интерфейсов:</p>
+
+<pre><code class="language-bash">netstat -i
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">Kernel Interface table
+Iface      MTU    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg
+br-31cf7  1500   116615      0      0 0        146329      0      0      0 BMRU
+br-40a61  1500        0      0      0 0             0      0      0      0 BMU
+br-acff3  1500     3031      0      0 0          3255      0      0      0 BMRU
+br-ff428  1500     7567      0      0 0          8222      0      0      0 BMRU
+docker0   1500 12645962      0      0 0      20553388      0      0      0 BMU
+enp98s0f  1500 155269942      0      0 4000   123518253      0      0      0 BMRU
+lo       65536  3087890      0      0 0       3087890      0      0      0 LRU
+</code></pre>
+
+<p>7) Непрерывный вывод информации (с периодичностью в несколько секунд):</p>
+
+<pre><code class="language-bash">netstat -c
+</code></pre>
+
+<p>8) Информация о принадлежности к многоадресной группе (multicast group):</p>
+
+<pre><code class="language-bash">netstat -g
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">IPv6/IPv4 Group Memberships
+Interface       RefCnt Group
+--------------- ------ ---------------------
+lo              1      all-systems.mcast.net
+enp98s0f0       1      224.0.0.251
+enp98s0f0       1      239.77.124.213
+enp98s0f0       1      all-systems.mcast.net
+docker0         1      all-systems.mcast.net
+br-31cf776      1      all-systems.mcast.net
+veth5fbca5      1      all-systems.mcast.net
+br-acff358      1      all-systems.mcast.net
+veth743035      1      all-systems.mcast.net
+veth06a264      1      all-systems.mcast.net
+</code></pre>
+
+<p>9) Информация о подключении на определенном порту:</p>
+
+<pre><code class="language-bash">netstat -anp | grep :80 | grep ESTABLISHED
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">tcp6       0      0 192.168.38.99:80         172.68.239.68:30932     ESTABLISHED 30068/java
+tcp6       0      0 192.168.38.99:80         172.68.239.98:31280     ESTABLISHED 30068/java
+tcp6       0      0 192.168.38.99:80         172.68.239.98:30944     ESTABLISHED 30068/java
+tcp6       0      0 192.168.38.99:80         172.68.239.20:61206     ESTABLISHED 30068/java
+tcp6       0      0 192.168.38.99:80         172.68.238.133:48884    ESTABLISHED 30068/java
+tcp6       0      0 192.168.38.99:80         172.68.239.98:32602     ESTABLISHED 30068/java
+</code></pre>
+
+<p>10) Количество соединений находящихся в разных состояниях (сортированное):</p>
+
+<pre><code class="language-bash">netstat -ant | awk '{print $6}' | sort | uniq -c | sort -n
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">      1 established)
+      1 Foreign
+      7 ESTABLISHED
+     23 LISTEN
+    102 TIME_WAIT
+</code></pre>
+
+<p>11) Информация о сервисах, слушающих определенный порт:</p>
+
+<pre><code class="language-bash">netstat -ltnp | grep ':53'
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      1323/systemd-resolv
+</code></pre>
+
+<p>12) Вывод статистики сети:</p>
+
+<pre><code class="language-bash">netstat --statistics --raw
+</code></pre>
+
+<p>Пример:</p>
+
+<pre><code class="language-bash">Ip:
+    Forwarding: 1
+    78312316 total packets received
+    34435611 forwarded
+    0 incoming packets discarded
+    43876636 incoming packets delivered
+    75662887 requests sent out
+    169 dropped because of missing route
+Icmp:
+    2031 ICMP messages received
+    510 input ICMP message failed
+    ICMP input histogram:
+        destination unreachable: 1146
+        timeout in transit: 17
+        echo requests: 218
+        echo replies: 650
+    9503 ICMP messages sent
+    0 ICMP messages failed
+    ICMP output histogram:
+        destination unreachable: 9285
+        echo replies: 218
+IcmpMsg:
+        InType0: 650
+        InType3: 1146
+        InType8: 218
+        InType11: 17
+        OutType0: 218
+        OutType3: 9285
+UdpLite:
+IpExt:
+    InMcastPkts: 2859
+    OutMcastPkts: 2892
+    InBcastPkts: 66
+    InOctets: 202894920380
+    OutOctets: 330142828646
+    InMcastOctets: 624001
+    OutMcastOctets: 625473
+    InBcastOctets: 21516
+    InNoECTPkts: 190813611
+    InECT1Pkts: 37
+    InECT0Pkts: 3405
+    InCEPkts: 329
+</code></pre>
+
+<p>Больше полезным примеров и опций использования утилиты <code>netstat</code> можно найти в <a href="https://linux.die.net/man/8/netstat">официальной документации</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2f%25D0%25BF%25D1%2580%25D0%25B0%25D0%25BA%25D1%2582%25D0%25B8%25D1%2587%25D0%25B5%25D1%2581%25D0%25BA%25D0%25B8%25D0%25B5-%25D0%25BF%25D1%2580%25D0%25B8%25D0%25BC%25D0%25B5%25D1%2580%25D1%258B-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D1%258F-netstat%2f - %d0%9f%d1%80%d0%b0%d0%ba%d1%82%d0%b8%d1%87%d0%b5%d1%81%d0%ba%d0%b8%d0%b5%20%d0%bf%d1%80%d0%b8%d0%bc%d0%b5%d1%80%d1%8b%20%d0%b8%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f%20netstat by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-18-podpresets/">Знакомство с Kubernetes. Часть 18: PodPresets<aside class="dates">Oct 1 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

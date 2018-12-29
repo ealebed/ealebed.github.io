@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Как заставить Munin собирать данные каждую минуту"/>
+  <meta name="twitter:description" content="По умолчанию Munin собирает данные (и строит по ним графики) каждые 5 минут. Такие графики получаются мягко говоря неточными.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Как заставить Munin собирать данные каждую минуту &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Как заставить Munin собирать данные каждую минуту
+                    </h1>
+                    <h2 class="headline">
+                    Feb 8, 2016 21:28
+                    · 554 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/munin">munin</a>
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>По умолчанию Munin собирает данные (и строит по ним графики) каждые 5 минут. Такие графики получаются мягко говоря неточными.</p>
+
+<p></p>
+
+<p>Для детализации можно (и нужно) собирать данные чаще — например, каждую минуту. Давайте разберемся, как это сделать в ОС Debian Wheezy!</p>
+
+<p>Для того, чтобы <strong>заставить Munin собирать данные каждую минуту</strong>, нужно выполнить несколько простых шагов. Сначала в файле <code>/etc/cron.d/munin</code> необходимо изменить <code>*/5</code> на <code>*</code>, чтобы <code>munin-update</code> запускался каждую минуту.</p>
+
+<p>В конфигурационном файле <code>/etc/munin/munin.conf</code> необходимо добавить следующие строки:</p>
+
+<pre><code class="language-text">...
+graph_data_size custom 1d, 1m for 1w, 5m for 1t, 15m for 1y
+update_rate 60
+...
+</code></pre>
+
+<p><strong>Примечание.</strong> Не забываем перезапустить Munin для применения изменений в конфигурационном файле.</p>
+
+<p>После внесенных изменений существующие <code>.rrd</code>-файлы больше не смогут накапливать данные. Если все собранные ранее данные не нужны, то можно удалить <code>.rrd</code>-файлы в каталоге <code>/var/lib/munin/&lt;имя_домена&gt;</code> и начать все с чистого листа графика.</p>
+
+<p>Если же нужно хранить и выводить все, что собиралось ранее — Justin Silver предлагает конвертировать <code>.rrd</code>-файлы так:</p>
+
+<pre><code class="language-bash">rrdtool dump file.rrd &gt; file.5.xml
+./rrd_step_reduce.py file.5.xml 5 &gt; file1.xml
+rrdtool restore file1.xml file.rrd
+</code></pre>
+
+<p>Скрипт <code>rrd_step_reduce.py</code> выглядит так:</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+  
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see .
+  
+import sys
+from copy import deepcopy
+from StringIO import StringIO
+  
+try:
+    from lxml import etree
+except ImportError:
+    try:
+        import xml.etree.cElementTree as etree
+    except ImportError:
+        try:
+            import xml.etree.ElementTree as etree
+        except ImportError:
+            try:
+                import cElementTree as etree
+            except ImportError:
+                try:
+                    import elementtree.ElementTree as etree
+                except ImportError:
+                    raise
+  
+def main(dumpfile, factor):
+          
+    xmldoc = etree.parse(dumpfile)
+    root = xmldoc.getroot()
+      
+    # change step, reducing it by a factor of &quot;factor&quot;
+    step = root.find(&quot;step&quot;)
+    assert(step!=None)
+    old_step = int(step.text)
+    new_step = old_step/factor
+    step.text = str(new_step) 
+      
+    database = root.findall(&quot;rra/database&quot;)
+    for d in database:
+        index = 0
+        count = len(d)
+        while count &gt; 0:
+            for i in range(0, factor-1):
+                d.insert(index+1, deepcopy(d[index]))
+            index = index + factor
+            count = count - 1
+      
+    print etree.tostring(root)
+  
+if __name__ == &quot;__main__&quot;:
+    # arguments
+    if len(sys.argv) != 3:
+        print &quot;rrd_step_reduce.py rrddump.xml factor&quot;
+        sys.exit(-1)
+      
+    # call main
+    main(sys.argv[1], int(sys.argv[2]))
+</code></pre>
+
+<p>Это работает, единственный минус этого решения — приходится запускать скрипт для каждого <code>.rrd</code>-файла. Простенький bash-скрипт, который переконвертирует все <code>.rrd</code>-файлы в каталоге <code>/var/lib/munin</code> выглядит следующим образом:</p>
+
+<pre><code class="language-bash">find /var/lib/munin -type f -iname &quot;*.rrd&quot; -print0 | while IFS= read -r -d $'\0' filename; do
+  echo $filename
+  rrdtool dump $filename &gt; temp.5.xml
+  ./rrd_step_reduce.py temp.5.xml 5 &gt; temp.1.xml
+  rm $filename
+  rrdtool restore temp.1.xml $filename
+done
+</code></pre>
+
+<p><strong>Примечание.</strong> Перед тем как запускать данный скрипт убедитесь, что вы сделали резервные копии <code>.rrd</code>-файлов и Munin остановлен (не собирает данные). Для этого достаточно закомментировать задачу в <code>/etc/cron.d/munin</code>.</p>
+
+<p>После проделанных действий измените владельца <code>.rrd</code>-файлов командой:</p>
+
+<pre><code class="language-bash">chown -R munin:munin /var/lib/munin/example.com/
+</code></pre>
+
+<p>иначе в логе <code>/var/log/munin/munin-update.log</code> будут ошибки вида:</p>
+
+<pre><code class="language-bash">2016/01/27 15:20:09 [ERROR] In RRD: Error updating /var/lib/munin/example.com/web1-exim_mailstats-completed-d.rrd: rrdcached: Cannot read/write /var/lib/munin/example.com/web1-exim_mailstats-completed-d.rrd: Permission denied
+2016/01/27 15:20:09 [ERROR] In RRD: Error updating /var/lib/munin/example.com/db1-fw_packets-forwarded-d.rrd: rrdcached: Cannot read/write /var/lib/munin/example.com/db1-fw_packets-forwarded-d.rrd: Permission denied
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D0%25BA%25D0%25B0%25D0%25BA-%25D0%25B7%25D0%25B0%25D1%2581%25D1%2582%25D0%25B0%25D0%25B2%25D0%25B8%25D1%2582%25D1%258C-munin-%25D1%2581%25D0%25BE%25D0%25B1%25D0%25B8%25D1%2580%25D0%25B0%25D1%2582%25D1%258C-%25D0%25B4%25D0%25B0%25D0%25BD%25D0%25BD%25D1%258B%25D0%25B5-%25D0%25BA%25D0%25B0%25D0%25B6%25D0%25B4%25D1%2583%25D1%258E-%25D0%25BC%25D0%25B8%25D0%25BD%25D1%2583%25D1%2582%25D1%2583%2f - %d0%9a%d0%b0%d0%ba%20%d0%b7%d0%b0%d1%81%d1%82%d0%b0%d0%b2%d0%b8%d1%82%d1%8c%20Munin%20%d1%81%d0%be%d0%b1%d0%b8%d1%80%d0%b0%d1%82%d1%8c%20%d0%b4%d0%b0%d0%bd%d0%bd%d1%8b%d0%b5%20%d0%ba%d0%b0%d0%b6%d0%b4%d1%83%d1%8e%20%d0%bc%d0%b8%d0%bd%d1%83%d1%82%d1%83 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

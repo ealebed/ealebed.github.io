@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Установка и настройка LXC в CentOS 7"/>
+  <meta name="twitter:description" content="LXC (Linux Containers) — система виртуализации уровня ОС, позволяющая внутри основной операционной системы запускать изолированные дочерние ОС (с отдельными файловыми системами, сетевым стеком и памятью, но общим ядром).
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Установка и настройка LXC в CentOS 7 &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Установка и настройка LXC в CentOS 7
+                    </h1>
+                    <h2 class="headline">
+                    Feb 16, 2017 11:14
+                    · 851 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/lxc">lxc</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><strong>LXC (Linux Containers)</strong> — система виртуализации уровня ОС, позволяющая внутри основной операционной системы запускать изолированные дочерние ОС (с отдельными файловыми системами, сетевым стеком и памятью, но общим ядром).</p>
+
+<p></p>
+
+<p>Давайте разберемся на конкретном примере <strong>установки Linux Containers (LXC)</strong> в операционной системе CentOS 7!</p>
+
+<p>На сегодняшний день установка LXC недоступна из базового репозитория CentOS 7, поэтому нужно добавить в систему EPEL репозиторий командой:</p>
+
+<pre><code class="language-bash">yum -y install epel-release
+</code></pre>
+
+<p>LXC-контейнеры используют сетевой мост для взаимодействия с хостом, между собой и доступом в интернет, поэтому перед созданием контейнеров следует настроить сеть как описано в <a href="https://ealebed.github.io/posts/2017/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%81%D0%B5%D1%82%D0%B8-%D0%B4%D0%BB%D1%8F-lxc-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%BE%D0%B2-%D0%B2-debian-8-centos-7-%D0%B8-fedora-21/">этой статье</a>.</p>
+
+<p>После настройки сети приступаем к установке необходимых пакетов:</p>
+
+<pre><code class="language-bash">yum -y install lxc lxc-templates libcap-devel libcgroup wget bridge-utils dnsmasq iptables-services
+</code></pre>
+
+<p>После установки убедимся, что все готово к созданию и запуску контейнеров:</p>
+
+<pre><code class="language-bash">lxc-checkconfig
+Kernel configuration not found at /proc/config.gz; searching...
+Kernel configuration found at /boot/config-3.10.0-514.2.2.el7.x86_64
+--- Namespaces ---
+Namespaces: enabled
+Utsname namespace: enabled
+Ipc namespace: enabled
+Pid namespace: enabled
+User namespace: enabled
+Network namespace: enabled
+Multiple /dev/pts instances: enabled
+
+--- Control groups ---
+Cgroup: enabled
+Cgroup clone_children flag: enabled
+Cgroup device: enabled
+Cgroup sched: enabled
+Cgroup cpu account: enabled
+Cgroup memory controller: enabled
+Cgroup cpuset: enabled
+
+--- Misc ---
+Veth pair device: enabled
+Macvlan: enabled
+Vlan: enabled
+Bridges: enabled
+Advanced netfilter: enabled
+CONFIG_NF_NAT_IPV4: enabled
+CONFIG_NF_NAT_IPV6: enabled
+CONFIG_IP_NF_TARGET_MASQUERADE: enabled
+CONFIG_IP6_NF_TARGET_MASQUERADE: enabled
+CONFIG_NETFILTER_XT_TARGET_CHECKSUM: enabled
+
+--- Checkpoint/Restore ---
+checkpoint restore: enabled
+CONFIG_FHANDLE: enabled
+CONFIG_EVENTFD: enabled
+CONFIG_EPOLL: enabled
+CONFIG_UNIX_DIAG: enabled
+CONFIG_INET_DIAG: enabled
+CONFIG_PACKET_DIAG: enabled
+CONFIG_NETLINK_DIAG: enabled
+File capabilities: enabled
+
+Note : Before booting a new kernel, you can check its configuration
+usage : CONFIG=/path/to/config /usr/bin/lxc-checkconfig
+</code></pre>
+
+<p>Благодаря установленному пакету <code>lxc-templates</code> мы получили готовые шаблоны, которые можно использовать для <strong>быстрого создания LXC-контейнеров</strong>. Просмотреть список шаблонов можно так:</p>
+
+<pre><code class="language-bahs">ls -la /usr/share/lxc/templates/
+total 344
+drwxr-xr-x. 2 root root  4096 Jan 12 02:43 .
+drwxr-xr-x. 6 root root   106 Jan 12 02:43 ..
+-rwxr-xr-x. 1 root root 10579 Dec  3 14:09 lxc-alpine
+-rwxr-xr-x. 1 root root 13534 Dec  3 14:09 lxc-altlinux
+-rwxr-xr-x. 1 root root 10839 Dec  3 14:09 lxc-archlinux
+-rwxr-xr-x. 1 root root  9677 Dec  3 14:09 lxc-busybox
+-rwxr-xr-x. 1 root root 29491 Dec  3 14:09 lxc-centos
+-rwxr-xr-x. 1 root root 10486 Dec  3 14:09 lxc-cirros
+-rwxr-xr-x. 1 root root 18306 Dec  3 14:09 lxc-debian
+-rwxr-xr-x. 1 root root 17781 Dec  3 14:09 lxc-download
+-rwxr-xr-x. 1 root root 49435 Dec  3 14:09 lxc-fedora
+-rwxr-xr-x. 1 root root 28253 Dec  3 14:09 lxc-gentoo
+-rwxr-xr-x. 1 root root 13962 Dec  3 14:09 lxc-openmandriva
+-rwxr-xr-x. 1 root root 14046 Dec  3 14:09 lxc-opensuse
+-rwxr-xr-x. 1 root root 35540 Dec  3 14:09 lxc-oracle
+-rwxr-xr-x. 1 root root 12233 Dec  3 14:09 lxc-plamo
+-rwxr-xr-x. 1 root root  6851 Dec  3 14:09 lxc-sshd
+-rwxr-xr-x. 1 root root 23976 Dec  3 14:09 lxc-ubuntu
+-rwxr-xr-x. 1 root root 11641 Dec  3 14:09 lxc-ubuntu-cloud
+</code></pre>
+
+<p>Создать контейнер можно командой <code>lxc-create</code>, указав после опции <code>-n</code> имя контейнера, а после <code>-t</code> шаблон ОС для его создания. Результат выполнения команды сильно сокращен:</p>
+
+<pre><code class="language-bash">lxc-create -n Lxc0 -t centos
+Host CPE ID from /etc/os-release: cpe:/o:centos:centos:7
+Checking cache download in /var/cache/lxc/centos/x86_64/7/rootfs ...
+Cache found. Updating...
+Loaded plugins: fastestmirror
+...
+...
+...
+Complete!
+Loaded plugins: fastestmirror
+Cleaning repos: base extras updates
+0 package files removed
+Update finished
+Copy /var/cache/lxc/centos/x86_64/7/rootfs to /var/lib/lxc/Lxc0/rootfs ...
+Copying rootfs to /var/lib/lxc/Lxc0/rootfs ...
+sed: can't read /var/lib/lxc/Lxc0/rootfs/etc/init/tty.conf: No such file or directory
+Storing root password in '/var/lib/lxc/Lxc0/tmp_root_pass'
+Expiring password for user root.
+passwd: Success
+sed: can't read /var/lib/lxc/Lxc0/rootfs/etc/rc.sysinit: No such file or directory
+sed: can't read /var/lib/lxc/Lxc0/rootfs/etc/rc.d/rc.sysinit: No such file or directory
+
+Container rootfs and config have been created.
+Edit the config file to check/enable networking setup.
+
+The temporary root password is stored in:
+
+        '/var/lib/lxc/Lxc0/tmp_root_pass'
+
+
+The root password is set up as expired and will require it to be changed
+at first login, which you should do as soon as possible.  If you lose the
+root password or wish to change it without starting the container, you
+can change it from the host by running the following command (which will
+also reset the expired flag):
+
+        chroot /var/lib/lxc/Lxc0/rootfs passwd
+</code></pre>
+
+<p>Контейнер будет создан с паролем по умолчанию, который можно подсмотреть в файле <code>/var/lib/lxc/Lxc0/tmp_root_pass</code>:</p>
+
+<pre><code class="language-bash">cat /var/lib/lxc/Lxc0/tmp_root_pass
+Root-Lxc0-d3OLnh
+</code></pre>
+
+<p>Этот автоматически созданный рутовый пароль сразу же меняем на более удобный. Сделать это можно так:</p>
+
+<pre><code class="language-bash">chroot /var/lib/lxc/Lxc0/rootfs passwd
+</code></pre>
+
+<p>Существует также вариант создания контейнеров в более интерактивном режиме (возможность выбрать дистрибутив/релиз/архитектуру), например:</p>
+
+<pre><code class="language-bash">lxc-create -t download -n Lxc1
+...
+Distribution: centos
+Release: 7
+Architecture: amd64
+</code></pre>
+
+<p>Для запуска LXC-контейнера в фоновом режиме следует использовать команду:</p>
+
+<pre><code class="language-bash">lxc-start -n Lxc1 -d
+</code></pre>
+
+<p>Если же вы не укажете опцию <code>-d</code>, то после старта контейнера автоматически попадете в его консоль. При первом подключении к контейнеру вы увидите что-то типа:</p>
+
+<pre><code class="language-bash">Type  to exit the console,  to enter Ctrl+a itself
+</code></pre>
+
+<p>— в моем случае это не заработало, поэтому я всегда запускаю контейнеры с опцией <code>-d</code>.</p>
+
+<p>Для подключения к контейнеру можно использовать команду:</p>
+
+<pre><code class="language-bash">lxc-attach -n Lxc0
+</code></pre>
+
+<p>На этом этапе следует установить внутри контейнера все необходимые для комфортной работы системные утилиты.</p>
+
+<p>Для управления контейнерами чаще всего используются такие команды как остановка контейнера:</p>
+
+<pre><code class="language-bash">lxc-stop -n Lxc0
+</code></pre>
+
+<p>получение дополнительной информации о контейнере:</p>
+
+<pre><code class="language-bash">lxc-info -n Lxc0
+</code></pre>
+
+<p>клонирования контейнеров:</p>
+
+<pre><code class="language-bash">lxc-clone Lxc0 Lxc2
+</code></pre>
+
+<p>создания снепшотов (работает при остановленном контейнере):</p>
+
+<pre><code class="language-bash">lxc-snapshot -n Lxc0
+</code></pre>
+
+<p>восстановления из снепшотов:</p>
+
+<pre><code class="language-bash">lxc-snapshot -r snap0 -n Lxc0
+</code></pre>
+
+<p>и удаления контейнеров:</p>
+
+<pre><code class="language-bash">lxc-destroy -n Lxc0
+</code></pre>
+
+<p>Для более тонкой настройки контейнера можно использовать конфигурационный файл <code>/var/lib/lxc/{имя_контейнера}/config</code>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2f%25D1%2583%25D1%2581%25D1%2582%25D0%25B0%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25BA%25D0%25B0-%25D0%25B8-%25D0%25BD%25D0%25B0%25D1%2581%25D1%2582%25D1%2580%25D0%25BE%25D0%25B9%25D0%25BA%25D0%25B0-lxc-%25D0%25B2-centos-7%2f - %d0%a3%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%ba%d0%b0%20%d0%b8%20%d0%bd%d0%b0%d1%81%d1%82%d1%80%d0%be%d0%b9%d0%ba%d0%b0%20LXC%20%d0%b2%20CentOS%207 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

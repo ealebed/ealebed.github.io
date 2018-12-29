@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Оптимизация Munin в Debian"/>
+  <meta name="twitter:description" content="Чем больше хостов мониторится с помощью Munin, тем медленнее он работает и требует все больше и больше ресурсов.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Оптимизация Munin в Debian &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Оптимизация Munin в Debian
+                    </h1>
+                    <h2 class="headline">
+                    Feb 18, 2016 21:30
+                    · 580 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/munin">munin</a>
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Чем больше хостов мониторится с помощью Munin, тем медленнее он работает и требует все больше и больше ресурсов.</p>
+
+<p></p>
+
+<p>Ситуация несколько улучшается с каждой новой версией системы мониторинга (особенно это заметно при переходе с версии 1.4.x на 2.0.x), но всегда найдется место для оптимизации. Давайте разберемся!</p>
+
+<p>Для хранения данных Munin использует <code>rrd</code> (Round-robin Database, кольцевая база данных), поэтому первое, что нам поможет — это RRDCached. RRDCached — демон, кэширующий данные для записи в базу данных, и записывающий их после накопления определенного объема (по истечению лимита времени).</p>
+
+<p><strong>Примечание.</strong> Полная поддержка <code>rrdcached</code> присутствует в Munin начиная с версии 2.0.x.</p>
+
+<p>Установим необходимый пакет:</p>
+
+<pre><code class="language-bash">aptitude install rrdcached
+</code></pre>
+
+<p>Запустим следующую команду для создания сокета:</p>
+
+<pre><code class="language-bash">sudo -u munin /usr/bin/rrdcached \
+  -p /run/munin/rrdcached.pid \
+  -B -b /var/lib/munin/ \
+  -F -j /var/lib/munin/rrdcached-journal/ \
+  -m 0660 -l unix:/run/munin/rrdcached.sock \
+  -w 1800 -z 1800 -f 3600
+</code></pre>
+
+<p><strong>Примечание.</strong> Эту команду также следует добавить в <code>/etc/rc.local</code>.</p>
+
+<p>RRDCached по умолчанию записывает данные в базу каждые 5 минут (такой же интервал по умолчанию используется в Munin для сбора данных). Следовательно, нам нужно изменить интервалы кеширования, записи и очистки кеша — можно использовать данные из примера или ввести ваши значения. За эти интервалы отвечают следующие параметры:</p>
+
+<ul>
+<li><code>-w 1800</code> — данные записываются с таймаутом 30 минут;</li>
+<li><code>-z 1800</code> — используется отложенная запись со случайным интервалом времени от 0 до 30 минут (это значение должно быть меньше либо равно предыдущему);</li>
+<li><code>-f 3600</code> — очистка устаревших данных происходит каждый час.</li>
+</ul>
+
+<p>Добавим в конфигурационный файл <code>/etc/munin/munin.conf</code> следующую строку:</p>
+
+<pre><code class="language-bash">rrdcached_socket /run/munin/rrdcached.sock
+</code></pre>
+
+<p>и перезапустим Munin для применения изменений.</p>
+
+<p>Скрипты <code>/usr/share/munin/munin-update</code> и <code>/usr/share/munin/munin-graph</code> по умолчанию запускаются по крону каждые 5 минут (одной задачей в кронтабе <code>/etc/cron.d/munin</code>). Эти скрипты лучше разделить, для этого создаем файл <code>/usr/bin/munin-graph</code>:</p>
+
+<pre><code class="language-bash">nano /usr/bin/munin-graph
+</code></pre>
+
+<p>Содержимое файла следующее:</p>
+
+<pre><code class="language-bash">#!/bin/bash
+# We always launch munin-html.
+# It is a noop if html_strategy is &amp;quot;cgi&amp;quot;
+nice /usr/share/munin/munin-html $@ || exit 1
+ 
+# The result of munin-html is needed for munin-graph.
+# It is a noop if graph_strategy is &amp;quot;cgi&amp;quot;
+nice /usr/share/munin/munin-graph --cron $@ || exit 1
+</code></pre>
+
+<p>Делаем файл исполняемым:</p>
+
+<pre><code class="language-bash">chmod +x /usr/bin/munin-graph
+</code></pre>
+
+<p>Правим существующий файл <code>/usr/bin/munin-cron</code> (закомментируем строки, которые добавили в файл <code>/usr/bin/munin-graph</code>):</p>
+
+<pre><code class="language-bash">...
+# We always launch munin-html.
+# It is a noop if html_strategy is &amp;quot;cgi&amp;quot;
+# nice /usr/share/munin/munin-html $@ || exit 1
+ 
+# The result of munin-html is needed for munin-graph.
+# It is a noop if graph_strategy is &amp;quot;cgi&amp;quot;
+# nice /usr/share/munin/munin-graph --cron $@ || exit 1
+</code></pre>
+
+<p>Добавим еще одно задание в кронтаб <code>/etc/cron.d/munin</code> — дописываем следующую строку:</p>
+
+<pre><code>10 * * * *      munin if [ -x /usr/bin/munin-graph ]; then /usr/bin/munin-graph; fi
+</code></pre>
+
+<p>После этих действий Munin будет собирать данные каждые 5 минут (как и раньше), но строить по ним графики и генерировать html-страницы раз в час.</p>
+
+<p>Еще для оптимизации Munin можно использовать <code>nice</code> и <code>ionice</code>. Для этого достаточно привести кронтаб <code>/etc/cron.d/munin</code> к следующему виду:</p>
+
+<pre><code>*/5 * * * *     munin if [ -x /usr/bin/munin-cron ]; then /usr/bin/ionice -c 3 /usr/bin/nice -n 19 /usr/bin/munin-cron; fi
+</code></pre>
+
+<p>А если вы использовали предложенный выше вариант с разделением скриптов <code>/usr/share/munin/munin-update</code> и <code>/usr/share/munin/munin-graph</code>, то в кронтабе будет еще и такая строка:</p>
+
+<pre><code>10 * * * *      munin if [ -x /usr/bin/munin-graph ]; then /usr/bin/ionice -c 3 /usr/bin/nice -n 19 /usr/bin/munin-graph; fi
+</code></pre>
+
+<p>При большом количестве хостов (&gt;200) можно снизить нагрузку на диск если Munin будет генеририровать html-страницы в памяти. Для этого, проверим параметр <code>htmldir</code> в конфигурационном файле <code>/etc/munin/munin.conf</code>:</p>
+
+<pre><code class="language-bash">cat /etc/munin/munin.conf | grep htmldir
+htmldir /var/cache/munin/www
+</code></pre>
+
+<p>Добавим в <code>/etc/fstab</code> следующую строку:</p>
+
+<pre><code>...
+tmpfs  /var/cache/munin/www   tmpfs   rw,mode=755,uid=munin,gid=munin,size=150M   0 0
+</code></pre>
+
+<p>и выполним:</p>
+
+<pre><code class="language-bash">mount -a
+</code></pre>
+
+<p><strong>Примечание.</strong> Эффект от предложенных шагов будет тем ощутимее, чем больше хостов мониторится с помощью Munin.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D0%25BE%25D0%25BF%25D1%2582%25D0%25B8%25D0%25BC%25D0%25B8%25D0%25B7%25D0%25B0%25D1%2586%25D0%25B8%25D1%258F-munin-%25D0%25B2-debian%2f - %d0%9e%d0%bf%d1%82%d0%b8%d0%bc%d0%b8%d0%b7%d0%b0%d1%86%d0%b8%d1%8f%20Munin%20%d0%b2%20Debian by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

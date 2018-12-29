@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Kubernetes. Часть 9: Метки и селекторы"/>
+  <meta name="twitter:description" content="Метки (labels) представляют собой пары ключ/значение, которые назначаются объектам (например, подам) в кластере Kubernetes. Эти метки предназначены для указания идентифицирующих атрибутов объектов, осмысленных и имеющих отношение к пользователям.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Знакомство с Kubernetes. Часть 9: Метки и селекторы &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Kubernetes. Часть 9: Метки и селекторы
+                    </h1>
+                    <h2 class="headline">
+                    Jun 25, 2018 07:07
+                    · 727 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Метки (labels) представляют собой пары ключ/значение, которые назначаются объектам (например, <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/">подам</a>) в кластере <code>Kubernetes</code>. Эти метки предназначены для указания идентифицирующих атрибутов объектов, осмысленных и имеющих отношение к пользователям.</p>
+
+<p></p>
+
+<p>Метки чаще всего используются для выбора подмножеств и организации объектов в кластере. В данном случае под &ldquo;организацией&rdquo; следует понимать возможность пользователей сопоставлять свои собственные организационные структуры и системные объекты, не требуя от клиентов хранить эти сопоставления.</p>
+
+<p>Метки могут прикрепляться к объектам во время создания или же добавляться (и изменяться) в любое время. Каждый объект в кластере <code>Kubernetes</code> может иметь собственный набор ключей/значений. Каждый ключ должен быть уникальным для данного объекта:</p>
+
+<pre><code class="language-yaml">&quot;metadata&quot;: {
+  &quot;labels&quot;: {
+    &quot;key1&quot; : &quot;value1&quot;,
+    &quot;key2&quot; : &quot;value2&quot;
+  }
+}
+</code></pre>
+
+<p>В зависимости от конкретных требований проекта, подхода к разработке и тестированию, используемых технологий, бюджета (и прочих факторов) для доставки приложения конечному пользователю у вас может быть несколько датацентров/кластеров, разные наборы нод в кластере (отличающиеся, например по CPU), несколько различных окружений, множество микросервисов и т. д. С помощью меток можно &ldquo;задокументировать&rdquo; запущенные в кластере объекты в понятном для пользователя формате, а также использовать метки в селекторах, что существенно упрощает управление инфраструктурой. Пример наиболее часто используемых меток:</p>
+
+<pre><code class="language-yaml">&quot;release&quot; : &quot;stable&quot;, &quot;release&quot; : &quot;canary&quot;
+</code></pre>
+
+<pre><code class="language-yaml">&quot;environment&quot; : &quot;dev&quot;, &quot;environment&quot; : &quot;qa&quot;, &quot;environment&quot; : &quot;production&quot;
+</code></pre>
+
+<pre><code class="language-yaml">&quot;tier&quot; : &quot;frontend&quot;, &quot;tier&quot; : &quot;backend&quot;, &quot;tier&quot; : &quot;cache&quot;
+</code></pre>
+
+<pre><code class="language-yaml">&quot;track&quot; : &quot;daily&quot;, &quot;track&quot; : &quot;weekly&quot;
+</code></pre>
+
+<p>Можно использовать свои собственные обозначения, главное помнить, что ключ метки должен быть уникальным для объекта.</p>
+
+<p>Корректные имена ключей в метках состоят из двух сегментов: <strong>опционального</strong> префикса и имени, разделенных символом <code>/</code>. Имя - обязательная часть - должно начинаться и заканчиваться буквенно-цифровым символом (<code>[a-z0-9A-Z]</code>), может содержать в себе дефисы (<code>-</code>), подчеркивания (<code>_</code>) и точки (<code>.</code>). Максимально допустимая длина имени ключа - 63 символа.</p>
+
+<p>Опциональный префикс (если определен) должен быть DNS-поддоменом (разрешается использование точек) не длиннее 253 символов и заканчиваться символом <code>/</code>. Например, префикс <code>kubernetes.io/</code> зарезервирован для основных компонентов Kubernetes.</p>
+
+<p>Значения меток, так же как и имена ключей, должны начинаться и заканчиваться буквенно-цифровым символом (<code>[a-z0-9A-Z]</code>), содержать в себе дефисы (<code>-</code>), подчеркивания (<code>_</code>) и точки (<code>.</code>). Максимально допустимая длина значения метки - 63 символа.</p>
+
+<p>С использованием селектора меток (label selector) в кластере <code>Kubernetes</code> пользователь может идентифицировать набор объектов. Селектор - это примитив основной группировки в <code>Kubernetes</code>. В данный момент API поддерживает два вида селекторов - основанных на точном соответствии (equality-based) и на соответствии набору (set-based). Если в селекторе указывается несколько соответствий, то они должны быть перечислены через запятую - в данном случае для их объединения будет использоваться логический оператор <code>AND</code> (<code>&amp;&amp;</code>).</p>
+
+<p>Селектор, основанный на точном соответствии поддерживает только три возможных оператора сравнения - <code>=</code>, <code>==</code> и <code>!=</code> - первые два из них означают равенство, третий - неравенство. Например:</p>
+
+<pre><code class="language-yaml">environment = production
+tier != frontend
+</code></pre>
+
+<p>В данном примере селектор выберет все ресурсы, у который ключ <code>environment</code> соответствует значению <code>production</code>, а также те ресурсы, у которых ключ <code>tier</code> не равен <code>frontend</code> (в том числе ресурсы, у которых нет ключа <code>tier</code>).</p>
+
+<p>Селектор, основанный на соответствии набору также поддерживает три возможных оператора - <code>in</code>, <code>notin</code> и <code>exists</code> (последний используется только для проверки наличия/отсутствия ключа). Например:</p>
+
+<pre><code class="language-yaml">environment in (production, qa)
+tier notin (frontend, backend)
+partition
+!partition
+</code></pre>
+
+<p>В данном примере, первая строка позволит выбрать все ресурсы, у которых есть ключ <code>environment</code> со значениями <code>production</code> или <code>qa</code>. Вторая строка выбирает ресурсы у которых есть ключ <code>tier</code> и любые значения кроме <code>frontend</code> и <code>backend</code>. Третья строка служит для выбора всех ресурсов, у которых в метках есть ключ <code>partition</code> (значения не проверяются), а четвертая - наоборот, выбирает ресурсы которые не имеют ключа <code>partition</code>.</p>
+
+<p>Есть возможность комбинировать оба типа селекторов, например:</p>
+
+<pre><code class="language-yaml">tier in (frontend, backend),environment!=qa
+</code></pre>
+
+<p>Несколько примеров использования селекторов с утилитой <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-15-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-kubectl/"><code>kubectl</code></a>:</p>
+
+<pre><code class="language-bash">kubectl get pods -l environment=production,tier=frontend
+</code></pre>
+
+<pre><code class="language-bash">kubectl get pods -l 'environment in (production),tier in (frontend)'
+</code></pre>
+
+<pre><code class="language-bash">kubectl get pods -l 'environment in (production, qa)'
+</code></pre>
+
+<pre><code class="language-bash">kubectl get pods -l 'environment,environment notin (frontend)'
+</code></pre>
+
+<p>Набор подов для сервиса (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-11-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B-services/"><code>service</code></a>) определяется с помощью селектора. Аналогично, набор подов, которыми управляет <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-16-%D1%80%D0%B0%D0%B7%D0%BB%D0%B8%D1%87%D0%B8%D1%8F-%D0%B2-replication-controller-replica-set-%D0%B8-deployments/"><code>Replication Controller</code></a> также определяется с помощью селектора. Для этих двух объектов может быть использован только селектор на основе точного соответствия (equality-based) - об этом мы уже упоминали в статье <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/">Знакомство с Kubernetes. Часть 4: Реплики (ReplicaSet)</a>. Выглядеть это может примерно так:</p>
+
+<pre><code class="language-yaml">selector:
+    component: redis
+</code></pre>
+
+<p>Для более новых объектов <code>Kubernetes</code>, например, (<code>Job</code>, <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/"><code>Deployment</code></a>, <code>Replica Set</code>, <code>Daemon Set</code>) может быть использован селектор на основе соответствия набору (set-based). Например:</p>
+
+<pre><code class="language-yaml">selector:
+  matchLabels:
+    component: redis
+  matchExpressions:
+    - {key: tier, operator: In, values: [cache]}
+    - {key: environment, operator: NotIn, values: [dev]}
+</code></pre>
+
+<p>На этом с метками и селекторами все, в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-10-%D0%BD%D0%B5%D0%B9%D0%BC%D1%81%D0%BF%D0%B5%D0%B9%D1%81%D1%8B-namespaces/">следующей статье</a> рассмотрим неймспейсы (namespaces) в <code>Kubernetes</code>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-kubernetes-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-9-%25D0%25BC%25D0%25B5%25D1%2582%25D0%25BA%25D0%25B8-%25D0%25B8-%25D1%2581%25D0%25B5%25D0%25BB%25D0%25B5%25D0%25BA%25D1%2582%25D0%25BE%25D1%2580%25D1%258B%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Kubernetes.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%209%3a%20%d0%9c%d0%b5%d1%82%d0%ba%d0%b8%20%d0%b8%20%d1%81%d0%b5%d0%bb%d0%b5%d0%ba%d1%82%d0%be%d1%80%d1%8b by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

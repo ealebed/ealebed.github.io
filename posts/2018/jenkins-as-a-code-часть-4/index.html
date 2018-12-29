@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Jenkins as a code. Часть 4"/>
+  <meta name="twitter:description" content="Возникла необходимость разграничения прав доступа пользователей на Jenkins-сервере - давайте разберемся, как можно это сделать без использования webUI!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Jenkins as a code. Часть 4 &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Jenkins as a code. Часть 4
+                    </h1>
+                    <h2 class="headline">
+                    Sep 10, 2018 07:08
+                    · 419 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/jenkins">jenkins</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ci">CI</a>
+                          
+                              <a href="https://ealebed.github.io/tags/scripts">scripts</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Возникла необходимость разграничения прав доступа пользователей на Jenkins-сервере - давайте разберемся, как можно это сделать без использования webUI!</p>
+
+<p></p>
+
+<p>В моем случае нужно разделить пользователей на две группы - администраторов (с полным уровнем доступа) и обычных пользователей (есть доступ только на просмотр списка заданий, запуск и отмену запущенных задач). Для решения этой задачи отлично подходит плагин <a href="https://plugins.jenkins.io/role-strategy">Role-based Authorization Strategy</a>. Главной особенностью является наличие в данном плагине двух предустановленных групп пользователей:</p>
+
+<ul>
+<li><strong>Anonymous</strong> — незалогиненные пользователи;</li>
+<li><strong>authenticated</strong> — залогиненные пользователи.</li>
+</ul>
+
+<p>Использование группы <strong>authenticated</strong> даст возможность не перечислять всех пользователей нашего jenkins-сервера в явном виде.</p>
+
+<p>Устанавливать данный плагин мы будем при старте jenkins-сервера с помощью инит-скрипта, как описано в этой <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">статье</a>. Для этого в скрипте <code>00-install-plugins.groovy</code> список устанавливаемых плагинов приводим к следующему виду:</p>
+
+<pre><code class="language-java">...
+Set&lt;String&gt; plugins_to_install = [
+    &quot;github-pullrequest&quot;,
+    &quot;google-login&quot;,
+    &quot;workflow-aggregator&quot;,
+    &quot;htmlpublisher&quot;,
+    &quot;locale&quot;,
+    &quot;role-strategy&quot;
+]
+...
+</code></pre>
+
+<p>Теперь создадим еще один groovy-скрипт (назовем его <code>06-role-based-auth.groovy</code>) со следующим содержанием:</p>
+
+<pre><code class="language-java">import hudson.*
+import hudson.model.*
+import hudson.security.*
+import jenkins.*
+import jenkins.model.*
+import java.util.*
+import com.michelin.cio.hudson.plugins.rolestrategy.*
+import java.lang.reflect.*
+
+// Roles
+def globalRoleRead = &quot;builder&quot;
+def globalRoleAdmin = &quot;admin&quot;
+
+// Users and Groups
+def access = [
+    admins: [
+            &quot;admin@example.com&quot;,
+            &quot;devops@example.com&quot;,
+            &quot;ealebed@example.com&quot;
+    ],
+    builders: [&quot;authenticated&quot;],
+]
+
+def instance = Jenkins.getInstance()
+def currentAuthenticationStrategy = Hudson.instance.getAuthorizationStrategy()
+
+Thread.start {
+    sleep 15000
+    if (currentAuthenticationStrategy instanceof RoleBasedAuthorizationStrategy) {
+        println &quot;Role based authorisation already enabled.&quot;
+        println &quot;Exiting script...&quot;
+        return
+    } else {
+        println &quot;Enabling role based authorisation strategy...&quot;
+    }
+
+    // Set new authentication strategy
+    RoleBasedAuthorizationStrategy roleBasedAuthenticationStrategy = new RoleBasedAuthorizationStrategy()
+    instance.setAuthorizationStrategy(roleBasedAuthenticationStrategy)
+
+    Constructor[] constrs = Role.class.getConstructors()
+    for (Constructor&lt;?&gt; c : constrs) {
+        c.setAccessible(true)
+    }
+
+    // Make the method assignRole accessible
+    Method assignRoleMethod = RoleBasedAuthorizationStrategy.class.getDeclaredMethod(&quot;assignRole&quot;, String.class, Role.class, String.class)
+    assignRoleMethod.setAccessible(true)
+
+    // Create admin set of permissions
+    Set&lt;Permission&gt; adminPermissions = new HashSet&lt;Permission&gt;()
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Hudson.Administer&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Hudson.Read&quot;))
+    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.View&quot;))
+    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.ManageDomains&quot;))
+    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.Create&quot;))
+    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.Update&quot;))
+    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.Delete&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.View.Read&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.View.Create&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.View.Configure&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.View.Delete&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Read&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Discover&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Workspace&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Create&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Move&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Configure&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Build&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Cancel&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Delete&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Create&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Connect&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Configure&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Build&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Provision&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Disconnect&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Delete&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Run.Update&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Run.Replay&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.model.Run.Delete&quot;))
+    adminPermissions.add(Permission.fromId(&quot;hudson.scm.SCM.Tag&quot;))
+
+    // Create permissions for authenticated users
+    Set&lt;Permission&gt; authenticatedPermissions = new HashSet&lt;Permission&gt;()
+    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.Hudson.Read&quot;))
+    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.View.Read&quot;))
+    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.Item.Read&quot;))
+    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.Item.Build&quot;))
+    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.Item.Cancel&quot;))
+
+    // Create the admin role
+    Role adminRole = new Role(globalRoleAdmin, adminPermissions)
+    roleBasedAuthenticationStrategy.addRole(RoleBasedAuthorizationStrategy.GLOBAL, adminRole)
+
+    // Create the builder role
+    Role builderRole = new Role(globalRoleRead, authenticatedPermissions)
+    roleBasedAuthenticationStrategy.addRole(RoleBasedAuthorizationStrategy.GLOBAL, builderRole)
+
+    // Assign the admin role
+    access.admins.each { l -&gt;
+        println(&quot;Granting admin permissions to ${l}&quot;)
+        roleBasedAuthenticationStrategy.assignRole(RoleBasedAuthorizationStrategy.GLOBAL, adminRole, l)
+    }
+
+    access.builders.each { l -&gt;
+        println(&quot;Granting builder permissions to ${l}&quot;)
+        roleBasedAuthenticationStrategy.assignRole(RoleBasedAuthorizationStrategy.GLOBAL, builderRole, l)
+    }
+
+    // Save the state
+    println &quot;Saving changes.&quot;
+    instance.save()
+}
+</code></pre>
+
+<p>С помощью данного скрипта создаются две роли - <code>builder</code> и <code>admin</code>, которым устанавливаются разные наборы прав доступа. Далее всем пользователям, перечисленным в <code>access.admins</code>, назначается роль <code>admin</code>, а группе <code>authenticated</code> (находится в <code>access.builders</code>) назначается роль <code>builder</code>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2fjenkins-as-a-code-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-4%2f - Jenkins%20as%20a%20code.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%204 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

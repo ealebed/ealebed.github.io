@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="GitLab CI: Часть 9, этап deploy в .gitlab-ci.yml (продолжение)"/>
+  <meta name="twitter:description" content="В данной статье цикла о continuous integration и особенностях ее реализации в GitLab продолжаем максимально подробно разбирать этап деплоя изменений на ревью с помощью docker-образов.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>GitLab CI: Часть 9, этап deploy в .gitlab-ci.yml (продолжение) &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        GitLab CI: Часть 9, этап deploy в .gitlab-ci.yml (продолжение)
+                    </h1>
+                    <h2 class="headline">
+                    Jun 19, 2017 08:31
+                    · 751 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab">gitlab</a>
+                          
+                              <a href="https://ealebed.github.io/tags/gitlab-ci">gitlab ci</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В данной статье цикла о continuous integration и особенностях ее реализации в <strong>GitLab</strong> продолжаем максимально подробно разбирать этап деплоя изменений на ревью с помощью docker-образов.</p>
+
+<p></p>
+
+<p>Давайте разберемся с содержимым файла <code>docker-compose-staging.yml</code> и посмотрим, что у нас получилось!</p>
+
+<p>Как и обещал в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D1%8D%D1%82%D0%B0%D0%BF-deploy-%D0%B2-.gitlab-ci.yml/">предыдущей статье</a>, привожу содержимое конфигурационного файла <code>docker-compose-staging.yml</code>, который используется для создания и запуска docker-контейнеров на ревью (сервер с именем staging.lc):</p>
+
+<pre><code class="language-yaml">version: '2'
+services:
+### Applications Code Container #############################
+    applications:
+        container_name: application
+        image: registry.gitlab.lc:5000/develop/ed:develop.sources.last
+### Applications1 Code Container ############################
+    applications1:
+        container_name: application1
+        image: registry.gitlab.lc:5000/develop/ed:docker.sources.last
+### PHP-FPM Container #######################################
+    php-fpm:
+        container_name: php-fpm
+        image: registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq
+        volumes_from:
+            - applications
+            - applications1
+        expose:
+            - &quot;9000&quot;
+### Nginx Server Container ##################################
+    nginx:
+        container_name: nginx
+        image: registry.gitlab.lc:5000/develop/ed:nginx-ed-sq
+        volumes_from:
+            - applications
+            - applications1
+        depends_on:
+            - &quot;websocket&quot;
+        ports:
+            - &quot;${HTTP_PORT}:80&quot;
+            - &quot;443:443&quot;
+        links:
+            - php-fpm
+### Redis Container #########################################
+    redis:
+        container_name: redis
+        image: registry.gitlab.lc:5000/develop/ed:redis-ed-sq
+        volumes:
+            - redis:/data
+        ports:
+            - &quot;6379:6379&quot;
+        links:
+            - php-fpm
+### Memcached Container #####################################
+    memcached:
+        container_name: memcached
+        image: registry.gitlab.lc:5000/develop/ed:memcached-ed-sq
+        volumes:
+            - memcached:/var/lib/memcached
+        ports:
+            - &quot;11211:11211&quot;
+        links:
+            - php-fpm
+### Websocket Container ######################################
+    websocket:
+        container_name: websocket
+        restart: always
+        image: registry.gitlab.lc:5000/develop/ed:websocket-ed-sq
+        depends_on:
+            - &quot;redis&quot;
+        environment:
+            - WS_PORT=${WS_PORT}
+            - REDIS_HOST=${REDIS_HOST}
+            - REDIS_PORT=${REDIS_PORT}
+            - REDIS_PASS=${REDIS_PASS}
+        volumes_from:
+            - applications
+            - applications1
+        ports:
+            - &quot;${WS_PORT}:${WS_PORT}&quot;
+### SDCV Container ##########################################
+    sdcv:
+        container_name: sdcv
+        image: registry.gitlab.lc:5000/develop/ed:sdcv-ed-sq
+        ports:
+            - &quot;9095:9095&quot;
+### Volumes Setup ###########################################
+volumes:
+    memcached:
+        driver: &quot;local&quot;
+    redis:
+        driver: &quot;local&quot;
+</code></pre>
+
+<p>На мой взгляд, содержимое данного файла не требует дополнительных пояснений, однако если у вас возникнут вопросы — буду рад ответить на них в комментариях.</p>
+
+<p>На вкладке pipelines подробности выполнения этапа деплоя выглядят так:</p>
+
+<pre><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
+Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
+Starting service registry.gitlab.lc/develop/ed:my-docker-dind ...
+Using locally found image version due to if-not-present pull policy
+Waiting for services to be up and running...
+Using locally found image version due to if-not-present pull policy
+Running on runner-9e68759f-project-8-concurrent-0 via c7662d5025ba...
+Fetching changes...
+Removing .env
+Removing bin/
+Removing build/all.html
+Removing build/complexity.html
+Removing build/coupling.html
+Removing build/css/
+Removing build/images/
+Removing build/index.html
+Removing build/js/
+Removing build/loc.html
+Removing build/oop.html
+Removing build/panel.html
+Removing build/relations.html
+Removing build/violations.html
+Removing public/default_img/user/en/
+Removing public/default_img/user/ru/
+Removing public/dsd/css/style.css
+Removing public/dsd/css/style.css.map
+Removing public/dsd/js/bundles/
+Removing public/dsd/js/templates.hbs.js
+Removing public/dsd/js/templates.html.js
+Removing public/dsd/js/utils/routes.js
+Removing public/dsd/mix/tmp-pages-bundle/
+Removing public/dsl/css/
+Removing public/dsl/js/bundles/
+Removing public/dsm/css/ltr-style.css
+Removing public/dsm/css/ltr-style.css.map
+Removing public/dsm/css/rtl-style.css
+Removing public/dsm/css/rtl-style.css.map
+Removing public/dsm/js/main-build.js
+Removing public/dsm/js/main-build.js.map
+Removing public/vendor/
+Removing vendor/
+HEAD is now at 635e14c14a Merge branch 'develop' into 'develop'
+Checking out 635e14c1 as develop...
+Skipping Git submodules setup
+Downloading artifacts for compile (2609)...
+Downloading artifacts from coordinator... ok        id=2609 responseStatus=200 OK token=ERugScWJ
+Downloading artifacts for testing (2610)...
+Downloading artifacts from coordinator... ok        id=2610 responseStatus=200 OK token=uv5PAJbp
+$ eval $(ssh-agent -s)
+Agent pid 14
+$ ssh-add &lt;(echo &quot;$SSH_PRIVATE_KEY&quot;)
+Identity added: /dev/fd/63 (/dev/fd/63)
+$ scp $ENV_FILE $DC_FILE provisioner@staging.lc:~/docker
+Warning: Permanently added 'staging.lc,192.168.0.140' (ECDSA) to the list of known hosts.
+$ ssh provisioner@staging.lc 'bash -s' &lt; ./docker/deploy.sh
+Warning: Permanently added 'staging.lc,192.168.0.140' (ECDSA) to the list of known hosts.
+Pulling applications (registry.gitlab.lc:5000/develop/ed:develop.sources.last)...
+develop.sources.last: Pulling from develop/ed
+Digest: sha256:fdea81e5367ba5c37f1a19c4bdb0900b0702ab38c8b4d675a5305d03eacd2bfe
+Status: Downloaded newer image for registry.gitlab.lc:5000/develop/ed:develop.sources.last
+Pulling applications1 (registry.gitlab.lc:5000/develop/ed:docker.sources.last)...
+docker.sources.last: Pulling from develop/ed
+Digest: sha256:a9ad02b5c1c92f40eb0f908954cbece15052b76b2d2f8a43964a26d88705f127
+Status: Image is up to date for registry.gitlab.lc:5000/develop/ed:docker.sources.last
+Pulling php-fpm (registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq)...
+php-fpm-ed-sq: Pulling from develop/ed
+Digest: sha256:b335cb7f1e29f120d38d2baa3b3f0c3681f24124858b79bffd6df7e1fdb4ccb5
+Status: Image is up to date for registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq
+Pulling redis (registry.gitlab.lc:5000/develop/ed:redis-ed-sq)...
+redis-ed-sq: Pulling from develop/ed
+Digest: sha256:07292eb9cc8e873b81ca3cfc4b1685b42fa5136ad185857a11e6a9168346deb2
+Status: Image is up to date for registry.gitlab.lc:5000/develop/ed:redis-ed-sq
+Pulling websocket (registry.gitlab.lc:5000/develop/ed:websocket-ed-sq)...
+websocket-ed-sq: Pulling from develop/ed
+Digest: sha256:fd9d07def9039da373e5fe4a1bf00b98f123f64c3f76eaa3aa0021f80456d3c5
+Status: Image is up to date for registry.gitlab.lc:5000/develop/ed:websocket-ed-sq
+Pulling nginx (registry.gitlab.lc:5000/develop/ed:nginx-ed-sq)...
+nginx-ed-sq: Pulling from develop/ed
+Digest: sha256:89fe4ff99bf343205418cd136dbb192e48a1905445d9a4b7751d11694141c9d3
+Status: Image is up to date for registry.gitlab.lc:5000/develop/ed:nginx-ed-sq
+Pulling memcached (registry.gitlab.lc:5000/develop/ed:memcached-ed-sq)...
+memcached-ed-sq: Pulling from develop/ed
+Digest: sha256:d6d57917ce5a6c01f570eb9b7b3b0205ef0c0100489cfbecbab2f28583a4b3f9
+Status: Image is up to date for registry.gitlab.lc:5000/develop/ed:memcached-ed-sq
+Stopping nginx ...
+Stopping websocket ...
+Stopping redis ...
+Stopping memcached ...
+Stopping php-fpm ...
+Stopping memcached ... done
+Stopping nginx ... done
+Stopping websocket ... done
+Stopping redis ... done
+Stopping php-fpm ... done
+Removing nginx ...
+Removing websocket ...
+Removing redis ...
+Removing memcached ...
+Removing php-fpm ...
+Removing application ...
+Removing application1 ...
+Removing websocket ... done
+Removing application1 ... done
+Removing redis ... done
+Removing php-fpm ... done
+Removing application ... done
+Removing memcached ... done
+Removing nginx ... done
+Removing network docker_default
+Creating network &quot;docker_default&quot; with the default driver
+Creating application1
+Creating application
+Creating php-fpm
+Creating memcached
+Creating redis
+Creating websocket
+Creating nginx
+Build succeeded
+</code></pre>
+
+<p>Занимает все это действие чуть менее полутора минут (01:26).</p>
+
+<p>Для быстрого доступа к сайту после деплоя можно воспользоваться вебинтерфейсом <strong>GitLab</strong> - достаточно перейти на вкладку &ldquo;Pipelines -&gt; Environments&rdquo; и кликнуть мышкой по ссылке &ldquo;Open&rdquo;.</p>
+
+<p>В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-10-%D1%8D%D1%82%D0%B0%D0%BF-cleanup-%D0%B2-.gitlab-ci.yml/">завершающей статье</a> цикла о настройке <strong>GitLab CI</strong> мы рассмотрим этап удаления контейнеров и данных, использовавшихся при сборке проекта, а также увидим полную версию конфигурационного файла <code>.gitlab-ci.yml</code>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2fgitlab-ci-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-9-%25D1%258D%25D1%2582%25D0%25B0%25D0%25BF-deploy-%25D0%25B2-.gitlab-ci.yml-2%2f - GitLab%20CI%3a%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%209%2c%20%d1%8d%d1%82%d0%b0%d0%bf%20deploy%20%d0%b2%20.gitlab-ci.yml%20%28%d0%bf%d1%80%d0%be%d0%b4%d0%be%d0%bb%d0%b6%d0%b5%d0%bd%d0%b8%d0%b5%29 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

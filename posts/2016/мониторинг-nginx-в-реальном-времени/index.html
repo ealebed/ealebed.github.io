@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Мониторинг Nginx в реальном времени"/>
+  <meta name="twitter:description" content="Для сбора и отображения метрик веб-сервера Nginx часто используются Munin, Zabbix, Nagios и другие системы мониторинга.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Мониторинг Nginx в реальном времени &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Мониторинг Nginx в реальном времени
+                    </h1>
+                    <h2 class="headline">
+                    Mar 21, 2016 09:52
+                    · 339 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                              <a href="https://ealebed.github.io/tags/nginx">nginx</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Для сбора и отображения метрик веб-сервера Nginx часто используются Munin, Zabbix, Nagios и другие системы мониторинга.</p>
+
+<p></p>
+
+<p>Большинство из них приходится «допиливать» под свои нужды, так как «из коробки» доступно довольно мало информации. Давайте разберемся с утилитой <code>Ngxtop</code> для <strong>мониторинга Nginx в реальном времени</strong>!</p>
+
+<p>Утилита <code>Ngxtop</code> парсит <code>access</code>-логи веб-сервера Nginx и выводит их в консоль в удобном (<code>top-like</code>) виде. Установка выполняется следующим образом:</p>
+
+<pre><code class="language-bash">pip install ngxtop
+</code></pre>
+
+<p>Синтаксис использования утилиты:</p>
+
+<pre><code class="language-bash">ngxtop [options]
+ngxtop [options] (print|top|avg|sum) 
+</code></pre>
+
+<p>Список всех доступных опций можно посмотреть командой:</p>
+
+<pre><code class="language-bash">ngxtop --help
+</code></pre>
+
+<p>По умолчанию, <code>Ngxtop</code> самостоятельно определяет местоположение <code>access</code>-лога Nginx из конфигурационного файла <code>/etc/nginx/nginx.conf</code>. Если таких логов несколько, необходимо будет выбрать с каким именно логом работать:</p>
+
+<pre><code class="language-bash">ngxtop
+Multiple access logs detected in configuration:
+1. /var/log/nginx/access502.log
+2. /var/log/nginx/access.api.log
+3. /var/log/nginx/access.img.log
+4. /var/log/nginx/access.log
+5. /var/log/nginx/access404.log
+</code></pre>
+
+<p>Чтобы посмотреть запросы со статусом 404 можно воспользоваться командой:</p>
+
+<pre><code class="language-bash">ngxtop -i 'status == 404' print request status
+</code></pre>
+
+<p>результат выполнения в моем случае выглядит так:</p>
+
+<pre><code class="language-bash">running for 130 seconds, 150 records processed: 1.15 req/sec
+
+request, status:
+|request                                              |   status |
+|-----------------------------------------------------+----------|
+| GET /browserconfig.xml HTTP/1.1                     |  404     |
+| GET /employer/my/archive/2107569/98483600/ HTTP/1.1 |  404     |
+| GET /employer/my/archive/2107569/98483867/ HTTP/1.1 |  404     |
+| GET /jobs/1045534/ HTTP/1.1                         |  404     |
+| GET /jobs/1230564/ HTTP/1.1                         |  404     |
+| GET /jobs/1254320/ HTTP/1.1                         |  404     |
+| GET /jobs/1304769/ HTTP/1.1                         |  404     |
+| GET /jobs/1326496/ HTTP/1.1                         |  404     |
+</code></pre>
+
+<p>Посмотреть IP-адреса, с которых приходит больше всего запросов можно командой:</p>
+
+<pre><code class="language-bash">ngxtop top remote_addr
+</code></pre>
+
+<p>результат выполнения:</p>
+
+<pre><code class="language-bash">running for 8 seconds, 1759 records processed: 217.15 req/sec
+
+top remote_addr
+| remote_addr     |   count |
+|-----------------+---------|
+| 92.60.184.91    |      45 |
+| 66.249.78.10    |      42 |
+| 77.120.121.122  |      42 |
+| 66.249.89.63    |      28 |
+| 91.206.201.152  |      19 |
+| 37.229.17.176   |      17 |
+| 77.87.193.40    |      17 |
+| 157.55.39.7     |      16 |
+| 188.115.135.245 |      16 |
+| 89.184.80.168   |      16 |
+</code></pre>
+
+<p>Однако не следует забывать, что в каждом конкретном случае нужно применять соответствующий инструмент. <code>Ngxtop</code> может быть очень полезен для сравнительно небольших сайтов, но использование данной утилиты на высоконагруженных проектах (с десятками тысяч запросов в секунду) может быть неразумно.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D0%25BC%25D0%25BE%25D0%25BD%25D0%25B8%25D1%2582%25D0%25BE%25D1%2580%25D0%25B8%25D0%25BD%25D0%25B3-nginx-%25D0%25B2-%25D1%2580%25D0%25B5%25D0%25B0%25D0%25BB%25D1%258C%25D0%25BD%25D0%25BE%25D0%25BC-%25D0%25B2%25D1%2580%25D0%25B5%25D0%25BC%25D0%25B5%25D0%25BD%25D0%25B8%2f - %d0%9c%d0%be%d0%bd%d0%b8%d1%82%d0%be%d1%80%d0%b8%d0%bd%d0%b3%20Nginx%20%d0%b2%20%d1%80%d0%b5%d0%b0%d0%bb%d1%8c%d0%bd%d0%be%d0%bc%20%d0%b2%d1%80%d0%b5%d0%bc%d0%b5%d0%bd%d0%b8 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

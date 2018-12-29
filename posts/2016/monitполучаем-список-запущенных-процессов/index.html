@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Monit — получаем список запущенных процессов"/>
+  <meta name="twitter:description" content="Давайте разберемся как использовать Monit для получения списка запущенных процессов в системе при аномальном росте нагрузки сервера!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Monit — получаем список запущенных процессов &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Monit — получаем список запущенных процессов
+                    </h1>
+                    <h2 class="headline">
+                    Aug 8, 2016 15:09
+                    · 256 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/monit">monit</a>
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Давайте разберемся <strong>как использовать Monit для получения списка запущенных процессов</strong> в системе при аномальном росте нагрузки сервера!</p>
+
+<p></p>
+
+<p>Переходим в каталог <code>/etc/monit/conf.d/</code>:</p>
+
+<pre><code>cd /etc/monit/conf.d/
+</code></pre>
+
+<p>Создаем файл <code>system</code>:</p>
+
+<pre><code>touch system
+</code></pre>
+
+<p>Приводим созданный файл к следующему виду:</p>
+
+<pre><code>check system localhost
+if loadavg (5min) &gt; 20 for 2 cycles then exec &quot;/usr/local/sbin/highload&quot;
+</code></pre>
+
+<p>Далее создаем исполняемый файл <code>/usr/local/sbin/highload</code> со следующим содержанием:</p>
+
+<pre><code>#!/bin/bash
+#
+# 11.07.16 by e.lebed
+#
+# Скрипт генерирует письмо, содержащее:
+# - список процессов (сортировка по памяти)
+# - список процессов (сортировка по CPU)
+#
+ 
+STAMP=`date +%H%M%S`
+address='admin@example.com'
+ 
+echo &quot;Load Average&quot; &gt;&gt; /tmp/$STAMP.tmp
+top -b | head -5 &gt;&gt; /tmp/$STAMP.tmp 2&gt;&amp;1
+echo &gt;&gt; /tmp/$STAMP.tmp
+ 
+echo &quot;Memory process list (top50)&quot; &gt;&gt; /tmp/$STAMP.tmp
+ps -ewwwo pid,size,command --sort -size | head -50 | awk '{ pid=$1 ; printf(&quot;%7s &quot;, pid) }{ hr=$2/1024 ; printf(&quot;%8.2f Mb &quot;, hr) } { for ( x=3 ; x&lt;=NF ; x++ ) { printf(&quot;%s &quot;,$x) } print &quot;&quot; }' &gt;&gt; /tmp/$STAMP.tmp 2&gt;&amp;1
+echo &gt;&gt; /tmp/$STAMP.tmp
+ 
+echo &quot;CPU process list (top50)&quot; &gt;&gt; /tmp/$STAMP.tmp
+ps -ewwwo pcpu,pid,user,command --sort -pcpu  | head -50 &gt;&gt; /tmp/$STAMP.tmp 2&gt;&amp;1
+echo &gt;&gt; /tmp/$STAMP.tmp
+ 
+cat /tmp/$STAMP.tmp | mail -s &quot;Highload Report from &quot;`hostname -f` $address
+ 
+rm /tmp/$STAMP.tmp
+ 
+exit 1
+</code></pre>
+
+<p>Не забываем выполнить:</p>
+
+<pre><code>/etc/init.d/monit reload
+</code></pre>
+
+<p>Теперь, если LA сервера в течении двух проверок будет превышать 20, monit запустит скрипт, в результате выполнения которого будет сгенерировано и отправлено письмо на указанный адрес. В письме будет информация о текущей нагрузке на сервер, топ-50 процессов, отсортированных по потреблению памяти и топ-50 процессов, отсортированных по потреблению CPU.</p>
+
+<p>Скрипт очень просто откорректировать под свои нужды с учетом текущей нагрузки серверов.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2fmonit%25D0%25BF%25D0%25BE%25D0%25BB%25D1%2583%25D1%2587%25D0%25B0%25D0%25B5%25D0%25BC-%25D1%2581%25D0%25BF%25D0%25B8%25D1%2581%25D0%25BE%25D0%25BA-%25D0%25B7%25D0%25B0%25D0%25BF%25D1%2583%25D1%2589%25D0%25B5%25D0%25BD%25D0%25BD%25D1%258B%25D1%2585-%25D0%25BF%25D1%2580%25D0%25BE%25D1%2586%25D0%25B5%25D1%2581%25D1%2581%25D0%25BE%25D0%25B2%2f - Monit%20%e2%80%94%20%d0%bf%d0%be%d0%bb%d1%83%d1%87%d0%b0%d0%b5%d0%bc%20%d1%81%d0%bf%d0%b8%d1%81%d0%be%d0%ba%20%d0%b7%d0%b0%d0%bf%d1%83%d1%89%d0%b5%d0%bd%d0%bd%d1%8b%d1%85%20%d0%bf%d1%80%d0%be%d1%86%d0%b5%d1%81%d1%81%d0%be%d0%b2 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

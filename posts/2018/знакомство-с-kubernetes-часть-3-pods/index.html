@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Kubernetes. Часть 3: Поды (Pods)"/>
+  <meta name="twitter:description" content="В данной статье цикла о знакомстве с оркестратором Kubernetes детальнее разберемся с подами (Pods) - наименьшей функциональной единицей для развертывания в объектной модели Kubernetes.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Знакомство с Kubernetes. Часть 3: Поды (Pods) &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Kubernetes. Часть 3: Поды (Pods)
+                    </h1>
+                    <h2 class="headline">
+                    May 14, 2018 06:17
+                    · 776 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                              <a href="https://ealebed.github.io/tags/pod">pod</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В данной статье цикла о знакомстве с оркестратором <code>Kubernetes</code> детальнее разберемся с подами (<code>Pods</code>) - наименьшей функциональной единицей для развертывания в объектной модели <code>Kubernetes</code>.</p>
+
+<p></p>
+
+<p><code>Pod</code> (переводится с английского как стручок) состоит обычно из одного или нескольких контейнеров, хранилища (storage), отдельного IP-адреса и опций, которые определяют, как именно контейнер(ы) должны запускаться. Также <code>Pod</code> представляет собой некий запущенный процесс в кластере <code>Kubernetes</code>.</p>
+
+<p>Чаще всего в <code>Pod'</code>ах используются docker-контейнеры (что и не удивительно), но можно использовать и другие контейнеры (например, rkt от CoreOS).</p>
+
+<p><strong>Важно</strong> <code>Kubernetes</code> управляет <code>Pod'</code>ами, а не контейнерами напрямую.</p>
+
+<p>В кластере <code>Kubernetes</code> <code>Pod'</code>ы используются двумя способами:</p>
+
+<ul>
+<li><code>Pod</code> из одного контейнера - наиболее распространенный случай использования. В этом варианте <code>Pod</code> можно представить как обертку вокруг одного контейнера;</li>
+<li><code>Pod</code> из нескольких контейнеров, работающих сообща - контейнеры в данном случае образуют отдельную единицу (сервис) и используют общие ресурсы - например, файлы из одного хранилища (storage). При этом, отдельный контейнер <code>Pod'</code>а может обновлять эти файлы.</li>
+</ul>
+
+<p>Каждый <code>Pod</code> предназначен для запуска одного экземпляра конкретного приложения. Если есть необходимость горизонтального масштабирования, то можно запустить несколько экземпляров <code>Pod'</code>а - в терминологии <code>Kubernetes</code> это называется репликацией. Реплицированные <code>Pod'</code>ы создаются и управляются как единая группа абстракцией, которая называется контроллер (Controller).</p>
+
+<p><code>Pod'</code>ы спроектированы для поддержки множества взаимодействующих процессов (например, контейнеров), которые образуют отдельный сервис (единицу обслуживания). Контейнеры внутри <code>Pod'</code>а автоматически размещаются и управляются на одной и той же физической (или виртуальной) ноде кластера. Контейнеры в <code>Pod'</code>е могут совместно использовать ресурсы и зависимости, взаимодействовать друг с другом и определять, когда и как они будут завершаться.</p>
+
+<p>К слову, группировка и запуск нескольких контейнеров в <code>Pod'</code>е считается &ldquo;продвинутым&rdquo; вариантом использования, и применять этот шаблон нужно только при реальной необходимости. Например, у вас может быть контейнер с web-сервером, использующий файлы из общего (относительно <code>Pod'</code>а) хранилища, и отдельный контейнер, который обновляет эти файлы из удаленного источника.</p>
+
+<p><code>Pod'</code>ы предоставляют запущенным внутри контейнерам два типа общих ресурсов: сеть и хранилище.</p>
+
+<p><strong>Сеть</strong></p>
+
+<p>Каждому <code>Pod'</code>у присваивается уникальный IP-адрес. Внутри <code>Pod'</code>а каждый контейнер использует общее пространство имен (namespace) сети, включая IP-адрес и сетевые порты. Между собой внутри <code>Pod'</code>а контейнеры взаимодействуют через localhost. При взаимодействии с объектами, находящимися за пределами <code>Pod'</code>а, контейнеры &ldquo;договариваются&rdquo; между собой и координируют использование общих сетевых ресурсов (таких как порты).</p>
+
+<p><strong>Хранилище</strong></p>
+
+<p><code>Pod</code> может определить набор общих томов (volumes) для хранения данных. Контейнеры внутри <code>Pod'</code>а могут работать с этими томами и, таким образом, обмениваться данными между собой. Благодаря использованию томов, можно сохранить данные, если один из контейнеров <code>Pod'</code>а (которому нужны эти данные для корректной работы) должен быть перезапущен. Время жизни томов совпадает с временем жизни самого <code>Pod'</code>а.</p>
+
+<p>Что касается работы в кластере <code>Kubernetes</code>, то редко когда приходится создавать и запускать отдельные <code>Pod'</code>ы вручную (варианты запуска при ознакомлении с <code>Kubernetes</code> мы в расчет не берем). Связано это с тем, что <code>Pod'</code>ы изначально проектировались как эфемерные объекты, минимальные единицы, &ldquo;строительные блоки&rdquo; для сущностей более высокого уровня (например, контроллеров). Когда <code>Pod</code> создается (не важно, вручную вами или контроллером), он по плану (за это отвечает scheduler) запускается на одной из нод кластера <code>Kubernetes</code>. На этой ноде <code>Pod</code> остается до тех пор, пока:</p>
+
+<ul>
+<li>не завершится процесс внутри <code>Pod'</code>а (например, если это одноразовая задача);</li>
+<li><code>Pod</code> не будет удален вручную;</li>
+<li><code>Pod</code> не будет &ldquo;выселен&rdquo; с ноды из-за нехватки ресурсов;</li>
+<li>нода не выйдет из строя.</li>
+</ul>
+
+<p><strong>Примечание</strong> Перезапуск контейнера внутри <code>Pod'</code>а не следует путать с перезапуском самого <code>Pod'</code>а.</p>
+
+<p>Сами по себе <code>Pod'</code>ы не являются &ldquo;самолечащимися&rdquo; (self-healing) объектами. Если запуск <code>Pod'</code>а запланирован на ноде, которая вышла из строя, или сама операция запуска потерпела крах, то <code>Pod</code> удаляется. Точно также, при нехватке ресурсов на ноде (когда <code>Pod'</code>ы &ldquo;выселяются&rdquo;) или при переводе ноды в режим обслуживания, <code>Pod'</code>ы не будут запущены на других узлах и удалятся. Для обеспечения запуска на других нодах (и управления <code>Pod'</code>ами в целом) в <code>Kubernetes</code> используются абстракции более высокого уровня, называемые контроллерами - в основном именно с ними и приходится иметь дело.</p>
+
+<p>Контроллер может управлять несколькими экземплярами <code>Pod'</code>ов - в том числе обеспечивать репликацию и самовосстановление в пределах кластера (при выходе из строя ноды, идентичный экземпляр <code>Pod'</code>а будет запущен на другой ноде). Примером контроллера, который содержит в себе один или несколько экземпляров <code>Pod'</code>а могут быть:</p>
+
+<ul>
+<li><a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/">Deployment</a></li>
+<li>StatefulSet</li>
+<li>DaemonSet</li>
+</ul>
+
+<p>Для обеспечения такого функционала контроллеры используют шаблоны <code>Pod'</code>ов (Pod Templates). Шаблон <code>Pod'</code>а - спецификация, которая используется контроллерами и другими объектами (например, заданиями - Jobs/CronJob) для запуска настоящего, реального <code>Pod'</code>а. Ниже приведен пример простой спецификации (ее еще иногда называют манифестом), описывающей контейнер, который напечатает сообщение при запуске и &ldquo;уснет&rdquo; на час:</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox
+    command: ['sh', '-c', 'echo Hello Kubernetes! &amp;&amp; sleep 3600']
+</code></pre>
+
+<p>Предложенный манифест (спецификацию) можно сохранить в файле <code>single-example-pod.yml</code> и запустить <code>Pod</code> с помощью утилиты командной строки <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-15-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-kubectl/"><code>kubectl</code></a>:</p>
+
+<pre><code class="language-bash">kubectl create -f single-example-pod.yml
+</code></pre>
+
+<p>Больше информации о <code>Pod'</code>ах можно найти в <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod/">официальной документации</a> по <code>Kubernetes</code>, а мы в следующей статье поговорим о <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/">репликах</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-kubernetes-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-3-pods%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Kubernetes.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%203%3a%20%d0%9f%d0%be%d0%b4%d1%8b%20%28Pods%29 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

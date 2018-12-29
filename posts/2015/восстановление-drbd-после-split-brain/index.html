@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Восстановление DRBD после split brain"/>
+  <meta name="twitter:description" content="DRBD — распределённое реплицируемое блочное устройство, которое используется для построения отказоустойчивых кластеров под управлением ОС Linux. DRBD отражает все операции с блочным устройством по сети, поэтому принято считать что это сетевой RAID-1.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Восстановление DRBD после split brain &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Восстановление DRBD после split brain
+                    </h1>
+                    <h2 class="headline">
+                    Oct 29, 2015 18:54
+                    · 337 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/drbd">drbd</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><strong>DRBD</strong> — распределённое реплицируемое блочное устройство, которое используется для построения отказоустойчивых кластеров под управлением ОС Linux. <strong>DRBD</strong> отражает все операции с блочным устройством по сети, поэтому принято считать что это сетевой RAID-1.</p>
+
+<p></p>
+
+<p>Больше информации о <strong>DRBD</strong> можно найти <a href="http://xgu.ru/wiki/DRBD">здесь</a>, а мы в данной статье разберемся как восстанавливать блочное устройство после <a href="https://en.wikipedia.org/wiki/Split-brain_(computing)">split brain</a>.</p>
+
+<p>Из-за возникновения split brain на обоих хостах DRBD-ресурсы находятся в режиме <code>Primary</code>, а состояние соединения <code>StandAlone</code>. В <code>/var/log/kern.log</code> можно увидеть такие строки:</p>
+
+<pre><code>kernel: block drbd0: Split-Brain detected, dropping connection!
+</code></pre>
+
+<p>Смотрим состояние <strong>DRBD</strong> на первом хосте:</p>
+
+<pre><code>cat /proc/drbd 
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: F937DCB2E5D83C6CCE4A6C9 
+ 0: cs:StandAlone ro:Primary/Unknown ds:UpToDate/DUnknown C r-----
+    ns:806339152 nr:7553228 dw:815132460 dr:1840430365 al:34434471 bm:15105 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+
+ 2: cs:StandAlone ro:Primary/Unknown ds:UpToDate/DUnknown C r-----
+    ns:499963084 nr:1132592 dw:501095676 dr:857543433 al:2345239 bm:941 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+</code></pre>
+
+<p>на втором:</p>
+
+<pre><code>cat /proc/drbd 
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: F937DCB2E5D83C6CCE4A6C9 
+ 0: cs:StandAlone ro:Primary/Unknown ds:UpToDate/DUnknown C r-----
+    ns:0 nr:1727749652 dw:1727749652 dr:0 al:0 bm:2405 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+
+ 2: cs:StandAlone ro:Primary/Unknown ds:UpToDate/DUnknown C r-----
+    ns:0 nr:348016128 dw:348016128 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+</code></pre>
+
+<p>Исправить данную ситуацию можно с помощью следующих шагов:</p>
+
+<ul>
+<li>перевести один из хостов в режим <code>Secondary</code> и отменить на нем все внесенные изменения, выполнив следующие команды:</li>
+</ul>
+
+<pre><code>drbdadm secondary all
+</code></pre>
+
+<pre><code>drbdadm disconnect all
+</code></pre>
+
+<pre><code>drbdadm -- --discard-my-data connect all
+</code></pre>
+
+<ul>
+<li>второй хост перевести в режим <code>Primary</code> и отключить/подключить ресурсы такими командами:</li>
+</ul>
+
+<pre><code>drbdadm primary all
+</code></pre>
+
+<pre><code>drbdadm disconnect all
+</code></pre>
+
+<pre><code>drbdadm connect all
+</code></pre>
+
+<p>Проблема решена, после завершения синхронизации состояние <strong>DRBD</strong> на первом хосте:</p>
+
+<pre><code>cat /proc/drbd 
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: F937DCB2E5D83C6CCE4A6C9 
+ 0: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
+    ns:811209960 nr:7553228 dw:820003268 dr:1842586049 al:34451063 bm:15105 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+
+ 2: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
+    ns:500025956 nr:1132592 dw:501158548 dr:857725017 al:2345912 bm:941 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+</code></pre>
+
+<p>на втором:</p>
+
+<pre><code>cat /proc/drbd 
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: F937DCB2E5D83C6CCE4A6C9 
+ 0: cs:Connected ro:Secondary/Primary ds:UpToDate/UpToDate C r-----
+    ns:0 nr:1732429880 dw:1732429880 dr:0 al:0 bm:2405 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+
+ 2: cs:Connected ro:Secondary/Primary ds:UpToDate/UpToDate C r-----
+    ns:0 nr:348078352 dw:348078352 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2015%2f%25D0%25B2%25D0%25BE%25D1%2581%25D1%2581%25D1%2582%25D0%25B0%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25BB%25D0%25B5%25D0%25BD%25D0%25B8%25D0%25B5-drbd-%25D0%25BF%25D0%25BE%25D1%2581%25D0%25BB%25D0%25B5-split-brain%2f - %d0%92%d0%be%d1%81%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%bb%d0%b5%d0%bd%d0%b8%d0%b5%20DRBD%20%d0%bf%d0%be%d1%81%d0%bb%d0%b5%20split%20brain by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

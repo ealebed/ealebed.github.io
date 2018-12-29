@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="GRPC REST Gateway"/>
+  <meta name="twitter:description" content="Наверняка многие слышали о gRPC — открытом RPC-фреймворком от Google, который активно используется Netflix, Kubernetes, Docker и многими другими. Давайте разберемся как можно начать использовать gRPC не отказываясь от уже существующего REST-варианта!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>GRPC REST Gateway &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        GRPC REST Gateway
+                    </h1>
+                    <h2 class="headline">
+                    Dec 29, 2018 11:10
+                    · 697 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/grpc">gRPC</a>
+                          
+                              <a href="https://ealebed.github.io/tags/curl">curl</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Наверняка многие слышали о gRPC — открытом RPC-фреймворком от Google, который активно используется Netflix, Kubernetes, Docker и многими другими. Давайте разберемся как можно начать использовать gRPC не отказываясь от уже существующего REST-варианта!</p>
+
+<p></p>
+
+<p>При написании микросервисов использование gRPC позволяет получить несколько преимуществ перед традиционным подходом (REST+JSON) - например, декларативный вариант описания типов и RPC-методов или экономию траффика. Но, к сожалению, часто переход на использование gRPC в существующих проектах затруднителен из-за наличия уже использующихся REST-клиентов, которые невозможно &ldquo;взять и обновить&rdquo; за раз.</p>
+
+<p>В gRPC по умолчанию используется <code>Google Protobuf 3</code> в качестве IDL (Interface Description Language) и HTTP/2 в качестве транспорта. Кодогенерация возможна с помощью 12 (официально) языков программирования, в том числе Go, Java, C++, Python, Ruby, Node.js, C#, PHP. В данной статье в качестве примера мы будем использовать Go. В случае использования gRPC у вас существует только одно место, где вы указываете, как именуются поля, как называются запросы, что они принимают и что возвращают - это <code>.proto</code> файл.</p>
+
+<p>Для начала необходимо установить <code>protobuf</code> - сделать это можно несколькими способами, например:</p>
+
+<pre><code class="language-bash">mkdir tmp
+cd tmp
+git clone https://github.com/google/protobuf
+cd protobuf
+./autogen.sh
+./configure
+make
+make check
+sudo make install
+</code></pre>
+
+<p>Или (в моем случае установка выполнялась на MacOS) так:</p>
+
+<pre><code class="language-bash">brew install protobuf
+</code></pre>
+
+<p>Убедиться, что установка прошла успешно можно с помощью команды:</p>
+
+<pre><code class="language-bash">protoc --version
+libprotoc 3.6.1
+</code></pre>
+
+<p>Далее устанавливаем необходимые плагины:</p>
+
+<pre><code class="language-bash">go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+go get -u github.com/golang/protobuf/protoc-gen-go
+</code></pre>
+
+<p>Убедитесь, что <code>${GOPATH}/bin</code> присутствует в вашем <code>${PATH}</code> - в моем случае пришлось выполнить дополнительные команды:</p>
+
+<pre><code class="language-bash">export GOPATH=$HOME/go
+export PATH=$PATH:$GOPATH/bin
+</code></pre>
+
+<p>Структура проекта следующая:</p>
+
+<pre><code class="language-bash">tree
+.
+├── gateway
+│   ├── main.go
+│   └── proto
+│       └── hello
+│           └── hello.proto
+└── server
+    ├── main.go
+    └── proto
+        └── hello
+            └── hello.proto
+</code></pre>
+
+<p>Для сервиса <code>.proto</code> файл будет выглядеть следующим образом:</p>
+
+<pre><code class="language-golang">syntax = &quot;proto3&quot;;
+
+package hello;
+
+// The greeting service definition.
+service Say {
+    // Sends a greeting
+	rpc Hello(Request) returns (Response) {}
+}
+
+// The request message containing the user's name.
+message Request {
+	string name = 1;
+}
+
+// The response message containing the greetings
+message Response {
+	string message = 1;
+}
+</code></pre>
+
+<p>Сам сервис выглядит так:</p>
+
+<pre><code class="language-golang">package main
+
+import (
+	&quot;context&quot;
+	&quot;log&quot;
+	&quot;net&quot;
+
+	&quot;google.golang.org/grpc&quot;
+	&quot;google.golang.org/grpc/reflection&quot;
+	hello &quot;./proto/hello&quot;
+)
+
+const (
+	port = &quot;:50051&quot;
+)
+
+type server struct{}
+
+func (s *server) Hello(ctx context.Context, in *hello.Request) (*hello.Response, error) {
+	return &amp;hello.Response{Message: &quot;Hello &quot; + in.Name}, nil
+}
+
+func main() {
+	lis, err := net.Listen(&quot;tcp&quot;, port)
+	if err != nil {
+		log.Fatalf(&quot;failed to listen: %v&quot;, err)
+	}
+	s := grpc.NewServer()
+	hello.RegisterSayServer(s, &amp;server{})
+
+	reflection.Register(s)
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf(&quot;failed to serve: %v&quot;, err)
+	}
+}
+</code></pre>
+
+<p>Генерируем с помощью protoc-компилятора код для сервиса (на языке Go, естественно):</p>
+
+<pre><code class="language-bash">protoc -I/usr/local/include -I. \
+	-I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+	-I server/proto/hello/hello.proto \
+	--go_out=plugins=grpc:. \
+	server/proto/hello/hello.proto
+</code></pre>
+
+<p>Для gRPC-gateway необходимо немного изменить <code>.proto</code> файл (импортируем google.api и добавляем опции к нашему сервису):</p>
+
+<pre><code class="language-golang">syntax = &quot;proto3&quot;;
+
+package hello;
+
+import &quot;google/api/annotations.proto&quot;;
+
+// The greeting service definition.
+service Say {
+	// Sends a greeting
+	rpc Hello(Request) returns (Response) {
+		option (google.api.http) = {
+			post: &quot;/greeter/hello&quot;
+			body: &quot;*&quot;
+		};
+	}
+}
+
+// The request message containing the user's name.
+message Request {
+	string name = 1;
+}
+
+// The response message containing the greetings
+message Response {
+	string message = 1;
+}
+
+</code></pre>
+
+<p>Код для gRPC-шлюза будет выглядеть следующим образом:</p>
+
+<pre><code class="language-golang">package main
+
+import (
+	&quot;context&quot;
+	&quot;flag&quot;
+	&quot;net/http&quot;
+
+	&quot;github.com/golang/glog&quot;
+	&quot;google.golang.org/grpc&quot;
+	&quot;github.com/grpc-ecosystem/grpc-gateway/runtime&quot;
+
+	hello &quot;./proto/hello&quot;
+)
+
+var (
+	endpoint = flag.String(&quot;endpoint&quot;, &quot;localhost:50051&quot;, &quot;address&quot;)
+)
+
+func run() error {
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+
+	err := hello.RegisterSayHandlerFromEndpoint(ctx, mux, *endpoint, opts)
+	if err != nil {
+		return err
+	}
+
+	return http.ListenAndServe(&quot;:80&quot;, mux)
+}
+
+func main() {
+	flag.Parse()
+
+	defer glog.Flush()
+
+	if err := run(); err != nil {
+		glog.Fatal(err)
+	}
+}
+</code></pre>
+
+<p>Генерация кода из <code>.proto</code> файла для gRPC-gateway потребует на одно действие больше:</p>
+
+<pre><code class="language-bash">protoc -I/usr/local/include -I. \
+	-I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+	-I gateway/proto/hello/hello.proto \
+	--go_out=plugins=grpc:. \
+	gateway/proto/hello/hello.proto
+</code></pre>
+
+<pre><code class="language-bash">protoc -I/usr/local/include -I. \
+	-I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+	-I gateway/proto/hello/hello.proto \
+	--grpc-gateway_out=logtostderr=true:. \
+	gateway/proto/hello/hello.proto
+</code></pre>
+
+<p>Приступаем к тестированию, для начала запустим наш сервис:</p>
+
+<pre><code>go run server/main.go
+</code></pre>
+
+<p>Теперь (в отдельной консоли) запускаем непосредственно gRPC-gateway:</p>
+
+<pre><code>go run gateway/main.go
+</code></pre>
+
+<p>С помощью утилиты <code>curl</code> пробуем получить ответ от нашего сервиса:</p>
+
+<pre><code>curl -d '{&quot;name&quot;: &quot;John&quot;}' http://localhost/greeter/hello
+{&quot;message&quot;:&quot;Hello John&quot;}
+</code></pre>
+
+<p>Все использованные в данном примере файлы можно найти в <a href="https://github.com/ealebed/grpc-gw-example">этом</a> репозитории, а больше информации о gRPC можно найти на <a href="https://grpc.io/">официальном сайте</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2fgrpc-rest-gateway%2f - GRPC%20REST%20Gateway by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-18-podpresets/">Знакомство с Kubernetes. Часть 18: PodPresets<aside class="dates">Oct 1 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

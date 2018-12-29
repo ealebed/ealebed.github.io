@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Настройка Nginx &#43; SSL от Let’s Encrypt на Debian 8"/>
+  <meta name="twitter:description" content="Let’s Encrypt – это Certificate Authority (CA) провайдер, который раздает TLS/SSL сертификаты бесплатно. Давайте разберемся, как настроить Nginx на использование ssl-сертификата от Let’s Encrypt!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Настройка Nginx &#43; SSL от Let’s Encrypt на Debian 8 &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Настройка Nginx &#43; SSL от Let’s Encrypt на Debian 8
+                    </h1>
+                    <h2 class="headline">
+                    Apr 25, 2016 21:51
+                    · 554 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/nginx">nginx</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ssl">ssl</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><a href="https://letsencrypt.org/">Let’s Encrypt</a> – это Certificate Authority (CA) провайдер, который раздает TLS/SSL сертификаты бесплатно. Давайте разберемся, <strong>как настроить Nginx на использование ssl-сертификата от Let’s Encrypt</strong>!</p>
+
+<p></p>
+
+<p>Получение ssl-сертификата всегда было связано с рядом неудобств, заключающихся в выполнении следующих пунктов:</p>
+
+<ul>
+<li>формирование CSR-запроса;</li>
+<li>отправка CSR-запроса в СЦ;</li>
+<li>подтверждение владения доменом (ссылка в письме на почту admin@yourhost.ru);</li>
+<li>получение сертификатов на почту;</li>
+<li>подготовка полученных сертификатов к использованию (для Nginx, например, цепочку сертификатов нужно склеивать в один);</li>
+<li>через год — проделать всё заново.</li>
+</ul>
+
+<p>Для автоматизации всего вышеизложенного некоммерческая организация Let’s Encrypt разработала протокол ACME и работающий с ним клиент и создала свой доверенный центр сертификации, который уже признаётся корневыми центрами сертификации.</p>
+
+<p>Итак, приступим. Действия производятся на:</p>
+
+<pre><code class="language-bash">sb_release -a
+No LSB modules are available.
+Distributor ID:	Debian
+Description:	Debian GNU/Linux 8.4 (jessie)
+Release:	8.4
+Codename:	jessie
+</code></pre>
+
+<p>Загружаем репозиторий:</p>
+
+<pre><code class="language-bash">git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
+</code></pre>
+
+<p>Подключать сертификаты будем с помощью плагина Webroot. Для этого открываем файл настроек хоста (например, <code>/etc/nginx/conf.d/example.com.conf</code>) и в блок <code>server</code> добавляем следующие строки:</p>
+
+<pre><code>...
+    # Webroot for Lets Encrypt
+    location ~ /.well-known {
+       allow all;
+    }
+...
+</code></pre>
+
+<p>Проверяем:</p>
+
+<pre><code class="language-bash">nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+</code></pre>
+
+<p>Перечитываем конфиг веб-сервера:</p>
+
+<pre><code class="language-bash">service nginx reload
+</code></pre>
+
+<p>Переходим к созданию сертификата с помощью клиента Let’s Encrypt:</p>
+
+<pre><code class="language-bash">cd /opt/letsencrypt
+</code></pre>
+
+<p>Запускаем следующую команду:</p>
+
+<pre><code class="language-bash">./letsencrypt-auto certonly -a webroot --webroot-path=/var/www/example --email webmaster@example.com -d example.com -d www.example.com
+</code></pre>
+
+<p>В данном примере используются следующие опции:</p>
+
+<ul>
+<li><code>certonly</code> — скачать сертификат, но не устанавливать (сами разберемся);</li>
+<li><code>--webroot-path</code> — путь к каталогу с сайтом;</li>
+<li><code>--email</code> — почтовый ящик для контактов;</li>
+<li><code>-d</code> — домен (можно указать несколько, еще раз указав <code>-d</code>).</li>
+</ul>
+
+<p>После создания сертификатов вы увидите примерно следующее:</p>
+
+<pre><code class="language-bash">...
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at
+   /etc/letsencrypt/live/example.com/fullchain.pem. Your cert will
+   expire on 2016-07-19. To obtain a new version of the certificate in
+   the future, simply run Let's Encrypt again.
+ - If you like Let's Encrypt, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+</code></pre>
+
+<p>Генерируем ключ Diffie–Hellman:</p>
+
+<pre><code class="language-bash">mkdir /etc/nginx/ssl &amp;&amp; openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048
+Generating DH parameters, 2048 bit long safe prime, generator 2
+This is going to take a long time
+...
+</code></pre>
+
+<p>Возвращаемся к настройкам хоста в Nginx (например, <code>/etc/nginx/conf.d/example.com.conf</code>) и приводим их к следующему виду:</p>
+
+<pre><code>server {
+    listen 80;
+    listen 443 ssl;
+ 
+    server_name example.com www.example.com;
+ 
+    root /var/www/example;
+ 
+    if ( $scheme = &quot;http&quot; ) {
+        return 301 https://$host$request_uri;
+    }
+ 
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_prefer_server_ciphers on;
+    ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+    ssl_ciphers &quot;EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4&quot;;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:50m;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    add_header Strict-Transport-Security max-age=15768000;
+ 
+    charset utf-8;
+ 
+    # Lets Encrypt Webroot
+    location ~ /.well-known {
+        allow all;
+    }
+ 
+    location / {
+  index index.php index.html;
+  try_files $uri $uri/ /index.php?$query_string;
+    }
+ 
+... # далее ваши специфические настройки
+</code></pre>
+
+<p>Проверяем:</p>
+
+<pre><code class="language-bash">nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+</code></pre>
+
+<p>Перезапускаем:</p>
+
+<pre><code class="language-bash">service nginx restart
+</code></pre>
+
+<p>Процесс обновления сертификатов можно запустить с помощью следующей команды:</p>
+
+<pre><code class="language-bash">./letsencrypt-auto renew
+Checking for new version...
+Requesting root privileges to run letsencrypt...
+   /root/.local/share/letsencrypt/bin/letsencrypt renew
+
+-------------------------------------------------------------------------------
+Processing /etc/letsencrypt/renewal/example.com.conf
+-------------------------------------------------------------------------------
+
+The following certs are not due for renewal yet:
+  /etc/letsencrypt/live/example.com/fullchain.pem (skipped)
+No renewals were attempted.
+</code></pre>
+
+<p>Сейчас продление не требуется — сертификат был получен только сегодня.
+Для автоматизации добавляем следующую задачу в <code>crontab</code>:</p>
+
+<pre><code class="language-bash">@monthly /opt/letsencrypt/letsencrypt-auto renew &gt;&gt; /var/log/le-renew.log
+</code></pre>
+
+<p>А еще теперь можно <a href="https://ealebed.github.io/posts/2016/%D0%BA%D0%B0%D0%BA-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C-http2.0-%D0%B2-nginx/">включить поддержку протокола HTTP2.0 в Nginx</a>!</p>
+
+<p>С опытом пришел более <a href="https://ealebed.github.io/posts/2017/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-ssl-%D0%BE%D1%82-lets-encrypt-%D0%B2%D0%B0%D1%80%D0%B8%D0%B0%D0%BD%D1%82-2-%D1%8D%D0%BB%D0%B5%D0%B3%D0%B0%D0%BD%D1%82%D0%BD%D1%8B%D0%B9/">элегантный вариант настройки Nginx + SSL от Let’s Encrypt</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D0%25BD%25D0%25B0%25D1%2581%25D1%2582%25D1%2580%25D0%25BE%25D0%25B9%25D0%25BA%25D0%25B0-nginx-%25D0%25B8-ssl-%25D0%25BE%25D1%2582-lets-encrypt-%25D0%25BD%25D0%25B0-debian-8%2f - %d0%9d%d0%b0%d1%81%d1%82%d1%80%d0%be%d0%b9%d0%ba%d0%b0%20Nginx%20%2b%20SSL%20%d0%be%d1%82%20Let%e2%80%99s%20Encrypt%20%d0%bd%d0%b0%20Debian%208 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

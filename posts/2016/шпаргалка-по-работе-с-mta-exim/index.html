@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Шпаргалка по работе с MTA Exim"/>
+  <meta name="twitter:description" content="MTA (Mail Transfer Agent) Exim — довольно распространенный агент передачи сообщений (почтовый сервер), который используется в Unix-подобных операционных системах.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Шпаргалка по работе с MTA Exim &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Шпаргалка по работе с MTA Exim
+                    </h1>
+                    <h2 class="headline">
+                    Jan 11, 2016 17:25
+                    · 411 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/exim">exim</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><strong>MTA (Mail Transfer Agent) Exim</strong> — довольно распространенный агент передачи сообщений (почтовый сервер), который используется в Unix-подобных операционных системах.</p>
+
+<p></p>
+
+<p>Давайте разберемся с полезными <strong>командами для работы с Exim</strong> и управления очередями электронной почты!</p>
+
+<p>Базовая информация о почтовом сервере.</p>
+
+<p>Чем почтовый сервер занят в данный момент:</p>
+
+<pre><code class="language-bash">exiwhat
+</code></pre>
+
+<p>Вывод всех настроек почтового сервера:</p>
+
+<pre><code class="language-bash">exim -bP
+</code></pre>
+
+<p>Проверка маршрута до адреса получателя:</p>
+
+<pre><code class="language-bash">exim -bt email@example.com
+</code></pre>
+
+<p>Проверка SMTP-соединения для определенного ip-адреса:</p>
+
+<pre><code class="language-bash">exim -bh 192.168.0.25
+</code></pre>
+
+<p><strong>Примечание.</strong> При этом можно увидеть процесс прохождения/срабатывания проверок, фильтров и листов доступа (ACL). Но на самом деле, сообщение никуда доставлено не будет.</p>
+
+<p>Количество сообщений в очереди:</p>
+
+<pre><code class="language-bash">exim -bpc
+</code></pre>
+
+<p>Список сообщений в очереди:</p>
+
+<pre><code class="language-bash">exim -bp
+</code></pre>
+
+<p>Вывод суммарной информации (кол-во, объем, первое, последнее, домен) по сообщениям в очереди:</p>
+
+<pre><code class="language-bash">exim -bp | exiqsumm
+</code></pre>
+
+<p>Поиск почтовых сообщений в очереди.</p>
+
+<p>Вывод сообщений от конкретного отправителя:</p>
+
+<pre><code class="language-bash">exiqgrep -f email@example.com
+</code></pre>
+
+<p>Вывод сообщений для конкретного получателя:</p>
+
+<pre><code class="language-bash">exiqgrep -r email@example.com
+</code></pre>
+
+<p>Вывод сообщений старше 1 дня:</p>
+
+<pre><code class="language-bash">exiqgrep -o 86400
+</code></pre>
+
+<p><strong>Примечание.</strong> Время указывается в секундах, так 1 день это 86400 секунд.</p>
+
+<p>Вывод сообщений свежее 1 часа:</p>
+
+<pre><code class="language-bash">exiqgrep -y 3600
+</code></pre>
+
+<p>Вывод только Message-ID почтовых сообщений:</p>
+
+<pre><code class="language-bash">exiqgrep -i
+</code></pre>
+
+<p><strong>Примечание.</strong> Идентификаторы почтовых сообщений это буквенно-цифровые последовательности в верхнем и нижнем регистрах, например <code>1aBYtM-0003lt-MD</code>.</p>
+
+<p>Вывод кол-ва сообщений (можно комбинировать с описанными выше вариантами поиска):</p>
+
+<pre><code class="language-bash">exiqgrep -c
+</code></pre>
+
+<p>Просмотр почтовых сообщений в очереди.</p>
+
+<p>Вывод заголовков сообщения:</p>
+
+<pre><code class="language-bash">exim -Mvh &lt;идентификатор сообщения&gt;
+</code></pre>
+
+<p>Вывод тела сообщения:</p>
+
+<pre><code class="language-bash">exim -Mvb &lt;идентификатор сообщения&gt;
+</code></pre>
+
+<p>Вывод лога сообщения:</p>
+
+<pre><code class="language-bash">exim -Mvl &lt;идентификатор сообщения&gt;
+</code></pre>
+
+<p>Управление очередями сообщений.</p>
+
+<p>Запуск всей очереди:</p>
+
+<pre><code class="language-bash">exim -q -v
+</code></pre>
+
+<p>Запуск очереди локальных доставок:</p>
+
+<pre><code class="language-bash">exim -ql -v
+</code></pre>
+
+<p>Удалить сообщение из очереди по ID:</p>
+
+<pre><code class="language-bash">exim -Mrm &lt;идентификатор сообщения&gt;
+</code></pre>
+
+<p>Удалить сообщение из очереди по почтовому ящику отправителя:</p>
+
+<pre><code class="language-bash">exiqgrep -i -f email@example.com | xargs exim -Mrm
+</code></pre>
+
+<p>Удалить заблокированные (замороженные) сообщения из очереди:</p>
+
+<pre><code class="language-bash">exipick -zi | xargs exim -Mrm
+</code></pre>
+
+<p>или:</p>
+
+<pre><code class="language-bash">exim -bp | awk '$6~&quot;frozen&quot; { print $3 }' | xargs exim -Mrm
+</code></pre>
+
+<p>Удалить все сообщения из очереди:</p>
+
+<pre><code class="language-bash">exipick -i | xargs exim -Mrm
+</code></pre>
+
+<p>Удалить сообщения старше 1 дня из очереди:</p>
+
+<pre><code class="language-bash">exiqgrep -o 86400 -i | xargs exim -Mrm
+</code></pre>
+
+<p>Заморозить сообщение по ID:</p>
+
+<pre><code class="language-bash">exim -Mf &lt;идентификатор сообщения&gt;
+</code></pre>
+
+<p>Заморозить почту по почтовому ящику отправителя:</p>
+
+<pre><code class="language-bash">exiqgrep -i -f email@example.com | xargs exim -Mf
+</code></pre>
+
+<p>Разморозить сообщение по ID:</p>
+
+<pre><code class="language-bash">exim -Mt &lt;идентификатор сообщения&gt;
+</code></pre>
+
+<p>Остановить отправку сообщения с формулировкой «отменено администратором»:</p>
+
+<pre><code class="language-bash">exim -Mg &lt;идентификатор сообщения&gt;
+</code></pre>
+
+<p>Попытаться доставить сообщение если достигнуто время повторной отправки:</p>
+
+<pre><code class="language-bash">exim -Mc &lt;идентификатор сообщения&gt;
+</code></pre>
+
+<p>Попытаться доставить сообщение, вне зависимости от времени повторной отправки или блокировки:</p>
+
+<pre><code class="language-bash">exim -M &lt;идентификатор сообщения&gt;
+</code></pre>
+
+<p>Попытаться доставить все сообщения, вне зависимости от времени повторной отправки или блокировки, отправленные на домен:</p>
+
+<pre><code class="language-bash">exiqgrep -r '@example.com' -i  | xargs exim -M
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D1%2588%25D0%25BF%25D0%25B0%25D1%2580%25D0%25B3%25D0%25B0%25D0%25BB%25D0%25BA%25D0%25B0-%25D0%25BF%25D0%25BE-%25D1%2580%25D0%25B0%25D0%25B1%25D0%25BE%25D1%2582%25D0%25B5-%25D1%2581-mta-exim%2f - %d0%a8%d0%bf%d0%b0%d1%80%d0%b3%d0%b0%d0%bb%d0%ba%d0%b0%20%d0%bf%d0%be%20%d1%80%d0%b0%d0%b1%d0%be%d1%82%d0%b5%20%d1%81%20MTA%20Exim by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

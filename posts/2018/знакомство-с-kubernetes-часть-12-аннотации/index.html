@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Kubernetes. Часть 12: Аннотации"/>
+  <meta name="twitter:description" content="Для добавления произвольных, неидентифицирующиих метаданных к создаваемым в кластере Kubernetes объектам можно использовать аннотации. Клиенты (в том числе инструменты и библиотеки) могут получать и использовать эти данные. Давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Знакомство с Kubernetes. Часть 12: Аннотации &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Kubernetes. Часть 12: Аннотации
+                    </h1>
+                    <h2 class="headline">
+                    Jul 16, 2018 07:02
+                    · 385 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Для добавления произвольных, неидентифицирующиих метаданных к создаваемым в кластере <code>Kubernetes</code> объектам можно использовать аннотации. Клиенты (в том числе инструменты и библиотеки) могут получать и использовать эти данные. Давайте разберемся!</p>
+
+<p></p>
+
+<p>В <code>Kubernetes</code> для добавления метаданных к объектам используются <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D0%BC%D0%B5%D1%82%D0%BA%D0%B8-%D0%B8-%D1%81%D0%B5%D0%BB%D0%B5%D0%BA%D1%82%D0%BE%D1%80%D1%8B/">метки</a> и аннотации. Метки обычно используются для выбора объектов селекторами или для поиска наборов объектов, которые соответствуют определенным условиям. Аннотации же, напротив, не используются для выбора или идентификации объектов. В аннотациях можно использовать символы, запрещенные для использования в метках, аннотации могут быть структурированными или нет, а также отличаться размером (количеством символов).</p>
+
+<p>Как и метки, аннотации представляют собой пары ключ/значение, и в общем виде могут выглядеть так:</p>
+
+<pre><code class="language-json">&quot;metadata&quot;: {
+  &quot;annotations&quot;: {
+    &quot;key1&quot; : &quot;value1&quot;,
+    &quot;key2&quot; : &quot;value2&quot;
+  }
+}
+</code></pre>
+
+<p>Конечно, вместо использования аннотаций, все эти дополнительные данные могут храниться во внешней базе данных, но это не так удобно и требует дополнительных ресурсов на поддержание базы данных в актуальном состоянии.</p>
+
+<p>Несколько примеров информации, которую можно (а иногда и нужно) добавлять в аннотации:</p>
+
+<ul>
+<li>поля, создаваемые декларативной конфигурацией (declarative configuration layer). Такие поля, прикрепленные в виде аннотаций, позволяют отличать их от значений по умолчанию или от автоматически генерируемых полей;</li>
+<li>версия билда, релиза, информация о docker-образе (временные метки, имя ветви из репозитория, номер PR и т.д.);</li>
+<li>информация о логировании, мониторинге, аналитике и пр.;</li>
+<li>информация об используемых библиотеках или утилитах, которые могут использоваться в целях отладки;</li>
+<li>информация о пользователе или системе (к примеру, URL-адреса связанных объектов или список зависимых микросервисов);</li>
+<li>метаданные для ускоренного отката на предыдущую работоспособную версию приложения (например, конфиги);</li>
+<li>контактные данные ответственных за данный объект лиц.</li>
+</ul>
+
+<p>Стоит отметить, что при создании объектов в кластере <code>Kubernetes</code> с помощью команды <code>kubectl apply -а &lt;имя_файла&gt;</code>, в аннотации к объекту автоматически создастся ключ <code>kubectl.kubernetes.io/last-applied-configuration:</code>, содержащий, как можно догадаться, последнюю успешно примененную конфигурацию (в json-формате).</p>
+
+<p>Например, если сервис описан в файле <code>auth0-svc.yaml</code> следующим образом:</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  name: auth0-proxy
+spec:
+  clusterIP: None
+  ports:
+  - port: 8080
+  selector:
+    app: auth0-proxy
+</code></pre>
+
+<p>и создаем его командой:</p>
+
+<pre><code class="language-bash">kubectl apply -f auth0-svc.yaml
+</code></pre>
+
+<p>то с помощью команды:</p>
+
+<pre><code class="language-bash">kubectl get svc auth0-proxy -o yaml --export=true
+</code></pre>
+
+<p>можно получить не только описание сервиса (в том числе, с полями по умолчанию), но и последнюю удачно развернутую версию из аннотации:</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {&quot;apiVersion&quot;:&quot;v1&quot;,&quot;kind&quot;:&quot;Service&quot;,&quot;metadata&quot;:{&quot;annotations&quot;:{},&quot;name&quot;:&quot;auth0-proxy&quot;,&quot;namespace&quot;:&quot;default&quot;},&quot;spec&quot;:{&quot;clusterIP&quot;:&quot;None&quot;,&quot;ports&quot;:[{&quot;port&quot;:8080}],&quot;selector&quot;:{&quot;app&quot;:&quot;auth0-proxy&quot;}}}
+  creationTimestamp: null
+  name: auth0-proxy
+  selfLink: /api/v1/namespaces/default/services/auth0-proxy
+spec:
+  clusterIP: None
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: auth0-proxy
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-kubernetes-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-12-%25D0%25B0%25D0%25BD%25D0%25BD%25D0%25BE%25D1%2582%25D0%25B0%25D1%2586%25D0%25B8%25D0%25B8%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Kubernetes.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%2012%3a%20%d0%90%d0%bd%d0%bd%d0%be%d1%82%d0%b0%d1%86%d0%b8%d0%b8 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

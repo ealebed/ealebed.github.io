@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Let&#39;s Encrypt: Wildcard-сертификаты теперь доступны!"/>
+  <meta name="twitter:description" content="Еще в прошлом году разработчики Let&rsquo;s Encrypt обещали внедрить в январе 2018 года поддержку возможности генерации wildcard-сертификатов для доменов и вот, наконец, этот день настал. Давайте разберемся, как сгенерировать wildcard-сертификат Let&rsquo;s Encrypt для всех поддоменов!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Let&#39;s Encrypt: Wildcard-сертификаты теперь доступны! &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Let&#39;s Encrypt: Wildcard-сертификаты теперь доступны!
+                    </h1>
+                    <h2 class="headline">
+                    Mar 19, 2018 08:13
+                    · 605 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/nginx">nginx</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ssl">ssl</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Еще в прошлом году разработчики <a href="https://letsencrypt.org/">Let&rsquo;s Encrypt</a> обещали внедрить в январе 2018 года поддержку возможности генерации wildcard-сертификатов для доменов и вот, наконец, этот день настал. Давайте разберемся, <strong>как сгенерировать wildcard-сертификат Let&rsquo;s Encrypt для всех поддоменов</strong>!</p>
+
+<p></p>
+
+<p>Говорить о важности данного нововведения, думаю, будет лишним. Всем известно, что ранее для генерации корректных бесплатных ssl-сертификатов от Let&rsquo;s Encrypt для нескольких поддоменов, нужно было все их перечислить с помощью параметра <code>-d</code>. Например, для генерации сертификатов, которые используются на окружении разработчиков, мне приходилось ранее запускать такую команду:</p>
+
+<pre><code class="language-bash">certbot certonly -d eddev.cf -d www.eddev.cf \
+    -d roman.eddev.cf -d www.roman.eddev.cf \
+    -d nick.eddev.cf -d www.nick.eddev.cf \
+    -d anton.eddev.cf -d www.anton.eddev.cf \
+    -d andrey.eddev.cf -d www.andrey.eddev.cf
+</code></pre>
+
+<p>При добавлении нового разработчика, сертификаты приходилось перевыпускать, добавляя к списку еще пару доменов - не самое рациональное использование времени.</p>
+
+<p>Теперь можно все сделать гораздо проще и быстрее - прежде всего, убедитесь, что ваш клиент поддерживает протокол ACME второй версии (v2). Список таких клиентов доступен по <a href="https://letsencrypt.org/docs/client-options/#acme-v2-compatible-clients">этой ссылке</a>. Разработчики рекомендуют использовать <a href="https://certbot.eff.org/">Certbot</a> клиент (если быть точным - <code>Certbot &gt;= 0.22.0</code>). Так как пакет нужной версии присутствует далеко не во всех репозиториях, то установить его стандартным менеджером пакетов (<code>apt</code>/<code>aptitude</code>/<code>apt-get</code> и т.д.) не выйдет (по крайней мере, на сегодняшний день). Но, в любой ситуации можно найти варианты, и эта не является исключением:</p>
+
+<ul>
+<li>можно воспользоваться docker-образом со свежей версией certbot, как написано <a href="https://certbot.eff.org/docs/install.html#running-with-docker">здесь</a>;</li>
+<li>можно использовать плагин manual (наш вариант);</li>
+<li>можно подождать появления пакетов в репозитории.</li>
+</ul>
+
+<p>Установить плагин manual можно с помощью <code>certbot-auto</code>, для этого выполняем команды:</p>
+
+<pre><code class="language-bash">wget https://dl.eff.org/certbot-auto &amp;&amp; chmod a+x certbot-auto
+</code></pre>
+
+<p><code>certbot-auto</code> использует те же флаги (параметры), что и хорошо знакомый нам <code>certbot</code>; кроме того, он некоторые свои зависимости и обновляет код клиента до последней версии (что нам и нужно) автоматически.</p>
+
+<p>Команда с использованием плагина manual для генерации бесплатных ssl-сертификатов будет выглядеть примерно так:</p>
+
+<pre><code class="language-bash">./certbot-auto certonly --manual -d *.eddev.cf -d eddev.cf \
+    --preferred-challenges dns-01 \
+    --server https://acme-v02.api.letsencrypt.org/directory
+</code></pre>
+
+<p><strong>Примечание.</strong> При первом запуске будут также установлены все необходимые зависимости (нужно будет подтвердить установку нажатием <code>y</code>).</p>
+
+<p>В моем случае, первый <del>блин вышел комом</del> запуск команды завершился ошибкой:</p>
+
+<pre><code class="language-bash">Could not choose appropriate plugin: Too many flags setting configurators/installers/authenticators 'webroot' -&gt; 'manual'
+Too many flags setting configurators/installers/authenticators 'webroot' -&gt; 'manual'
+</code></pre>
+
+<p>И действительно, ранее на этом компьютере я обновлял сертификаты с помощью плагина webroot, и даже прописал его в конфигурационном файле <code>/etc/letsencrypt/cli.ini</code>:</p>
+
+<pre><code class="language-bash">authenticator = webroot
+webroot-path = /var/www/html
+post-hook = service nginx reload
+text = True
+</code></pre>
+
+<p>Приводим данный конфигурационный файл в следующему виду (меняем authenticator и добавляем server):</p>
+
+<pre><code class="language-bash">authenticator = manual
+server = https://acme-v02.api.letsencrypt.org/directory
+webroot-path = /var/www/html
+post-hook = service nginx reload
+text = True
+</code></pre>
+
+<p>Опять запускаем команду для генерации сертификатов:</p>
+
+<pre><code class="language-bash">./certbot-auto certonly -d *.eddev.cf -d eddev.cf \
+    --preferred-challenges dns-01
+</code></pre>
+
+<p>В процессе нужно будет выполнить несколько стандартных действий (ввести или подтвердить существующий почтовый ящик, согласиться с условиями использования и т.д.) и добавить в DNS пару TXT-записей для перечисленных доменов. Выглядеть это будет примерно так (вывод сильно сокращен):</p>
+
+<pre><code class="language-bash">Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator manual, Installer None
+...
+
+Obtaining a new certificate
+Performing the following challenges:
+dns-01 challenge for eddev.cf
+dns-01 challenge for eddev.cf
+
+...
+-------------------------------------------------------------------------------
+Please deploy a DNS TXT record under the name
+_acme-challenge.eddev.cf with the following value:
+
+fAXDHivfJTlzam0GGwxogvM1pdtnsh2CvJc9LUuNg1c
+
+Before continuing, verify the record is deployed.
+-------------------------------------------------------------------------------
+Press Enter to Continue
+
+-------------------------------------------------------------------------------
+Please deploy a DNS TXT record under the name
+_acme-challenge.eddev.cf with the following value:
+
+48B-49zYhnasCoxy7VtZOWmMtfEZFG24j7L6wWkwmiE
+
+Before continuing, verify the record is deployed.
+-------------------------------------------------------------------------------
+Press Enter to Continue
+
+Waiting for verification...
+Cleaning up challenges
+Running post-hook command: service nginx reload
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+   /etc/letsencrypt/live/eddev.cf/fullchain.pem
+   Your key file has been saved at:
+   /etc/letsencrypt/live/eddev.cf/privkey.pem
+...
+</code></pre>
+
+<p>Далее с новыми бесплатными сертификатами от Let&rsquo;s Encrypt можно работать как и раньше, например, <a href="https://ealebed.github.io/posts/2017/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-ssl-%D0%BE%D1%82-lets-encrypt-%D0%B2%D0%B0%D1%80%D0%B8%D0%B0%D0%BD%D1%82-2-%D1%8D%D0%BB%D0%B5%D0%B3%D0%B0%D0%BD%D1%82%D0%BD%D1%8B%D0%B9/">использовать в связке с web-сервером Nginx</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2fletsencrypt-wildcard-%25D1%2581%25D0%25B5%25D1%2580%25D1%2582%25D0%25B8%25D1%2584%25D0%25B8%25D0%25BA%25D0%25B0%25D1%2582%25D1%258B-%25D1%2582%25D0%25B5%25D0%25BF%25D0%25B5%25D1%2580%25D1%258C-%25D0%25B4%25D0%25BE%25D1%2581%25D1%2582%25D1%2583%25D0%25BF%25D0%25BD%25D1%258B%2f - Let%27s%20Encrypt%3a%20Wildcard-%d1%81%d0%b5%d1%80%d1%82%d0%b8%d1%84%d0%b8%d0%ba%d0%b0%d1%82%d1%8b%20%d1%82%d0%b5%d0%bf%d0%b5%d1%80%d1%8c%20%d0%b4%d0%be%d1%81%d1%82%d1%83%d0%bf%d0%bd%d1%8b%21 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

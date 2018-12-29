@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Мониторинг php-fpm с помощью New Relic Plugin Agent"/>
+  <meta name="twitter:description" content="Ранее мы уже упоминали о системе мониторинга New Relic, однако рассматривали пример лишь с мониторингом базовых сервисов. Давайте разберемся, как собирать и выводить метрики от php-fpm!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Мониторинг php-fpm с помощью New Relic Plugin Agent &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Мониторинг php-fpm с помощью New Relic Plugin Agent
+                    </h1>
+                    <h2 class="headline">
+                    Jan 26, 2017 21:05
+                    · 580 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/new-relic">new relic</a>
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                              <a href="https://ealebed.github.io/tags/php-fpm">php-fpm</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Ранее мы уже <a href="https://ealebed.github.io/posts/2016/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BE%D0%B2-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-new-relic/">упоминали</a> о <strong>системе мониторинга New Relic</strong>, однако рассматривали пример лишь с мониторингом базовых сервисов. Давайте разберемся, как собирать и выводить метрики от <code>php-fpm</code>!</p>
+
+<p></p>
+
+<p>Для мониторинга некоторых специальных сервисов можно использовать <strong>New Relic Plugin Agent</strong>. К таким сервисам относятся:</p>
+
+<ul>
+<li>Alternative PHP Cache;</li>
+<li>Apache HTTP Server;</li>
+<li>CouchDB;</li>
+<li>Elasticsearch;</li>
+<li>HAProxy;</li>
+<li>Memcached;</li>
+<li>MongoDB;</li>
+<li>Nginx;</li>
+<li>pgBouncer;</li>
+<li>PHP FPM;</li>
+<li>PostgreSQL;</li>
+<li>RabbitMQ;</li>
+<li>Redis;</li>
+<li>Riak;</li>
+<li>uWSGI.</li>
+</ul>
+
+<p>Как видим, в этом списке присутствует <code>php-fpm</code> — то, что нам нужно! Устанавливаем агент следующей командой:</p>
+
+<pre><code class="language-bash">pip install newrelic-plugin-agent
+</code></pre>
+
+<p>Создаем необходимые для работы агента каталоги:</p>
+
+<pre><code class="language-bash">mkdir -p /var/log/newrelic
+</code></pre>
+
+<pre><code class="language-bash">mkdir -p /var/run/newrelic
+</code></pre>
+
+<p><strong>Примечание.</strong> Пользователь, определенный в конфигурационном файле, должен иметь право записи в это каталоги.</p>
+
+<p>Копируем пример конфигурационного файла агента в каталог <code>/etc/newrelic/</code>:</p>
+
+<pre><code class="language-bash">cp /opt/newrelic-plugin-agent/newrelic-plugin-agent.cfg /etc/newrelic/newrelic-plugin-agent.cfg
+</code></pre>
+
+<p>И изменяем под свои нужды — вводим лицензионный ключ и определяем сервисы, которые нужно мониторить. В мое случае конфиг выглядит так:</p>
+
+<pre><code class="language-yaml">%YAML 1.2
+---
+Application:
+  license_key: ed36507db6a10fb33429637793735933e9a477aa
+  wake_interval: 60
+ 
+  nginx:
+    name: web1.employer.cz
+    scheme: http
+    host: 127.0.0.1
+    port: 80
+    verify_ssl_cert: true
+    path: /nginx_status
+ 
+  php_fpm:
+    - name: letsclearitup
+      scheme: https
+      host: letsclearitup.com.ua
+      port: 443
+      path: /status
+      query: json
+    - name: animania
+      scheme: http
+      host: animania.dp.ua
+      port: 80
+      path: /status
+      query: json
+ 
+Daemon:
+  user: newrelic
+  pidfile: /var/run/newrelic/newrelic-plugin-agent.pid
+ 
+Logging:
+  formatters:
+    verbose:
+      format: '%(levelname) -10s %(asctime)s %(process)-6d %(processName) -15s %(threadName)-10s %(name) -45s %(funcName) -25s L%(lineno)-6d: %(message)s'
+  handlers:
+    file:
+      class : logging.handlers.RotatingFileHandler
+      formatter: verbose
+      filename: /var/log/newrelic/newrelic-plugin-agent.log
+      maxBytes: 10485760
+      backupCount: 3
+  loggers:
+    newrelic_plugin_agent:
+      level: INFO
+      propagate: True
+      handlers: [console, file]
+    requests:
+      level: ERROR
+      propagate: True
+      handlers: [console, file]
+</code></pre>
+
+<p>Далее следует запустить <strong>New Relic Plugin Agent</strong>, в инструкции предлагается делать это следующим образом:</p>
+
+<pre><code class="language-bash">newrelic-plugin-agent -c PATH-TO-CONF-FILE [-f]
+</code></pre>
+
+<p>На мой взгляд это не самый удобный способ, поэтому для управления агентом в каталоге <code>/etc/init.d/</code> создаем init-скрипт <code>newrelic_plugin_agent</code> следующего содержания:</p>
+
+<pre><code class="language-bash">#! /bin/sh
+ 
+### BEGIN INIT INFO
+# Provides:          newrelic_plugin_agent
+# Required-Start:    $network $local_fs $remote_fs
+# Required-Stop:     $remote_fs
+# Should-Start:      $named
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: The New Relic Plugin Agent
+# Description:       The New Relic Plugin Agent
+### END INIT INFO
+ 
+NAME=newrelic_plugin_agent
+CONFIG=/etc/newrelic/newrelic-plugin-agent.cfg
+DAEMON=/usr/local/bin/newrelic-plugin-agent
+DAEMON_OPTS=&quot;-c $CONFIG&quot;
+DESC=&quot;New Relic Plugin Agent&quot;
+ 
+# define LSB log_* functions.
+. /lib/lsb/init-functions
+ 
+check_daemon() {
+  if [ ! -x $DAEMON ]; then
+    log_action_msg &quot;$DAEMON not found&quot; || true
+    log_end_msg 1 || false
+    exit 1
+  fi
+}
+ 
+check_config() {
+  if [ ! -e $CONFIG ]; then
+    log_action_msg &quot;Configuration file $CONFIG not found&quot; || true
+    log_end_msg 1 || false
+    exit 1
+  fi
+}
+ 
+check_pid() {
+  if [ ! -d /var/run/newrelic ]; then
+    install -m 777 -o newrelic -g newrelic -d /var/run/newrelic
+    log_action_msg &quot;PID directory was not found and created&quot; || true
+  fi;
+}
+ 
+PIDFILE=$(sed -n -e 's/^[ ]*pidfile[ ]*:[ ]*//p' -e 's/[ ]*$//' $CONFIG)
+ 
+export PATH=&quot;${PATH:+$PATH:}/usr/sbin:/sbin/:usr/local/sbin:/usr/local/bin&quot;
+ 
+case &quot;$1&quot; in
+  start)
+    log_daemon_msg &quot;Starting $DESC&quot; &quot;$NAME&quot; || true
+    check_daemon
+    check_config
+    check_pid
+ 
+    if [ -s $PIDFILE ] &amp;&amp; kill -0 $(cat $PIDFILE) &gt; /dev/null 2&gt;&amp;1; then
+      log_action_msg &quot;apparently already running&quot; || true
+      log_end_msg 0 || true
+      exit 0
+    fi
+ 
+    if start-stop-daemon --oknodo --start --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS; then
+      log_end_msg 0 || true
+    else
+      log_end_msg 1 || false
+    fi
+  ;;
+  stop)
+    log_daemon_msg &quot;Stopping $DESC&quot; &quot;$NAME&quot; || true
+    check_daemon
+ 
+    if start-stop-daemon --oknodo --stop --pidfile $PIDFILE; then
+      log_end_msg 0 || true
+    else
+      log_end_msg 1 || false
+    fi
+  ;;
+  status)
+   status_of_proc -p $PIDFILE $DAEMON $NAME &amp;&amp; exit 0 || exit $?
+   ;;
+  restart|force-reload)
+  $0 stop
+  $0 start
+  ;;
+  *)
+    echo &quot;Usage: /etc/init.d/$NAME {start|stop|restart|force-reload}&quot; &gt;&amp;2
+  exit 1
+  ;;
+esac
+ 
+exit 0
+</code></pre>
+
+<p>Включаем и запускаем созданный сервис:</p>
+
+<pre><code class="language-bash">systemctl enable newrelic_plugin_agent.service
+systemctl start newrelic_plugin_agent.service
+</code></pre>
+
+<p>Если все настроено верно, то через некоторое время графики появятся с <strong>системе мониторинга New Relic</strong> (вкладка PLUGINS).</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2f%25D0%25BC%25D0%25BE%25D0%25BD%25D0%25B8%25D1%2582%25D0%25BE%25D1%2580%25D0%25B8%25D0%25BD%25D0%25B3-php-fpm-%25D1%2581-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-new-relic-plugin-agent%2f - %d0%9c%d0%be%d0%bd%d0%b8%d1%82%d0%be%d1%80%d0%b8%d0%bd%d0%b3%20php-fpm%20%d1%81%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20New%20Relic%20Plugin%20Agent by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Ubuntu: удаление неиспользуемых ядер"/>
+  <meta name="twitter:description" content="Вместе с обновлениями в Ubuntu устанавливаются новые версии ядра, при этом старые не удаляются и занимают место на жестком диске. Давайте разберемся как быстро и без вреда системе удалить старые ядра!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Ubuntu: удаление неиспользуемых ядер &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Ubuntu: удаление неиспользуемых ядер
+                    </h1>
+                    <h2 class="headline">
+                    May 9, 2016 23:17
+                    · 273 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/ubuntu">ubuntu</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Вместе с обновлениями в Ubuntu устанавливаются новые версии ядра, при этом старые не удаляются и занимают место на жестком диске. Давайте разберемся как быстро и без вреда системе удалить старые ядра!</p>
+
+<p></p>
+
+<p>Первый вариант — графический (не наш случай). С помощью менеджера пакетов Synaptic нужно вручную отметить устаревшие версии ядра для удаления и нажать кнопку «Применить».</p>
+
+<p>Второй вариант — консольный. Чтобы удалить все ядра кроме последней и предпоследней версии можно сначала выполнить:</p>
+
+<pre><code>apt-get purge $(dpkg -l 'linux-*' | sed '/^ii/!d;/'&quot;$(uname -r | sed &quot;s/\(.*\)-\([^0-9]\+\)/\1/&quot;)&quot;'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | head -n -1)
+</code></pre>
+
+<p>а потом запустить команду:</p>
+
+<pre><code>apt-get autoremove
+</code></pre>
+
+<p>Третий вариант — тоже консольный (мой выбор). Оставить только текущую версию ядра и удались все остальные можно с помощью команды:</p>
+
+<pre><code>export KERNEL=&quot;$(uname -r | grep -Po '([0-9\.\-]*[0-9])?')&quot;; dpkg --get-selections | grep -E &quot;linux-(header|image).*&quot; | grep -iw install | sort | grep -v &quot;$KERNEL&quot; | grep -v &quot;lts&quot; | sed 's/install//g' | xargs dpkg -P
+</code></pre>
+
+<p>Разберем данную команду подробнее. Первая часть в переменную <code>KERNEL</code> записывает текущую версию ядра:</p>
+
+<pre><code>export KERNEL=&quot;$(uname -r | grep -Po '([0-9\.\-]*[0-9])?')&quot;
+</code></pre>
+
+<p>Вторая часть выводит список всех пакетов в системе:</p>
+
+<pre><code>dpkg --get-selections
+</code></pre>
+
+<p>Третья часть выбирает из списка всех пакетов в системе те пакеты, в имени которых есть <code>linux-header</code> или <code>linux-image</code>:</p>
+
+<pre><code>grep -E &quot;linux-(header|image).*&quot;
+</code></pre>
+
+<p>Четвертая часть среди оставшихся пакетов выбирает только установленные:</p>
+
+<pre><code>grep -iw install
+</code></pre>
+
+<p>Пятая часть сортирует вывод оставшихся пакетов:</p>
+
+<pre><code>sort
+</code></pre>
+
+<p>Шестая часть убирает из выборки пакеты с текущей версией ядра и lts-версии:</p>
+
+<pre><code>grep -v &quot;$KERNEL&quot; | grep -v &quot;lts&quot;
+</code></pre>
+
+<p>Седьмая часть удаляет слово <code>install</code>:</p>
+
+<pre><code>sed 's/install//g'
+</code></pre>
+
+<p>В последней части наконец удаляются старые неиспользуемые ядра — <code>xargs</code> передает имена пакетов менеджеру пакетов <code>dpkg</code>, который удаляет их с ключом <code>-P</code> (<code>purge</code>):</p>
+
+<pre><code>xargs dpkg -P
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2fubuntu-%25D1%2583%25D0%25B4%25D0%25B0%25D0%25BB%25D0%25B5%25D0%25BD%25D0%25B8%25D0%25B5-%25D0%25BD%25D0%25B5%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D1%2583%25D0%25B5%25D0%25BC%25D1%258B%25D1%2585-%25D1%258F%25D0%25B4%25D0%25B5%25D1%2580%2f - Ubuntu%3a%20%d1%83%d0%b4%d0%b0%d0%bb%d0%b5%d0%bd%d0%b8%d0%b5%20%d0%bd%d0%b5%d0%b8%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d1%83%d0%b5%d0%bc%d1%8b%d1%85%20%d1%8f%d0%b4%d0%b5%d1%80 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

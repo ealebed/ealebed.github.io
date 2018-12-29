@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Пишем свой плагин для Munin: nginx request time"/>
+  <meta name="twitter:description" content="Давайте разберемся с созданием плагина для munin, который в красивой и понятной форме даст нам представление о времени обработки запросов nginx’ом.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Пишем свой плагин для Munin: nginx request time &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Пишем свой плагин для Munin: nginx request time
+                    </h1>
+                    <h2 class="headline">
+                    Aug 10, 2015 10:05
+                    · 433 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/munin">munin</a>
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                              <a href="https://ealebed.github.io/tags/nginx">nginx</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Давайте разберемся с <strong>созданием плагина для munin</strong>, который в красивой и понятной форме даст нам представление о времени обработки запросов nginx’ом.</p>
+
+<p></p>
+
+<p>Итак, на графике нам нужно видеть количество запросов (в процентах от общего числа), время обработки которых:</p>
+
+<ul>
+<li>дольше 1 секунды;</li>
+<li>от 100 милисекунд до 1 секунды;</li>
+<li>от 50 до 100 милисекунд;</li>
+<li>менее 50 милисекунд;</li>
+</ul>
+
+<p>Почему именно <strong>плагин для munin</strong>? Во-первых, это просто и понятно — можно написать плагин, потратив минимум времени на чтение документации. Во-вторых, получение данных от всех плагинов сервером <code>munin</code> происходит каждые 5 минут (по умолчанию). В-третьих, ротация логов <code>nginx’а</code> происходит также каждые 5 минут (в моем случае).</p>
+
+<p>Алгоритм действий следующий:</p>
+
+<ul>
+<li>открываем на редактирование конфиг <code>/etc/nginx/nginx.conf</code>:</li>
+</ul>
+
+<pre><code class="language-bash">nano /etc/nginx/nginx.conf
+</code></pre>
+
+<ul>
+<li>в секции <code>http</code> находим строку <code>log_format</code> и добавляем в нее параметр <code>$request_time</code>:</li>
+</ul>
+
+<pre><code class="language-text">log_format  main  '$remote_addr $remote_user [$time_local] &quot;$request&quot; $status $request_time $bytes_sent '
+                          '&quot;$http_referer&quot; &quot;$http_user_agent&quot;';
+</code></pre>
+
+<p><strong>Примечание.</strong> <code>$request_time</code> — время обработки запроса в секундах с точностью до миллисекунд; время, прошедшее с момента чтения первых байт от клиента до момента записи в лог после отправки последних байт клиенту.</p>
+
+<ul>
+<li>перечитываем конфигурацию <code>nginx’а</code>:</li>
+</ul>
+
+<pre><code class="language-bash">nginx -s reload
+</code></pre>
+
+<p>После этих действий <code>/var/log/nginx/access.log</code> должен выгдядеть примерно так:</p>
+
+<pre><code class="language-text">...
+31.43.5.37 - [20/Feb/2014:10:54:04 +0200] &quot;GET /_data/search_categories.php?search=%D0%BD HTTP/1.1&quot; 200 0.016 311 &quot;-&quot; &quot;Opera/9.80 (Windows NT 5.1) Presto/2.12.388 Version/12.16&quot;
+...
+</code></pre>
+
+<p><strong>Примечание.</strong> Именно значение 0.016 в примере из лога — то, с чем мы будем работать дальше</p>
+
+<p>Далее непосредственно <strong>написание плагина для munin</strong>:</p>
+
+<ul>
+<li>переходим в каталог <code>/etc/munin/plugins</code>:</li>
+</ul>
+
+<pre><code class="language-bash">cd /etc/munin/plugins
+</code></pre>
+
+<ul>
+<li>создаем файл <code>nginx_request_time</code>:</li>
+</ul>
+
+<pre><code class="language-bash">nano nginx_request_time
+</code></pre>
+
+<ul>
+<li>вставляем следующий код:</li>
+</ul>
+
+<pre><code class="language-php">#!/usr/bin/php
+&lt;?php
+if ($argv[1] == 'config')
+{
+  echo &quot;graph_category nginx
+  graph_title Nginx request time
+  graph_vlabel %
+  graph_scale no
+  graph_args --base 1000 -r --lower-limit 0 --upper-limit 100
+  t0.label less 50ms
+  t0.draw AREA
+  t0.type GAUGE
+  t0.min 0
+  t1.label less 100ms
+  t1.draw STACK
+  t1.type GAUGE
+  t1.min 0
+  t2.label less 1s
+  t2.draw STACK
+  t2.type GAUGE
+  t2.min 0
+  t3.label more 1s
+  t3.draw STACK
+  t3.type GAUGE
+  t3.min 0
+  &quot;;
+}
+else
+{
+  $result    = `grep '\&quot; 200 ' /var/log/nginx/access.log.0 | awk '{print $9;}'`;
+  $resultArray = explode(&quot;\n&quot;, $result);
+  $return    = array(0, 0, 0, 0);
+  if (count($resultArray))
+  {
+    foreach ($resultArray as $one)
+    {
+      if ($one &lt; 0.05)
+      {
+        $return[0] ++;
+      }
+      elseif ($one &lt; 0.1)
+      {
+        $return[1] ++;
+      }
+      elseif ($one &lt; 1)
+      {
+        $return[2] ++;
+      }
+      else
+      {
+        $return[3] ++;
+      }
+    }
+  }
+  $all_request = array_sum($return);
+  foreach ($return as $key =&gt; $one)
+  {
+    $value = round(($one / $all_request * 100), 4);
+    echo 't'.$key.'.value '.$value.&quot;\n&quot;;
+  }
+}
+</code></pre>
+
+<ul>
+<li>меняем права доступа для <code>nginx_request_time</code>:</li>
+</ul>
+
+<pre><code class="language-bash">chmod 755 nginx_request_time
+</code></pre>
+
+<ul>
+<li>переходим в каталог <code>/etc/munin/plugin-conf.d</code>:</li>
+</ul>
+
+<pre><code class="language-bash">cd /etc/munin/plugin-conf.d
+</code></pre>
+
+<ul>
+<li>в файле <code>munin-node</code> находим (или создаем) секцию <code>nginx*</code>, где в качестве пользователя укажем <code>root</code>:</li>
+</ul>
+
+<pre><code class="language-text">...
+[nginx*]
+user root
+...
+</code></pre>
+
+<ul>
+<li>перезапускаем демон <code>munin-node</code>:</li>
+</ul>
+
+<pre><code class="language-bash">/etc/init.d/munin-node restart
+</code></pre>
+
+<p>Через некоторое время вы сможете увидеть результаты проделанной работы в виде графика.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2015%2f%25D0%25BF%25D0%25B8%25D1%2588%25D0%25B5%25D0%25BC-%25D1%2581%25D0%25B2%25D0%25BE%25D0%25B9-%25D0%25BF%25D0%25BB%25D0%25B0%25D0%25B3%25D0%25B8%25D0%25BD-%25D0%25B4%25D0%25BB%25D1%258F-muninnginx-request-time%2f - %d0%9f%d0%b8%d1%88%d0%b5%d0%bc%20%d1%81%d0%b2%d0%be%d0%b9%20%d0%bf%d0%bb%d0%b0%d0%b3%d0%b8%d0%bd%20%d0%b4%d0%bb%d1%8f%20Munin%3a%20nginx%20request%20time by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

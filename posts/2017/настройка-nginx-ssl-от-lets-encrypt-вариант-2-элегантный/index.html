@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Настройка Nginx &#43; SSL от Let’s Encrypt (вариант 2, элегантный)"/>
+  <meta name="twitter:description" content="Ранее мы уже рассматривали процесс настройки Nginx c SSL-сертификатами от Let’s Encrypt в ОС Debian 8, однако стоит признать, что есть более элегантный и простой способ настройки и использования бесплатных сертификатов. Давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Настройка Nginx &#43; SSL от Let’s Encrypt (вариант 2, элегантный) &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Настройка Nginx &#43; SSL от Let’s Encrypt (вариант 2, элегантный)
+                    </h1>
+                    <h2 class="headline">
+                    Feb 9, 2017 21:08
+                    · 520 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/nginx">nginx</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ssl">ssl</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Ранее мы уже рассматривали процесс <a href="https://ealebed.github.io/posts/2016/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-%D0%B8-ssl-%D0%BE%D1%82-lets-encrypt-%D0%BD%D0%B0-debian-8/">настройки Nginx c SSL-сертификатами от Let’s Encrypt в ОС Debian 8</a>, однако стоит признать, что есть более элегантный и простой способ настройки и использования бесплатных сертификатов. Давайте разберемся!</p>
+
+<p></p>
+
+<p>Итак, сначала нужно установить <strong>Certbot</strong>. Для ОС Debian Jessie сначала потребуется подключить backports, добавив в <code>/etc/apt/sources.list</code> следующую строку:</p>
+
+<pre><code class="language-bash">deb http://ftp.debian.org/debian/ jessie-backports main contrib non-free
+</code></pre>
+
+<p>Далее выполняем:</p>
+
+<pre><code class="language-bash">aptitude update &amp;&amp; aptitude install certbot -t jessie-backports
+</code></pre>
+
+<p>Для ОС Ubuntu версий ниже 16.10 установка <strong>Certbot</strong> сводится к следующему:</p>
+
+<pre><code class="language-bash">sudo add-apt-repository ppa:certbot/certbot
+</code></pre>
+
+<pre><code class="language-bash">sudo apt-get update
+</code></pre>
+
+<pre><code class="language-bash">sudo apt-get install --upgrade letsencrypt
+</code></pre>
+
+<p><strong>Примечание.</strong> Дальше в командной строке вместо <code>certbot</code> можно использовать <code>letsencrypt</code>.</p>
+
+<p>Инструкции по установке для других дистрибутивов можно поискать <a href="https://certbot.eff.org/">здесь</a>, но они обычно сводятся к:</p>
+
+<pre><code class="language-bash">wget -O /usr/local/bin/certbot-auto https://dl.eff.org/certbot-auto
+</code></pre>
+
+<pre><code class="language-bash">chmod +x /usr/local/bin/certbot-auto
+</code></pre>
+
+<pre><code class="language-bash">ln -s /usr/local/bin/certbot-auto /usr/local/bin/certbot
+</code></pre>
+
+<p>Получать/продлевать сертификаты будем по методу <code>webroot</code> без перезапуска web-сервера (Nginx), следовательно нам нужен каталог, который будет доступен удостоверяющему серверу из Интернета и в который certbot будет писать свои временные файлы. Для этого, в общем случае, во всех блоках <code>server</code> надо было добавить следующий <code>location</code>:</p>
+
+<pre><code>...
+    # Webroot for Lets Encrypt
+    location ~ /.well-known {
+       allow all;
+    }
+...
+</code></pre>
+
+<p>Если сайтов несколько, то вписывать такой блок для каждого неразумно, поэтому создадим файл <code>/etc/nginx/acme</code> следующего содержания:</p>
+
+<pre><code># Webroot for Lets Encrypt
+location /.well-known {
+    root /var/www/html;
+}
+</code></pre>
+
+<p>И далее для каждого домена, для которого подключаем сертификат, в блоке <code>server</code> будем инклудить этот файл:</p>
+
+<pre><code>...
+include acme;
+...
+</code></pre>
+
+<p>Аналогично следует поступить с настройками <code>ssl</code> — вынести их в отдельный файл и инклудить по необходимости. Для этого создаем файл <code>/etc/nginx/ssl</code> с таким содержимым:</p>
+
+<pre><code>ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+ssl_prefer_server_ciphers on;
+ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+ssl_ciphers &quot;EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4&quot;;
+ssl_session_timeout 1h;
+ssl_session_cache shared:SSL:50m;
+ssl_stapling on;
+ssl_stapling_verify on;
+add_header Strict-Transport-Security max-age=15768000;
+ 
+resolver 127.0.0.1 valid=300s;
+resolver_timeout 10s;
+</code></pre>
+
+<p>И теперь, вместо указания всех <code>ssl</code>-настроек в блоке server (как мы делали в <a href="https://ealebed.github.io/posts/2016/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-%D0%B8-ssl-%D0%BE%D1%82-lets-encrypt-%D0%BD%D0%B0-debian-8/">предыдущий раз</a>), указываем только пути к сертификатам (они будут отличаться для каждого сайта) и инклудим общие настройки:</p>
+
+<pre><code>...
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
+ 
+    include /etc/nginx/ssl;
+...
+</code></pre>
+
+<p>Чтобы каждый раз при создании/продлении сертификата не писать длинную строку из опций, сохраним их в файл конфигурации <code>/etc/letsencrypt/cli.ini</code>:</p>
+
+<pre><code>authenticator = webroot
+webroot-path = /var/www/html
+post-hook = service nginx reload
+text = True
+</code></pre>
+
+<p>Также нужно зарегистрироваться в Let’s Encrypt (если вы еще не зарегистрированы и это ваш первый опыт настройки сертификатов):</p>
+
+<pre><code class="language-bash">certbot register --email admin@example.com
+</code></pre>
+
+<p>Теперь все готово для получения сертификата, запускаем в командной строке:</p>
+
+<pre><code class="language-bash">certbot certonly -d example.com
+</code></pre>
+
+<p>Если вы вдруг забыли указать поддомен (например, www) или с момента получения сертификата у вас появились новые поддомены, то можно просто запустить команду еще раз, добавив нужные имена:</p>
+
+<pre><code class="language-bash">certbot certonly -d example.com -d www.example.com -d voip.example.com
+</code></pre>
+
+<p>Сертификаты выдаются на три месяца, но с автоматическим продлением никаких проблем нет. Если вы используете ОС Debian Jessie, то в кронтабе <code>/etc/cron.d/certbot</code> нужно добавить ключ <code>--allow-subset-of-names</code>. Этот ключ позволяет получить сертификаты для частичного набора доменов (особенно актуально при переносе поддоменов на другие сервера).</p>
+
+<p>Если у вас другая ОС (или просто нет файла <code>/etc/cron.d/certbot</code>), то следует добавить одну строку в рутовый кронтаб, для этого делаем:</p>
+
+<pre><code class="language-bash">sudo crontab -e
+</code></pre>
+
+<p>И дописываем следующую строку:</p>
+
+<pre><code>42 */12 * * * certbot renew --quiet --allow-subset-of-names
+</code></pre>
+
+<p>На этом все, ну а для поклонников утилит <code>tee</code> и <code>sed</code> есть хорошее <a href="https://www.alexeykopytko.com/2017/free-ssl-from-letsencrypt/">руководство</a> от Алексея Копытько.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2f%25D0%25BD%25D0%25B0%25D1%2581%25D1%2582%25D1%2580%25D0%25BE%25D0%25B9%25D0%25BA%25D0%25B0-nginx-ssl-%25D0%25BE%25D1%2582-lets-encrypt-%25D0%25B2%25D0%25B0%25D1%2580%25D0%25B8%25D0%25B0%25D0%25BD%25D1%2582-2-%25D1%258D%25D0%25BB%25D0%25B5%25D0%25B3%25D0%25B0%25D0%25BD%25D1%2582%25D0%25BD%25D1%258B%25D0%25B9%2f - %d0%9d%d0%b0%d1%81%d1%82%d1%80%d0%be%d0%b9%d0%ba%d0%b0%20Nginx%20%2b%20SSL%20%d0%be%d1%82%20Let%e2%80%99s%20Encrypt%20%28%d0%b2%d0%b0%d1%80%d0%b8%d0%b0%d0%bd%d1%82%202%2c%20%d1%8d%d0%bb%d0%b5%d0%b3%d0%b0%d0%bd%d1%82%d0%bd%d1%8b%d0%b9%29 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

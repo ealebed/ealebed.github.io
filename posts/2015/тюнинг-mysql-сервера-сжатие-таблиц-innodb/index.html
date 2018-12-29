@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Тюнинг MySQL-сервера: сжатие таблиц InnoDB"/>
+  <meta name="twitter:description" content="В больших проектах со временем размер баз данных разрастается до множества гигабайт (терабайт), поэтому всегда остается открытым вопрос как с этим бороться.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Тюнинг MySQL-сервера: сжатие таблиц InnoDB &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Тюнинг MySQL-сервера: сжатие таблиц InnoDB
+                    </h1>
+                    <h2 class="headline">
+                    Jul 8, 2015 22:21
+                    · 293 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/mysql">mysql</a>
+                          
+                              <a href="https://ealebed.github.io/tags/innodb">innodb</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В больших проектах со временем размер баз данных разрастается до множества гигабайт (терабайт), поэтому всегда остается открытым вопрос как с этим бороться.</p>
+
+<p></p>
+
+<p>Известно несколько вариантов решения данной проблемы — уменьшение объема данных (грубо говоря, удаление старых записей), разделение одной базы данных на несколько, шардирование, приобретение нового оборудования (новых серверов или жестких дисков большего объема).</p>
+
+<p>В большинстве случаев, уменьшение объема данных невозможно, так как база данных увеличивается за счет активного использования. Более того, если движок базы данных InnoDB, то недостаточно просто удалить записи из таблиц. Иногда архитектура проекта не позволяет разделить одну базу данных на несколько, а шардирование хорошо реализуется только при условии отсутствия (или минимального количества) связей между таблицами. Покупка нового оборудования стоит денег и требует времени на его установку и настройку.</p>
+
+<p>Разработчики проекта <a href="https://basecamp.com/">Basecamp</a> для своей базы данных использовали <strong>сжатие таблиц InnoDB (InnoDB compression)</strong> — давайте разберемся с таким подходом!</p>
+
+<p>Прежде чем использовать их опыт, необходимо знать следующее:</p>
+
+<ul>
+<li><strong>сжатие таблиц InnoDB</strong> лучше применять на таблицах с данными типа text/BLOB;</li>
+<li>при работе со сжатыми таблицами увеличивается нагрузка на процессор (за счет компрессии/декомпрессии таблиц).</li>
+</ul>
+
+<p>Что нужно для <strong>сжатия таблиц InnoDB</strong>:</p>
+
+<ul>
+<li>тип движка базы данных (<strong>storage engine</strong>) должен быть <strong>InnoDB</strong>;</li>
+</ul>
+
+<pre><code class="language-sql">show variables like 'storage_engine'\G;
+*************************** 1. row ***************************
+Variable_name: storage_engine
+        Value: InnoDB
+1 row in set (0.00 sec)
+</code></pre>
+
+<ul>
+<li>параметр <strong>innodb_file_per_table</strong> должен быть включен (как включить данную опцию читайте <a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BE%D0%BF%D1%86%D0%B8%D0%B8-innodb_file_per_table/">в этой статье</a>);</li>
+</ul>
+
+<pre><code class="language-sql">show variables like 'innodb_file_per_table'\G;
+*************************** 1. row ***************************
+Variable_name: innodb_file_per_table
+        Value: ON
+1 row in set (0.00 sec)
+</code></pre>
+
+<ul>
+<li>параметр <strong>innodb_file_format = Barracuda</strong> (<a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2-barracuda/">подробнее об этом параметре читайте здесь</a>);</li>
+</ul>
+
+<pre><code class="language-sql">show variables like 'innodb_file_format'\G;
+*************************** 1. row ***************************
+Variable_name: innodb_file_format
+        Value: Barracuda
+1 row in set (0.00 sec)
+</code></pre>
+
+<ul>
+<li>помните, что лучше сжимаются таблицы с текстовыми полями.</li>
+</ul>
+
+<p>Как сжать таблицу:</p>
+
+<ul>
+<li>подключаемся к MySQL-серверу:</li>
+</ul>
+
+<pre><code class="language-bash">mysql -u&lt;имя_пользователя&gt; -p&lt;пароль&gt;
+</code></pre>
+
+<ul>
+<li>выбираем базу данных:</li>
+</ul>
+
+<pre><code class="language-bash">use &lt;имя_базы_данных&gt;;
+</code></pre>
+
+<ul>
+<li>выполняем запрос:</li>
+</ul>
+
+<pre><code class="language-sql">ALTER TABLE &lt;имя_таблицы&gt; ROW_FORMAT=COMPRESSED;
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2015%2f%25D1%2582%25D1%258E%25D0%25BD%25D0%25B8%25D0%25BD%25D0%25B3-mysql-%25D1%2581%25D0%25B5%25D1%2580%25D0%25B2%25D0%25B5%25D1%2580%25D0%25B0-%25D1%2581%25D0%25B6%25D0%25B0%25D1%2582%25D0%25B8%25D0%25B5-%25D1%2582%25D0%25B0%25D0%25B1%25D0%25BB%25D0%25B8%25D1%2586-innodb%2f - %d0%a2%d1%8e%d0%bd%d0%b8%d0%bd%d0%b3%20MySQL-%d1%81%d0%b5%d1%80%d0%b2%d0%b5%d1%80%d0%b0%3a%20%d1%81%d0%b6%d0%b0%d1%82%d0%b8%d0%b5%20%d1%82%d0%b0%d0%b1%d0%bb%d0%b8%d1%86%20InnoDB by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

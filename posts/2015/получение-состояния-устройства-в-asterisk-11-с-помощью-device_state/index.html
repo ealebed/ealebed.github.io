@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Получение состояния устройства в Asterisk 11 с помощью DEVICE_STATE"/>
+  <meta name="twitter:description" content="Если используется Call Waiting (режим ожидания для второго входящего звонка при занятой линии) в Asterisk, то при звонке уже разговаривающему абоненту мы услышим в трубке обычные гудки дозвона.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Получение состояния устройства в Asterisk 11 с помощью DEVICE_STATE &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Получение состояния устройства в Asterisk 11 с помощью DEVICE_STATE
+                    </h1>
+                    <h2 class="headline">
+                    Sep 24, 2015 16:26
+                    · 315 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/asterisk">asterisk</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Если используется <code>Call Waiting</code> (режим ожидания для второго входящего звонка при занятой линии) в Asterisk, то при звонке уже разговаривающему абоненту мы услышим в трубке обычные гудки дозвона.</p>
+
+<p></p>
+
+<p>В такой ситуации трудно понять, разговаривает ли сотрудник по второй линии или его просто нет на рабочем месте. Давайте разберемся с вариантами решения этой проблемы!</p>
+
+<p>Самое очевидное решение — отключить поддержку второй линии, но тогда абонент не узнает кто еще пытался ему дозвониться. В Asterisk 11 данную проблему хорошо решает <strong>получение состояния устройства с помощью DEVICE_STATE()</strong>.</p>
+
+<p><strong>Примечание.</strong> Функция <code>DEVICE_STATE()</code> используется для получения или установки состояний устройства. Также функция может использоваться для установки особенных состояний устройства из плана набора (в этом случае для указания имени состояния должен использоваться префикс «Custom:»)</p>
+
+<p>В нашем случае используются телефонные аппараты Cisco 504G и Linksys SPA942, которые поддерживают четыре телефонные линии. В случае «занятости» аппарат Cisco 504G возвращает статус BUSY, а аппарат Linksys SPA942 возвращает статус INUSE.</p>
+
+<p><strong>Примечание.</strong> На самом деле существует девять возможных значений состояния устройства — <code>UNKNOWN</code>, <code>NOT_INUSE</code>, <code>INUSE</code>, <code>BUSY</code>, <code>INVALID</code>, <code>UNAVAILABLE</code>, <code>RINGING</code>, <code>RINGINUSE</code> и <code>ONHOLD</code>, но мы будем обрабатывать только два из них.</p>
+
+<p>Для получения состояния устройства с помощью <code>DEVICE_STATE()</code> делаем следующее:</p>
+
+<ul>
+<li>открываем на редактирование конфиг <code>/etc/asterisk/sip.conf</code>:</li>
+</ul>
+
+<pre><code class="language-bash">nano /etc/asterisk/sip.conf
+</code></pre>
+
+<ul>
+<li>в созданном <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B2%D0%BD%D1%83%D1%82%D1%80%D0%B5%D0%BD%D0%BD%D0%B8%D1%85-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%BE%D0%B2/">ранее</a> шаблоне <code>[template-office]</code> добавим строку:</li>
+</ul>
+
+<pre><code class="language-text">...
+callcounter=yes
+...
+</code></pre>
+
+<ul>
+<li>открываем конфиг <code>/etc/asterisk/extensions.conf</code>:</li>
+</ul>
+
+<pre><code class="language-bash">nano /etc/asterisk/extensions.conf
+</code></pre>
+
+<ul>
+<li>и добавляем в контекст <code>[office-in]</code> (перед вызовом <code>Dial</code>) следующие строки:</li>
+</ul>
+
+<pre><code class="language-text">...
+exten =&gt; s,n,Log(NOTICE, &quot;101 has DEVICE STATE ${DEVICE_STATE(SIP/101)}&quot;)
+exten =&gt; s,n,GotoIf($[&quot;${DEVICE_STATE(SIP/101)}&quot; = &quot;BUSY&quot;]?s-BUSY,1)
+exten =&gt; s,n,GotoIf($[&quot;${DEVICE_STATE(SIP/101)}&quot; = &quot;INUSE&quot;]?s-BUSY,1)
+...
+</code></pre>
+
+<p>Теперь при звонке на номер 101 будет проверяться состояние телефонного аппарата, и если функция <code>DEVICE_STATE()</code> вернет состояние устройства <code>BUSY</code> или <code>INUSE</code>, то будет осуществлен условный переход на метку <code>s-BUSY,1</code> для дальнейшей обработки звонка. Далее звонок будем обрабатывать с помощью голосового меню, организацию которого рассмотрим в следующей статье.</p>
+
+<p>Выполнять обработку можно и без условного перехода, в этой же строке, например так:</p>
+
+<pre><code class="language-text">exten =&gt; s,n,ExecIf($[&quot;${DEVICE_STATE(SIP/101)}&quot; = &quot;INUSE&quot;]?Playback(abonent_zanyat))
+</code></pre>
+
+<p>Для применения изменений в конфигах Asterisk не забываем выполнить:</p>
+
+<pre><code class="language-bash">/etc/init.d/asterisk reload
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2015%2f%25D0%25BF%25D0%25BE%25D0%25BB%25D1%2583%25D1%2587%25D0%25B5%25D0%25BD%25D0%25B8%25D0%25B5-%25D1%2581%25D0%25BE%25D1%2581%25D1%2582%25D0%25BE%25D1%258F%25D0%25BD%25D0%25B8%25D1%258F-%25D1%2583%25D1%2581%25D1%2582%25D1%2580%25D0%25BE%25D0%25B9%25D1%2581%25D1%2582%25D0%25B2%25D0%25B0-%25D0%25B2-asterisk-11-%25D1%2581-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-device_state%2f - %d0%9f%d0%be%d0%bb%d1%83%d1%87%d0%b5%d0%bd%d0%b8%d0%b5%20%d1%81%d0%be%d1%81%d1%82%d0%be%d1%8f%d0%bd%d0%b8%d1%8f%20%d1%83%d1%81%d1%82%d1%80%d0%be%d0%b9%d1%81%d1%82%d0%b2%d0%b0%20%d0%b2%20Asterisk%2011%20%d1%81%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20DEVICE_STATE by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

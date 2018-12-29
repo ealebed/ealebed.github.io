@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Практические примеры использования sysdig"/>
+  <meta name="twitter:description" content="В Linux используется целый набор утилит для сбора и анализа информации о состоянии системы. Примеры работы со многими из этих диагностических инструментов мы уже рассматривали — раз, два, три.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Практические примеры использования sysdig &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Практические примеры использования sysdig
+                    </h1>
+                    <h2 class="headline">
+                    Feb 12, 2018 08:55
+                    · 1033 words
+                    · 5 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/monitoring">monitoring</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/sysdig">sysdig</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В Linux используется целый набор утилит для сбора и анализа информации о состоянии системы. Примеры работы со многими из этих диагностических инструментов мы уже рассматривали — <a href="https://ealebed.github.io/posts/2016/4-%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-%D0%B4%D0%BB%D1%8F-%D0%B4%D0%B8%D0%B0%D0%B3%D0%BD%D0%BE%D1%81%D1%82%D0%B8%D0%BA%D0%B8-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BD%D1%8B%D1%85-%D0%BF%D1%80%D0%BE%D0%B1%D0%BB%D0%B5%D0%BC/">раз</a>, <a href="https://ealebed.github.io/posts/2016/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-lsof/">два</a>, <a href="https://ealebed.github.io/posts/2016/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-nmap/">три</a>.</p>
+
+<p></p>
+
+<p><strong>Утилита Sysdig</strong> благодаря своей фунциональности вполне способна заменить их — давайте разберемся!</p>
+
+<p>Меня данная утилита заинтересовала прежде всего возможностью мониторинга docker-контейнеров:</p>
+
+<p><em>Sysdig provides additional value by focusing on a few key principles:
+offering native support for all Linux container technologies, including Docker, LXC, etc</em></p>
+
+<p>Установка в Debian-based дистрибутивах выглядит следующим образом:</p>
+
+<pre><code class="language-bash">curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public | apt-key add -
+</code></pre>
+
+<pre><code class="language-bash">curl -s -o /etc/apt/sources.list.d/draios.list http://download.draios.com/stable/deb/draios.list
+</code></pre>
+
+<pre><code class="language-bash">apt-get update
+</code></pre>
+
+<pre><code class="language-bash">apt-get -y install linux-headers-$(uname -r)
+</code></pre>
+
+<pre><code class="language-bash">apt-get -y install sysdig
+</code></pre>
+
+<p>Информацию о процессе установки в других дистрибутивах можно найти на <a href="https://www.sysdig.org/install/">официальном сайте</a>.</p>
+
+<p>Первый запуск команды может изрядно испугать:</p>
+
+<pre><code class="language-bash">sysdig
+...
+223028 16:20:28.018155561 3 mc (4078) &lt; select res=1 
+223029 16:20:28.018155742 3 mc (4078) &gt; read fd=5(/dev/ptmx) size=128 
+223030 16:20:28.018155824 2 gnome-terminal- (3564) &lt; read res=116 data=15149 16:20:27.890776487 3  (15982) &gt; switch next=4078(mc) pgft_maj=0 pgft_m 
+223031 16:20:28.018156006 2 gnome-terminal- (3564) &gt; read fd=15(/dev/ptmx) size=3046 
+223032 16:20:28.018156183 3 mc (4078) &lt; read res=72 data=15151 16:20:27.890776843 1 gnome-terminal- (3564) &gt; recvmsg fd=4(&lt; u &gt;) .. 
+223033 16:20:28.018156337 2 gnome-terminal- (3564) &lt; read res=-11(EAGAIN) data= 
+...
+</code></pre>
+
+<p>В стандартный вывод попадают события (по одному событию на строку) в следующем формате:</p>
+
+<pre><code class="language-bash">%evt.num %evt.time %evt.cpu %proc.name (%thread.tid) %evt.dir %evt.type %evt.args
+</code></pre>
+
+<p>Здесь:</p>
+
+<ul>
+<li><code>evt.num</code> — номер события;</li>
+<li><code>evt.time</code> — время события;</li>
+<li><code>evt.cpu</code> — номер процессора, в котором было перехвачено событие;</li>
+<li><code>proc.name</code> — имя процесса;</li>
+<li><code>thread.tid</code> — номер потока (у однопотоковых процессов он совпадает c номером процесса);</li>
+<li><code>evt.dir</code> — направление события (&lt; — для входящих процессов, &gt; — для исходящих);</li>
+<li><code>evt.type</code> — тип события;</li>
+<li><code>evt.args</code> — аргументы события.</li>
+</ul>
+
+<p>Сохранить информацию о событиях в файл можно так:</p>
+
+<pre><code class="language-bash">sysdig -w myfile.scap
+</code></pre>
+
+<p>или так (записать 100 событий):</p>
+
+<pre><code class="language-bash">sysdig —n 100 —w myfile.scap
+</code></pre>
+
+<p>Фильтруем вывод событий одной программы (например, <code>chrome</code>):</p>
+
+<pre><code class="language-bash">sysdig proc.name = chrome
+...
+180621 16:34:36.898787194 0 chrome (9083) &gt; futex addr=7FFFFD8F2E0C op=137(FUTEX_PRIVATE_FLAG|FUTEX_WAIT_BITSET) val=1 
+180622 16:34:36.898790679 0 chrome (9083) &gt; switch next=0 pgft_maj=39 pgft_min=199159 vm_size=1242504 vm_rss=153276 vm_swap=25188 
+180624 16:34:36.899067296 0 chrome (9150) &lt; futex res=-110(ETIMEDOUT) 
+180625 16:34:36.899070845 0 chrome (9150) &gt; futex addr=7FFFFD8F2DE0 op=129(FUTEX_PRIVATE_FLAG|FUTEX_WAKE) val=1 
+180626 16:34:36.899071321 0 chrome (9150) &lt; futex res=0 
+180627 16:34:36.899083270 0 chrome (9150) &gt; gettid 
+180628 16:34:36.899083852 0 chrome (9150) &lt; gettid 
+180629 16:34:36.899149695 0 chrome (9150) &gt; gettid 
+...
+</code></pre>
+
+<p>Уберем из предыдущего вывода события типа <code>gettid</code>:</p>
+
+<pre><code class="language-bash">sysdig proc.name = chrome and evt.type!=gettid
+...
+209252 16:39:40.670972885 2 chrome (9185) &lt; futex res=0 
+209271 16:39:40.671141167 2 chrome (9185) &gt; futex addr=7FFFFD8F2E0C op=137(FUTEX_PRIVATE_FLAG|FUTEX_WAIT_BITSET) val=1 
+209272 16:39:40.671143614 2 chrome (9185) &gt; switch next=0 pgft_maj=0 pgft_min=714232 vm_size=1246760 vm_rss=173320 vm_swap=12756 
+210554 16:39:40.682201010 3 chrome (26029) &lt; futex res=-110(ETIMEDOUT) 
+210556 16:39:40.682206257 3 chrome (26029) &gt; futex addr=7FFFFD8F2DE0 op=129(FUTEX_PRIVATE_FLAG|FUTEX_WAKE) val=1 
+210558 16:39:40.682207044 3 chrome (26029) &lt; futex res=0 
+210572 16:39:40.682372914 3 chrome (26029) &gt; futex addr=7FFFFD8F2E0C op=137(FUTEX_PRIVATE_FLAG|FUTEX_WAIT_BITSET) val=1 
+210573 16:39:40.682376030 3 chrome (26029) &gt; switch next=0 pgft_maj=4 pgft_min=85552 vm_size=1230936 vm_rss=160852 vm_swap=6400 
+...
+</code></pre>
+
+<p>Форматируем вывод с помощью опции <code>-p</code>. Например, вывести в консоль имена пользователей, выполняющих команду <code>cd</code> (системные вызовы <code>chdir</code>) и имена директорий, в которые переходят пользователи можно так:</p>
+
+<pre><code class="language-bash">sysdig -p&quot;user:%user.name dir:%evt.arg.path&quot; evt.type=chdir
+...
+user:root dir:/data
+user:root dir:/var/run/docker/libcontainerd/containerd/bb9716c53b30446d2cf71b02ae72357d12909c6a23b22faff4c2e6fba64d0911/7128d41f044c88220b6dbdbb7086920e5607cc0e9ba158192d9d9e0130d27f6a
+user:root dir:/var/run/docker/libcontainerd/bb9716c53b30446d2cf71b02ae72357d12909c6a23b22faff4c2e6fba64d0911
+user:root dir:/var/lib/docker/overlay2/9daf5e57ecc960ed30068bd57f98b041ef6645e051ca14a98a9d4dfcb6156100/merged
+...
+</code></pre>
+
+<p>Также есть возможность использовать для анализа событий готовые lua-скрипты, которые разработчики продукта именуют <code>chisels</code> (в переводе - &ldquo;долото&rdquo;, &ldquo;стаместка&rdquo;). Список всех таких скриптов, рассотритованых по категориям, можно увидеть с помощью команды:</p>
+
+<pre><code class="language-bash">sysdig -cl
+</code></pre>
+
+<p>Описание конкретного скрипта можно прочесть используя команду <code>sysdig -i &lt;имя_скрипта&gt;</code>, например:</p>
+
+<pre><code class="language-bash">sysdig -i topprocs_net
+
+Category: Net
+-------------
+topprocs_net    Top processes by network I/O
+
+Sort the list of the processes that use the most network bandwidth. This chisel
+ is compatible with containers using the sysdig -pc or -pcontainer argument, ot
+herwise no container information will be shown.
+Args:
+(None)
+</code></pre>
+
+<p>Фильтры можно применять и к &ldquo;чизелам&rdquo; (<code>chisels</code>). Например, посмотреть к каким файлам обращается пользователь e.lebed так:</p>
+
+<pre><code class="language-bash">sysdig -c topfiles_bytes &quot;user.name=e.lebed&quot;
+</code></pre>
+
+<p>Теперь немного о анализе событий в docker-контейнерах.
+Просмотреть информацию о процессах (в т. ч. запущенных в контейнерах), потребляющих больше всего трафика можно так:</p>
+
+<pre><code class="language-bash">sysdig -pc -c topprocs_net
+Bytes               Process             Host_pid            Container_pid       container.name      
+--------------------------------------------------------------------------------
+800B                redis-server        7181                1                   redis
+784B                Chrome_IOThread     8668                8715                host
+136B                redis-cli           23621               17865               redis
+136B                redis-cli           23553               17853               redis
+136B                redis-cli           23691               17877               redis
+98B                 redis-cli           23587               17859               redis
+98B                 redis-cli           23518               17847               redis
+98B                 redis-cli           23656               17871               redis
+98B                 redis-cli           23726               17883               redis
+49B                 avahi-daemon        677                 677                 host
+</code></pre>
+
+<p>Информация об использовании дисковой подсистемы (в т. ч. контейнерами):</p>
+
+<pre><code class="language-bash">sysdig -pc -c topprocs_file
+Bytes               Process             Host_pid            Container_pid       container.name      
+--------------------------------------------------------------------------------
+14.05M              php-fpm             6886                8                   docker_php-fpm_1
+14.05M              php-fpm             6888                10                  docker_php-fpm_1
+14.05M              php-fpm             6890                12                  docker_php-fpm_1
+14.05M              php-fpm             6889                11                  docker_php-fpm_1
+2.38M               mpegaudioparse3     13372               13393               host
+1.28M               curl                29468               29468               host
+183.14KB            Chrome_IOThread     8668                8715                host
+</code></pre>
+
+<p>Увидеть информацию об использовании процессора так:</p>
+
+<pre><code class="language-bash">sysdig -pc -c topprocs_cpu
+CPU%                Process             Host_pid            Container_pid       container.name
+--------------------------------------------------------------------------------
+0.00%               gmain               716                 716                 host
+0.00%               gdbus               1025                1025                host
+0.00%               systemd             963                 963                 host
+0.00%               php-fpm             12858               1                   docker_php-fpm_1
+0.00%               supervisord         13152               1                   dynamicus
+0.00%               bash                13145               1                   sphinxsearch
+0.00%               sysdig              15393               15393               host
+0.00%               fish                12507               12507               host
+0.00%               beam.smp            15005               338                 rabbitmq
+0.00%               sshd                25107               25107               host
+</code></pre>
+
+<p>или так (использование CPU конкретным контейнером):</p>
+
+<pre><code class="language-bash">sysdig -pc -c topprocs_cpu container.name=docker_php-fpm_1
+CPU%                Process             Host_pid            Container_pid       container.name      
+--------------------------------------------------------------------------------
+0.00%               php-fpm             6890                12                  docker_php-fpm_1
+0.00%               php-fpm             6886                8                   docker_php-fpm_1
+0.00%               php-fpm             6302                1                   docker_php-fpm_1
+0.00%               php-fpm             6887                9                   docker_php-fpm_1
+0.00%               php-fpm             6889                11                  docker_php-fpm_1
+0.00%               php-fpm             6888                10                  docker_php-fpm_1
+</code></pre>
+
+<p>Приятный бонус: утилита <code>sysdig</code> также имеет UI (очень похож на интерфейс утилиты <code>htop</code>). Для запуска нужно использовать команду:</p>
+
+<pre><code class="language-bash">csysdig
+</code></pre>
+
+<p>Далее можно с помощью функциональных клавиш фильтровать/сортировать вывод событий, менять вид отображения, использовать поиск и &ldquo;погружаться&rdquo; (<code>dig</code>) глубже в интересующий процесс для получения дополнительных сведений. Так как нас прежде всего интересуют docker-контейнеры, изменим текущий вид (View) - нажимаем F2 и с помощью стрелок навигации выбираем пункт Containers. На экране появится информация о запущенных контейнерах.</p>
+
+<p>Далее можно выбрать из списка интересующий нас контейнер и &ldquo;погрузиться&rdquo; в подробности нажав клавишу F6 (вернуться на предыдущий уровень можно нажав кнопку Backspace или дважды Esc). По нажатию F8 на интересующем нас контейнере видим список действий, которые можно к нему применить (если вы не выбрали вид (View) отображения Containers, то список доступных действий будет отличаться - будут предложены действия, применимые к процессам).</p>
+
+<p>Стоит отметить, что в последней версии утилиты <code>sysdig</code> есть виды (View), позволяющие мониторить Kubernetes и его сущности (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>pods</code></a> / <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/"><code>deployments</code></a> / <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-10-%D0%BD%D0%B5%D0%B9%D0%BC%D1%81%D0%BF%D0%B5%D0%B9%D1%81%D1%8B-namespaces/"><code>namespaces</code></a> / <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>replicasets</code></a> / <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-11-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B-services/"><code>services</code></a>).</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2f%25D0%25BF%25D1%2580%25D0%25B0%25D0%25BA%25D1%2582%25D0%25B8%25D1%2587%25D0%25B5%25D1%2581%25D0%25BA%25D0%25B8%25D0%25B5-%25D0%25BF%25D1%2580%25D0%25B8%25D0%25BC%25D0%25B5%25D1%2580%25D1%258B-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D1%258F-sysdig%2f - %d0%9f%d1%80%d0%b0%d0%ba%d1%82%d0%b8%d1%87%d0%b5%d1%81%d0%ba%d0%b8%d0%b5%20%d0%bf%d1%80%d0%b8%d0%bc%d0%b5%d1%80%d1%8b%20%d0%b8%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f%20sysdig by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

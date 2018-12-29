@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Практические примеры использования tcpdump"/>
+  <meta name="twitter:description" content="Tcpdump - пакетный сниффер и главный инструмент сетевого анализа для специалистов по информационной безопасности. Рассмотрим несколько практических примеров &ldquo;подслушивания&rdquo; сетевого траффика.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Практические примеры использования tcpdump &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Практические примеры использования tcpdump
+                    </h1>
+                    <h2 class="headline">
+                    Oct 18, 2018 06:02
+                    · 2001 words
+                    · 10 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/tcpdump">tcpdump</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p><code>Tcpdump</code> - пакетный сниффер и главный инструмент сетевого анализа для специалистов по информационной безопасности. Рассмотрим несколько практических примеров &ldquo;подслушивания&rdquo; сетевого траффика.</p>
+
+<p></p>
+
+<p>Работает <code>tcpdump</code> при помощи интерфейса <code>bpf</code> (Berkeley Packet Filter). Если поддержку этого устройства отключить, то сниффинг в UNIX (и BSD) окажется невозможен. Установка утилиты не должна вызывать сложностей, в Debian/Ubuntu это можно сделать следующим образом:</p>
+
+<pre><code class="language-bash">apt install tcpdump
+</code></pre>
+
+<p>в RedHat/Centos:</p>
+
+<pre><code class="language-bash">yum install tcpdump
+</code></pre>
+
+<p>Если запустить утилиту <code>tcpdump</code> без дополнительных опций, то она начнет анализировать траффик на всех доступных сетевых интерфейсах в системе:</p>
+
+<pre><code class="language-bash">tcpdump
+
+tcpdump: data link type PKTAP
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on pktap, link-type PKTAP (Apple DLT_PKTAP), capture size 262144 bytes
+16:34:25.733424 STP 802.1w, Rapid STP, Flags [Learn, Forward], bridge-id 8000.d4:ca:6d:e0:84:31.8002, length 39
+16:34:25.733579 STP 802.1w, Rapid STP, Flags [Learn, Forward], bridge-id 8000.d4:ca:6d:e0:83:31.8001, length 43
+^C16:34:25.733861 ARP, Probe 169.254.42.136, length 46
+
+3 packets captured
+89 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>Несколько наиболее часто используемых опций для утилиты <code>tcpdump</code>:</p>
+
+<ul>
+<li><code>-i interface</code> - какой сетевой интерфейс будет использоваться для захвата пакетов;</li>
+<li><code>-n</code> - вывод IP-адреса вместо имени хоста;</li>
+<li><code>-t</code> - не выводить метку времени (timestamp) в каждой строке;</li>
+<li><code>-X</code> - вывод содержимого пакета в ASCII- и hex-формате;</li>
+<li><code>-v, -vv, -vvv</code> - увеличение кол-ва подробной информации;</li>
+<li><code>-c N</code> - завершение работы после получения N пакетов;</li>
+<li><code>-s N</code> - кол-во байтов пакета, которые будет обрабатывать <code>tcpdump</code>;</li>
+<li><code>-S</code> - выводить абсолютные порядковые номера;</li>
+<li><code>-q</code> - вывод минимума информации (имя протокола, откуда и куда шел пакет, порты и количество переданных данных);</li>
+<li><code>-w file</code> - запись данных <code>tcpdump</code> в двоичном формате в файл.</li>
+</ul>
+
+<p>Переходим к примерам.</p>
+
+<p>1) Вывод списка доступных сетевых интерфейсов:</p>
+
+<pre><code class="language-bash">tcpdump -D
+</code></pre>
+
+<p>Результат выполнения команды:</p>
+
+<pre><code>1.en0 [Up, Running]
+2.p2p0 [Up, Running]
+3.awdl0 [Up, Running]
+4.bridge0 [Up, Running]
+5.utun0 [Up, Running]
+6.en1 [Up, Running]
+</code></pre>
+
+<p>2) Захват 5 пакетов на сетевом интерфейсе <code>en0</code>:</p>
+
+<pre><code class="language-bash">tcpdump -i en0 -c 5
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on en0, link-type EN10MB (Ethernet), capture size 262144 bytes
+16:48:28.391511 IP 10.0.1.72.50241 &gt; 239.255.255.250.ssdp: UDP, length 174
+16:48:28.401952 IP 10.0.0.128.54878 &gt; google-public-dns-a.google.com.domain: 53956+ PTR? 72.1.0.10.in-addr.arpa. (40)
+16:48:28.450276 IP google-public-dns-a.google.com.domain &gt; 10.0.0.128.54878: 53956 NXDomain 0/0/0 (40)
+16:48:28.452045 IP 10.0.0.128.55520 &gt; google-public-dns-a.google.com.domain: 34082+ PTR? 250.255.255.239.in-addr.arpa. (46)
+16:48:28.498491 IP google-public-dns-a.google.com.domain &gt; 10.0.0.128.55520: 34082 NXDomain 0/1/0 (103)
+5 packets captured
+11 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>3) Выводить номер порта вместо используемого им протокола (для той же самой команды):</p>
+
+<pre><code class="language-bash">tcpdump -i en0 -c 5 -nn
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on en0, link-type EN10MB (Ethernet), capture size 262144 bytes
+16:50:50.933442 IP 10.0.0.92.5353 &gt; 224.0.0.251.5353: 0 AAAA (QM)? EPSON-655-3fl.local. (37)
+16:50:50.933690 IP6 fe80::148c:40ea:542c:2d8c.5353 &gt; ff02::fb.5353: 0 AAAA (QM)? EPSON-655-3fl.local. (37)
+16:50:50.934342 IP 10.0.0.237.2048 &gt; 239.255.255.250.1900: UDP, length 101
+16:50:51.138480 48:3b:38:2e:b9:12 &gt; ff:ff:ff:ff:ff:ff Null Supervisory, Receiver not Ready, rcv seq 64, Flags [Poll], length 42
+16:50:51.659581 IP 93.158.134.119.443 &gt; 10.0.0.128.51991: Flags [P.], seq 481586204:481586235, ack 4042079405, win 147, options [nop,nop,TS val 1448581989 ecr 1232876532], length 31
+5 packets captured
+10 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>4) Информация о входящих пакетах на всех интерфейсах на порту 53:</p>
+
+<pre><code class="language-bash">tcpdump dst port 53
+</code></pre>
+
+<p>Результат выполнения:</p>
+
+<pre><code>tcpdump: data link type PKTAP
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on pktap, link-type PKTAP (Apple DLT_PKTAP), capture size 262144 bytes
+16:59:30.701385 IP 10.0.0.128.rockwell-csp2 &gt; google-public-dns-a.google.com.domain: 38769+ A? clients4.google.com. (37)
+16:59:30.707188 IP 10.0.0.128.49702 &gt; google-public-dns-a.google.com.domain: 904+ PTR? 128.0.0.10.in-addr.arpa. (41)
+16:59:38.394251 IP 10.0.0.128.33399 &gt; google-public-dns-a.google.com.domain: 52728+ A? www.linkedin.com. (34)
+16:59:39.167025 IP 10.0.0.128.neto-wol-server &gt; google-public-dns-a.google.com.domain: 13145+ A? static.licdn.com. (34)
+...
+</code></pre>
+
+<p>5) Информация о пакетах на всех интерфейсах и всех портах, кроме 53:</p>
+
+<pre><code class="language-bash">tcpdump not port 53
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>tcpdump: data link type PKTAP
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on pktap, link-type PKTAP (Apple DLT_PKTAP), capture size 262144 bytes
+17:02:36.066118 IP 10.0.1.50.mdns &gt; 224.0.0.251.mdns: 0 [2n] [1au] ANY (QM)? Apple-TV.local. (105)
+17:02:36.066457 IP6 apple-tv.local.mdns &gt; ff02::fb.mdns: 0 [2n] [1au] ANY (QM)? Apple-TV.local. (105)
+17:02:36.168069 IP 10.0.1.199.mdns &gt; 224.0.0.251.mdns: 0 [1a] A (QM)? EPSON-655-3fl.local. (53)
+17:02:36.168076 ARP, Probe 169.254.137.194, length 46
+17:02:36.168433 IP 10.0.0.195.mdns &gt; 224.0.0.251.mdns: 0 [1a] A (QM)? EPSON-655-3fl.local. (53)
+17:02:36.168968 IP 10.0.0.75.56487 &gt; 239.255.255.250.ssdp: UDP, length 174
+17:02:36.312474 IP 10.0.0.128.mdns &gt; 224.0.0.251.mdns: 0 PTR (QU)? 194.137.254.169.in-addr.arpa. (46)
+17:02:36.312525 IP6 ealebed-macbook.local.mdns &gt; ff02::fb.mdns: 0 PTR (QU)? 194.137.254.169.in-addr.arpa. (46)
+17:02:36.373393 IP 10.0.0.110.mdns &gt; 224.0.0.251.mdns: 0 [1a] A (QM)? EPSON-655-3fl.local. (53)
+17:02:36.475371 IP 10.0.1.50.mdns &gt; 224.0.0.251.mdns: 0 [2n] [1au] ANY (QM)? Apple-TV.local. (105)
+17:02:36.475793 IP6 apple-tv.local.mdns &gt; ff02::fb.mdns: 0 [2n] [1au] ANY (QM)? Apple-TV.local. (105)
+17:02:36.476560 IP6 apple-tv.local.mdns &gt; ff02::fb.mdns: 0*- [0q] 1/0/1 PTR 70-35-60-63.1 Apple TV._sleep-proxy._udp.local. (101)
+17:02:36.476563 ARP, Probe 169.254.137.194, length 46
+17:02:36.782405 IP 10.0.1.50.mdns &gt; 224.0.0.251.mdns: 0*- [0q] 2/0/2 (Cache flush) AAAA fe80::1001:93a7:a8fe:7374, (Cache flush) A 10.0.1.50 (119)
+17:02:36.782823 IP6 apple-tv.local.mdns &gt; ff02::fb.mdns: 0*- [0q] 2/0/2 (Cache flush) AAAA fe80::1001:93a7:a8fe:7374, (Cache flush) A 10.0.1.50 (119)
+...
+</code></pre>
+
+<p>6) Информация о пакетах, переданных по протоколу <code>icmp</code> (в соседней консоли запускаем <code>ping 8.8.8.8</code>):</p>
+
+<pre><code class="language-bash">tcpdump -i en0 -c 5 -nn icmp
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on en0, link-type EN10MB (Ethernet), capture size 262144 bytes
+17:05:06.344119 IP 10.0.0.128 &gt; 8.8.8.8: ICMP echo request, id 54073, seq 0, length 64
+17:05:06.394107 IP 8.8.8.8 &gt; 10.0.0.128: ICMP echo reply, id 54073, seq 0, length 64
+17:05:07.348516 IP 10.0.0.128 &gt; 8.8.8.8: ICMP echo request, id 54073, seq 1, length 64
+17:05:07.397421 IP 8.8.8.8 &gt; 10.0.0.128: ICMP echo reply, id 54073, seq 1, length 64
+17:05:08.352231 IP 10.0.0.128 &gt; 8.8.8.8: ICMP echo request, id 54073, seq 2, length 64
+5 packets captured
+425 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>7) Записываем перехваченные пакеты в файл для дальнейшего анализа:</p>
+
+<pre><code class="language-bash">tcpdump -i en0 -c 5 -nn tcp -w packets-record.cap -s 0
+</code></pre>
+
+<p>Сами пакеты будут записаны в файл, в консоли увидим:</p>
+
+<pre><code>tcpdump: listening on en0, link-type EN10MB (Ethernet), capture size 262144 bytes
+5 packets captured
+44 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>8) Читаем информацию из файла:</p>
+
+<pre><code class="language-bash">tcpdump -r packets-record.cap
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>reading from file packets-record.cap, link-type EN10MB (Ethernet)
+17:08:21.821325 IP 10.0.0.128.51852 &gt; ec2-107-23-203-104.compute-1.amazonaws.com.https: Flags [P.], seq 601162185:601162473, ack 2264508809, win 4096, options [nop,nop,TS val 1233987441 ecr 638699261], length 288
+17:08:21.979792 IP ec2-107-23-203-104.compute-1.amazonaws.com.https &gt; 10.0.0.128.51852: Flags [.], ack 288, win 422, options [nop,nop,TS val 638702514 ecr 1233987441], length 0
+17:08:21.979796 IP ec2-107-23-203-104.compute-1.amazonaws.com.https &gt; 10.0.0.128.51852: Flags [P.], seq 1:326, ack 288, win 422, options [nop,nop,TS val 638702514 ecr 1233987441], length 325
+17:08:21.979868 IP 10.0.0.128.51852 &gt; ec2-107-23-203-104.compute-1.amazonaws.com.https: Flags [.], ack 326, win 4085, options [nop,nop,TS val 1233987599 ecr 638702514], length 0
+17:08:22.697706 IP s167i.storage.yandex.net.https &gt; 10.0.0.128.52124: Flags [.], ack 246357771, win 12, options [nop,nop,TS val 663985568 ecr 1233984018], length 0
+</code></pre>
+
+<p>9) Более подробная информация о пакетах:</p>
+
+<pre><code class="language-bash">tcpdump -i en0 -c 5 -ttttnnvvS
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>tcpdump: listening on en0, link-type EN10MB (Ethernet), capture size 262144 bytes
+2018-09-14 17:10:21.273159 IP (tos 0x0, ttl 2, id 21387, offset 0, flags [DF], proto UDP (17), length 160)
+    10.0.1.63.42699 &gt; 239.255.255.250.1900: [udp sum ok] UDP, length 132
+2018-09-14 17:10:21.886917 STP 802.1w, Rapid STP, Flags [Learn, Forward], bridge-id 8000.d4:ca:6d:e0:84:31.8002, length 39
+	message-age 0.00s, max-age 20.00s, hello-time 2.00s, forwarding-delay 15.00s
+	root-id 8000.d4:ca:6d:e0:84:31, root-pathcost 0, port-role Designated
+2018-09-14 17:10:21.886926 STP 802.1w, Rapid STP, Flags [Learn, Forward], bridge-id 8000.d4:ca:6d:e0:83:31.8001, length 43
+	message-age 0.00s, max-age 20.00s, hello-time 2.00s, forwarding-delay 15.00s
+	root-id 8000.d4:ca:6d:e0:83:31, root-pathcost 0, port-role Designated
+2018-09-14 17:10:22.091541 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.0.1.126 tell 10.0.0.222, length 46
+2018-09-14 17:10:22.296521 IP (tos 0x0, ttl 2, id 21580, offset 0, flags [DF], proto UDP (17), length 161)
+    10.0.1.63.42699 &gt; 239.255.255.250.1900: [udp sum ok] UDP, length 133
+5 packets captured
+5 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>10) Пакеты, полученные с определенного ip-адреса:</p>
+
+<pre><code class="language-bash">tcpdump -i en0 -c 5 -ttttnnvvS src host 8.8.8.8
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>tcpdump: listening on en0, link-type EN10MB (Ethernet), capture size 262144 bytes
+2018-09-14 17:14:29.214585 IP (tos 0x0, ttl 108, id 51066, offset 0, flags [none], proto UDP (17), length 118)
+    8.8.8.8.53 &gt; 10.0.0.128.20936: [udp sum ok] 45411 q: A? chatenabled.mail.google.com. 2/0/0 chatenabled.mail.google.com. CNAME b.googlemail.l.google.com., b.googlemail.l.google.com. A 172.217.16.7 (90)
+2018-09-14 17:15:00.959303 IP (tos 0x0, ttl 45, id 20470, offset 0, flags [none], proto UDP (17), length 102)
+    8.8.8.8.53 &gt; 10.0.0.128.61834: [udp sum ok] 32755 q: A? contacts.google.com. 2/0/0 contacts.google.com. CNAME plus.l.google.com., plus.l.google.com. A 172.217.16.14 (74)
+2018-09-14 17:15:01.030383 IP (tos 0x0, ttl 108, id 63166, offset 0, flags [none], proto UDP (17), length 132)
+    8.8.8.8.53 &gt; 10.0.0.128.61171: [udp sum ok] 9697 q: A? static-asm-skype.trafficmanager.net. 2/0/0 static-asm-skype.trafficmanager.net. CNAME neu1-authgw.cloudapp.net., neu1-authgw.cloudapp.net. A 52.178.207.179 (104)
+2018-09-14 17:15:01.545424 IP (tos 0x0, ttl 45, id 26902, offset 0, flags [none], proto UDP (17), length 152)
+    8.8.8.8.53 &gt; 10.0.0.128.65448: [udp sum ok] 3071 q: A? 1180c.ec.azureedge.net. 3/0/0 1180c.ec.azureedge.net. CNAME lb.apr-1180c.edgecastdns.net., lb.apr-1180c.edgecastdns.net. CNAME cs10.wpc.v0cdn.net., cs10.wpc.v0cdn.net. A 68.232.34.200 (124)
+2018-09-14 17:15:02.933648 IP (tos 0x0, ttl 108, id 56826, offset 0, flags [none], proto UDP (17), length 102)
+    8.8.8.8.53 &gt; 10.0.0.128.11992: [udp sum ok] 46837 q: A? flant.ru. 3/0/0 flant.ru. A 46.4.70.143, flant.ru. A 88.99.236.188, flant.ru. A 176.9.67.92 (74)
+5 packets captured
+1099 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>11) Пакеты, отправленные на определенный ip-адрес:</p>
+
+<pre><code class="language-bash">tcpdump -i en0 -c 5 -ttttnnvvS dst host 8.8.8.8
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>tcpdump: listening on en0, link-type EN10MB (Ethernet), capture size 262144 bytes
+2018-09-14 17:17:31.501414 IP (tos 0x0, ttl 255, id 10013, offset 0, flags [none], proto UDP (17), length 80)
+    10.0.0.128.57664 &gt; 8.8.8.8.53: [udp sum ok] 14939+ A? gs-loc-new.ls-apple.com.akadns.net. (52)
+2018-09-14 17:17:32.490921 IP (tos 0x0, ttl 64, id 52451, offset 0, flags [none], proto UDP (17), length 68)
+    10.0.0.128.43217 &gt; 8.8.8.8.53: [udp sum ok] 6632+ A? storage.mds.yandex.net. (40)
+2018-09-14 17:17:32.767095 IP (tos 0x0, ttl 64, id 49578, offset 0, flags [none], proto UDP (17), length 68)
+    10.0.0.128.55720 &gt; 8.8.8.8.53: [udp sum ok] 3143+ A? storage.mds.yandex.net. (40)
+2018-09-14 17:17:33.769442 IP (tos 0x0, ttl 64, id 50447, offset 0, flags [none], proto ICMP (1), length 56)
+    10.0.0.128 &gt; 8.8.8.8: ICMP 10.0.0.128 udp port 55720 unreachable, length 36
+	IP (tos 0x0, ttl 45, id 17556, offset 0, flags [none], proto UDP (17), length 84)
+    8.8.8.8.53 &gt; 10.0.0.128.55720: [no cksum] [|domain]
+2018-09-14 17:17:34.438324 IP (tos 0x0, ttl 64, id 43433, offset 0, flags [none], proto UDP (17), length 71)
+    10.0.0.128.51895 &gt; 8.8.8.8.53: [udp sum ok] 55021+ A? s23vla.storage.yandex.net. (43)
+5 packets captured
+244 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>12) Пакеты (входящие и исходящие) от определенного хоста:</p>
+
+<pre><code class="language-bash">tcpdump -i en0 -c 5 -ttttnnvvS host 8.8.8.8
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>tcpdump: listening on en0, link-type EN10MB (Ethernet), capture size 262144 bytes
+2018-09-14 17:27:27.825506 IP (tos 0x0, ttl 64, id 25419, offset 0, flags [none], proto UDP (17), length 61)
+    10.0.0.128.22110 &gt; 8.8.8.8.53: [udp sum ok] 55278+ A? ssl.gstatic.com. (33)
+2018-09-14 17:27:27.871838 IP (tos 0x0, ttl 45, id 50798, offset 0, flags [none], proto UDP (17), length 77)
+    8.8.8.8.53 &gt; 10.0.0.128.22110: [udp sum ok] 55278 q: A? ssl.gstatic.com. 1/0/0 ssl.gstatic.com. A 172.217.16.3 (49)
+2018-09-14 17:27:33.255311 IP (tos 0x0, ttl 255, id 22154, offset 0, flags [none], proto UDP (17), length 80)
+    10.0.0.128.55402 &gt; 8.8.8.8.53: [udp sum ok] 19893+ A? gs-loc-new.ls-apple.com.akadns.net. (52)
+2018-09-14 17:27:34.089989 IP (tos 0x0, ttl 108, id 40535, offset 0, flags [none], proto UDP (17), length 133)
+    8.8.8.8.53 &gt; 10.0.0.128.55402: [udp sum ok] 19893 q: A? gs-loc-new.ls-apple.com.akadns.net. 3/0/0 gs-loc-new.ls-apple.com.akadns.net. CNAME gs-loc.ls-apple.com.akadns.net., gs-loc.ls-apple.com.akadns.net. A 17.134.127.223, gs-loc.ls-apple.com.akadns.net. A 17.134.126.34 (105)
+2018-09-14 17:27:43.508417 IP (tos 0x0, ttl 64, id 63649, offset 0, flags [none], proto UDP (17), length 69)
+    10.0.0.128.49142 &gt; 8.8.8.8.53: [udp sum ok] 11740+ A? pollserver.lastpass.com. (41)
+5 packets captured
+504 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>13) Пакеты на определенном диапазоне портов:</p>
+
+<pre><code class="language-bash">tcpdump -i en0 -c 5 -nns 0 portrange 80-443
+</code></pre>
+
+<p>Результат:</p>
+
+<pre><code>tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on en0, link-type EN10MB (Ethernet), capture size 262144 bytes
+17:29:53.147192 IP 10.0.0.73.137 &gt; 10.0.3.255.137: NBT UDP PACKET(137): QUERY; REQUEST; BROADCAST
+17:29:53.147923 IP 10.0.2.164.137 &gt; 10.0.3.255.137: NBT UDP PACKET(137): QUERY; REQUEST; BROADCAST
+17:29:53.247888 IP 10.0.1.62.137 &gt; 10.0.3.255.137: NBT UDP PACKET(137): QUERY; REQUEST; BROADCAST
+17:29:53.248148 IP 10.0.0.111.137 &gt; 10.0.3.255.137: NBT UDP PACKET(137): QUERY; REQUEST; BROADCAST
+17:29:53.249846 IP 10.0.0.179.137 &gt; 10.0.3.255.137: NBT UDP PACKET(137): QUERY; REQUEST; BROADCAST
+5 packets captured
+13 packets received by filter
+0 packets dropped by kernel
+</code></pre>
+
+<p>Больше информации об использовании данной утилиты можно найти <a href="https://ru.wikipedia.org/wiki/Tcpdump">здесь</a> и <a href="http://www.tcpdump.org/">здесь</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2f%25D0%25BF%25D1%2580%25D0%25B0%25D0%25BA%25D1%2582%25D0%25B8%25D1%2587%25D0%25B5%25D1%2581%25D0%25BA%25D0%25B8%25D0%25B5-%25D0%25BF%25D1%2580%25D0%25B8%25D0%25BC%25D0%25B5%25D1%2580%25D1%258B-%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D1%258F-tcpdump%2f - %d0%9f%d1%80%d0%b0%d0%ba%d1%82%d0%b8%d1%87%d0%b5%d1%81%d0%ba%d0%b8%d0%b5%20%d0%bf%d1%80%d0%b8%d0%bc%d0%b5%d1%80%d1%8b%20%d0%b8%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f%20tcpdump by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-18-podpresets/">Знакомство с Kubernetes. Часть 18: PodPresets<aside class="dates">Oct 1 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Украшаем консоль в Linux"/>
+  <meta name="twitter:description" content="На просторах интернета можно найти множество статей о настройке и «раскраске» консоли в Linux. Предлагаю измененный вариант ssh-приветствия и настройки .bashrc и .profile для комфортной работы в консоли!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Украшаем консоль в Linux &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Украшаем консоль в Linux
+                    </h1>
+                    <h2 class="headline">
+                    Sep 1, 2016 20:53
+                    · 368 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/console">console</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>На просторах интернета можно найти множество статей о настройке и «раскраске» консоли в Linux. Предлагаю измененный вариант ssh-приветствия и настройки <code>.bashrc</code> и <code>.profile</code> для комфортной работы в консоли!</p>
+
+<p></p>
+
+<p>Все необходимые настройки для работы в консоли хранятся в конфигурационных файлах <code>.bashrc</code> и <code>.profile</code> в домашнем каталоге пользователя. Подробно останавливаться на их содержимом нет смысла — информацию ищите <a href="https://www.google.com.ua/">здесь</a> или используйте <code>man bash</code>. Часть информационного сообщения, выводимого при подключении на сервер по ssh находятся в <code>/etc/motd</code> (информацию о последнем логине считаем полезной и удалять не будем).</p>
+
+<p>Итак, для <strong>изменения настроек консоли Linux</strong> нужно подключиться на сервер и, находясь в домашней директории пользователя для которого применяются изменения, выполнить следующие команды:</p>
+
+<pre><code class="language-bash">mv .bashrc .bashrc.mybackup
+mv .profile .profile.mybackup
+cp /etc/skel/.bashrc ~/
+cp /etc/skel/.profile ~/
+sed -i 's/#force/force/' ~/.bashrc
+sed -i 's/#force/force/;s/32/31/' ~/.bashrc
+sed -i 's/#alias/alias/g' ~/.bashrc
+sed -i 's/#alias/alias/g' ~/.bashrc
+sed -i 's/ls --color=auto/ls --color=always/' ~/.bashrc
+echo -e '\nexport LESS=-R' &gt;&gt;~/.bashrc
+</code></pre>
+
+<p>Для изменения ssh-приветствия делаем следующее:</p>
+
+<pre><code class="language-bash">&gt; /etc/motd
+touch /etc/profile.d/sshinfo.sh
+chmod +x /etc/profile.d/sshinfo.sh
+</code></pre>
+
+<p>Содержимое созданного нами файла <code>/etc/profile.d/sshinfo.sh</code> должно быть следующим:</p>
+
+<pre><code class="language-bash">SystemMountPoint=&quot;/&quot;;
+LinesPrefix=&quot;  &quot;;
+b=$(tput bold); n=$(tput sgr0);
+ 
+UserName=$(whoami);
+ 
+WAN_IP=$(/sbin/ifconfig | grep -A 1 eth0 | grep &quot;inet addr&quot; | cut -d&quot;:&quot; -f2 | cut -d&quot; &quot; -f1);
+LAN_IP=$(/sbin/ifconfig | grep -A 1 eth1 | grep &quot;inet addr&quot; | cut -d&quot;:&quot; -f2 | cut -d&quot; &quot; -f1);
+HOST=$(hostname -f);
+ 
+SystemLoad=$(cat /proc/loadavg | cut -d&quot; &quot; -f1);
+ProcessesCount=$(cat /proc/loadavg | cut -d&quot;/&quot; -f2 | cut -d&quot; &quot; -f1);
+ 
+MountPointInfo=$(/bin/df -Th $SystemMountPoint 2&gt;/dev/null | tail -n 1);
+MountPointFreeSpace=( \
+  $(echo $MountPointInfo | awk '{ print $6 }') \
+  $(echo $MountPointInfo | awk '{ print $3 }') \
+);
+UsersOnlineCount=$(users | wc -w);
+ 
+UsedRAMsize=$(free | awk 'FNR == 3 {printf(&quot;%.0f&quot;, $3/($3+$4)*100);}');
+ 
+SystemUptime=$(uptime | sed 's/.*up \([^,]*\), .*/\1/');
+ 
+echo -e &quot;${LinesPrefix}${n}Hello, ${b}${UserName}${n}! Welcome to ${b}${HOST}\n&quot;;
+ 
+if [ ! -z &quot;${LinesPrefix}&quot; ] &amp;&amp; [ ! -z &quot;${SystemLoad}&quot; ]; then
+  echo -e &quot;${LinesPrefix}${b}System load:${n}\t${SystemLoad}\t\t\t${LinesPrefix}${b}Processes:${n}\t\t${ProcessesCount}&quot;;
+fi;
+ 
+if [ ! -z &quot;${MountPointFreeSpace[0]}&quot; ] &amp;&amp; [ ! -z &quot;${MountPointFreeSpace[1]}&quot; ]; then
+  echo -ne &quot;${LinesPrefix}${b}Usage of $SystemMountPoint:${n}\t${MountPointFreeSpace[0]} of ${MountPointFreeSpace[1]}\t\t&quot;;
+fi;
+echo -e &quot;${LinesPrefix}${b}Users logged in:${n}\t${UsersOnlineCount}&quot;;
+ 
+if [ ! -z &quot;${UsedRAMsize}&quot; ]; then
+  echo -ne &quot;${LinesPrefix}${b}Memory usage:${n}\t${UsedRAMsize}%\t\t\t&quot;;
+fi;
+echo -e &quot;${LinesPrefix}${b}System uptime:${n}\t${SystemUptime}&quot;;
+echo -e &quot;${LinesPrefix}${b}WAN ip:${n}\t${WAN_IP}\t\t${LinesPrefix}${b}LAN ip:${n}\t\t${LAN_IP}&quot;;
+</code></pre>
+
+<p>Возможно, потребуется внести изменения в предложенный код — например, в зависимости от количества сетевых интерфейсов на сервере.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2016%2f%25D1%2583%25D0%25BA%25D1%2580%25D0%25B0%25D1%2588%25D0%25B0%25D0%25B5%25D0%25BC-%25D0%25BA%25D0%25BE%25D0%25BD%25D1%2581%25D0%25BE%25D0%25BB%25D1%258C-%25D0%25B2-linux%2f - %d0%a3%d0%ba%d1%80%d0%b0%d1%88%d0%b0%d0%b5%d0%bc%20%d0%ba%d0%be%d0%bd%d1%81%d0%be%d0%bb%d1%8c%20%d0%b2%20Linux by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

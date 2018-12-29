@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Docker Swarm: stack deploy и именованные тома (named volumes)"/>
+  <meta name="twitter:description" content="При переходе на 3.х версию файла docker-compose.yml (необходимое требование для работы Docker Swarm) пропадает возможность использовать Data-only контейнеры — специальные контейнеры-спутники, файловая система которых служит для хранения данных и подключается к остальным сервисам с помощью параметра volumes-from.
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Docker Swarm: stack deploy и именованные тома (named volumes) &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Docker Swarm: stack deploy и именованные тома (named volumes)
+                    </h1>
+                    <h2 class="headline">
+                    Sep 18, 2017 14:53
+                    · 873 words
+                    · 5 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker-swarm">docker swarm</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>При переходе на 3.х версию файла <code>docker-compose.yml</code> (необходимое требование для работы Docker Swarm) пропадает возможность использовать Data-only контейнеры — специальные контейнеры-спутники, файловая система которых служит для хранения данных и подключается к остальным сервисам с помощью параметра <code>volumes-from</code>.</p>
+
+<p></p>
+
+<p>Давайте разберемся с возможным решением данной проблемы на реальном примере!</p>
+
+<p>В примере используются сервисы [docker-контейнеры] <code>nginx</code> (в качестве фронтенда) и <code>php-fpm</code> (бэкенд), которым необходим доступ к одному и тому же каталогу с кодом. Используя <code>docker-compose.yml</code> второй версии, мы вправе были написать так:</p>
+
+<pre><code class="language-yaml">version: '2'
+services:
+### Applications Code Container #############################
+    applications:
+        container_name: application
+        image: registry.gitlab.lc:5000/develop/ed/develop.sources:latest
+### PHP-FPM Container #######################################
+    php-fpm:
+        container_name: php-fpm
+        image: registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest
+        volumes_from:
+            - applications
+        expose:
+            - &quot;9000&quot;
+### Nginx Server Container ##################################
+    nginx:
+        container_name: nginx
+        image: registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest
+        volumes_from:
+            - applications
+        depends_on:
+            - &quot;php-fpm&quot;
+        ports:
+            - &quot;80:80&quot;
+            - &quot;443:443&quot;
+</code></pre>
+
+<p>Dockerfile для сборки data-only контейнера (<code>application</code>) в процессе CI выглядит так (<code>BRANCH_NAME</code> — имя git-ветки, для которой выполняется CI):</p>
+
+<pre><code class="language-Dockerfile">FROM registry.gitlab.lc:5000/develop/ed/image_for_sources:latest
+ 
+ARG BRANCH_NAME=
+ 
+COPY ./bin /var/www/${BRANCH_NAME}/bin
+COPY ./build /var/www/${BRANCH_NAME}/build
+COPY ./config /var/www/${BRANCH_NAME}/config
+COPY ./data /var/www/${BRANCH_NAME}/data
+COPY ./.env /var/www/${BRANCH_NAME}/
+COPY ./grunt /var/www/${BRANCH_NAME}/grunt
+COPY ./init_autoloader.php /var/www/${BRANCH_NAME}/
+COPY ./library /var/www/${BRANCH_NAME}/library
+COPY ./module /var/www/${BRANCH_NAME}/module
+COPY ./postcss.config.js /var/www/${BRANCH_NAME}/
+COPY ./public /var/www/${BRANCH_NAME}/public
+COPY ./vendor /var/www/${BRANCH_NAME}/vendor
+COPY ./zf /var/www/${BRANCH_NAME}/
+ 
+VOLUME /var/www/${BRANCH_NAME}
+</code></pre>
+
+<p>При изменении data-only контейнера для обновления содержимого каталога <code>/var/www/${BRANCH_NAME}</code> в контейнерах <code>nginx</code> и <code>php-fpm</code> необходимо выполнить команды:</p>
+
+<pre><code class="language-bash">docker-compose down &amp;&amp; docker compose up -d
+</code></pre>
+
+<p>которые неизменно повлекут за собой простой (downtime) ~10-15 секунд (если контейнеров больше, чем в данном примере, то время простоя также возрастает).</p>
+
+<p>Первым этапом на пути к Docker Swarm стало изменение файла <code>docker-compose.yml</code> (перевод его на третью версию с использованием именованных томов):</p>
+
+<pre><code class="language-yaml">version: '3'
+services:
+### Code from branch develop #################################
+  applications:
+    container_name: application
+    image: registry.gitlab.lc:5000/develop/ed/develop.sources:latest
+    volumes:
+      - developcode:/var/www/develop
+### PHP-FPM ##################################################
+  php-fpm:
+    container_name: php-fpm
+    image: registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest
+    volumes:
+      - developcode:/var/www/develop
+    expose:
+      - &quot;9000&quot;
+### Nginx ####################################################
+  nginx:
+    container_name: nginx
+    image: registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest
+    volumes:
+      - developcode:/var/www/develop
+    ports:
+      - &quot;80:80&quot;
+      - &quot;443:443&quot;
+### Volumes Setup ############################################
+volumes:
+  developcode:
+</code></pre>
+
+<p>Однако в этом случае возникли проблемы с обновлением содержимого каталога <code>/var/www/develop</code> в контейнерах <code>nginx</code> и <code>php-fpm</code>. Дело в том, что при первом выполнении команды <code>docker-compose up -d</code> создается пустой именованный том <code>developcode</code>, и, так как он пустой, в него копируется содержимое каталога <code>/var/www/develop</code> из контейнера <code>application</code>. При повторном запуске <code>docker-compose up -d</code> именованный том уже существует, и он не пустой (содержит код предыдущего «релиза»), следовательно содержимое тома <code>developcode</code> будет скопировано в каталоги <code>/var/www/develop</code> контейнеров <code>application</code>, <code>nginx</code> и <code>php-fpm</code>.</p>
+
+<p>Решение данной проблемы находится быстро, но добавляет еще ~5-10 секунд к времени простоя: нужно выполнять команду <code>docker-compose down</code> с дополнительным ключом <code>--volumes</code> или <code>-v</code>. Таким образом, именованные тома будут удалены, а при следующем вызове <code>docker-compose up -d</code> вновь создастся пустой том, в который скопируются файлы из data-only контейнера.</p>
+
+<p>Так как наща цель избавиться от времени простоя, то нужно использовать для развертывания/обновления стека сервисов команду <code>docker stack deploy</code>. Однако здесь мы также сталкиваемся с той же проблемой — содержимое каталога <code>/var/www/develop</code> в контейнерах <code>nginx</code> и <code>php-fpm</code> не обновляется. Использование связки <code>docker stack rm ... &amp;&amp; docker stack deploy ...</code> нам не подходит — во-первых, это не исключает даунтайма, во-вторых именованные тома не удаляются (и дополнительных ключей для этого нет), а значит код не будет обновлен.</p>
+
+<p>После множества вопросов заданных с docker-сообществах и переписках с признанными docker-капитанами (<a href="https://twitter.com/EltonStoneman">Elton Stoneman</a> и <a href="https://twitter.com/BretFisher">Bret Fisher</a>) мне предложили отказаться от использования томов, переделать процесс CI и сразу добавлять код в оба контейнера <code>nginx</code> и <code>php-fpm</code> — мол, это лучшие практики использования docker.</p>
+
+<p>Я уже почти согласился с данным предложением (хотя мне откровенно не нравилось добавлять 337MB «обвески» контейнерам <code>nginx</code> и <code>php-fpm</code> и пересобирать их по 15-25 раз в день) но решил попробовать реализовать еще один «велосипед» с использованием переменных в именах томов.</p>
+
+<p>Первая же попытка в таком виде:</p>
+
+<pre><code class="language-yaml">version: '3'
+services:
+### Code from branch develop #################################
+  applications:
+    image: registry.gitlab.lc:5000/develop/ed/develop.sources:latest
+    volumes:
+      - ${VOLUME_NAME}:/var/www/develop
+### PHP-FPM ##################################################
+  php-fpm:
+    image: registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest
+    volumes:
+      - ${VOLUME_NAME}:/var/www/develop
+### Nginx ####################################################
+  nginx:
+    image: registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest
+    volumes:
+      - ${VOLUME_NAME}:/var/www/develop
+    ports:
+      - &quot;80:80&quot;
+      - &quot;443:443&quot;
+### Volumes Setup ############################################
+volumes:
+  ${VOLUME_NAME}:
+</code></pre>
+
+<p>привела к неудаче:</p>
+
+<pre><code>...
+volumes value Additional properties are not allowed ('${VOLUME_NAME}' was unexpected)
+...
+</code></pre>
+
+<p>Как оказалось, это нормальное поведение — docker-compose умеет работать в переменными в значениях, но не в ключах (<a href="https://github.com/docker/compose/pull/3108#issuecomment-248038373">подробности</a>). И вообще, как оказалось использование переменных в режиме роя (Swarm) с командой <code>stack deploy</code> это целая <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-env-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5/">эпопея</a>.</p>
+
+<p>Но ведь никто нам не запрещает использовать <a href="https://docs.docker.com/compose/compose-file/#external"><code>external</code></a> тома! Теперь наш <code>docker-compose.yml</code> полностью готов к развертыванию через <code>stack deploy</code> и выглядит так:</p>
+
+<pre><code class="language-yaml">version: '3.1'
+services:
+### Code from branch develop #################################
+  applications:
+    image: registry.gitlab.lc:5000/develop/ed/develop.sources:latest
+    volumes:
+      - developcode:/var/www/develop
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: [node.role == manager]
+### PHP-FPM ##################################################
+  php-fpm:
+    image: registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest
+    volumes:
+      - developcode:/var/www/develop
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: [node.role == manager]
+### Nginx ####################################################
+  nginx:
+    image: registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:staging
+    volumes:
+      - developcode:/var/www/develop
+    ports:
+      - &quot;80:80&quot;
+      - &quot;443:443&quot;
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: [node.role == manager]
+### Volumes Setup ############################################
+volumes:
+  developcode:
+    external:
+      name: code-${VER}
+</code></pre>
+
+<p>Процесс деплоя сервисов усложнился на одну команду (создание именованного тома с определенным именем) и выглядит так:</p>
+
+<pre><code class="language-bash">export VER=1.1 &amp;&amp; docker volume create --name code-$VER
+</code></pre>
+
+<pre><code class="language-bash">docker stack deploy --with-registry-auth --compose-file docker-compose.yml MY_STACK
+</code></pre>
+
+<p>Стоит отметить, что данное решение пока не тестировалось на продакшене (да и вообще, кластер Docker Swarm в данном примере состоял из одной ноды) — это просто демонстрация возможности использования data-only контейнеров.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2fdocker-swarm-stack-deploy-%25D0%25B8-%25D0%25B8%25D0%25BC%25D0%25B5%25D0%25BD%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25BD%25D1%258B%25D0%25B5-%25D1%2582%25D0%25BE%25D0%25BC%25D0%25B0%2f - Docker%20Swarm%3a%20stack%20deploy%20%d0%b8%20%d0%b8%d0%bc%d0%b5%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b5%20%d1%82%d0%be%d0%bc%d0%b0%20%28named%20volumes%29 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

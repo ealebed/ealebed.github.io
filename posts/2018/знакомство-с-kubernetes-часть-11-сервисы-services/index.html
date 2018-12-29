@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Знакомство с Kubernetes. Часть 11: Сервисы (services)"/>
+  <meta name="twitter:description" content="Поды в кластере Kubernetes смертны - они создаются (рождаются), но когда под по какой-либо причине умирает, то он не воскресает. И хотя каждый под при создании получает свой собственный IP-адрес, этот адрес нельзя назвать постоянным и стабильным вследствие &ldquo;смертности&rdquo; подов. Давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Знакомство с Kubernetes. Часть 11: Сервисы (services) &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Знакомство с Kubernetes. Часть 11: Сервисы (services)
+                    </h1>
+                    <h2 class="headline">
+                    Jul 9, 2018 07:06
+                    · 665 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Поды в кластере <code>Kubernetes</code> смертны - они создаются (рождаются), но когда под по какой-либо причине умирает, то он не воскресает. И хотя каждый под при создании получает свой собственный IP-адрес, этот адрес нельзя назвать постоянным и стабильным вследствие &ldquo;смертности&rdquo; подов. Давайте разберемся!</p>
+
+<p></p>
+
+<p>К примеру, <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>ReplicaSet</code></a> может динамически изменять количество подов в кластере (путем масштабирования), при этом новые поды могут быть запущены на других узлах (нодах) кластера - в этом случае IP-адрес пода наверняка изменится.</p>
+
+<p>Это порождает проблему: если некий набор подов (назовем их backends) предоставляют функционал другому набору подов (назовем их frontends) внутри кластера <code>Kubernetes</code>, то как frontend-поды узнают адреса backend-подов и взаимодействуют с ними?</p>
+
+<p>Сервис в <code>Kubernetes</code> - это абстракция, определяющая логический набор подов и политику доступа к ним (иногда такой набор подов еще называют микросервисом). Как правило, этот набор подов определяется на основе <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D0%BC%D0%B5%D1%82%D0%BA%D0%B8-%D0%B8-%D1%81%D0%B5%D0%BB%D0%B5%D0%BA%D1%82%D0%BE%D1%80%D1%8B/">меток</a> (присваиваются в момент создания подов) и селекторов.</p>
+
+<p>Например, backend - это 3 реплики подов, занимающихся обработкой изображений. Все три пода абсолютно идентичны с функциональной точки зрения (так как это реплики), поэтому frontend не должен беспокоиться на какой именно backend-под попадет запрос - это работа сервиса.</p>
+
+<p>Простейший пример сервиса может выглядеть так:</p>
+
+<pre><code class="language-yaml">kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: MyApp
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9376
+</code></pre>
+
+<p>Согласно данной спецификации, будет создан объект &ldquo;сервис&rdquo; (<code>service</code>) с именем <code>my-service</code>, перенаправляющий запросы на порт 9376 <strong>каждого</strong> пода, у которого присутствует метка <code>app=MyApp</code>. Этому сервису также будет назначен отдельный IP-адрес.</p>
+
+<p>Согласно указанному селектору, в кластере непрерывно будут проверяться поды на наличие метки <code>app=MyApp</code>, а результат такой проверки будет публиковаться (с помощью <code>POST</code>) в объект <code>Endpoints</code> с таким же именем - <code>my-service</code>.</p>
+
+<p>Стоит отметить, что сервис может сопоставлять входящий порт (<code>port:</code>) с любым портом назначения (<code>targetPort:</code>). Если параметр <code>targetPort</code> не указан, то по умолчанию будет использоваться тот же порт, что и в параметре <code>port</code>. Еще одна интересная особенность - <code>targetPort</code> может содержать строку с <strong>именем</strong> порта в подах (а сам номер порта, присвоенный этому имени, может быть разным для каждого пода).</p>
+
+<p>Сервисы чаще всего используются для доступа к подам в кластере <code>Kubernetes</code>, но их также можно использовать и для доступа к другим типам бэкендов, например:</p>
+
+<ul>
+<li>внешний кластер баз данных в production-окружении, локальная БД для тестового окружения;</li>
+<li>совершенно иной сервис в другом неймспейсе или кластере;</li>
+<li>часть бекендов, запущенных вне кластера <code>Kubernetes</code> (например, если вы только переносите свою инфраструктуру).</li>
+</ul>
+
+<p>В любом из предложенных вариантов следует создать сервис без селекторов, например:</p>
+
+<pre><code class="language-yaml">kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9376
+</code></pre>
+
+<p>и, так как селекторов нет, соотвествующий объект <code>Endpoints</code> не создастся автоматически. Его необходимо создать вручную, тем самым указав связь между сервисом и конечной точкой (бекендом), например так:</p>
+
+<pre><code class="language-yaml">kind: Endpoints
+apiVersion: v1
+metadata:
+  name: my-service
+subsets:
+  - addresses:
+      - ip: 1.2.3.4
+    ports:
+      - port: 9376
+</code></pre>
+
+<p><strong>Примечание.</strong> IP-адрес в данном случае не может находиться в диапазонах 127.0.0.0/8, 169.254.0.0/16 и 224.0.0.0/24.</p>
+
+<p>Для многих сервисов обычным делом является использование (открытие) нескольких портов. В таком случае, все что необходимо - присвоить имена всем портам, например:</p>
+
+<pre><code class="language-yaml">kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: MyApp
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 9376
+  - name: https
+    protocol: TCP
+    port: 443
+    targetPort: 9377
+</code></pre>
+
+<p>В <code>Kubernetes</code> существует несколько вариантов предоставления доступа к сервисам, которые называются типы (<code>ServiceTypes</code>):</p>
+
+<ul>
+<li><code>ClusterIP</code>: предоставляет доступ к сервису на внутреннем IP-адресе кластера (сервис доступен только внутри кластера). Тип <code>ClusterIP</code> используется по умолчанию;</li>
+<li><code>NodePort</code>: предоставляет доступ к сервису на IP-адресе каждого узла (ноды) кластера, на статическом порту (из диапазона 30000-32767). Автоматически создастся и сервис типа <code>ClusterIP</code>, на который будут маршрутизироваться запросы с <code>NodePort</code>. Взаимодействовать с сервисом можно также из-за пределов кластера, используя в качестве адреса <code>&lt;NodeIP&gt;:&lt;NodePort&gt;</code>;</li>
+<li><code>LoadBalancer</code>: предоставляет доступ к сервису используя балансировщик (load balancer) облачного провайдера. При этом автоматически создаются сервисы типа <code>NodePort</code> и <code>ClusterIP</code>, на которые будут маршрутизироваться запросы с балансировщика;</li>
+<li><code>ExternalName</code>: особый случай - сопоставляет имя сервиса с содержимым поля <code>externalName</code> (например, foo.bar.example.com), возвращая CNAME запись. Никакого проксирования не происходит.</li>
+</ul>
+
+<p>Больше информации о сервисах можно найти в <a href="https://kubernetes.io/docs/concepts/services-networking/service/">официальной документации</a> или в статье <a href="https://medium.com/google-cloud/understanding-kubernetes-networking-services-f0cb48e4cc82">Understanding kubernetes networking: services</a>, а мы в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-12-%D0%B0%D0%BD%D0%BD%D0%BE%D1%82%D0%B0%D1%86%D0%B8%D0%B8/">следующей статье</a> поговорим об аннотациях.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2f%25D0%25B7%25D0%25BD%25D0%25B0%25D0%25BA%25D0%25BE%25D0%25BC%25D1%2581%25D1%2582%25D0%25B2%25D0%25BE-%25D1%2581-kubernetes-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-11-%25D1%2581%25D0%25B5%25D1%2580%25D0%25B2%25D0%25B8%25D1%2581%25D1%258B-services%2f - %d0%97%d0%bd%d0%b0%d0%ba%d0%be%d0%bc%d1%81%d1%82%d0%b2%d0%be%20%d1%81%20Kubernetes.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%2011%3a%20%d0%a1%d0%b5%d1%80%d0%b2%d0%b8%d1%81%d1%8b%20%28services%29 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

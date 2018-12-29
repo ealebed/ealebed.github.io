@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Docker совет №36: Что происходит при запуске docker-compose up?"/>
+  <meta name="twitter:description" content="В этой статье попробуем разобраться, что же на самом деле происходит &ldquo;под капотом&rdquo; при запуске команды docker-compose up. Давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Docker совет №36: Что происходит при запуске docker-compose up? &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Docker совет №36: Что происходит при запуске docker-compose up?
+                    </h1>
+                    <h2 class="headline">
+                    Aug 23, 2018 07:01
+                    · 1495 words
+                    · 8 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker-compose">docker-compose</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В этой статье попробуем разобраться, что же на самом деле происходит &ldquo;под капотом&rdquo; при запуске команды <code>docker-compose up</code>. Давайте разберемся!</p>
+
+<p></p>
+
+<p>Без изучения исходного кода утилиты <code>docker-compose</code> можно предположить, что утилита просто парсит конфигурационный файл в формате <code>*.yaml</code> (<code>docker-compose.yml</code>) и преобразует services/volumes/networks в соответствующие команды самого docker. В принципе, это недалеко от истины, но стоит уточнить, что <code>docker-compose</code> не взаимодействует с бинарным файлом <code>docker</code> напрямую - все вызовы осуществляются через Docker API.</p>
+
+<p>Для лучшего понимания происходящего, достаточно добавить флаг <code>--verbose</code> к любой команде <code>docker-compose</code>, например так:</p>
+
+<pre><code class="language-bash">docker-compose --verbose up
+</code></pre>
+
+<p>Слегка упрощенная схема вызова команды <code>docker-compose up</code> выглядит так:</p>
+
+<ul>
+<li>попытка найти и применить (в том числе кастомные) конфиги сервиса docker;</li>
+<li>подключение к настроенному docker-демону;</li>
+<li>попытка найти или создать сеть для данного docker-проекта;</li>
+<li>попытка найти или создать тома для данного docker-проекта;</li>
+<li>поиск docker-контейнеров, уже созданных для данного docker-проекта;</li>
+<li>поиск и/или скачивание/сборка docker-образов, для данного docker-проекта;</li>
+<li>создание контейнеров для данного docker-проекта;</li>
+<li>запуск созданных контейнеров;</li>
+<li>периодическая проверка состояния запущенных docker-контейнеров;</li>
+<li>остановка запущенных docker-контейнеров по нажатию пользователем комбинации <code>Ctrl+C</code>.</li>
+</ul>
+
+<p>Подробный лог запуска простенького сервиса (команда <code>docker-compose --verbose up</code>) выглядит так:</p>
+
+<pre><code class="language-bash">compose.config.config.find: Using configuration files: ./docker-compose.yml
+docker.utils.config.find_config_file: Trying paths: ['/Users/ealebed/.docker/config.json', '/Users/ealebed/.dockercfg']
+docker.utils.config.find_config_file: Found file at path: /Users/ealebed/.docker/config.json
+docker.auth.load_config: Found 'auths' section
+docker.auth.parse_auth: Auth data for https://us.gcr.io is absent. Client might be using a credentials store instead.
+docker.auth.load_config: Found 'credsStore' section
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/version HTTP/1.1&quot; 200 568
+compose.cli.command.get_client: docker-compose version 1.21.2, build a133471
+docker-py version: 3.3.0
+CPython version: 3.6.4
+OpenSSL version: OpenSSL 1.0.2o  27 Mar 2018
+compose.cli.command.get_client: Docker base_url: http+docker://localhost
+compose.cli.command.get_client: Docker version: Platform={'Name': ''}, Components=[{'Name': 'Engine', 'Version': '18.05.0-ce', 'Details': {'ApiVersion': '1.37', 'Arch': 'amd64', 'BuildTime': '2018-05-09T22:20:16.000000000+00:00', 'Experimental': 'true', 'GitCommit': 'f150324', 'GoVersion': 'go1.10.1', 'KernelVersion': '4.9.93-linuxkit-aufs', 'MinAPIVersion': '1.12', 'Os': 'linux'}}], Version=18.05.0-ce, ApiVersion=1.37, MinAPIVersion=1.12, GitCommit=f150324, GoVersion=go1.10.1, Os=linux, Arch=amd64, KernelVersion=4.9.93-linuxkit-aufs, Experimental=True, BuildTime=2018-05-09T22:20:16.000000000+00:00
+compose.cli.verbose_proxy.proxy_callable: docker inspect_network &lt;- ('satis_default')
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/networks/satis_default HTTP/1.1&quot; 404 32
+compose.cli.verbose_proxy.proxy_callable: docker info &lt;- ()
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/info HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker info -&gt; {'Architecture': 'x86_64',
+ 'BridgeNfIp6tables': True,
+ 'BridgeNfIptables': True,
+ 'CPUSet': True,
+ 'CPUShares': True,
+ 'CgroupDriver': 'cgroupfs',
+ 'ClusterAdvertise': '',
+ 'ClusterStore': '',
+ 'ContainerdCommit': {'Expected': '773c489c9c1b21a6d78b5c538cd395416ec50f88',
+                      'ID': '773c489c9c1b21a6d78b5c538cd395416ec50f88'},
+...
+WARNING: compose.cli.main.warn_for_swarm_mode: The Docker Engine you're using is running in swarm mode.
+
+Compose does not use swarm mode to deploy services to multiple nodes in a swarm. All containers will be scheduled on the current node.
+
+To deploy your application across the swarm, use `docker stack deploy`.
+
+compose.cli.verbose_proxy.proxy_callable: docker inspect_network &lt;- ('satis_default')
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/networks/satis_default HTTP/1.1&quot; 404 32
+compose.network.ensure: Creating network &quot;satis_default&quot; with the default driver
+compose.cli.verbose_proxy.proxy_callable: docker create_network &lt;- (name='satis_default', driver=None, options=None, ipam=None, internal=False, enable_ipv6=False, labels=None, attachable=None, check_duplicate=True)
+urllib3.connectionpool._make_request: http://localhost:None &quot;POST /v1.22/networks/create HTTP/1.1&quot; 201 87
+compose.cli.verbose_proxy.proxy_callable: docker create_network -&gt; {'Id': 'cc32d1c887c3f023abdde526cc8390b0bc62b4ed4bc9ccacbd27927a34a7064f',
+ 'Warning': ''}
+compose.cli.verbose_proxy.proxy_callable: docker containers &lt;- (all=False, filters={'label': ['com.docker.compose.project=satis', 'com.docker.compose.oneoff=False']})
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/json?limit=-1&amp;all=0&amp;size=0&amp;trunc_cmd=0&amp;filters=%7B%22label%22%3A+%5B%22com.docker.compose.project%3Dsatis%22%2C+%22com.docker.compose.oneoff%3DFalse%22%5D%7D HTTP/1.1&quot; 200 3
+compose.cli.verbose_proxy.proxy_callable: docker containers -&gt; (list with 0 items)
+compose.cli.verbose_proxy.proxy_callable: docker containers &lt;- (all=True, filters={'label': ['com.docker.compose.project=satis', 'com.docker.compose.service=satis', 'com.docker.compose.oneoff=False']})
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/json?limit=-1&amp;all=1&amp;size=0&amp;trunc_cmd=0&amp;filters=%7B%22label%22%3A+%5B%22com.docker.compose.project%3Dsatis%22%2C+%22com.docker.compose.service%3Dsatis%22%2C+%22com.docker.compose.oneoff%3DFalse%22%5D%7D HTTP/1.1&quot; 200 3
+compose.cli.verbose_proxy.proxy_callable: docker containers -&gt; (list with 0 items)
+compose.cli.verbose_proxy.proxy_callable: docker containers &lt;- (all=True, filters={'label': ['com.docker.compose.project=satis', 'com.docker.compose.service=satis', 'com.docker.compose.oneoff=False']})
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/json?limit=-1&amp;all=1&amp;size=0&amp;trunc_cmd=0&amp;filters=%7B%22label%22%3A+%5B%22com.docker.compose.project%3Dsatis%22%2C+%22com.docker.compose.service%3Dsatis%22%2C+%22com.docker.compose.oneoff%3DFalse%22%5D%7D HTTP/1.1&quot; 200 3
+compose.cli.verbose_proxy.proxy_callable: docker containers -&gt; (list with 0 items)
+compose.cli.verbose_proxy.proxy_callable: docker inspect_image &lt;- ('ealebed/satis:latest')
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/images/ealebed/satis:latest/json HTTP/1.1&quot; 404 73
+compose.service.pull: Pulling satis (ealebed/satis:latest)...
+compose.cli.verbose_proxy.proxy_callable: docker pull &lt;- ('ealebed/satis', tag='latest', stream=True, platform=None)
+docker.auth.get_config_header: Looking for auth config
+docker.auth.resolve_authconfig: Using credentials store &quot;osxkeychain&quot;
+docker.auth._resolve_authconfig_credstore: Looking for auth entry for 'https://index.docker.io/v1/'
+docker.auth._resolve_authconfig_credstore: No entry found
+docker.auth.resolve_authconfig: No entry in credstore - fetching from auth dict
+docker.auth.resolve_authconfig: Looking for auth entry for 'docker.io'
+docker.auth.resolve_authconfig: No entry found
+docker.auth.get_config_header: No auth config found
+urllib3.connectionpool._make_request: http://localhost:None &quot;POST /v1.22/images/create?tag=latest&amp;fromImage=ealebed%2Fsatis HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker pull -&gt; &lt;generator object APIClient._stream_helper at 0x102d43830&gt;
+latest: Pulling from ealebed/satis
+660c48dd555d: Pull complete
+4c7380416e78: Pull complete
+421e436b5f80: Pull complete
+e4ce6c3651b3: Pull complete
+be588e74bd34: Pull complete
+fc0f7bb0f395: Pull complete
+0f54a38f512b: Pull complete
+40ba48e14cd6: Pull complete
+1708b519798c: Pull complete
+0008302ba0ba: Pull complete
+7ecdd31a977d: Pull complete
+18e1eab12144: Pull complete
+194b7fd05ba6: Pull complete
+32311fdd7828: Pull complete
+05633ecef2a6: Pull complete
+952548b263fe: Pull complete
+e5eb867a959a: Pull complete
+f73dc7ea1237: Pull complete
+0fb278a120ce: Pull complete
+Digest: sha256:3bd280e469669fa81a3eb54717d72d30eadd00ca435c6836204203532af53bcd
+Status: Downloaded newer image for ealebed/satis:latest
+compose.cli.verbose_proxy.proxy_callable: docker containers &lt;- (all=True, filters={'label': ['com.docker.compose.project=satis', 'com.docker.compose.service=satis', 'com.docker.compose.oneoff=False']})
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/json?limit=-1&amp;all=1&amp;size=0&amp;trunc_cmd=0&amp;filters=%7B%22label%22%3A+%5B%22com.docker.compose.project%3Dsatis%22%2C+%22com.docker.compose.service%3Dsatis%22%2C+%22com.docker.compose.oneoff%3DFalse%22%5D%7D HTTP/1.1&quot; 200 3
+compose.cli.verbose_proxy.proxy_callable: docker containers -&gt; (list with 0 items)
+compose.cli.verbose_proxy.proxy_callable: docker containers &lt;- (all=True, filters={'label': ['com.docker.compose.project=satis', 'com.docker.compose.service=satis', 'com.docker.compose.oneoff=False']})
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/json?limit=-1&amp;all=1&amp;size=0&amp;trunc_cmd=0&amp;filters=%7B%22label%22%3A+%5B%22com.docker.compose.project%3Dsatis%22%2C+%22com.docker.compose.service%3Dsatis%22%2C+%22com.docker.compose.oneoff%3DFalse%22%5D%7D HTTP/1.1&quot; 200 3
+compose.cli.verbose_proxy.proxy_callable: docker containers -&gt; (list with 0 items)
+compose.parallel.feed_queue: Pending: {&lt;Service: satis&gt;}
+compose.parallel.feed_queue: Starting producer thread for &lt;Service: satis&gt;
+compose.cli.verbose_proxy.proxy_callable: docker containers &lt;- (all=True, filters={'label': ['com.docker.compose.project=satis', 'com.docker.compose.service=satis', 'com.docker.compose.oneoff=False']})
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/json?limit=-1&amp;all=1&amp;size=0&amp;trunc_cmd=0&amp;filters=%7B%22label%22%3A+%5B%22com.docker.compose.project%3Dsatis%22%2C+%22com.docker.compose.service%3Dsatis%22%2C+%22com.docker.compose.oneoff%3DFalse%22%5D%7D HTTP/1.1&quot; 200 3
+compose.cli.verbose_proxy.proxy_callable: docker containers -&gt; (list with 0 items)
+Creating satis ...
+compose.parallel.feed_queue: Pending: {ServiceName(project='satis', service='satis', number=1)}
+compose.parallel.feed_queue: Starting producer thread for ServiceName(project='satis', service='satis', number=1)
+compose.cli.verbose_proxy.proxy_callable: docker inspect_image &lt;- ('ealebed/satis:latest')
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/images/ealebed/satis:latest/json HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker inspect_image -&gt; {'Architecture': 'amd64',
+ 'Author': '',
+ 'Comment': '',
+ 'Config': {'ArgsEscaped': True,
+            'AttachStderr': False,
+            'AttachStdin': False,
+            'AttachStdout': False,
+            'Cmd': ['/usr/bin/supervisord',
+                    '-n',
+                    '-c',
+...
+compose.cli.verbose_proxy.proxy_callable: docker inspect_image &lt;- ('ealebed/satis:latest')
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/images/ealebed/satis:latest/json HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker inspect_image -&gt; {'Architecture': 'amd64',
+ 'Author': '',
+ 'Comment': '',
+ 'Config': {'ArgsEscaped': True,
+            'AttachStderr': False,
+            'AttachStdin': False,
+            'AttachStdout': False,
+            'Cmd': ['/usr/bin/supervisord',
+                    '-n',
+                    '-c',
+...
+compose.service.build_container_labels: Added config hash: c4f47feda571bb211198bf82b84f64fab2d1b3a71c47f5d39c341c6379fed616
+compose.cli.verbose_proxy.proxy_callable: docker create_host_config &lt;- (links=[], port_bindings={'3000/tcp': ['3333'], '80/tcp': ['8181']}, binds=['/Users/ealebed/Code/ED/satis/dist:/satisfy/web/dist:rw', '/Users/ealebed/Code/ED/satis/include:/satisfy/web/include:rw', '/Users/ealebed/Code/ED/satis/satis.json:/app/config.json:rw', '/Users/ealebed/Code/ED/satis/COMPOSER_CACHE:/root/.composer:rw'], volumes_from=[], privileged=False, network_mode='satis_default', devices=None, dns=None, dns_opt=None, dns_search=None, restart_policy={'Name': 'always', 'MaximumRetryCount': 0}, runtime=None, cap_add=None, cap_drop=None, mem_limit=None, mem_reservation=None, memswap_limit=None, ulimits=None, log_config={'Type': '', 'Config': {}}, extra_hosts=None, read_only=None, pid_mode=None, security_opt=None, ipc_mode=None, cgroup_parent=None, cpu_quota=None, shm_size=None, sysctls=None, pids_limit=None, tmpfs=[], oom_kill_disable=None, oom_score_adj=None, mem_swappiness=None, group_add=None, userns_mode=None, init=None, init_path=None, isolation=None, cpu_count=None, cpu_percent=None, nano_cpus=None, volume_driver=None, cpuset_cpus=None, cpu_shares=None, storage_opt=None, blkio_weight=None, blkio_weight_device=None, device_read_bps=None, device_read_iops=None, device_write_bps=None, device_write_iops=None, mounts=None, device_cgroup_rules=None, cpu_period=None, cpu_rt_period=None, cpu_rt_runtime=None)
+compose.cli.verbose_proxy.proxy_callable: docker create_host_config -&gt; {'Binds': ['/Users/ealebed/Code/ED/satis/dist:/satisfy/web/dist:rw',
+           '/Users/ealebed/Code/ED/satis/include:/satisfy/web/include:rw',
+           '/Users/ealebed/Code/ED/satis/satis.json:/app/config.json:rw',
+           '/Users/ealebed/Code/ED/satis/COMPOSER_CACHE:/root/.composer:rw'],
+ 'Links': [],
+ 'LogConfig': {'Config': {}, 'Type': ''},
+ 'NetworkMode': 'satis_default',
+ 'PortBindings': {'3000/tcp': [{'HostIp': '', 'HostPort': '3333'}],
+                  '80/tcp': [{'HostIp': '', 'HostPort': '8181'}]},
+ 'RestartPolicy': {'MaximumRetryCount': 0, 'Name': 'always'},
+...
+compose.cli.verbose_proxy.proxy_callable: docker create_container &lt;- (environment=['CRONTAB_FREQUENCY=10 0 * * *', 'VIRTUAL_HOST=satis.lc'], image='ealebed/satis:latest', ports=[('3000', 'tcp'), ('80', 'tcp')], volumes={'/satisfy/web/dist': {}, '/app/config.json': {}, '/satisfy/web/include': {}, '/root/.composer': {}}, name='satis', detach=True, labels={'com.docker.compose.project': 'satis', 'com.docker.compose.service': 'satis', 'com.docker.compose.oneoff': 'False', 'com.docker.compose.container-number': '1', 'com.docker.compose.version': '1.21.2', 'com.docker.compose.config-hash': 'c4f47feda571bb211198bf82b84f64fab2d1b3a71c47f5d39c341c6379fed616'}, host_config={'NetworkMode': 'satis_default', 'RestartPolicy': {'Name': 'always', 'MaximumRetryCount': 0}, 'VolumesFrom': [], 'Binds': ['/Users/ealebed/Code/ED/satis/dist:/satisfy/web/dist:rw', '/Users/ealebed/Code/ED/satis/include:/satisfy/web/include:rw', '/Users/ealebed/Code/ED/satis/satis.json:/app/config.json:rw', '/Users/ealebed/Code/ED/satis/COMPOSER_CACHE:/root/.composer:rw'], 'PortBindings': {'3000/tcp': [{'HostIp': '', 'HostPort': '3333'}], '80/tcp': [{'HostIp': '', 'HostPort': '8181'}]}, 'Links': [], 'LogConfig': {'Type': '', 'Config': {}}}, networking_config={'EndpointsConfig': {'satis_default': {'Aliases': ['satis'], 'IPAMConfig': {}}}})
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+urllib3.connectionpool._make_request: http://localhost:None &quot;POST /v1.22/containers/create?name=satis HTTP/1.1&quot; 201 90
+compose.cli.verbose_proxy.proxy_callable: docker create_container -&gt; {'Id': 'c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba',
+ 'Warnings': None}
+compose.cli.verbose_proxy.proxy_callable: docker inspect_container &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba')
+compose.parallel.feed_queue: Pending: set()
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba/json HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker inspect_container -&gt; {'AppArmorProfile': '',
+ 'Args': ['-n', '-c', '/etc/supervisor/supervisord.conf'],
+ 'Config': {'ArgsEscaped': True,
+            'AttachStderr': False,
+            'AttachStdin': False,
+            'AttachStdout': False,
+            'Cmd': ['/usr/bin/supervisord',
+                    '-n',
+                    '-c',
+                    '/etc/supervisor/supervisord.conf'],
+...
+compose.cli.verbose_proxy.proxy_callable: docker attach &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba', stdout=True, stderr=True, stream=True)
+urllib3.connectionpool._make_request: http://localhost:None &quot;POST /v1.22/containers/c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba/attach?logs=0&amp;stdout=1&amp;stderr=1&amp;stream=1 HTTP/1.1&quot; 101 0
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba/json HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker attach -&gt; &lt;docker.types.daemon.CancellableStream object at 0x103e4a0f0&gt;
+compose.cli.verbose_proxy.proxy_callable: docker disconnect_container_from_network &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba', 'satis_default')
+urllib3.connectionpool._make_request: http://localhost:None &quot;POST /v1.22/networks/satis_default/disconnect HTTP/1.1&quot; 200 0
+compose.cli.verbose_proxy.proxy_callable: docker disconnect_container_from_network -&gt; None
+compose.cli.verbose_proxy.proxy_callable: docker connect_container_to_network &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba', 'satis_default', aliases=['c0296db3b560', 'satis'], ipv4_address=None, ipv6_address=None, links=[], link_local_ips=None)
+urllib3.connectionpool._make_request: http://localhost:None &quot;POST /v1.22/networks/satis_default/connect HTTP/1.1&quot; 200 0
+compose.cli.verbose_proxy.proxy_callable: docker connect_container_to_network -&gt; None
+compose.cli.verbose_proxy.proxy_callable: docker start &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba')
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+urllib3.connectionpool._make_request: http://localhost:None &quot;POST /v1.22/containers/c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba/start HTTP/1.1&quot; 204 0
+compose.cli.verbose_proxy.proxy_callable: docker start -&gt; None
+Creating satis ... done
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.parallel_execute_iter: Finished processing: &lt;Service: satis&gt;
+compose.parallel.feed_queue: Pending: set()
+Attaching to satis
+compose.cli.verbose_proxy.proxy_callable: docker events &lt;- (filters={'label': ['com.docker.compose.project=satis', 'com.docker.compose.oneoff=False']}, decode=True)
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/events?filters=%7B%22label%22%3A+%5B%22com.docker.compose.project%3Dsatis%22%2C+%22com.docker.compose.oneoff%3DFalse%22%5D%7D HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker events -&gt; &lt;docker.types.daemon.CancellableStream object at 0x103e64f98&gt;
+satis    | 2018-07-14 08:34:31,302 CRIT Supervisor running as root (no user in config file)
+
+...
+
+^CGracefully stopping... (press Ctrl+C again to force)
+compose.cli.verbose_proxy.proxy_callable: docker containers &lt;- (all=False, filters={'label': ['com.docker.compose.project=satis', 'com.docker.compose.oneoff=False']})
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/json?limit=-1&amp;all=0&amp;size=0&amp;trunc_cmd=0&amp;filters=%7B%22label%22%3A+%5B%22com.docker.compose.project%3Dsatis%22%2C+%22com.docker.compose.oneoff%3DFalse%22%5D%7D HTTP/1.1&quot; 200 1868
+compose.cli.verbose_proxy.proxy_callable: docker containers -&gt; (list with 1 items)
+compose.cli.verbose_proxy.proxy_callable: docker inspect_container &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba')
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba/json HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker inspect_container -&gt; {'AppArmorProfile': '',
+ 'Args': ['-n', '-c', '/etc/supervisor/supervisord.conf'],
+ 'Config': {'ArgsEscaped': True,
+            'AttachStderr': False,
+            'AttachStdin': False,
+            'AttachStdout': False,
+            'Cmd': ['/usr/bin/supervisord',
+                    '-n',
+                    '-c',
+                    '/etc/supervisor/supervisord.conf'],
+...
+Stopping satis ...
+compose.parallel.feed_queue: Pending: {&lt;Container: satis (c0296d)&gt;}
+compose.parallel.feed_queue: Starting producer thread for &lt;Container: satis (c0296d)&gt;
+compose.cli.verbose_proxy.proxy_callable: docker stop &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba', timeout=10)
+compose.cli.verbose_proxy.proxy_callable: docker inspect_container &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba')
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba/json HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker inspect_container -&gt; {'AppArmorProfile': '',
+ 'Args': ['-n', '-c', '/etc/supervisor/supervisord.conf'],
+ 'Config': {'ArgsEscaped': True,
+            'AttachStderr': False,
+            'AttachStdin': False,
+            'AttachStdout': False,
+            'Cmd': ['/usr/bin/supervisord',
+                    '-n',
+                    '-c',
+                    '/etc/supervisor/supervisord.conf'],
+...
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.cli.verbose_proxy.proxy_callable: docker inspect_container &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba')
+compose.cli.verbose_proxy.proxy_callable: docker wait &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba')
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+compose.parallel.feed_queue: Pending: set()
+urllib3.connectionpool._make_request: http://localhost:None &quot;POST /v1.22/containers/c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba/stop?t=10 HTTP/1.1&quot; 204 0
+urllib3.connectionpool._make_request: http://localhost:None &quot;POST /v1.22/containers/c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba/wait HTTP/1.1&quot; 200 30
+compose.cli.verbose_proxy.proxy_callable: docker stop -&gt; None
+urllib3.connectionpool._make_request: http://localhost:None &quot;GET /v1.22/containers/c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba/json HTTP/1.1&quot; 200 None
+compose.cli.verbose_proxy.proxy_callable: docker wait -&gt; {'Error': None, 'StatusCode': 0}
+compose.cli.verbose_proxy.proxy_callable: docker inspect_container -&gt; {'AppArmorProfile': '',
+ 'Args': ['-n', '-c', '/etc/supervisor/supervisord.conf'],
+ 'Config': {'ArgsEscaped': True,
+            'AttachStderr': False,
+            'AttachStdin': False,
+            'AttachStdout': False,
+            'Cmd': ['/usr/bin/supervisord',
+                    '-n',
+                    '-c',
+                    '/etc/supervisor/supervisord.conf'],
+...
+compose.parallel.feed_queue: Pending: set()
+compose.cli.verbose_proxy.proxy_callable: docker inspect_container &lt;- ('c0296db3b560958301aa050811f0176218f9300c5d4a5deb6c31d75c844d1dba')
+</code></pre>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2018%2fdocker-%25D1%2581%25D0%25BE%25D0%25B2%25D0%25B5%25D1%2582-36-%25D1%2587%25D1%2582%25D0%25BE-%25D0%25BF%25D1%2580%25D0%25BE%25D0%25B8%25D1%2581%25D1%2585%25D0%25BE%25D0%25B4%25D0%25B8%25D1%2582-%25D0%25BF%25D1%2580%25D0%25B8-%25D0%25B7%25D0%25B0%25D0%25BF%25D1%2583%25D1%2581%25D0%25BA%25D0%25B5-docker-compose-up%2f - Docker%20%d1%81%d0%be%d0%b2%d0%b5%d1%82%20%e2%84%9636%3a%20%d0%a7%d1%82%d0%be%20%d0%bf%d1%80%d0%be%d0%b8%d1%81%d1%85%d0%be%d0%b4%d0%b8%d1%82%20%d0%bf%d1%80%d0%b8%20%d0%b7%d0%b0%d0%bf%d1%83%d1%81%d0%ba%d0%b5%20docker-compose%20up%3f by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

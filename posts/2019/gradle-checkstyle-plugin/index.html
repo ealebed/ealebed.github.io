@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Gradle Checkstyle plugin"/>
+  <meta name="twitter:description" content="Возникла необходимость настроить статический анализ кода (checkstyle) для проекта на языке Java. Давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Gradle Checkstyle plugin &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Gradle Checkstyle plugin
+                    </h1>
+                    <h2 class="headline">
+                    Jan 2, 2019 14:50
+                    · 846 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/gradle">gradle</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ci">CI</a>
+                          
+                              <a href="https://ealebed.github.io/tags/jenkins">jenkins</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Возникла необходимость настроить статический анализ кода (<a href="http://checkstyle.sourceforge.net/index.html">checkstyle</a>) для проекта на языке Java. Давайте разберемся!</p>
+
+<p></p>
+
+<p>Из особенностей - проверка кода должна запускаться только при подаче пулл реквеста, а сама задача должна быть легко масштабируема (можно быстро включить checkstyle еще для 50 или 100 других проектов). Итак, приступим.</p>
+
+<p>Для решения задачи будем использовать плагин <a href="https://docs.gradle.org/current/userguide/checkstyle_plugin.html">Checkstyle</a>. Пример схемы (файл <code>checkstyle.xml</code>) для данного плагина можно взять <a href="https://github.com/checkstyle/checkstyle/blob/master/src/main/resources/google_checks.xml">здесь</a> и, при необходимости, подредактировать под свои нужды.</p>
+
+<p>В предыдущей статье мы уже рассматривали использование инит-скриптов гредла, и, так как нам нужна масштабируемость, настройку статического анализа кода мы тоже сделаем через инит-скрипт. Создаем файл <code>checkstyle.gradle</code> со следующим содержимым:</p>
+
+<pre><code class="language-java">allprojects {
+    afterEvaluate { project -&gt;
+        project.plugins.withId('checkstyle') {
+            try {
+                def _toolVersion = ext.has('toolVersion') ? ext['toolVersion'] : '8.15'
+                if (System.getenv('BUILD_ENVIRONMENT') ?: 'DEVELOPER' == 'CI') {
+                    println &quot;'checkstyle' plugin common config&quot;
+                    println &quot; |- use toolVersion version: $_toolVersion&quot;
+                    checkstyle {
+                        toolVersion &quot;$_toolVersion&quot;
+
+                        configFile = file(System.getenv('GRADLE_HOME') + &quot;/checkstyle.xml&quot;)
+                        println &quot; |- use checkstyle.xml: &quot; + configFile
+                        println ''
+                        reportsDir = file(&quot;${buildDir}/checkstyleReports&quot;)
+                    }
+                    checkstyleMain {
+                        source ='src/main/java'
+                    }
+                    checkstyleTest {
+                        source ='src/test/java'
+                    }
+                } else {
+                    println &quot;'checkstyle' plugin common config&quot;
+                    println &quot; |- use toolVersion version: $_toolVersion&quot;
+                    checkstyle {
+                        toolVersion &quot;$_toolVersion&quot;
+
+                        configFile = file(System.getenv('HOME') + &quot;/.gradle/checkstyle.xml&quot;)
+                        println &quot; |- use checkstyle.xml: &quot; + configFile
+                        println ''
+                        reportsDir = file(&quot;${project.buildDir}/checkstyleReports&quot;)
+                    }
+                    checkstyleMain {
+                        source ='src/main/java'
+                    }
+                    checkstyleTest {
+                        source ='src/test/java'
+                    }
+                }
+            } catch (UnknownPluginException) {
+                println UnknownPluginException
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>Схема для плагина на машине разработчика должна находиться по пути <code>USER_HOME/.gradle/checkstyle.xml</code>, а в docker-контейнере, который запускается на CI-сервере, - в <code>GRADLE_HOME/checkstyle.xml</code>. Добиться этого несложно - в предыдущей статье мы рассматривали как это можно сделать.</p>
+
+<p>Теперь, чтобы в проекте появились задачи для статического анализа кода, достаточно в конфигурации сборки (<code>build.gradle</code>) добавить соответствующий плагин:</p>
+
+<pre><code class="language-java">plugins {
+    id 'checkstyle'
+}
+</code></pre>
+
+<p>После добавления плагина станут доступны задачи <code>checkstyleMain</code>, <code>checkstyleTest</code>, <code>checkstyleSourceSet</code> и, самое главное, <code>check</code>, которая зависит (включает в себя) все перечисленные ранее.</p>
+
+<p>Для запуска проверки кода на CI-сервере с помощью docker-контейнера достаточно выполнить примерно такую команду:</p>
+
+<pre><code class="language-bash">	docker run \
+		--rm \
+		-v $(pwd):/project \
+		-w /project \
+	myorganization/gradle:5.0-jdk11 gradle clean check
+</code></pre>
+
+<p>Для описания пайплайна (Pipeline) с задачей checkstyle будем использовать уже хорошо известные нам <a href="https://ealebed.github.io/posts/2018/jenkins-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-shared-libraries/">shared libraries</a> - помним о возможности масштабирования и о принципе DRY (Don’t Repeat Yourself). Расширим базовые требования - добавим в описание пайплайна также отправку комментариев к пулл реквесту с результатами анализа кода, формирование отчета (для доступа по ссылке) и уведомление в slack-канал.</p>
+
+<p><strong>Примечание.</strong> Для отправки комментариев в пулл реквесту нам понадобится jenkins-плагин <a href="https://wiki.jenkins.io/display/JENKINS/Violation+Comments+to+GitHub+Plugin">Violation Comments to GitHub</a>. Установить его можно руками или с помощью скрипта <code>00-install-plugins.groovy</code> как описано <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">здесь</a>.</p>
+
+<p>Pipeline (файл <code>adsCheckstylePipeline</code>) в нашем случае будет выглядеть так:</p>
+
+<pre><code class="language-java">def call(body) {
+    def pipelineParams = [:]
+    body.resolveStrategy = Closure.DELEGATE_FIRST
+    body.delegate = pipelineParams
+    body()
+
+    pipeline {
+        agent any
+        stages {
+            stage('Checkstyle') {
+                steps {
+                    script {
+                        env.REPO_NAME = &quot;${pipelineParams.repoName}&quot;
+                        sh '''
+                            docker run \
+                                --rm \
+                                -v $(pwd):/project \
+                                -w /project \
+                            myorganization/gradle:5.0-jdk11 gradle clean check
+                        '''
+                        env.BUILD_STATUS = &quot;${currentBuild.currentResult}&quot;.toLowerCase()
+                    }
+                    step([$class: 'ViolationsToGitHubRecorder',
+                        config: [
+                            gitHubUrl: 'https://api.github.com/',
+                            repositoryOwner: &quot;${GITHUB_PR_SOURCE_REPO_OWNER}&quot;,
+                            repositoryName: &quot;${REPO_NAME}&quot;,
+                            pullRequestId: &quot;${GITHUB_PR_NUMBER}&quot;,
+
+                            credentialsId: 'token-pr',
+
+                            createCommentWithAllSingleFileComments: true,
+                            createSingleFileComments: true,
+                            commentOnlyChangedContent: false,
+                            minSeverity: 'WARN',
+                            keepOldComments: false,
+
+                            commentTemplate: &quot;&quot;&quot;
+Reporter: {{violation.reporter}}{{#violation.rule}}
+    
+Rule: {{violation.rule}}{{/violation.rule}}
+Severity: {{violation.severity}}
+File: {{violation.file}} L{{violation.startLine}}{{#violation.source}}
+    
+Source: {{violation.source}}{{/violation.source}}
+    
+{{violation.message}}
+                            &quot;&quot;&quot;,
+
+                            violationConfigs: [
+                                [ pattern: &quot;.*/checkstyleReports/.*\\.xml\$&quot;,
+                                  parser: 'CHECKSTYLE',
+                                  reporter: 'Checkstyle'
+                                ]
+                            ]
+                        ]
+                    ])
+                    }
+                post {
+                    always {
+                        publishHTML([
+                            allowMissing: false,
+                            alwaysLinkToLastBuild: true,
+                            keepAll: true,
+                            reportDir: 'build/checkstyleReports',
+                            reportFiles: 'main.html',
+                            reportName: 'HTML Report',
+                            reportTitles: ''
+                        ])
+                        slackSend(channel: &quot;${pipelineParams.slackChannel}&quot;, \
+                              message: &quot;Build '${env.JOB_NAME}' is *${BUILD_STATUS}* \n (${env.BUILD_URL}) \n\n&quot; +
+                            &quot;See report on '${JOB_URL}HTML_20Report/'&quot;)
+                    }
+                }
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>Находящийся в основном проекте Jenkinsfile для запуска checkstyle будет таким:</p>
+
+<pre><code class="language-java">@Library('jenkins-shared-libraries@master') _
+
+adsCheckstylePipeline {
+    slackChannel = '@ealebed' // for sending notification in slack
+    repoName = 'my-test-repo' // GitHub repo name, need for pushing comment to PR
+}
+</code></pre>
+
+<p>Для публикации комментариев с результатами анализа кода плагину необходимо авторизоваться на GitHub. Это делается с помощью строки <code>credentialsId: 'token-pr'</code> - конечно же, соответствующие креденшелы нужно создать. Можно это сделать вручную - в Интернете множество примеров с картинками, как это сделать, а можно немного &ldquo;доработать&rdquo; уже существующие groovy-скрипты по настройке Jenkins (см. цикл статей &ldquo;Jenkins as a code&rdquo; - <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">1</a>, <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2/">2</a>, <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3/">3</a>, <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">4</a>).</p>
+
+<p>Я выбрал второй вариант, поэтому мне пришлось добавить в скрипт <code>01-global-settings.groovy</code> следующие строки:</p>
+
+<pre><code class="language-java">...
+
+println(&quot;--- Configuring credentials&quot;)
+Credentials secretText = (Credentials) new StringCredentialsImpl(
+    CredentialsScope.GLOBAL,
+    &quot;token-pr&quot;, // id token
+    &quot;GitHub token for PR&quot;, // description for this token
+    Secret.fromString(&quot;bw4aeqkmejay.....xip4ln727u0wg7q&quot;) // token generated on github: https://github.com/settings/tokens
+)
+SystemCredentialsProvider.getInstance().getStore().addCredentials(Domain.global(), secretText)
+
+println(&quot;--- Configuring GitHubServer&quot;)
+GitHubServerConfig server = new GitHubServerConfig('token-pr')
+server.setManageHooks(true)
+server.setApiUrl('https://api.github.com')
+server.setClientCacheSize(20)
+GitHubPlugin.configuration().getConfigs().add(server)
+</code></pre>
+
+<p>Осталось создать задачу в Jenkins, где в качестве триггера указать &ldquo;GitHub Pull Requests&rdquo;. <strong>Trigger Mode</strong> в данном случае будет &ldquo;Cron with Persisted Data&rdquo;, а <strong>Trigger Events</strong> - &ldquo;Pull Request Opened&rdquo; (конечно, вы можете выбрать другие значения в зависимости от ваших требований). Также в поле <strong>Branches to build</strong> нужно указать &ldquo;origin/pull/${GITHUB_PR_NUMBER}/merge&rdquo;, а в расширенных настройках репозитория в <strong>Refspec</strong> вписать &ldquo;+refs/pull/${GITHUB_PR_NUMBER}/merge:refs/remotes/origin/pull/${GITHUB_PR_NUMBER}/merge&rdquo;. Опять же, для 1-2 задач это быстрее сделать руками, но если нужно настроить несколько сотен таких задач, то проще доработать groovy-скрипт <code>05-create-jobs.groovy</code> из <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3/">этой</a> статьи.</p>
+
+<p>Больше полезной информации о настройке плагинов Checkstyle (анализ кода), Violation Comments to GitHub (комментарии с результатами чекстайла) и GitHub integration plugin (триггер &ldquo;GitHub Pull Requests&rdquo;) можно найти <a href="https://docs.gradle.org/current/userguide/checkstyle_plugin.html">здесь</a>, <a href="https://github.com/jenkinsci/violation-comments-to-github-plugin">здесь</a> и <a href="https://github.com/KostyaSha/github-integration-plugin/blob/master/docs/Configuration.adoc">здесь</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2019%2fgradle-checkstyle-plugin%2f - Gradle%20Checkstyle%20plugin by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-netstat/">Практические примеры использования netstat<aside class="dates">Oct 8 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0%D0%BD%D1%8F%D1%82%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D0%BE%D1%80%D1%82%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%BC-%D0%B2-linux/">Проверка занятости порта сервисом в Linux<aside class="dates">Oct 4 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2019 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

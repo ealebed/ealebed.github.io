@@ -13,8 +13,10 @@
     
   
   
-  <meta name="twitter:title" content="Сборка Проектов С Помощью Gradle"/>
-  <meta name="twitter:description" content=""/>
+  <meta name="twitter:title" content="Сборка проектов с помощью Gradle"/>
+  <meta name="twitter:description" content="На просторах Интернета существует множество статей и видеоуроков (как платных, так и бесплатных) о том, как установить Gradle, написать собственную конфигурацию сборки (файл build.gradle) и, наконец, собрать Java-приложение с помощью Gradle. В данной статье мы не будем рассматривать эти простейшие вещи, а разберемся как следовать принципу DRY (Don’t Repeat Yourself) при работе с большим количеством схожих проектов!
+
+"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -30,7 +32,7 @@
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
 		<meta name="generator" content="Hugo 0.38.2" />
-		<title>Сборка Проектов С Помощью Gradle &middot; Yevhen Lebid&#39;s website</title>
+		<title>Сборка проектов с помощью Gradle &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
@@ -58,17 +60,21 @@
             <article>
                 <header>
                     <h1>
-                        Сборка Проектов С Помощью Gradle
+                        Сборка проектов с помощью Gradle
                     </h1>
                     <h2 class="headline">
-                    Jan 2, 2019 10:49
-                    · 0 word
-                    · 0 minute read
+                    Jan 3, 2019 06:19
+                    · 972 words
+                    · 5 minute read
                       <span class="tags">
                       
                       
                           
-                              <a href="https://ealebed.github.io/tags/"></a>
+                              <a href="https://ealebed.github.io/tags/gradle">gradle</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ci">CI</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
                           
                       
                       
@@ -76,12 +82,215 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    
+                    <p>На просторах Интернета существует множество статей и видеоуроков (как платных, так и бесплатных) о том, как установить Gradle, написать собственную конфигурацию сборки (файл <code>build.gradle</code>) и, наконец, собрать Java-приложение с помощью Gradle. В данной статье мы не будем рассматривать эти простейшие вещи, а разберемся как следовать принципу DRY (Don’t Repeat Yourself) при работе с большим количеством схожих проектов!</p>
+
+<p></p>
+
+<p>Считаем, что Gradle уже установлен и работает.</p>
+
+<p>Допустим, вы работаете с большим количеством проектов, в которых конфигурация сборки (<code>build.gradle</code>) частично или полностью повторяется. Рано или поздно этот копипаст вам надоест и захочется избавиться от избыточности (как мы это уже делали с <a href="https://ealebed.github.io/posts/2018/jenkins-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-shared-libraries/">описаниями пайплайнов</a>).</p>
+
+<p>В данном случае для решения задачи как нельзя лучше подходят <a href="https://docs.gradle.org/current/userguide/init_scripts.html">инит-скрипты</a>. Эти скрипты очень похожи на остальные гредл-скрипты, но запускаются перед сборкой (<em>before the build starts</em>) и зачастую используются в следующих случаях:</p>
+
+<ul>
+<li>для конфигурации сборки на уровне организации (пути к кастомным плагинам или репозиториям);</li>
+<li>для установки параметров сборки в зависимости от текущего окружения (машина разработчика / CI-сервер);</li>
+<li>для настройки персональной информации, необходимой для сборки, в зависимости от пользователя (к примеру, учетные данные для доступа к БД или репозиторию);</li>
+<li>для определения специфических параметров, зависящих от машины, на которой выполняется сборка (например, путь к JDK);</li>
+<li>для регистрации или тонкой настройки логгеров.</li>
+</ul>
+
+<p>Существует несколько вариантов использования гредловских инит-скриптов, например:</p>
+
+<ul>
+<li>из командной строки, с помощью параметра <code>-I</code> (<code>--init-script</code>), за которым следует путь к скрипту. Этот параметр можно использовать несколько раз, для указания нескольких инит-скриптов;</li>
+<li>разместить файл <code>init.gradle</code> (или <code>init.gradle.kts</code> для Kotlin) в каталоге <code>USER_HOME/.gradle/</code>;</li>
+<li>разместить один или несколько файлов с расширением <code>.gradle</code> (или <code>.init.gradle.kts</code> для Kotlin) в директории <code>USER_HOME/.gradle/init.d/</code> (наш вариант для машины разработчика);</li>
+<li>разместить один или несколько файлов с расширением <code>.gradle</code> (или <code>.init.gradle.kts</code> для Kotlin) в папке <code>GRADLE_HOME/init.d/</code> (наш вариант для CI).</li>
+</ul>
+
+<p>К слову, если инит-скриптов несколько, то они все будут выполнены в порядке описанном выше. Если же инит-скрипты находятся в одном каталоге, то выполняться они будут в алфавитном порядке.</p>
+
+<p>Рассмотрим самый простой пример из документации Gradle. Допустим, <code>build.gradle</code> выглядит так:</p>
+
+<pre><code class="language-java">repositories {
+    mavenCentral()
+}
+
+task showRepos {
+    doLast {
+        println &quot;All repos:&quot;
+        println repositories.collect { it.name }
+    }
+}
+</code></pre>
+
+<p>Инит-скрипт <code>init.gradle</code> содержит строки:</p>
+
+<pre><code class="language-java">allprojects {
+    repositories {
+        mavenLocal()
+    }
+}
+</code></pre>
+
+<p>Для теста в командной строке выполним задачу showRepos:</p>
+
+<pre><code class="language-bash">gradle --init-script init.gradle -q showRepos
+All repos:
+[MavenLocal, MavenRepo]
+</code></pre>
+
+<p>Как видим, репозиторий <code>mavenLocal</code> был добавлен к списку репозиториев, перечисленных в конфигурации сборки (<code>build.gradle</code>).</p>
+
+<p>Разберем более сложный и реальный пример. Создаем файл <code>build-scripts.gradle</code> следующего содержания:</p>
+
+<pre><code class="language-java">gradle.projectsLoaded {
+    rootProject.allprojects {
+        if (System.getenv('BUILD_ENVIRONMENT') ?: 'DEVELOPER' == 'CI') {
+            buildscript {
+                repositories {
+                    maven { url 'http://artifactory:8081/artifactory/libs-release/' }
+                }
+                dependencies {
+                    classpath 'net.ltgt.gradle:gradle-apt-plugin:0.19'
+                    classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.0.5.RELEASE'
+                    classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
+                    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.6'
+                    classpath 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+                    classpath 'com.sun.xml.bind:jaxb-impl:2.3.0.1'
+                    classpath 'javax.xml.bind:jaxb-api:2.3.1'
+                    classpath 'javax.activation:activation:1.1.1'
+                }
+            }
+        } else {
+            buildscript {
+                repositories {
+                    maven {
+                        url 'https://company.jfrog.io/company/libs-release/'
+                        credentials {
+                            username &quot;${artifactoryUser}&quot;
+                            password &quot;${artifactoryPassword}&quot;
+                        }
+                    }
+                }
+                dependencies {
+                    classpath 'net.ltgt.gradle:gradle-apt-plugin:0.18'
+                    classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.0.5.RELEASE'
+                    classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
+                    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.6'
+                    classpath 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+                    classpath 'com.sun.xml.bind:jaxb-impl:2.3.0.1'
+                    classpath 'javax.xml.bind:jaxb-api:2.3.1'
+                    classpath 'javax.activation:activation:1.1.1'
+                }
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>В данном примере если сборка происходит на CI-сервере (значение переменной <code>BUILD_ENVIRONMENT</code> равно &ldquo;CI&rdquo;), то в качестве репозитория сторонних библиотек используется локальный jfrog-artifactory, доступный на порту 8081 без авторизации. Если же сборка производится на машине разработчика (<code>BUILD_ENVIRONMENT</code> равно &ldquo;DEVELOPER&rdquo;) то, используются личные учетные данные для доступа к приватному JFrog-репозиторию. Логин/пароль в данном случае должны находиться в файле <code>USER_HOME/.gradle/gradle.properties</code>:</p>
+
+<pre><code class="language-text">...
+artifactoryUser=admin
+artifactoryPassword=Very$tr0ngPaS$wd
+</code></pre>
+
+<p>Создадим еще один инит-скрипт, в котором будем проверять/устанавливать версию для проекта:</p>
+
+<pre><code class="language-java">allprojects {
+    afterEvaluate { project -&gt;
+        project.plugins.withId(&quot;java&quot;) {
+            try {
+                project.version = System.getenv('PROJECT_VERSION') ?: System.properties['user.name'] + &quot;_DEV&quot;
+                println &quot;'java' plugin common config&quot;
+                println &quot; |- set project version: ${project.version}&quot;
+                println ''
+            } catch (UnknownPluginException) {
+                println UnknownPluginException
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>Здесь для всех проектов, в которых используется плагин java, будет устанавливаться версия из переменной окружения &ldquo;PROJECT_VERSION&rdquo;, или, если такой переменной окружения нет, версия проекта будет равна имени пользователя с префиксом <code>_DEV</code>.</p>
+
+<p>Размещаем данные инит-скрипты в директории <code>USER_HOME/.gradle/init.d/</code>. Теперь во всех проектах, в конфигурации сборки (<code>build.gradle</code>) секция <code>buildscript</code> и установка версии проекта будет соответствовать описанным в инит-скриптах. Именно за счет этого можно избавиться от избыточности и копипасты в настройках сборки с помощью Gradle.</p>
+
+<p>Следующим логичным шагом будет возможность использования инит-скриптов всеми членами команды разработки - проще всего поместить эти скрипты в git-репозиторий. Опять же, для удобства настройки можно создать небольшой скрипт - назовем его <code>initilaze-gradle.sh</code> - с таким содержимым:</p>
+
+<pre><code class="language-bash">#!/usr/bin/env bash
+
+LINK_OR_DIR=&quot;${HOME}/.gradle/init.d&quot;
+
+if [ -d &quot;${LINK_OR_DIR}&quot; ]; then
+  if [ -L &quot;${LINK_OR_DIR}&quot; ]; then
+    # It is a symlink!
+    rm &quot;${LINK_OR_DIR}&quot;
+  else
+    # It's a directory!
+    rm -rf &quot;${LINK_OR_DIR}&quot;
+  fi
+fi
+
+DIR=&quot;$( cd &quot;$( dirname &quot;${BASH_SOURCE[0]}&quot; )&quot; &gt;/dev/null &amp;&amp; pwd )&quot;
+
+ln -s ${DIR}/init.d ${LINK_OR_DIR}
+
+while true; do
+  read -p &quot;Do you wish add credentials template to ${HOME}/.gradle/gradle.properties? &quot; yn
+  case $yn in
+    [Yy]* ) echo &quot;artifactoryUser=&quot; &gt;&gt;  ${HOME}/.gradle/gradle.properties; echo &quot;artifactoryPassword=&quot; &gt;&gt;  ${HOME}/.gradle/gradle.properties; break;;
+    [Nn]* ) exit;;
+    * ) echo &quot;Please answer yes or no.&quot;;;
+  esac
+done
+</code></pre>
+
+<p>Теперь разработчику достаточно склонировать git-репозиторий с инит-скриптами гредла, единожды запустить скрипт <code>initilaze-gradle.sh</code> (для создания символьной ссылки на каталог со скриптами) и добавить свои учетные данные для доступа к JFrog. Благодаря созданию символьной ссылки в будущем при обновлении инит-скриптов в git-репозитории достаточно будет выполнить</p>
+
+<pre><code class="language-bash">git pull
+</code></pre>
+
+<p>и &ldquo;свежие&rdquo; скрипты станут доступны по пути <code>USER_HOME/.gradle/init.d/</code>.</p>
+
+<p>Так как на CI-сервере абсолютно все сборки запускаются в docker-контейнерах, для использования данных инит-скриптов нам нужно добавить их в docker-образ. В моем случае инструкции по сборке образа (Dockerfile) выглядят так:</p>
+
+<pre><code class="language-Dockerfile">FROM openjdk:11.0.1-jdk-slim
+
+ENV GRADLE_HOME /opt/gradle
+ENV GRADLE_VERSION 5.0
+
+ARG GRADLE_DOWNLOAD_SHA256=6157ac9f3410bc63644625b3b3e9e96c963afd7910ae0697792db57813ee79a6
+RUN apt update &amp;&amp; apt install -y wget
+RUN set -o errexit -o nounset \
+    &amp;&amp; echo &quot;Downloading Gradle&quot; \
+    &amp;&amp; wget --no-verbose --output-document=gradle.zip &quot;https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip&quot; \
+    \
+    &amp;&amp; echo &quot;Checking download hash&quot; \
+    &amp;&amp; echo &quot;${GRADLE_DOWNLOAD_SHA256} *gradle.zip&quot; | sha256sum --check - \
+    \
+    &amp;&amp; echo &quot;Installing Gradle&quot; \
+    &amp;&amp; unzip gradle.zip \
+    &amp;&amp; rm gradle.zip \
+    &amp;&amp; mv &quot;gradle-${GRADLE_VERSION}&quot; &quot;${GRADLE_HOME}/&quot; \
+    &amp;&amp; ln --symbolic &quot;${GRADLE_HOME}/bin/gradle&quot; /usr/bin/gradle
+
+ENV BUILD_ENVIRONMENT=CI
+
+COPY init.d/ ${GRADLE_HOME}/init.d/
+
+WORKDIR /project
+</code></pre>
+
+<p>Больше информации о использовании инит-скриптов в Gradle можно найти в <a href="https://docs.gradle.org/current/userguide/init_scripts.html">официальной документации</a>, а в следующей статье рассмотрим использование плагина checkstyle для статического анализа кода.</p>
                 </section>
             </article>
 
             
-                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2019%2f%25D1%2581%25D0%25B1%25D0%25BE%25D1%2580%25D0%25BA%25D0%25B0-%25D0%25BF%25D1%2580%25D0%25BE%25D0%25B5%25D0%25BA%25D1%2582%25D0%25BE%25D0%25B2-%25D1%2581-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-gradle%2f - %d0%a1%d0%b1%d0%be%d1%80%d0%ba%d0%b0%20%d0%9f%d1%80%d0%be%d0%b5%d0%ba%d1%82%d0%be%d0%b2%20%d0%a1%20%d0%9f%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20Gradle by @ealebed"><span class="icon-twitter"> tweet</span></a>
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2019%2f%25D1%2581%25D0%25B1%25D0%25BE%25D1%2580%25D0%25BA%25D0%25B0-%25D0%25BF%25D1%2580%25D0%25BE%25D0%25B5%25D0%25BA%25D1%2582%25D0%25BE%25D0%25B2-%25D1%2581-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-gradle%2f - %d0%a1%d0%b1%d0%be%d1%80%d0%ba%d0%b0%20%d0%bf%d1%80%d0%be%d0%b5%d0%ba%d1%82%d0%be%d0%b2%20%d1%81%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20Gradle by @ealebed"><span class="icon-twitter"> tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(

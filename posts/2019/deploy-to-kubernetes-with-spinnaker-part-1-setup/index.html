@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Deploy to k8s with Spinnaker. Часть 1: Установка"/>
+  <meta name="twitter:description" content="Spinnaker - мультиоблачная платформа для непрерывной доставки (continuous delivery) с открытым исходным кодом (open-source) от разработчиков Netflix. Платформа предназначена для управления и деплоя приложений в AWS EC2, Kubernetes, GCE, GKE, GAE, Microsoft Azure и Openstack. Давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.38.2" />
+		<title>Deploy to k8s with Spinnaker. Часть 1: Установка &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Deploy to k8s with Spinnaker. Часть 1: Установка
+                    </h1>
+                    <h2 class="headline">
+                    Jan 24, 2019 15:31
+                    · 1120 words
+                    · 6 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/spinnaker">spinnaker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ci">ci</a>
+                          
+                              <a href="https://ealebed.github.io/tags/cd">cd</a>
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Spinnaker - мультиоблачная платформа для непрерывной доставки (continuous delivery) с открытым исходным кодом (open-source) от разработчиков Netflix. Платформа предназначена для управления и деплоя приложений в AWS EC2, Kubernetes, GCE, GKE, GAE, Microsoft Azure и Openstack. Давайте разберемся!</p>
+
+<p></p>
+
+<p>Устанавливать Spinnaker будем в Kubernetes кластер с помощью утилиты Halyard (рекомендуемый способ установки). Для начала установим Halyard на локальный компьютер или VM (с Ubuntu 14.04/16.04, Debian, или macOS).</p>
+
+<p><strong>Примечание.</strong> Это также может быть docker-контейнер, но данный вариант установки рассматривать не будем.</p>
+
+<p>В моем случае используется macOS (10.14.2 Mojave). Скачиваем последнюю версию установщика Halyard с помощью команды:</p>
+
+<pre><code class="language-bash">curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/macos/InstallHalyard.sh
+</code></pre>
+
+<p>Устанавливаем утилиту:</p>
+
+<pre><code class="language-bash">sudo bash InstallHalyard.sh
+</code></pre>
+
+<p>Проверить корректность установки можно так:</p>
+
+<pre><code class="language-bash">hal -v
+1.14.0-20190117020510
+</code></pre>
+
+<p><strong>Примечание.</strong> Если команда завершается с ошибкой, убедитесь, что путь к испольняемому файлу <code>hal</code> присутствует в переменной <code>$PATH</code>.</p>
+
+<p>Обновление Halyard можно вызвать командой:</p>
+
+<pre><code class="language-bash">sudo update-halyard
+</code></pre>
+
+<p>При необходимости удалить Halyard можно так:</p>
+
+<pre><code class="language-bash">sudo ~/.hal/uninstall.sh
+</code></pre>
+
+<p>Для установки Spinnaker далее следует определиться с облачным провайдером - все доступные варианты можно посмотреть <a href="https://www.spinnaker.io/setup/install/providers/">тут</a>, в моем случае будет использоваться вторая версия Kubernetes (Kubernetes Provider V2 (Manifest Based)). Сам Kubernetes кластер запущен на GKE (Google Kubernetes Engine).</p>
+
+<p>Если у вас нет кластера на GKE, его необходимо создать с помощью консольной утилиты <a href="https://cloud.google.com/sdk/downloads"><code>gcloud</code></a> или <a href="https://console.cloud.google.com/">Cloud Console</a> как описано в <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster#creating_a_cluster">официальной документации</a>. Также для этих целей можно использовать сторонние инструменты, например <code>Terraform</code>.</p>
+
+<p>Далее необходимо загрузить учетные данные для доступа к кластеру Kubernetes, например, как написано <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#generate_kubeconfig_entry">здесь</a>.</p>
+
+<p>Создаем отдельный сервис-аккаунт для Spinnaker и сгенерируем ему токен для доступа к кластеру Kubernetes:</p>
+
+<pre><code class="language-bash">CONTEXT=$(kubectl config current-context)
+
+# This service account uses the ClusterAdmin role -- this is not necessary, 
+# more restrictive roles can by applied.
+kubectl apply --context ${CONTEXT} \
+    -f https://spinnaker.io/downloads/kubernetes/service-account.yml
+
+TOKEN=$(kubectl get secret --context ${CONTEXT} \
+   $(kubectl get serviceaccount spinnaker-service-account \
+       --context ${CONTEXT} \
+       -n spinnaker \
+       -o jsonpath='{.secrets[0].name}') \
+   -n spinnaker \
+   -o jsonpath='{.data.token}' | base64 --decode)
+
+kubectl config set-credentials ${CONTEXT}-token-user --token ${TOKEN}
+
+kubectl config set-context ${CONTEXT} --user ${CONTEXT}-token-user
+</code></pre>
+
+<p>По желанию также можно настроить RBAC (Role-Based Access Control) для сервис-аккаунта Spinnaker, например, создав файл <code>spinnaker-role.yaml</code> с таким содержимым:</p>
+
+<pre><code class="language-yaml">apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+ name: spinnaker-role
+rules:
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;namespaces&quot;, &quot;configmaps&quot;, &quot;events&quot;, &quot;replicationcontrollers&quot;, &quot;serviceaccounts&quot;, &quot;pods/log&quot;]
+  verbs: [&quot;get&quot;, &quot;list&quot;]
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;pods&quot;, &quot;services&quot;, &quot;secrets&quot;]
+  verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;deletecollection&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;update&quot;, &quot;watch&quot;]
+- apiGroups: [&quot;autoscaling&quot;]
+  resources: [&quot;horizontalpodautoscalers&quot;]
+  verbs: [&quot;list&quot;, &quot;get&quot;]
+- apiGroups: [&quot;apps&quot;]
+  resources: [&quot;controllerrevisions&quot;, &quot;statefulsets&quot;]
+  verbs: [&quot;list&quot;]
+- apiGroups: [&quot;extensions&quot;, &quot;apps&quot;]
+  resources: [&quot;deployments&quot;, &quot;replicasets&quot;, &quot;ingresses&quot;]
+  verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;deletecollection&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;update&quot;, &quot;watch&quot;]
+# These permissions are necessary for halyard to operate. We use this role also to deploy Spinnaker itself.
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;services/proxy&quot;, &quot;pods/portforward&quot;]
+  verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;deletecollection&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;update&quot;, &quot;watch&quot;]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+ name: spinnaker-role-binding
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: ClusterRole
+ name: spinnaker-role
+subjects:
+- namespace: spinnaker
+  kind: ServiceAccount
+  name: spinnaker-service-account
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: spinnaker-service-account
+ namespace: spinnaker
+</code></pre>
+
+<p>и применив его с помощью команды:</p>
+
+<pre><code class="language-bash">kubectl apply -f spinnaker-role.yaml
+</code></pre>
+
+<p>Теперь можем в настройках Spinnaker&rsquo;а включить поддержку Kubernetes V2 провайдера и добавить аккаунт(ы):</p>
+
+<pre><code class="language-bash">hal config provider kubernetes enable
+</code></pre>
+
+<pre><code class="language-bash">CONTEXT=$(kubectl config current-context)
+
+hal config provider kubernetes account add k8s-account \
+    --namespaces default \
+    --provider-version v2 \
+    --context ${CONTEXT}
+</code></pre>
+
+<p><strong>Примечание.</strong> В терминологии Spinnaker аккаунт (account) соответствует контексту (context) Kubernetes кластера; имя аккаунта может отличаться от имени контекста.</p>
+
+<p>В примере выше для взаимодействия с Kubernetes кластерами будет использоваться дефолтный <a href="https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/"><code>kubeconfig</code></a> - <code>~/.kube/config</code>. Можно явно указать путь к <code>kubeconfig</code> с помощью параметра <code>--kubeconfig-file</code>.</p>
+
+<p>Также нужно включить поддержку артефактов:</p>
+
+<pre><code class="language-bash">hal config features edit --artifacts true
+</code></pre>
+
+<p>Особенно нас интересует возможность использования артефактов с GitHub (в моем примере артефакт - это манифест для k8s в формате <code>.yaml</code>). Для доступа к репозиториям на GitHub Spinnaker&rsquo;у понадобится токен, который можно сгенерировать <a href="https://github.com/settings/tokens">здесь</a>. Токену необходимы права доступа <strong>repo scope</strong>.</p>
+
+<pre><code class="language-bash">hal config artifact github enable
+</code></pre>
+
+<pre><code class="language-bash">TOKEN=b82c0b5201e5........8d3f1288cb
+echo ${TOKEN} | hal config artifact github account add spinnaker-github-token --token
+</code></pre>
+
+<p>Для хранения персистентных данных (настройки пайплайнов / приложений) Spinnaker&rsquo;у требуется внешнее хранилище. Доступные варианты хранилищ можно посмотреть <a href="https://www.spinnaker.io/setup/install/storage/">здесь</a>, в моем же случае будет использоваться GCS (Google Cloud Storage).</p>
+
+<p>Считаем, что у вас уже <a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects">создан проект</a> на GCP (Google Cloud Platform) и установлена утилита <a href="https://cloud.google.com/sdk/downloads"><code>gcloud</code></a>.</p>
+
+<p>Для аутентификации Spinnaker&rsquo;а на GCP создадим сервис-аккаунт с включенной ролью <code>roles/storage.admin</code> с помощью следующих команд:</p>
+
+<pre><code class="language-bash">SERVICE_ACCOUNT_NAME=spinnaker-gcs-account
+SERVICE_ACCOUNT_DEST=~/.gcp/gcs-account.json
+
+gcloud iam service-accounts create \
+    ${SERVICE_ACCOUNT_NAME} \
+    --display-name ${SERVICE_ACCOUNT_NAME}
+
+SA_EMAIL=$(gcloud iam service-accounts list \
+    --filter=&quot;displayName:${SERVICE_ACCOUNT_NAME}&quot; \
+    --format='value(email)')
+
+PROJECT=$(gcloud info --format='value(config.project)')
+
+gcloud projects add-iam-policy-binding ${PROJECT} \
+    --role roles/storage.admin --member serviceAccount:${SA_EMAIL}
+
+mkdir -p $(dirname ${SERVICE_ACCOUNT_DEST})
+
+gcloud iam service-accounts keys create ${SERVICE_ACCOUNT_DEST} \
+    --iam-account ${SA_EMAIL}
+</code></pre>
+
+<p>Настраиваем внешнее хранилище для Spinnaker:</p>
+
+<pre><code class="language-bash">BUCKET_LOCATION=europe-west1
+
+hal config storage gcs edit \
+    --project ${PROJECT} \
+    --bucket-location ${BUCKET_LOCATION} \
+    --bucket my-spinnaker-bucket \
+    --json-path ${SERVICE_ACCOUNT_DEST}
+
+</code></pre>
+
+<p>Включим и настроим поддержку docker-registry (необязательный шаг). В моем случае будут использоваться приватные docker-репозитории организации (Docker Private Organization Repository), и мне необходимо настроить триггер, который бы запускал пайплайн при появлении нового docker-образа в репозитории:</p>
+
+<pre><code class="language-bash">hal config provider docker-registry enable
+</code></pre>
+
+<pre><code class="language-bash">PASS=Very$tr0ngPaS$
+echo ${PASS} | hal config provider docker-registry account add private-dockerhub \
+    --provider-version v2 \
+    --address index.docker.io \
+    --repositories orgname/reponame-1 orgname/reponame-2 orgname/reponame-3 \
+    --username admin \
+    --password
+</code></pre>
+
+<p><strong>Примечание.</strong> Так как Docker Hub не предоставляет ендпоинта <a href="https://docs.docker.com/registry/spec/api/#listing-repositories">catalog</a> для автоматического получения списка docker репозиториев, их необходимо вручную указать с помощью параметра <code>--repositories</code>.</p>
+
+<p>Больше опций для более тонкой настройки docker registry можно найти <a href="https://www.spinnaker.io/reference/halyard/commands/#hal-config-provider-docker-registry-account-add">здесь</a>.</p>
+
+<p>Стоит отметить, что при большом количестве тэгов в репозиториях docker registry (&gt;1000) можно столкнуться с проблемой - микросервис <code>igor</code> (подробнее о архитектуре Spinnaker можно узнать <a href="https://www.spinnaker.io/reference/architecture/">здесь</a>) не будет видеть новые тэги и не сможет тригеррить пайплайны. В логах это будет выглядеть примерно так:</p>
+
+<pre><code class="language-text">...
+2019-01-22 12:59:55.923  INFO 1 --- [RxIoScheduler-3] c.n.s.i.d.service.ClouddriverService     : ---&gt; HTTP GET http://spin-clouddriver.spinnaker:7002/dockerRegistry/images/find?account=private-dockerhub
+2019-01-22 12:59:55.992  INFO 1 --- [RxIoScheduler-3] c.n.s.i.d.service.ClouddriverService     : &lt;--- HTTP 200 http://spin-clouddriver.spinnaker:7002/dockerRegistry/images/find?account=private-dockerhub (68ms)
+2019-01-22 12:59:56.034  INFO 1 --- [RxIoScheduler-3] c.n.spinnaker.igor.docker.DockerMonitor  : Found 5546 new images for private-dockerhub
+2019-01-22 12:59:56.034 ERROR 1 --- [RxIoScheduler-3] c.n.spinnaker.igor.docker.DockerMonitor  : Number of items (5546) to cache exceeds upper threshold (1000) in monitor=DockerMonitor partition=private-dockerhub
+...
+</code></pre>
+
+<p>Исправить ситуацию можно создав файл <code>~/.hal/default/profiles/igor-local.yml</code> следующего содержания:</p>
+
+<pre><code class="language-yaml">dockerRegistry:
+  itemUpperThreshold: 10000
+</code></pre>
+
+<p>Двигаемся дальше. Указываем тип установки для Spinnaker (в моем примере это будет distributed) и ранее созданный Kubernetes-аккаунт (в какой кластер устанавливать):</p>
+
+<pre><code class="language-bash">hal config deploy edit --type distributed --account-name k8s-account
+</code></pre>
+
+<p>Далее следует выбрать версию Spinnaker для установки. Список доступных версий можно просмотреть командой:</p>
+
+<pre><code class="language-bash">hal version list
+</code></pre>
+
+<p>Указываем нужную версию:</p>
+
+<pre><code class="language-bash">hal config version edit --version 1.10.12
+</code></pre>
+
+<p>Деплой (или обновление настроек) Spinnaker&rsquo;а выполняется командой:</p>
+
+<pre><code class="language-bash">hal deploy apply
+</code></pre>
+
+<p>Далее можно выполнить команду (по сути, port-forward):</p>
+
+<pre><code class="language-bash">hal deploy connect
+</code></pre>
+
+<p>После чего перейти по адресу <a href="localhost:9000">localhost:9000</a> для дальнейшей настройки (создания приложений / пайплайнов) Spinnaker - для теста вполне сойдет. Но если вы планируете полноценно использовать Spinnaker для деплоя / управления приложениями, то необходимо настроить субдомены для Spinnaker API и UI серверов (считаем, что домен существует):</p>
+
+<pre><code class="language-bash">DOMAIN=example.org
+hal config security ui edit \
+    --override-base-url http://spinnaker.${DOMAIN}
+
+hal config security api edit \
+    --override-base-url http://spinnaker-api.${DOMAIN}
+</code></pre>
+
+<p>После чего обновить настройки Spinnaker:</p>
+
+<pre><code class="language-bash">hal deploy apply
+</code></pre>
+
+<p>Также весьма полезно будет настроить авторизацию/аутентификацию, пример с использованием OAuth2.0 можно увидеть <a href="https://www.spinnaker.io/setup/quickstart/halyard-gke-public/">здесь</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2019%2fdeploy-to-kubernetes-with-spinnaker-part-1-setup%2f - Deploy%20to%20k8s%20with%20Spinnaker.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%201%3a%20%d0%a3%d1%81%d1%82%d0%b0%d0%bd%d0%be%d0%b2%d0%ba%d0%b0 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2019/gradle-checkstyle-plugin/">Gradle Checkstyle plugin<aside class="dates">Jan 8 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2019/%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%BE%D0%B2-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-gradle/">Сборка проектов с помощью Gradle<aside class="dates">Jan 3 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tcpdump/">Практические примеры использования tcpdump<aside class="dates">Oct 18 2018</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-tar/">Практические примеры использования tar<aside class="dates">Oct 11 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2019 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

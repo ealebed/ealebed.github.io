@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Ресурсы В Kubernetes. Часть 1: Память (Memory)"/>
+  <meta name="twitter:description" content="Чтобы Kubernetes смог максимально эффективно использовать доступную инфраструктуру и корректно выделить ресурсы, необходимые для работы вашего приложения, вам следует указать требования в ресурсам каждого контейнера. В данный момент есть возможность задавать два типа требований (requests и limits) для двух типов ресурсов - памяти (memory) и процессора (CPU). В данной статье рассмотрим requests и limits применительно к памяти - давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Ресурсы В Kubernetes. Часть 1: Память (Memory) &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Ресурсы В Kubernetes. Часть 1: Память (Memory)
+                    </h1>
+                    <h2 class="headline">
+                    Jul 15, 2019 10:23
+                    · 836 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Чтобы <code>Kubernetes</code> смог максимально эффективно использовать доступную инфраструктуру и корректно выделить ресурсы, необходимые для работы вашего приложения, вам следует указать требования в ресурсам каждого контейнера. В данный момент есть возможность задавать два типа требований (<code>requests</code> и <code>limits</code>) для двух типов ресурсов - памяти (<code>memory</code>) и процессора (<code>CPU</code>). В данной статье рассмотрим <code>requests</code> и <code>limits</code> применительно к памяти - давайте разберемся!</p>
+
+<p></p>
+
+<p>При описании пода (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) для каждого из его контейнеров могут быть заданы требования к ресурсам в следующем формате:</p>
+
+<pre><code class="language-yaml">...
+resources:
+  limits:
+    cpu: &quot;2&quot;
+    memory: 2Gi
+  requests:
+    cpu: &quot;2&quot;
+    memory: 2Gi
+...
+</code></pre>
+
+<p>Тип требований <code>requests</code> используется в <code>Kubernetes</code> планировщиком для корректного размещения и запуска подов в существующей инфраструктуре, как бы говоря &ldquo;запусти контейнеры данного пода там, где есть достаточное количество запрощенных ресурсов&rdquo;. <code>Limits</code> - жесткое ограничение ресурсов, доступных контейнеру и среде его выполнения (тут и далее имеется в виду Docker container runtime). Превышение указанных лимитов (<code>limits</code>) ресурсов зачастую приводит к троттлингу или остановке (termination) контейнера.</p>
+
+<p>Если значение <code>requests</code> для контейнера не указано, то по умолчанию будет использоваться значение установленное в <code>limits</code>. Если же не указано значение <code>limits</code>, то по умолчанию это значение будет равно 0 (если верить документации - неограниченно. На самом деле ограничивается ресурсами узла, на котором запускается под).</p>
+
+<p>Возникает вопрос, стоит ли указывать значения <code>limits</code> больше, чем <code>requests</code>? Если ваше приложение стабильно использует предсказуемый объем оперативной памяти, то устанавливать разные значения параметров <code>requests</code> и <code>limits</code> для памяти нет смысла. В случае с CPU, разница между заданными значениями <code>requests</code> и <code>limits</code> может не устанавливаться (при условии, что эти же ресурсы не используются другими контейнерами и их не нужно &ldquo;делить&rdquo;).</p>
+
+<p>Если вы новичок в <code>Kubernetes</code>, для начала лучше всего использовать значения <code>limits</code> точно такие же как и <code>requests</code> - это обеспечит так называемый &ldquo;гарантированный класс качества сервиса&rdquo; (<code>Guaranteed QoS</code> class, об этих классах чуть ниже). С другой стороны, класс <code>Burstable QoS</code> потенциально позволяет более эффективно использовать ресурсы инфраструктуры, правда, за счет большей непредсказуемости - например, рост CPU-latency может повлиять на остальные поды/контейнеры, запущенные на том же рабочем узле (ноде).</p>
+
+<p>В <code>Kubernetes</code> QoS классы используются в соответствии с наличием и конфигурацией <code>requests</code> и <code>limits</code> (<a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/resource-qos.md#qos-classes">детальное описание</a>):</p>
+
+<ul>
+<li>если для всех контейнеров пода установлены отличные от 0 <code>requests</code> и <code>limits</code> для всех типов ресурсов, и эти значения равны, то под будет принадлежать к классу <code>Guaranteed</code>;</li>
+<li>если для одного или нескольких контейнера пода установлены отличные от 0 <code>requests</code> и <code>limits</code> для одного или всех типов ресурсов и эти значения не равны, то под будет принадлежать к классу <code>Burstable</code>;</li>
+<li>если для всех контейнеров пода не установлены значения <code>requests</code> и <code>limits</code> для всех типов ресурсов, то поду будет присвоен класс <code>Best-Effort</code>.</li>
+</ul>
+
+<p>Поды класса <code>Best-Effort</code> обладают наименьшим приоритетом. Они могут использовать любое количество свободной памяти, доступное на рабочем узле, но будут остановлены в первую очередь, если система испытывает недостаток памяти (under memory pressure). Поды класса <code>Burstable</code> обычно имеют некоторое гарантированное количество ресурсов (благодаря <code>requests</code>), но могут использовать больше ресурсов (если такие доступны). Если система испытывает недостаток памяти (и остановка подов с классом <code>Best-Effort</code> не помогла), то поды данного класса, которые превысили значение заданное в <code>requests</code> будут остановлены. Класс <code>Guaranteed</code> обладает максимальным приоритетом, и поды данного класса будут остановлены только если они используют больше ресурсов, чем установлено в <code>limits</code>.</p>
+
+<p>Итак, что же означает память (<code>memory</code>) в данном контексте? В нашем случае, это общее значение размера страниц памяти (Resident set size, RSS) и использования кэша страниц (page cache) контейнерами.</p>
+
+<p><strong>Примечание.</strong> В &ldquo;чистом&rdquo; docker&rsquo;е в это значение также входит своп (swap), который предусмотрительно отключен в <code>Kubernetes</code>.</p>
+
+<p><strong>RSS</strong> - размер страниц памяти, выделенных процессу операционной системой и в настоящее время находящихся в ОЗУ. Например, для Java процесса это heap (куча), non-heap (стек) память, оff-heap (она же native memory) и т. д.</p>
+
+<p>Кэш страниц - иногда также называемый дисковый кэшем, используется для кеширования блоков с HDD/SSD. Все операции ввода/вывода обычно происходят через этот кэш (из соображений производительности). Чем больше данных читает/записывает ваше приложение на диск, тем больший объем памяти необходим для кэша страниц. Ядро будет использовать доступную память для кэша страниц, но будет освобождать ее, если память понадобится в другом месте/процессе - таким образом производительность вашего приложения может снижаться при недостаточном объеме оперативной памяти.</p>
+
+<p>Исходя из <a href="https://docs.docker.com/config/containers/runmetrics/#metrics-from-cgroups-memory-cpu-block-io">документации</a> docker, можно сказать, что размер кэша страниц, используемых контейнером, может сильно отличаться в зависимости от того, могут ли некоторые файлы &ldquo;поделены&rdquo; между несколькими контейнерами, запущенными на одном рабочем узле (достигается благодаря overlayfs storage driver).</p>
+
+<p>Значения параметров <code>requests</code> и <code>limits</code> измеряются в байтах, однако можно использовать и <a href="https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory">суффиксы</a>. К примеру, настройка памяти JVM <code>Xmx1g</code> (1024³ bytes) будет соответствовать <code>1Gi</code> в спецификации контейнера.</p>
+
+<p>Ограничения по памяти <code>limits</code> с точки зрения <code>Kubernetes</code> считаются &ldquo;несжимаемыми&rdquo; (non-compressible), следовательно при превышении этих ограничений троттлинг невозможен - ядро будет агрессивно очищать кэш страниц (для освобождения ресурсов / достижения желаемого состояния рабочего узла) и контейнеры к конце концов могут быть остановлены (прерваны) хорошо известным Linux Out of Memory (OOM) Killer.</p>
+
+<p>Для хорошей настройки приложения часто приходится эмпирическим путем подбирать необходимые значения <code>requests</code> и <code>limits</code> и менять их на протяжении всего жизненного цикла приложения, поэтому не стоит пренебрегать сбором метрик, мониторингом и оповещением о использовании ресурсов.</p>
+
+<p>На этом все, в следующей статье рассмотрим <code>requests</code> и <code>limits</code> применительно к использованию процессора (<code>CPU</code>).</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2019%2f%25D1%2580%25D0%25B5%25D1%2581%25D1%2583%25D1%2580%25D1%2581%25D1%258B-%25D0%25B2-kubernetes-%25D1%2587%25D0%25B0%25D1%2581%25D1%2582%25D1%258C-1-memory%2f - %d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b%20%d0%92%20Kubernetes.%20%d0%a7%d0%b0%d1%81%d1%82%d1%8c%201%3a%20%d0%9f%d0%b0%d0%bc%d1%8f%d1%82%d1%8c%20%28Memory%29 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2019/deploy-to-k8s-with-spinnaker-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0/">Deploy to k8s with Spinnaker. Часть 1: Установка<aside class="dates">Jan 24 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2019/gradle-checkstyle-plugin/">Gradle Checkstyle plugin<aside class="dates">Jan 8 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2019/%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%BE%D0%B2-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-gradle/">Сборка проектов с помощью Gradle<aside class="dates">Jan 3 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2018/grpc-rest-gateway/">GRPC REST Gateway<aside class="dates">Dec 29 2018</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2019 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

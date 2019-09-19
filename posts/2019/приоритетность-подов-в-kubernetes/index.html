@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Приоритетность подов в Kubernetes"/>
+  <meta name="twitter:description" content="Поды (Pods) могут иметь приоритет. Приоритет отображает важность пода относительно других подов в кластере. Если под не может быть запущен на подходящем узле из-за нехватки ресурсов, то планировщик (scheduler) пытается &ldquo;вытеснить&rdquo; поды с более низким приоритетом и переместить их на другие узлы кластера, чтобы освободить ресурсы и запустить ожидающий под. Давайте разберемся!
+
+"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.32.2" />
+		<title>Приоритетность подов в Kubernetes &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Приоритетность подов в Kubernetes
+                    </h1>
+                    <h2 class="headline">
+                    Sep 19, 2019 10:53
+                    · 808 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Поды (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) могут иметь приоритет. Приоритет отображает важность пода относительно других подов в кластере. Если под не может быть запущен на подходящем узле из-за нехватки ресурсов, то планировщик (<code>scheduler</code>) пытается &ldquo;вытеснить&rdquo; поды с более низким приоритетом и переместить их на другие узлы кластера, чтобы освободить ресурсы и запустить ожидающий под. Давайте разберемся!</p>
+
+<p></p>
+
+<p>Приоритет подов (Pod Priority) и вытеснение (Preemption) включены по умолчанию начиная с версии <code>Kubernetes</code> 1.11. Для их использования необходимо:</p>
+
+<ul>
+<li>создать один или несколько объектов <code>PriorityClass</code> в кластере;</li>
+<li>добавить в описание пода поле <code>priorityClassName</code> с именем созданного ранее класса.</li>
+</ul>
+
+<p><code>PriorityClass</code> - это объект, определяющий соответствие между именем класса приоритета и его целочисленным значением. Имя задается в поле <code>name</code> объекта, значение - в поле <code>value</code>. Чем больше значение, тем выше приоритет запуска у пода с указанным классом. В поле <code>value</code> можно указать целочисленное 32-битное значение меньше или равное 1000000000 - более высокие значения зарезервированы для критически важных системных подов, которые, как правило, не могут быть вытеснены. Кроме того,
+<code>PriorityClass</code> имеет два опциональных поля - <code>globalDefault</code> и <code>description</code>. Поле <code>globalDefault</code> со значением установленным в <code>true</code> указывает, что данный класс приоритета будет использоваться по умолчанию для всех подов кластера, в описании которых нет поля <code>priorityClassName</code>. В системе может существовать один и только один класс приоритета, в котором <code>globalDefault</code> установлено в <code>true</code>; если же во всех классах кластера это значение будет установлено в <code>false</code>, то по умолчанию приоритет всех подов в спецификации которых нет поля <code>priorityClassName</code> будет равен нулю (0).</p>
+
+<p><strong>Примечание.</strong> Если вы создаете объект(ы) <code>PriorityClass</code> в кластере <code>Kubernetes</code>, в котором уже запущены поды, то следует помнить, что для существующих подов приоритет будет равняться 0 (даже если вы добавили класс с иным значением и полем <code>globalDefault</code> равным <code>true</code>) - значения определенные в классе приоритетов будут применяться только к подам, которые были созданы после создания объекта(ов) <code>PriorityClass</code>.</p>
+
+<p>Пример объекта <code>PriorityClass</code> выглядит так:</p>
+
+<pre><code class="language-yaml">apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000000
+globalDefault: false
+description: &quot;This priority class should be used for very important services/pods only&quot;
+</code></pre>
+
+<p>В версии <code>Kubernetes</code> 1.15 (в качестве альфа-фичи) в объект <code>PriorityClass</code> добавлено поле <code>PreemptionPolicy</code>, в котором по умолчанию установлено значение <code>PreemptLowerPriority</code>, что позволяет подам данного класса приоритета &ldquo;вытеснять&rdquo; поды с более низким классом приоритета для освобождения ресурсов. В поле <code>PreemptionPolicy</code> также можно установить значение <code>Never</code> - в данном случае поды будут размещены в очереди планировщика перед подами с более низким приоритетом, но не смогут вытеснять другие поды, ожидая &ldquo;естественного&rdquo; освобождения ресурсов.</p>
+
+<p>Пример объекта <code>PriorityClass</code> с отключенным вытеснением будет таким:</p>
+
+<pre><code class="language-yaml">apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority-nonpreempting
+value: 1000000
+preemptionPolicy: Never
+globalDefault: false
+description: &quot;This priority class will not cause other pods to be preempted&quot;
+</code></pre>
+
+<p>После создания одного или нескольких классов приоритета необходимо добавить поле <code>priorityClassName</code> с именем соответствующего класса в спецификацию пода (или <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>ReplicaSet</code></a>, или <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/"><code>Deployments</code></a>), например:</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox
+    command: ['sh', '-c', 'echo Hello Kubernetes! &amp;&amp; sleep 3600']
+  priorityClassName: high-priority
+</code></pre>
+
+<p>В результате под с более высоким приоритетом будет поставлен в очередь и запущен раньше подов с приоритетом ниже. Если же под с высоким приоритетом не может быть запущен в данный момент времени, то планировщик (<code>scheduler</code>) попробует запустить его позднее, таким образом давая возможность стартонуть подам с более низким приоритетом.</p>
+
+<p>Итак, когда под (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) создан, он помещается в очередь и ожидает, пока планировщик определит ему подходящий узел кластера для запуска. Если планировщик не может найти ни одного подходящего узла, соответствующего всем требованиям запускаемого пода, то для ожидающего пода запускается процесс вытеснения. Допустим, <code>P</code> - это под в очереди, тогда логика вытеснения пытается найти подходящую ноду в кластере, на которой удаление одного или нескольких подов <code>p0,1,2-...</code> с более низким приоритетом, чем у <code>P</code>, позволило бы запустить под <code>P</code> на этом узле. Когда такая нода найдена, один или несколько подов <code>p0,1,2-...</code> &ldquo;выселяются&rdquo; с нее, освобождая необходимые ресурсы для запуска пода <code>P</code> из очереди планировщика.</p>
+
+<p>Когда под <code>P</code> &ldquo;выселяет&rdquo; один или несколько подов <code>p0,1,2-...</code> с узла <code>N</code>, в поле <code>nominatedNodeName</code> пода <code>P</code> появляется имя узла <code>N</code> - именно это поле помогает планировщику отслеживать необходимое количество ресурсов для пода <code>P</code> и дает пользователю информацию о вытеснениях подов в кластере.</p>
+
+<p>Стоит отметить, что под <code>P</code> не обязательно будет запущен на ноде, имя которой указано в поле <code>nominatedNodeName</code> - дело в том, что все поды имеют время для корректного завершения работы (graceful termination period). Если в течение этого периода на какой-либо другой ноде кластера появится достаточное количество ресурсов для запуска пода <code>P</code>, то он будет запущен на подходящей ноде, не дожидаясь вытеснения подов <code>p0,1,2-...</code> и освобождения ресурсов с ноды из поля <code>nominatedNodeName</code>. Второй случай когда имена узлов в полях <code>nominatedNodeName</code> и <code>nodeName</code> могут не совпадать - если в процессе освобождения ресурсов для пода <code>P</code> в очереди планировщика появится под с еще более высоким приоритетом, то именно он будет запущен раньше.</p>
+
+<p>Напоследок замечу, что класс приоритета (PriorityClass) для пода и класс качества сервиса (Qos), который рассматривали в статьях о ресурсах в <code>Kubernetes</code> (<a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">раз</a>, <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">два</a>) это совершенно разные вещи, их необходимо различать.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2019%2f%25D0%25BF%25D1%2580%25D0%25B8%25D0%25BE%25D1%2580%25D0%25B8%25D1%2582%25D0%25B5%25D1%2582%25D0%25BD%25D0%25BE%25D1%2581%25D1%2582%25D1%258C-%25D0%25BF%25D0%25BE%25D0%25B4%25D0%25BE%25D0%25B2-%25D0%25B2-kubernetes%2f - %d0%9f%d1%80%d0%b8%d0%be%d1%80%d0%b8%d1%82%d0%b5%d1%82%d0%bd%d0%be%d1%81%d1%82%d1%8c%20%d0%bf%d0%be%d0%b4%d0%be%d0%b2%20%d0%b2%20Kubernetes by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2019/deploy-to-k8s-with-spinnaker-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0/">Deploy to k8s with Spinnaker. Часть 1: Установка<aside class="dates">Jan 24 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/posts/2019/gradle-checkstyle-plugin/">Gradle Checkstyle plugin<aside class="dates">Jan 8 2019</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2019 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-112453311-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+    </body>
+</html>

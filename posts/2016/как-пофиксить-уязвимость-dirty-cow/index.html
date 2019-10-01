@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Как пофиксить уязвимость Dirty COW (CVE-2016-5195)"/>
-  <meta name="twitter:description" content="В ядре Linux 19-го октября была обнаружена опасная 0-day уязвимость, связанная с обработкой подсистемой памяти ядра механизма copy-on-write (COW). Давайте разберемся как пофиксить данную уязвимость, уже получившую имя Dirty COW!
-
-"/>
+  <meta name="twitter:description" content="В ядре Linux 19-го октября была обнаружена опасная 0-day уязвимость, связанная с обработкой подсистемой памяти ядра механизма copy-on-write (COW). Давайте разберемся как пофиксить данную уязвимость, уже получившую имя Dirty COW!"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Как пофиксить уязвимость Dirty COW (CVE-2016-5195) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,8 +80,6 @@
                 <section id="post-body">
                     <p>В ядре Linux 19-го октября была обнаружена опасная 0-day уязвимость, связанная с обработкой подсистемой памяти ядра механизма <code>copy-on-write</code> (COW). Давайте разберемся <strong>как пофиксить данную уязвимость, уже получившую имя Dirty COW</strong>!</p>
 
-<p></p>
-
 <p>Данная уязвимость уже почти десять лет присутствует в ядре Linux (начиная с 2.6.22) и относится к privilege escalation. Эксплуатируя данную уязвимость неавторизованный локальный пользователь может получить доступ к <code>memory mappings</code> с правом записи, хотя доступ должен быть ограничен только чтением.</p>
 
 <p>На практике проблема позволяет выполнить запись данных в область памяти, находящуюся в режиме только для чтения. Например, в прототипе <a href="https://github.com/dirtycow/dirtycow.github.io/blob/master/dirtyc0w.c">эксплоита</a> показано как использовать данную проблему для изменения содержимого файла, принадлежащего пользователю root и доступного только на чтение:</p>
@@ -115,11 +111,11 @@ m00000000000000000
 <p>Уже на следующий день были выпущены обновления для версий Linux 4.8, 4.7 и 4.4 LTS, исправляющие <strong>уязвимость Dirty COW (CVE-2016-5195)</strong>. Для устранения уязвимости необходимо выполнить несколько несложных действий:</p>
 
 <ol>
-<li>Проверить версию ядра, установленную в операционной системе:</li>
-</ol>
+<li><p>Проверить версию ядра, установленную в операционной системе:</p>
 
 <pre><code class="language-bash">uname -rv
-</code></pre>
+</code></pre></li>
+</ol>
 
 <p>Результат выполнения команды будет примерно следующим:</p>
 
@@ -138,11 +134,11 @@ m00000000000000000
 </code></pre>
 
 <ol>
-<li>В ОС Debian/Ubuntu выполняем следующую команду:</li>
-</ol>
+<li><p>В ОС Debian/Ubuntu выполняем следующую команду:</p>
 
 <pre><code class="language-bash">sudo apt-get update &amp;&amp; sudo apt-get dist-upgrade
-</code></pre>
+</code></pre></li>
+</ol>
 
 <p>В ОС Centos делаем так:</p>
 
@@ -150,11 +146,11 @@ m00000000000000000
 </code></pre>
 
 <ol>
-<li>После обновления перезагружаемся:</li>
-</ol>
+<li><p>После обновления перезагружаемся:</p>
 
 <pre><code class="language-bash">sudo reboot
-</code></pre>
+</code></pre></li>
+</ol>
 
 <p>После обновлений можно еще раз выполнить тест с помощью <a href="https://github.com/dirtycow/dirtycow.github.io/blob/master/dirtyc0w.c">эксплоита</a>.</p>
                 </section>
@@ -260,14 +256,17 @@ m00000000000000000
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

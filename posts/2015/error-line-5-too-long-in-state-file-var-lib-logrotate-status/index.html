@@ -18,8 +18,6 @@
 
 error: line 5 too long in state file /var/lib/logrotate/status
 error: could not read state file, will not attempt to write into it
-
-
 "/>
   
     <meta name="twitter:site" content="@ealebed"/>
@@ -35,7 +33,7 @@ error: could not read state file, will not attempt to write into it
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Error line 5 too long in state file /var/lib/logrotate/status &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -90,8 +88,6 @@ error: could not read state file, will not attempt to write into it
 error: could not read state file, will not attempt to write into it
 </code></pre>
 
-<p></p>
-
 <p>Давайте разберемся и устраним проблему!</p>
 
 <p>Короче говоря не ротейтятся логи — как минимум, неприятная ситуация. Подключаемся к проблемному серверу и проверяем файл <code>/var/lib/logrotate/status</code>:</p>
@@ -127,25 +123,21 @@ log/apache2/access-partner.log&quot; 2015-9-5
 <p>Исправить ошибку <code>Error: line 5 too long in state file /var/lib/logrotate/status</code> можно следующим образом:</p>
 
 <ul>
-<li>сделаем резервную копию файла <code>/var/lib/logrotate/status</code> переименовав его:</li>
-</ul>
+<li><p>сделаем резервную копию файла <code>/var/lib/logrotate/status</code> переименовав его:</p>
 
 <pre><code>mv /var/lib/logrotate/status /var/lib/logrotate/status.bak
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>запустим ротацию всех логов согласно конфигам, описанным в <code>/etc/logrotate.d/</code>:</li>
-</ul>
+<li><p>запустим ротацию всех логов согласно конфигам, описанным в <code>/etc/logrotate.d/</code>:</p>
 
 <pre><code>logrotate /etc/logrotate.d/*
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>убедимся что создался новый файл <code>/var/lib/logrotate/status</code>:</li>
-</ul>
+<li><p>убедимся что создался новый файл <code>/var/lib/logrotate/status</code>:</p>
 
 <pre><code>ls -l /var/lib/logrotate/status
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p><strong>Примечание.</strong> Также можно запустить <code>logrotate</code> с параметром <code>-f</code> (force).</p>
 
@@ -253,14 +245,17 @@ log/apache2/access-partner.log&quot; 2015-9-5
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

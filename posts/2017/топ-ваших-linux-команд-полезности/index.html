@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Топ ваших Linux команд &#43; полезности"/>
-  <meta name="twitter:description" content="Здесь собрано несколько непростых для запоминания «терминальных» команд, которые мне приходилось использовать более одного раза — просто чтобы не потерять. Давайте разберемся!
-
-"/>
+  <meta name="twitter:description" content="Здесь собрано несколько непростых для запоминания «терминальных» команд, которые мне приходилось использовать более одного раза — просто чтобы не потерять. Давайте разберемся!"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Топ ваших Linux команд &#43; полезности &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -64,7 +62,7 @@
                     </h1>
                     <h2 class="headline">
                     Jan 5, 2017 18:08
-                    · 370 words
+                    · 361 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -79,8 +77,6 @@
                 </header>
                 <section id="post-body">
                     <p>Здесь собрано несколько непростых для запоминания «терминальных» команд, которые мне приходилось использовать более одного раза — просто чтобы не потерять. Давайте разберемся!</p>
-
-<p></p>
 
 <p>Как вы знаете, когда вы вводите любую команду в терминале, она сохраняется в истории. Об этом даже была <a href="https://ealebed.github.io/posts/2016/%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B5-%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-history/">отдельная статья</a> с конкретными примерами. Мне стало интересно, какие же команды чаще всего используются в моей работе — посмотреть список самых часто используемых команд следующей конструкцией:</p>
 
@@ -118,42 +114,50 @@
 <p>А вот и несколько полезностей:</p>
 
 <ul>
-<li>получить топ-50 запущенных процессов, отсортированных по потребляемой памяти:
-<code>bash
-ps -ewwwo pid,size,command --sort -size | head -50 | awk '{ pid=$1 ; printf(&quot;%7s &quot;, pid) }{ hr=$2/1024 ; printf(&quot;%8.2f Mb &quot;, hr) } { for ( x=3 ; x&lt;=NF ; x++ ) { printf(&quot;%s &quot;,$x) } print &quot;&quot; }'
-</code></li>
-<li>получить топ-50 запущенных процессов, отсортированных по использованию CPU:
-<code>bash
-ps -ewwwo pcpu,pid,user,command --sort -pcpu | head 50
-</code></li>
-<li>&lsquo;прибить&rsquo; все процессы, использующие сетевой диск с резервными копиями (случались неприятности при проблемах в сети):
-<code>bash
-kill -9 $(ps aux | grep /usr/local/backup/ | awk '{ print $2 }')
-</code></li>
-<li>если не обновляются файлы в хранилищах, подключенных по <strong>GlusterFS</strong> (replicated volume):
-<code>bash
-find . -type f -exec dd if='{}' of=/dev/null bs=1M \; &gt; /dev/null 2&gt;&amp;1
-</code></li>
-<li>найти недавно модифицированные файлы (файл, измененный последним, будет первым в списке):
-<code>bash
-find /etc -type f -printf '%TY-%Tm-%Td %TT %p\n' | sort -r
-</code></li>
-<li>список файлов, которые изменялись сегодня:
-<code>bash
-ls -al --time-style=+%D | grep `date +%D`
-</code></li>
-<li>топ-10 процессов, которые запустили не вы, отсортированные по использованию CPU:
-<code>bash
-ps aux --sort=-%cpu | grep -m 11 -v `whoami`
-</code></li>
-<li>отсортированный список самых больших файлов в текущем каталоге:
-<code>bash
-ls -lSh
-</code></li>
-<li>отсортированный список самых больших файлов в текущем и вложенных каталогах:
-<code>bash
-find /home/ -type f -ls 2&gt; /dev/null | sort -rnk7 | head -100 | awk '{printf &quot;%10d MB\t%s\n&quot;,($7/1024)/1024,$NF}'
-</code></li>
+<li><p>получить топ-50 запущенных процессов, отсортированных по потребляемой памяти:</p>
+
+<pre><code class="language-bash">ps -ewwwo pid,size,command --sort -size | head -50 | awk '{ pid=$1 ; printf(&quot;%7s &quot;, pid) }{ hr=$2/1024 ; printf(&quot;%8.2f Mb &quot;, hr) } { for ( x=3 ; x&lt;=NF ; x++ ) { printf(&quot;%s &quot;,$x) } print &quot;&quot; }'
+</code></pre></li>
+
+<li><p>получить топ-50 запущенных процессов, отсортированных по использованию CPU:</p>
+
+<pre><code class="language-bash">ps -ewwwo pcpu,pid,user,command --sort -pcpu | head 50
+</code></pre></li>
+
+<li><p>&lsquo;прибить&rsquo; все процессы, использующие сетевой диск с резервными копиями (случались неприятности при проблемах в сети):</p>
+
+<pre><code class="language-bash">kill -9 $(ps aux | grep /usr/local/backup/ | awk '{ print $2 }')
+</code></pre></li>
+
+<li><p>если не обновляются файлы в хранилищах, подключенных по <strong>GlusterFS</strong> (replicated volume):</p>
+
+<pre><code class="language-bash">find . -type f -exec dd if='{}' of=/dev/null bs=1M \; &gt; /dev/null 2&gt;&amp;1
+</code></pre></li>
+
+<li><p>найти недавно модифицированные файлы (файл, измененный последним, будет первым в списке):</p>
+
+<pre><code class="language-bash">find /etc -type f -printf '%TY-%Tm-%Td %TT %p\n' | sort -r
+</code></pre></li>
+
+<li><p>список файлов, которые изменялись сегодня:</p>
+
+<pre><code class="language-bash">ls -al --time-style=+%D | grep `date +%D`
+</code></pre></li>
+
+<li><p>топ-10 процессов, которые запустили не вы, отсортированные по использованию CPU:</p>
+
+<pre><code class="language-bash">ps aux --sort=-%cpu | grep -m 11 -v `whoami`
+</code></pre></li>
+
+<li><p>отсортированный список самых больших файлов в текущем каталоге:</p>
+
+<pre><code class="language-bash">ls -lSh
+</code></pre></li>
+
+<li><p>отсортированный список самых больших файлов в текущем и вложенных каталогах:</p>
+
+<pre><code class="language-bash">find /home/ -type f -ls 2&gt; /dev/null | sort -rnk7 | head -100 | awk '{printf &quot;%10d MB\t%s\n&quot;,($7/1024)/1024,$NF}'
+</code></pre></li>
 </ul>
                 </section>
             </article>
@@ -258,14 +262,17 @@ find /home/ -type f -ls 2&gt; /dev/null | sort -rnk7 | head -100 | awk '{printf 
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

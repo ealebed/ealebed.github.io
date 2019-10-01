@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Знакомство с Kubernetes. Часть 5: Развертывания (Deployments)"/>
-  <meta name="twitter:description" content="Контроллер развертывания (Deployment controller) предоставляет возможность декларативного обновления для объектов типа поды (Pods) и наборы реплик (ReplicaSets). Давайте разберемся!
-
-"/>
+  <meta name="twitter:description" content="Контроллер развертывания (Deployment controller) предоставляет возможность декларативного обновления для объектов типа поды (Pods) и наборы реплик (ReplicaSets). Давайте разберемся!"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Знакомство с Kubernetes. Часть 5: Развертывания (Deployments) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -64,8 +62,8 @@
                     </h1>
                     <h2 class="headline">
                     May 28, 2018 07:33
-                    · 1487 words
-                    · 7 minute read
+                    · 1495 words
+                    · 8 minute read
                       <span class="tags">
                       
                       
@@ -81,8 +79,6 @@
                 </header>
                 <section id="post-body">
                     <p>Контроллер развертывания (Deployment controller) предоставляет возможность декларативного обновления для объектов типа поды (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) и наборы реплик (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>ReplicaSets</code></a>). Давайте разберемся!</p>
-
-<p></p>
 
 <p>Достаточно описать желаемое состояние [подов/реплик] в объекте <code>Deployment</code>, после чего контроллер развертывания изменит текущее состояние объектов на желаемое в контролируемом режиме. Стоит отметить, что при манипуляциях с развертываниями (<code>Deployments</code>) нам не нужно беспокоиться об управлении наборами реплик (<code>ReplicaSets</code>) - все необходимое будет выполнено непосредственно контроллером развертывания.</p>
 
@@ -100,9 +96,9 @@
 
 <p>При стратегии обновления <strong>RollingUpdate</strong> поды будут обновляться плавно, по очереди (дополнительно контролировать этот процесс можно с помощью параметров <code>maxUnavailable</code> и <code>maxSurge</code>).</p>
 
-<p>Параметр <code>.spec.strategy.rollingUpdate.maxUnavailable</code> - необязательное поле, указывающее максимальное количество подов, которые могут быть недоступны в процессе обновления. Значение может быть абсолютным числом (например, 5) или процентом от желаемого количества подов (<code>Pods</code>) (например, 10%). Абсолютное число рассчитывается из процента путем округления. Значение этого параметра <strong>не может быть установлено в 0</strong> и по умолчанию равно 25%.</p>
+<p>Параметр <code>.spec.strategy.rollingUpdate.maxUnavailable</code> - необязательное поле, указывающее максимальное количество подов, которые могут быть недоступны в процессе обновления. Значение может быть абсолютным числом (например, 5) или процентом от желаемого количества подов (<code>Pods</code>) (например, 10%). Абсолютное число рассчитывается из процента путем округления. Значение этого параметра <strong>не может быть установлено в 0</strong>, если <code>.spec.strategy.rollingUpdate.maxSurge</code> = 0, и по умолчанию равно 25%.</p>
 
-<p>Параметр <code>.spec.strategy.rollingUpdate.maxSurge</code> - необязательное поле, указывающее максимальное количество подов (<code>Pods</code>), которое может быть создано <strong>сверх</strong> желаемого количества подов (<code>Pods</code>), описанного в развертывании. Значение может быть абсолютным числом (например, 5) или процентом от желаемого количества подов (например, 10%). Значение этого параметра <strong>не может быть установлено в 0</strong> и по умолчанию равно 25%.</p>
+<p>Параметр <code>.spec.strategy.rollingUpdate.maxSurge</code> - необязательное поле, указывающее максимальное количество подов (<code>Pods</code>), которое может быть создано <strong>сверх</strong> желаемого количества подов (<code>Pods</code>), описанного в развертывании. Значение может быть абсолютным числом (например, 5) или процентом от желаемого количества подов (например, 10%). Значение этого параметра <strong>не может быть установлено в 0</strong>, если <code>.spec.strategy.rollingUpdate.maxUnavailable</code> = 0, и по умолчанию равно 25%.</p>
 
 <p>Ниже представлен пример развертывания (<code>Deployment</code>):</p>
 
@@ -449,14 +445,17 @@ deployment &quot;nginx-deployment&quot; autoscaled
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Тюнинг MySQL-сервера: формат файлов Barracuda"/>
-  <meta name="twitter:description" content="Ранее я уже писал о сжатии таблиц InnoDB, и одним из необходимых условий для сжатия таблиц было наличие формата файлов Barracuda (innodb_file_format=Barracuda).
-
-"/>
+  <meta name="twitter:description" content="Ранее я уже писал о сжатии таблиц InnoDB, и одним из необходимых условий для сжатия таблиц было наличие формата файлов Barracuda (innodb_file_format=Barracuda)."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Тюнинг MySQL-сервера: формат файлов Barracuda &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,8 +80,6 @@
                 <section id="post-body">
                     <p>Ранее я уже писал о <a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D1%81%D0%B6%D0%B0%D1%82%D0%B8%D0%B5-%D1%82%D0%B0%D0%B1%D0%BB%D0%B8%D1%86-innodb/">сжатии таблиц InnoDB</a>, и одним из необходимых условий для сжатия таблиц было наличие <strong>формата файлов Barracuda (innodb_file_format=Barracuda)</strong>.</p>
 
-<p></p>
-
 <p>Как известно, <strong>движок базы данных InnoDB</strong> поддерживает несколько форматов файлов. По умолчанию в InnoDB используется «старый» формат Antelope, но с помощью параметра <strong>innodb_file_format</strong> это можно изменить. Давайте разберемся в преимуществах использования <strong>формата файлов Barracuda</strong>!</p>
 
 <p><strong>Формат файлов Barracuda</strong> — самый «новый» и поддерживает компрессию (<code>ROW_FORMAT=COMPRESSED</code>). Это позволяет экономить место и снижать нагрузку на жесткие диски путём использования сжатия. Однако, бесплатный сыр бывает только в мышеловке — при работе со сжатыми таблицами увеличивается нагрузка на процессор (за счет компрессии/декомпрессии таблиц) плюс на сжатых таблицах ALTER-ы будут занимать гораздо больше времени (ALTER, как и любой другой DDL, блокирует таблицу, а как результат и весь кластер). Грубо говоря, сжатие лучше делать на одиночных инстансах mysql, и помнить, что лучше сжимаются таблицы с полями text/BLOB.</p>
@@ -92,18 +88,19 @@
 
 <ul>
 <li>в командной строке при запуске <code>mysqld</code>;</li>
-<li>в конфигурационном файле <code>/etc/mysql/my.cnf</code> (для Unix) добавив строку</li>
-</ul>
+
+<li><p>в конфигурационном файле <code>/etc/mysql/my.cnf</code> (для Unix) добавив строку</p>
 
 <pre><code class="language-text">innodb_file_format=Barracuda
 </code></pre>
 
 <ul>
-<li>с помощью следующего запроса</li>
-</ul>
+<li><p>с помощью следующего запроса</p>
 
 <pre><code class="language-sql">SET GLOBAL innodb_file_format=BARRACUDA
-</code></pre>
+</code></pre></li>
+</ul></li>
+</ul>
                 </section>
             </article>
 
@@ -207,14 +204,17 @@
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

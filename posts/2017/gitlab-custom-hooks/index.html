@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="GitLab: Custom hooks"/>
-  <meta name="twitter:description" content="В GitLab Enterprise Edition существует довольно удобная, а порой и просто необходимая возможность дополнительной настройки правил обновления кода в репозитории под названием Push Rules.
-
-"/>
+  <meta name="twitter:description" content="В GitLab Enterprise Edition существует довольно удобная, а порой и просто необходимая возможность дополнительной настройки правил обновления кода в репозитории под названием Push Rules."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>GitLab: Custom hooks &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -80,8 +78,6 @@
                 <section id="post-body">
                     <p>В <strong>GitLab Enterprise Edition</strong> существует довольно удобная, а порой и просто необходимая возможность дополнительной настройки правил обновления кода в репозитории под названием <a href="http://docs.gitlab.com/ee/push_rules/push_rules.html">Push Rules</a>.</p>
 
-<p></p>
-
 <p>В <strong>GitLab CE</strong> для реализации подобного функционала приходится использовать кастомные git-хуки — давайте разберемся, как их правильно готовить!</p>
 
 <p>Git изначально поддерживает хуки (hooks), которые выполняются при определенных действиях — например, <code>pre-receive</code>, <code>post-receive</code>, <code>update</code>… Больше о хуках можно прочитать <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#Server-Side-Hooks">здесь</a>, а мы приступим к рассмотрению конкретного <strong>примера настройки кастомного (custom) хука для GitLab CE</strong>.</p>
@@ -90,32 +86,26 @@
 
 <ul>
 <li>выбрать проект, для которого необходимо сделать кастомный хук;</li>
-<li>на сервере с GitLab перейти в каталоге репозитория проекта (в нашем случае — <code>/srv/gitlab/data/repositories/MYGROUP/MYREPO.git/</code>) создать новый каталог с именем <code>custom_hooks</code>:</li>
-</ul>
+
+<li><p>на сервере с GitLab перейти в каталоге репозитория проекта (в нашем случае — <code>/srv/gitlab/data/repositories/MYGROUP/MYREPO.git/</code>) создать новый каталог с именем <code>custom_hooks</code>:</p>
 
 <pre><code class="language-bash">mkdir -p /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>в каталоге …/custom_hooks создать файл с именем, соответствующим типу хука (например, для <code>pre-receive</code> хука файл должен называться <code>pre-receive</code>) без расширения:</li>
-</ul>
+<li><p>в каталоге …/custom_hooks создать файл с именем, соответствующим типу хука (например, для <code>pre-receive</code> хука файл должен называться <code>pre-receive</code>) без расширения:</p>
 
 <pre><code class="language-bash">touch /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>сделать файл исполняемым и рекурсивно сменить владельца директории <code>custom_hooks</code> на пользователя, от которого запускаются docker-контейнеры (обычно у него id=1000):</li>
-</ul>
+<li><p>сделать файл исполняемым и рекурсивно сменить владельца директории <code>custom_hooks</code> на пользователя, от которого запускаются docker-контейнеры (обычно у него id=1000):</p>
 
 <pre><code class="language-bash">chmod +x /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
 </code></pre>
 
 <pre><code class="language-bahs">chown -R 1000:1000 /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>в созданном файле написать git-хука (можно использовать любой язык программирования, главное не забыть в первой строке вставить &ldquo;shebang&rdquo; — <code>!#</code>). В нашем случае хук, выглядит так:</li>
-</ul>
+<li><p>в созданном файле написать git-хука (можно использовать любой язык программирования, главное не забыть в первой строке вставить &ldquo;shebang&rdquo; — <code>!#</code>). В нашем случае хук, выглядит так:</p>
 
 <pre><code class="language-bash">#!/bin/sh
   
@@ -126,39 +116,40 @@ EXIT=0
   
 # Read stdin for ref information
 while read oldref newref refname; do
- # Skip branch deletions
- if [ &quot;${newref}&quot; = &quot;${NULLSHA}&quot; ]; then
-   continue;
- fi
+# Skip branch deletions
+if [ &quot;${newref}&quot; = &quot;${NULLSHA}&quot; ]; then
+continue;
+fi
   
- # Set oldref properly if this is branch creation.
- if [ &quot;${oldref}&quot; = &quot;${NULLSHA}&quot; ]; then
-   oldref=&quot;HEAD&quot;
- fi
+# Set oldref properly if this is branch creation.
+if [ &quot;${oldref}&quot; = &quot;${NULLSHA}&quot; ]; then
+oldref=&quot;HEAD&quot;
+fi
   
- # Get list of files to look at using git diff
- for file in $($GITCMD diff --stat --name-only --diff-filter=ACMRT ${oldref}..${newref}); do
-   # Get the size of this file
-   size=$($GITCMD cat-file -s ${newref}:${file})
-   # Check to see if for some reason we didn't get a size
-   if [ ! -z ${size} ]; then
-     # Compare filesize to MAXSIZE
-     if [ &quot;${size}&quot; -gt &quot;${MAXSIZE}&quot; ]; then
-       # Send output back to the user about oversized files.
-       echo &quot;ERROR: ${file} larger than ${MAXSIZE}.&quot;
-       EXIT=1
-     fi # End size comparison
-   fi   # End check for empty size
- done   # End list of files
+# Get list of files to look at using git diff
+for file in $($GITCMD diff --stat --name-only --diff-filter=ACMRT ${oldref}..${newref}); do
+# Get the size of this file
+size=$($GITCMD cat-file -s ${newref}:${file})
+# Check to see if for some reason we didn't get a size
+if [ ! -z ${size} ]; then
+ # Compare filesize to MAXSIZE
+ if [ &quot;${size}&quot; -gt &quot;${MAXSIZE}&quot; ]; then
+   # Send output back to the user about oversized files.
+   echo &quot;ERROR: ${file} larger than ${MAXSIZE}.&quot;
+   EXIT=1
+ fi # End size comparison
+fi   # End check for empty size
+done   # End list of files
 done     # End reading stdin
   
 # If we have oversized files, write more information out to the user
 if [ &quot;${EXIT}&quot; = &quot;1&quot; ]; then
- echo &quot;ERROR: Your commit has been blocked due to certain files being oversized.&quot;
- echo &quot;ERROR: Check output above for more information.&quot;
+echo &quot;ERROR: Your commit has been blocked due to certain files being oversized.&quot;
+echo &quot;ERROR: Check output above for more information.&quot;
 fi
 exit $EXIT
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Добавляем в каталог с кодом проекта файл, заведомо большего размера (~12Mb), коммитим его:</p>
 
@@ -302,14 +293,17 @@ error: failed to push some refs to 'ssh://git@gitlab.lc:23/MYGROUP/MYREPO.git'
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Знакомство с Kubernetes. Часть 7: Образы (Images)"/>
-  <meta name="twitter:description" content="Перед тем, как описывать в манифесте какого-либо объекта Kubernetes образ контейнера, его необходимо создать и разместить в реестре образов. Давайте разберемся!
-
-"/>
+  <meta name="twitter:description" content="Перед тем, как описывать в манифесте какого-либо объекта Kubernetes образ контейнера, его необходимо создать и разместить в реестре образов. Давайте разберемся!"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Знакомство с Kubernetes. Часть 7: Образы (Images) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -79,8 +77,6 @@
                 </header>
                 <section id="post-body">
                     <p>Перед тем, как описывать в манифесте какого-либо объекта <code>Kubernetes</code> образ контейнера, его необходимо создать и разместить в реестре образов. Давайте разберемся!</p>
-
-<p></p>
 
 <p><strong>Примечание.</strong> В данной статье будем говорить прежде всего о docker-образах и docker-registry.</p>
 
@@ -143,11 +139,12 @@ Docker хранит ключи для частных реестров образ
 <ul>
 <li>На рабочем компьютере нужно выполнить <code>docker login [server]</code> для всех наборов учетных записей / реестров, которые вы планируете использовать. Эти команды актуализируют конфигурационный файл <code>$HOME/.docker/config.json</code>.</li>
 <li>Проверьте данный файл (<code>$HOME/.docker/config.json</code>) в текстовом редакторе и убедитесь, что в нем есть все необходимые данные.</li>
-<li>Получите все имена или ip-адреса узлов кластера <code>Kubernetes</code>:</li>
-</ul>
+
+<li><p>Получите все имена или ip-адреса узлов кластера <code>Kubernetes</code>:</p>
 
 <pre><code class="language-bash">nodes=$(kubectl get nodes -o jsonpath='{range.items[*].metadata}{.name} {end}')
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>или</p>
 
@@ -155,14 +152,12 @@ Docker хранит ключи для частных реестров образ
 </code></pre>
 
 <ul>
-<li>Скопируйте конфигурационный файл <code>$HOME/.docker/config.json</code> на все узлы кластера, например так:</li>
-</ul>
+<li><p>Скопируйте конфигурационный файл <code>$HOME/.docker/config.json</code> на все узлы кластера, например так:</p>
 
 <pre><code class="language-bash">for n in $nodes; do scp ~/.docker/config.json root@$n:/root/.docker/config.json; done
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>Проверьте доступ в частному реестру - например, создайте манифест для пода, использующий образ из реестра.</li>
+<li><p>Проверьте доступ в частному реестру - например, создайте манифест для пода, использующий образ из реестра.</p></li>
 </ul>
 
 <p><strong>Скачивая образы до запуска подов</strong>
@@ -316,14 +311,17 @@ spec:
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

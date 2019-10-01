@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Знакомство с Ansible. Часть 1: Введение"/>
-  <meta name="twitter:description" content="Ansible – одна из систем управления конфигурациями (автоматизации настройки и развертывания серверов).
-
-"/>
+  <meta name="twitter:description" content="Ansible – одна из систем управления конфигурациями (автоматизации настройки и развертывания серверов)."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Знакомство с Ansible. Часть 1: Введение &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -80,8 +78,6 @@
                 <section id="post-body">
                     <p><code>Ansible</code> – одна из систем управления конфигурациями (автоматизации настройки и развертывания серверов).</p>
 
-<p></p>
-
 <p>Особенность <code>Ansible</code> – наличие управляющего сервера, с которого отправляются команды или наборы инструкций (playbooks) на удаленные хосты посредством протокола SSH.</p>
 
 <p><code>Ansible</code> успешно решает следующие задачи:</p>
@@ -101,20 +97,18 @@
 <p>Установка <code>Ansible</code> не должна вызывать трудностей:</p>
 
 <ul>
-<li>перед установкой обновим имеющиеся в системе пакеты:</li>
-</ul>
+<li><p>перед установкой обновим имеющиеся в системе пакеты:</p>
 
 <pre><code class="language-bash">apt-get update &amp;&amp; apt-get upgrade
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>непосредственно установка Ansible:</li>
-</ul>
+<li><p>непосредственно установка Ansible:</p>
 
 <pre><code class="language-bash">echo 'deb http://http.debian.net/debian wheezy-backports main' &gt; /etc/apt/sources.list.d/backports.list
 apt-get update
 apt-get -t wheezy-backports install &quot;ansible&quot;
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Для настройки <code>Ansible</code> используется файл конфигурации <code>ansible.cfg</code>, который может находиться в таких местах:</p>
 
@@ -142,25 +136,21 @@ apt-get -t wheezy-backports install &quot;ansible&quot;
 <p>Перечислим имена удаленных хостов, с которыми будем проводить эксперименты в файле <code>/etc/ansible/hosts</code>. Для этого:</p>
 
 <ul>
-<li>переходим в каталог <code>/etc/ansible</code>:</li>
-</ul>
+<li><p>переходим в каталог <code>/etc/ansible</code>:</p>
 
 <pre><code class="language-bash">cd /etc/ansible
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>переименуем существующий файл <code>hosts</code>:</li>
-</ul>
+<li><p>переименуем существующий файл <code>hosts</code>:</p>
 
 <pre><code class="language-bash">mv hosts hosts.orig
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>и создадим новый файл <code>hosts</code>:</li>
-</ul>
+<li><p>и создадим новый файл <code>hosts</code>:</p>
 
 <pre><code class="language-bash">touch hosts
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Содержимое файла будет следующим:</p>
 
@@ -174,38 +164,36 @@ test-2
 <p>Для проверки правильности настройки <code>Ansible</code> делаем следующее:</p>
 
 <ul>
-<li>пингуем удаленные хосты:</li>
-</ul>
+<li><p>пингуем удаленные хосты:</p>
 
 <pre><code class="language-bash">ansible test -m ping
 test-1 | success &gt;&gt; {
-    &quot;changed&quot;: false, 
-    &quot;ping&quot;: &quot;pong&quot;
+&quot;changed&quot;: false, 
+&quot;ping&quot;: &quot;pong&quot;
 }
 
 test-2 | success &gt;&gt; {
-    &quot;changed&quot;: false, 
-    &quot;ping&quot;: &quot;pong&quot;
+&quot;changed&quot;: false, 
+&quot;ping&quot;: &quot;pong&quot;
 }
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>просмотрим информацию об использовании оперативной памяти на удаленных хостах:</li>
-</ul>
+<li><p>просмотрим информацию об использовании оперативной памяти на удаленных хостах:</p>
 
 <pre><code class="language-bash">ansible test -a &quot;free -h&quot;
 test-1 | success | rc=0 &gt;&gt;
-             total       used       free     shared    buffers     cached
+         total       used       free     shared    buffers     cached
 Mem:          7.6G       6.4G       1.2G       471M        64M       1.2G
 -/+ buffers/cache:       5.2G       2.4G
 Swap:         4.0G       616M       3.4G
 
 test-2 | success | rc=0 &gt;&gt;
-             total       used       free     shared    buffers     cached
+         total       used       free     shared    buffers     cached
 Mem:          3.9G       3.3G       573M       333M       4.8M       442M
 -/+ buffers/cache:       2.9G       1.0G
 Swap:         4.0G       1.7G       2.3G
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Работа с наборами инструкций (playbooks) — главная задача <code>Ansible</code>. Наборы инструкций содержат задачи и должны быть описаны в формате YAML. Задача использует часть кода-модуля, который может быть написан на любом языке программирования (но есть одно важное требование — сообщения от модулей должны быть в формате JSON).</p>
 
@@ -223,18 +211,16 @@ Swap:         4.0G       1.7G       2.3G
 <p>Давайте разберемся с синтаксисом конкретного набора инструкций на примере установки web-сервера <code>nginx</code>:</p>
 
 <ul>
-<li>создаем каталог, для хранения наших playbooks:</li>
-</ul>
+<li><p>создаем каталог, для хранения наших playbooks:</p>
 
 <pre><code class="language-bash">mkdir /etc/ansible/playbooks
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>в каталоге <code>/etc/ansible/playbooks</code> создаем файл <code>install_nginx.yml</code>:</li>
-</ul>
+<li><p>в каталоге <code>/etc/ansible/playbooks</code> создаем файл <code>install_nginx.yml</code>:</p>
 
 <pre><code class="language-bash">touch /etc/ansible/playbooks/install_nginx.yml
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Содержимое файла следующее:</p>
 
@@ -389,14 +375,17 @@ test-2                 : ok=3    changed=1    unreachable=0    failed=0
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Решение проблем после обновления SVN до 1.8.14"/>
-  <meta name="twitter:description" content="В одной из предыдущих статей рассматривалась установка SVN (subversion) 1.8 в Debian Wheezy. И если с установкой вопросов не возникло, то при обновлении на более свежую версию SVN (пакет от WANdisco) я столкнулся со следующей ошибкой:
-
-"/>
+  <meta name="twitter:description" content="В одной из предыдущих статей рассматривалась установка SVN (subversion) 1.8 в Debian Wheezy. И если с установкой вопросов не возникло, то при обновлении на более свежую версию SVN (пакет от WANdisco) я столкнулся со следующей ошибкой:"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Решение проблем после обновления SVN до 1.8.14 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,8 +80,6 @@
                 <section id="post-body">
                     <p>В одной из предыдущих статей рассматривалась <a href="https://ealebed.github.io/posts/2015/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-subversion-1-8-%D0%B2-debian-wheezy/">установка SVN (<code>subversion</code>) 1.8 в Debian Wheezy</a>. И если с установкой вопросов не возникло, то при обновлении на более свежую версию SVN (пакет от WANdisco) я столкнулся со следующей ошибкой:</p>
 
-<p></p>
-
 <pre><code class="language-bash">apache2: Syntax error on line 244 of /etc/apache2/apache2.conf: Syntax error on line 2 of /etc/apache2/mods-enabled/authz_svn.load: Cannot load /usr/lib/apache2/modules/mod_authz_svn.so into server: /usr/lib/apache2/modules/mod_authz_svn.so: undefined symbol: dav_svn_get_repos_path
 Action 'configtest' failed.
 The Apache error log may have more information.
@@ -109,12 +105,13 @@ LoadModule authz_svn_module /usr/lib/apache2/modules/mod_authz_svn.so
 
 <ul>
 <li>переименовать модули в каталоге <code>/etc/apache2/mods-enabled/</code> таким образом, чтобы они находились в нужном вам порядке — <code>@10-dav.load</code>, <code>@20-dav_svn_module</code> и <code>@30-authz_svn_module</code>;</li>
-<li>удалить файлы <code>@dav_svn.load</code> и <code>@authz_svn.load</code> в каталоге <code>/etc/apache2/mods-enabled/</code> и добавить в конфиг <code>/etc/apache2/apache2.conf</code> следующие строки:</li>
-</ul>
+
+<li><p>удалить файлы <code>@dav_svn.load</code> и <code>@authz_svn.load</code> в каталоге <code>/etc/apache2/mods-enabled/</code> и добавить в конфиг <code>/etc/apache2/apache2.conf</code> следующие строки:</p>
 
 <pre><code class="language-bash">LoadModule dav_svn_module /usr/lib/apache2/modules/mod_dav_svn.so
 LoadModule authz_svn_module /usr/lib/apache2/modules/mod_authz_svn.so
-</code></pre>
+</code></pre></li>
+</ul>
                 </section>
             </article>
 
@@ -218,14 +215,17 @@ LoadModule authz_svn_module /usr/lib/apache2/modules/mod_authz_svn.so
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

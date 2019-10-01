@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Восстановление DRBD после split brain"/>
-  <meta name="twitter:description" content="DRBD — распределённое реплицируемое блочное устройство, которое используется для построения отказоустойчивых кластеров под управлением ОС Linux. DRBD отражает все операции с блочным устройством по сети, поэтому принято считать что это сетевой RAID-1.
-
-"/>
+  <meta name="twitter:description" content="DRBD — распределённое реплицируемое блочное устройство, которое используется для построения отказоустойчивых кластеров под управлением ОС Linux. DRBD отражает все операции с блочным устройством по сети, поэтому принято считать что это сетевой RAID-1."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Восстановление DRBD после split brain &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -80,8 +78,6 @@
                 <section id="post-body">
                     <p><strong>DRBD</strong> — распределённое реплицируемое блочное устройство, которое используется для построения отказоустойчивых кластеров под управлением ОС Linux. <strong>DRBD</strong> отражает все операции с блочным устройством по сети, поэтому принято считать что это сетевой RAID-1.</p>
 
-<p></p>
-
 <p>Больше информации о <strong>DRBD</strong> можно найти <a href="http://xgu.ru/wiki/DRBD">здесь</a>, а мы в данной статье разберемся как восстанавливать блочное устройство после <a href="https://en.wikipedia.org/wiki/Split-brain_(computing)">split brain</a>.</p>
 
 <p>Из-за возникновения split brain на обоих хостах DRBD-ресурсы находятся в режиме <code>Primary</code>, а состояние соединения <code>StandAlone</code>. В <code>/var/log/kern.log</code> можно увидеть такие строки:</p>
@@ -116,8 +112,7 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
 <p>Исправить данную ситуацию можно с помощью следующих шагов:</p>
 
 <ul>
-<li>перевести один из хостов в режим <code>Secondary</code> и отменить на нем все внесенные изменения, выполнив следующие команды:</li>
-</ul>
+<li><p>перевести один из хостов в режим <code>Secondary</code> и отменить на нем все внесенные изменения, выполнив следующие команды:</p>
 
 <pre><code>drbdadm secondary all
 </code></pre>
@@ -126,11 +121,9 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
 </code></pre>
 
 <pre><code>drbdadm -- --discard-my-data connect all
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>второй хост перевести в режим <code>Primary</code> и отключить/подключить ресурсы такими командами:</li>
-</ul>
+<li><p>второй хост перевести в режим <code>Primary</code> и отключить/подключить ресурсы такими командами:</p>
 
 <pre><code>drbdadm primary all
 </code></pre>
@@ -139,7 +132,8 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
 </code></pre>
 
 <pre><code>drbdadm connect all
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Проблема решена, после завершения синхронизации состояние <strong>DRBD</strong> на первом хосте:</p>
 
@@ -267,14 +261,17 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

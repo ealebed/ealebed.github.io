@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Тюнинг MySQL-сервера: сжатие таблиц InnoDB"/>
-  <meta name="twitter:description" content="В больших проектах со временем размер баз данных разрастается до множества гигабайт (терабайт), поэтому всегда остается открытым вопрос как с этим бороться.
-
-"/>
+  <meta name="twitter:description" content="В больших проектах со временем размер баз данных разрастается до множества гигабайт (терабайт), поэтому всегда остается открытым вопрос как с этим бороться."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Тюнинг MySQL-сервера: сжатие таблиц InnoDB &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,8 +80,6 @@
                 <section id="post-body">
                     <p>В больших проектах со временем размер баз данных разрастается до множества гигабайт (терабайт), поэтому всегда остается открытым вопрос как с этим бороться.</p>
 
-<p></p>
-
 <p>Известно несколько вариантов решения данной проблемы — уменьшение объема данных (грубо говоря, удаление старых записей), разделение одной базы данных на несколько, шардирование, приобретение нового оборудования (новых серверов или жестких дисков большего объема).</p>
 
 <p>В большинстве случаев, уменьшение объема данных невозможно, так как база данных увеличивается за счет активного использования. Более того, если движок базы данных InnoDB, то недостаточно просто удалить записи из таблиц. Иногда архитектура проекта не позволяет разделить одну базу данных на несколько, а шардирование хорошо реализуется только при условии отсутствия (или минимального количества) связей между таблицами. Покупка нового оборудования стоит денег и требует времени на его установку и настройку.</p>
@@ -100,64 +96,54 @@
 <p>Что нужно для <strong>сжатия таблиц InnoDB</strong>:</p>
 
 <ul>
-<li>тип движка базы данных (<strong>storage engine</strong>) должен быть <strong>InnoDB</strong>;</li>
-</ul>
+<li><p>тип движка базы данных (<strong>storage engine</strong>) должен быть <strong>InnoDB</strong>;</p>
 
 <pre><code class="language-sql">show variables like 'storage_engine'\G;
 *************************** 1. row ***************************
 Variable_name: storage_engine
-        Value: InnoDB
+    Value: InnoDB
 1 row in set (0.00 sec)
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>параметр <strong>innodb_file_per_table</strong> должен быть включен (как включить данную опцию читайте <a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BE%D0%BF%D1%86%D0%B8%D0%B8-innodb_file_per_table/">в этой статье</a>);</li>
-</ul>
+<li><p>параметр <strong>innodb_file_per_table</strong> должен быть включен (как включить данную опцию читайте <a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BE%D0%BF%D1%86%D0%B8%D0%B8-innodb_file_per_table/">в этой статье</a>);</p>
 
 <pre><code class="language-sql">show variables like 'innodb_file_per_table'\G;
 *************************** 1. row ***************************
 Variable_name: innodb_file_per_table
-        Value: ON
+    Value: ON
 1 row in set (0.00 sec)
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>параметр <strong>innodb_file_format = Barracuda</strong> (<a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2-barracuda/">подробнее об этом параметре читайте здесь</a>);</li>
-</ul>
+<li><p>параметр <strong>innodb_file_format = Barracuda</strong> (<a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82-%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2-barracuda/">подробнее об этом параметре читайте здесь</a>);</p>
 
 <pre><code class="language-sql">show variables like 'innodb_file_format'\G;
 *************************** 1. row ***************************
 Variable_name: innodb_file_format
-        Value: Barracuda
+    Value: Barracuda
 1 row in set (0.00 sec)
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>помните, что лучше сжимаются таблицы с текстовыми полями.</li>
+<li><p>помните, что лучше сжимаются таблицы с текстовыми полями.</p></li>
 </ul>
 
 <p>Как сжать таблицу:</p>
 
 <ul>
-<li>подключаемся к MySQL-серверу:</li>
-</ul>
+<li><p>подключаемся к MySQL-серверу:</p>
 
 <pre><code class="language-bash">mysql -u&lt;имя_пользователя&gt; -p&lt;пароль&gt;
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>выбираем базу данных:</li>
-</ul>
+<li><p>выбираем базу данных:</p>
 
 <pre><code class="language-bash">use &lt;имя_базы_данных&gt;;
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>выполняем запрос:</li>
-</ul>
+<li><p>выполняем запрос:</p>
 
 <pre><code class="language-sql">ALTER TABLE &lt;имя_таблицы&gt; ROW_FORMAT=COMPRESSED;
-</code></pre>
+</code></pre></li>
+</ul>
                 </section>
             </article>
 
@@ -261,14 +247,17 @@ Variable_name: innodb_file_format
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

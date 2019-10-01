@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Установка и активация JIRA Software Server 7.5.0"/>
-  <meta name="twitter:description" content="Однажды мне стало интересно посмотреть, как устроена защита в одном из самых известных и популярных инструментов для разработчиков — JIRA Software.
-
-"/>
+  <meta name="twitter:description" content="Однажды мне стало интересно посмотреть, как устроена защита в одном из самых известных и популярных инструментов для разработчиков — JIRA Software."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Установка и активация JIRA Software Server 7.5.0 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,8 +80,6 @@
                 <section id="post-body">
                     <p>Однажды мне стало интересно посмотреть, как устроена защита в одном из самых известных и популярных инструментов для разработчиков — <strong>JIRA Software</strong>.</p>
 
-<p></p>
-
 <p><strong>ВНИМАНИЕ!</strong> Информация в статье доступна только в образовательных целях, <strong>НЕ ИСПОЛЬЗУЙТЕ</strong> ее для получения несанкционированного доступа к рассматриваемому ПО!</p>
 
 <p>Для «лицензирования» JIRA Software Server 7.5.0 необходимо внести изменения в два файла (приведены актуальные версии файлов на момент установки): <code>atlassian-extras-3.2.jar</code> и <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar</code>.</p>
@@ -96,8 +92,8 @@
 <li>открываем <code>atlassian-extras-3.2.jar</code> с помощью декомпилятора JD-GUI;</li>
 <li>жмем &ldquo;File -&gt; Save All Sources&rdquo; или Ctrl+Alt+S (сохранится архив <code>atlassian-extras-3.2.jar.src.zip</code>);</li>
 <li>распаковываем полученный архив с помощью архиватора;</li>
-<li>в <code>atlassian-extras-3.2.jar.src/com/atlassian/extras/decoder/v2/Version2LicenseDecoder.java</code> находим метод <code>loadLicenseConfiguration</code> (в моем случае выглядел так):</li>
-</ul>
+
+<li><p>в <code>atlassian-extras-3.2.jar.src/com/atlassian/extras/decoder/v2/Version2LicenseDecoder.java</code> находим метод <code>loadLicenseConfiguration</code> (в моем случае выглядел так):</p>
 
 <pre><code class="language-java">/*     */   private Properties loadLicenseConfiguration(Reader text)
 /*     */   {
@@ -112,7 +108,8 @@
 /* 224 */       throw new LicenseException(&quot;Could NOT load properties from reader&quot;, e);
 /*     */     }
 /*     */   }
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>и добавляем в данный метод информацию о лицензии:</p>
 
@@ -143,36 +140,35 @@
 <ul>
 <li>сохраняем файл;</li>
 <li>копируем <a href="https://www.dropbox.com/s/q922ucnr05hag63/commons-codec-1.9.jar?dl=0"><code>commons-codec-1.9.jar</code></a> в директорию с исходниками (<code>atlassian-extras-3.2.jar.src</code>);</li>
-<li>переходим в каталог с исходниками (<code>atlassian-extras-3.2.jar.src</code>) и компилируем класс из java-файла, который мы правили командой:</li>
-</ul>
+
+<li><p>переходим в каталог с исходниками (<code>atlassian-extras-3.2.jar.src</code>) и компилируем класс из java-файла, который мы правили командой:</p>
 
 <pre><code class="language-bash">javac -cp commons-codec-1.9.jar -sourcepath ./ com/atlassian/extras/decoder/v2/Version2LicenseDecoder.java 
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>могут быть ошибки (вызваны “кривостью” декомпиляции исходников), например:</li>
-</ul>
+<li><p>могут быть ошибки (вызваны “кривостью” декомпиляции исходников), например:</p>
 
 <pre><code class="language-bash">./com/atlassian/extras/common/LicenseException.java:7: error: class, interface, or enum expected
 /*    */  * @deprecated
-          ^
+      ^
 ./com/atlassian/extras/common/LicenseException.java:8: error: class, interface, or enum expected
 /*    */  */
-          ^
+      ^
 ./com/atlassian/extras/common/org/springframework/util/StringUtils.java:101: error: variable strLen is already defined in method hasText(String)
 /*     */     int strLen;
-                  ^
+              ^
 ./com/atlassian/extras/common/org/springframework/util/StringUtils.java:486: error: variable strLen is already defined in method changeFirstCharacterCase(boolean,String)
 /*     */     int strLen;
-                  ^
+              ^
 Note: ./com/atlassian/extras/common/org/springframework/util/StringUtils.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>устраняем ошибки и еще раз компилируем класс. После успешного выполнения в каталоге <code>com/atlassian/extras/decoder/v2/</code> появится файл <code>Version2LicenseDecoder.class</code></li>
-<li>полученныей файл копируем с заменой (по такому же пути <code>com/atlassian/extras/decoder/v2/</code>) в архив <code>atlassian-extras-3.2.jar</code> (проще всего это сделать через <code>mc</code> — Midnight Commander);</li>
-<li>в общем случае “новый” архив <code>atlassian-extras-3.2.jar</code> необходимо положить (с заменой) на сервере с Jira в каталог <code>/opt/atlassian/jira/atlassian-jira/WEB-INF/lib/</code> и перезапустить Jira. Если вы запускаете <strong>JIRA Software Server 7.5.0 в docker-контейнере</strong>, то нужно пересобрать docker-образ согласно инструкциям в Dockerfile (см. ниже)</li>
+<li><p>устраняем ошибки и еще раз компилируем класс. После успешного выполнения в каталоге <code>com/atlassian/extras/decoder/v2/</code> появится файл <code>Version2LicenseDecoder.class</code></p></li>
+
+<li><p>полученныей файл копируем с заменой (по такому же пути <code>com/atlassian/extras/decoder/v2/</code>) в архив <code>atlassian-extras-3.2.jar</code> (проще всего это сделать через <code>mc</code> — Midnight Commander);</p></li>
+
+<li><p>в общем случае “новый” архив <code>atlassian-extras-3.2.jar</code> необходимо положить (с заменой) на сервере с Jira в каталог <code>/opt/atlassian/jira/atlassian-jira/WEB-INF/lib/</code> и перезапустить Jira. Если вы запускаете <strong>JIRA Software Server 7.5.0 в docker-контейнере</strong>, то нужно пересобрать docker-образ согласно инструкциям в Dockerfile (см. ниже)</p></li>
 </ul>
 
 <p>Аналогичным образом патчим файл <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar</code>:</p>
@@ -181,23 +177,24 @@ Note: Recompile with -Xlint:unchecked for details.
 <li>открываем <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar</code> с помощью декомпилятора JD-GUI;</li>
 <li>жмем &ldquo;File -&gt; Save All Sources&rdquo; или Ctrl+Alt+S (сохранится архив <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar.src.zip</code>);</li>
 <li>распаковываем полученный архив с помощью архиватора;</li>
-<li>в <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar.src/com/atlassian/extras/decoder/v2/Version2LicenseDecoder.java</code> находим метод <code>loadLicenseConfiguration</code> (в моем случае выглядел так):</li>
-</ul>
+
+<li><p>в <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar.src/com/atlassian/extras/decoder/v2/Version2LicenseDecoder.java</code> находим метод <code>loadLicenseConfiguration</code> (в моем случае выглядел так):</p>
 
 <pre><code class="language-java">private Properties loadLicenseConfiguration(Reader text)
 {
-  try
-  {
-    Properties props = new Properties();
-    new DefaultPropertiesPersister().load(props, text);
-    return props;
-  }
-  catch (IOException e)
-  {
-    throw new LicenseException(&quot;Could NOT load properties from reader&quot;, e);
-  }
+try
+{
+Properties props = new Properties();
+new DefaultPropertiesPersister().load(props, text);
+return props;
 }
-</code></pre>
+catch (IOException e)
+{
+throw new LicenseException(&quot;Could NOT load properties from reader&quot;, e);
+}
+}
+</code></pre></li>
+</ul>
 
 <p>и добавляем в данный метод информацию о лицензии:</p>
 
@@ -223,16 +220,17 @@ Note: Recompile with -Xlint:unchecked for details.
 <ul>
 <li>сохраняем файл;</li>
 <li>копируем <a href="https://www.dropbox.com/s/q922ucnr05hag63/commons-codec-1.9.jar?dl=0"><code>commons-codec-1.9.jar</code></a> в директорию с исходниками (<code>atlassian-universal-plugin-manager-plugin-2.22.5.jar.src</code>);</li>
-<li>переходим в каталог с исходниками (<code>atlassian-universal-plugin-manager-plugin-2.22.5.jar.src</code>) и компилируем класс из java-файла, который мы правили такой командой:</li>
-</ul>
+
+<li><p>переходим в каталог с исходниками (<code>atlassian-universal-plugin-manager-plugin-2.22.5.jar.src</code>) и компилируем класс из java-файла, который мы правили такой командой:</p>
 
 <pre><code class="language-bash">javac -cp commons-codec-1.9.jar -sourcepath ./ com/atlassian/extras/decoder/v2/Version2LicenseDecoder.java
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>могут быть ошибки (вызваны “кривостью” декомпиляции исходников), устраняем их и еще раз компилируем класс. После успешного выполнения в каталоге <code>com/atlassian/extras/decoder/v2/</code> появится файл <code>Version2LicenseDecoder.class</code>;</li>
-<li>полученныей файл копируем с заменой (по такому же пути <code>com/atlassian/extras/decoder/v2/</code>) в архив <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar</code> (проще всего это сделать через <code>mc</code> — Midnight Commander);</li>
-<li>в общем случае “новый” архив <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar</code> необходимо положить (с заменой) на сервере с Jira в каталог <code>/opt/atlassian/jira/atlassian-jira/WEB-INF/atlassian-bundled-plugins/</code>, после чего удалить каталоги <code>${JIRA_HOME}/plugins/.bundled-plugins</code> и <code>${JIRA_HOME}/plugins/.bundled-plugins/.osgi-plugins</code> и перезапустить Jira. Если вы запускаете <strong>JIRA Software Server 7.5.0 в docker-контейнере</strong>, то нужно пересобрать docker-образ согласно инструкциям в Dockerfile</li>
+<li><p>могут быть ошибки (вызваны “кривостью” декомпиляции исходников), устраняем их и еще раз компилируем класс. После успешного выполнения в каталоге <code>com/atlassian/extras/decoder/v2/</code> появится файл <code>Version2LicenseDecoder.class</code>;</p></li>
+
+<li><p>полученныей файл копируем с заменой (по такому же пути <code>com/atlassian/extras/decoder/v2/</code>) в архив <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar</code> (проще всего это сделать через <code>mc</code> — Midnight Commander);</p></li>
+
+<li><p>в общем случае “новый” архив <code>atlassian-universal-plugin-manager-plugin-2.22.5.jar</code> необходимо положить (с заменой) на сервере с Jira в каталог <code>/opt/atlassian/jira/atlassian-jira/WEB-INF/atlassian-bundled-plugins/</code>, после чего удалить каталоги <code>${JIRA_HOME}/plugins/.bundled-plugins</code> и <code>${JIRA_HOME}/plugins/.bundled-plugins/.osgi-plugins</code> и перезапустить Jira. Если вы запускаете <strong>JIRA Software Server 7.5.0 в docker-контейнере</strong>, то нужно пересобрать docker-образ согласно инструкциям в Dockerfile</p></li>
 </ul>
 
 <p>Инструкции по сборке docker-образа (Dockerfile) выглядят так:</p>
@@ -347,14 +345,17 @@ CMD [&quot;/opt/atlassian/jira/bin/catalina.sh&quot;, &quot;run&quot;]
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

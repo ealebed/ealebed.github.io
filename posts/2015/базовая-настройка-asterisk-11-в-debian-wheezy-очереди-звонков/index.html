@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Базовая настройка Asterisk 11 в Debian Wheezy: очереди звонков"/>
-  <meta name="twitter:description" content="Цикл статей о базовой настройке Asterisk 11 в Debian Wheezy завершает статья об очередях звонков. Создание очередей звонков целесообразно, например, при наличии нескольких менеджеров по продажам — входящие звонки можно распределять по отделу продаж используя разные алгоритмы.
-
-"/>
+  <meta name="twitter:description" content="Цикл статей о базовой настройке Asterisk 11 в Debian Wheezy завершает статья об очередях звонков. Создание очередей звонков целесообразно, например, при наличии нескольких менеджеров по продажам — входящие звонки можно распределять по отделу продаж используя разные алгоритмы."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Базовая настройка Asterisk 11 в Debian Wheezy: очереди звонков &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,22 +80,17 @@
                 <section id="post-body">
                     <p>Цикл статей о <strong>базовой настройке Asterisk 11</strong> в Debian Wheezy завершает статья об очередях звонков. Создание очередей звонков целесообразно, например, при наличии нескольких менеджеров по продажам — входящие звонки можно распределять по отделу продаж используя разные алгоритмы.</p>
 
-<p></p>
-
 <p>Давайте разберемся с организацией очередей звонков!</p>
 
 <p>В одной из <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B2%D0%BD%D1%83%D1%82%D1%80%D0%B5%D0%BD%D0%BD%D0%B8%D1%85-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%BE%D0%B2/">предыдущих статей</a> мы уже описали нескольких пользователей в конфигурационном файле <code>/etc/asterisk/sip.conf</code>. Теперь нужно включить этих пользователей в очередь звонков, делается это так:</p>
 
 <ul>
-<li>открываем конфигурационный файл <code>/etc/asterisk/queues.conf</code>:</li>
-</ul>
+<li><p>открываем конфигурационный файл <code>/etc/asterisk/queues.conf</code>:</p>
 
 <pre><code>nano /etc/asterisk/queues.conf
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>добавляем описание нашей очереди:</li>
-</ul>
+<li><p>добавляем описание нашей очереди:</p>
 
 <pre><code>[office_all]
 music=default
@@ -107,7 +100,8 @@ ringinuse=no
 member =&gt; SIP/101
 member =&gt; SIP/102
 member =&gt; SIP/103
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Здесь мы описали состав очереди звонков и некоторые настройки, на которых остановимся подробнее:</p>
 
@@ -245,14 +239,17 @@ exten =&gt; s,n,Queue(office_all,tT,,,15)
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

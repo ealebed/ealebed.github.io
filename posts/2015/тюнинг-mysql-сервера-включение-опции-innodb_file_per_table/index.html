@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Тюнинг MySQL-сервера: включение опции innodb_file_per_table"/>
-  <meta name="twitter:description" content="По умолчанию, при использовании движка базы данных InnoDB, все таблицы и индексы хранятся в системном табличном пространстве (по сути в одном файле /var/lib/mysql/ibdata). Когда данных накапливается много, файл значительно разрастается, и с этим могут возникать различные проблемы и неудобства.
-
-"/>
+  <meta name="twitter:description" content="По умолчанию, при использовании движка базы данных InnoDB, все таблицы и индексы хранятся в системном табличном пространстве (по сути в одном файле /var/lib/mysql/ibdata). Когда данных накапливается много, файл значительно разрастается, и с этим могут возникать различные проблемы и неудобства."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Тюнинг MySQL-сервера: включение опции innodb_file_per_table &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,8 +80,6 @@
                 <section id="post-body">
                     <p>По умолчанию, при использовании <strong>движка базы данных InnoDB</strong>, все таблицы и индексы хранятся в системном табличном пространстве (по сути в одном файле <code>/var/lib/mysql/ibdata</code>). Когда данных накапливается много, файл значительно разрастается, и с этим могут возникать различные проблемы и неудобства.</p>
 
-<p></p>
-
 <p>В качестве альтернативы можно хранить каждую таблицу InnoDB и связанные индексы в отдельных файлах — за эту функцию отвечает опция <strong>innodb_file_per_table</strong>. Давайте разберемся как получить массу преимуществ, используя параметр <strong>innodb_file_per_table</strong>, например:</p>
 
 <ul>
@@ -113,77 +109,60 @@
 <p>Например, так можно проделать вышеописанную процедуру с базой данных zabbix:</p>
 
 <ul>
-<li>останавливаем сервисы работающие с базой (zabbix-server):</li>
-</ul>
+<li><p>останавливаем сервисы работающие с базой (zabbix-server):</p>
 
 <pre><code class="language-bash">/etc/init.d/zabbix-server stop
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>делаем <a href="https://ealebed.github.io/posts/2015/%D1%88%D0%BF%D0%B0%D1%80%D0%B3%D0%B0%D0%BB%D0%BA%D0%B0-%D0%BF%D0%BE-%D1%83%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D0%B5-mysqldump/">резервную копию</a> (дамп) данных:</li>
-</ul>
+<li><p>делаем <a href="https://ealebed.github.io/posts/2015/%D1%88%D0%BF%D0%B0%D1%80%D0%B3%D0%B0%D0%BB%D0%BA%D0%B0-%D0%BF%D0%BE-%D1%83%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D0%B5-mysqldump/">резервную копию</a> (дамп) данных:</p>
 
 <pre><code class="language-bash">/usr/bin/mysqldump --user=USER --password=PASSWORD zabbix | gzip &gt; /tmp/zabbix.sql.gz
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>удаляем базу данных zabbix:</li>
-</ul>
+<li><p>удаляем базу данных zabbix:</p>
 
 <pre><code class="language-bash">mysql -uUSER -pPASSWORD
 drop database zabbix;
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>останавливаем MySQL-сервер:</li>
-</ul>
+<li><p>останавливаем MySQL-сервер:</p>
 
 <pre><code class="language-bash">/etc/init.d/mysql stop
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>вносим правки в конфиг <code>/etc/mysql/my.cnf</code>;</li>
-</ul>
+<li><p>вносим правки в конфиг <code>/etc/mysql/my.cnf</code>;</p>
 
 <pre><code class="language-bash">nano /etc/mysql/my.cnf
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>удаляем файлы в директории <code>/var/lib/mysql</code>;</li>
-<li>запускаем MySQL-сервер:</li>
-</ul>
+<li><p>удаляем файлы в директории <code>/var/lib/mysql</code>;</p></li>
+
+<li><p>запускаем MySQL-сервер:</p>
 
 <pre><code class="language-bash">/etc/init.d/mysql start
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>создаем базу данных zabbix:</li>
-</ul>
+<li><p>создаем базу данных zabbix:</p>
 
 <pre><code class="language-bash">mysql -uUSER -pPASSWORD
 create database zabbix;
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>восстанавливаем данные из резервной копии:</li>
-</ul>
+<li><p>восстанавливаем данные из резервной копии:</p>
 
 <pre><code class="language-bash">zcat zabbix.sql.gz | mysql -uUSER -pPASSWORD zabbix
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>проверяем файлы с расширением <code>*.ibd</code> для каждой таблицы:</li>
-</ul>
+<li><p>проверяем файлы с расширением <code>*.ibd</code> для каждой таблицы:</p>
 
 <pre><code class="language-bash">ls -la /var/lib/mysql/zabbix
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>запускаем zabbix-server:</li>
-</ul>
+<li><p>запускаем zabbix-server:</p>
 
 <pre><code class="language-bash">/etc/init.d/zabbix-server start
-</code></pre>
+</code></pre></li>
+</ul>
                 </section>
             </article>
 
@@ -287,14 +266,17 @@ create database zabbix;
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

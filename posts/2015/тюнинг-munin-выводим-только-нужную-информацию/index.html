@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Тюнинг Munin: выводим только нужную информацию"/>
-  <meta name="twitter:description" content="Мониторинг — важнейшее звено стабильной функциональности системы любой сложности и предназначения. Очень важно наблюдать за ключевыми процессами организации, вникать в их суть, вести учет данных, следить за важными цифрами, строить тренды и графики.
-
-"/>
+  <meta name="twitter:description" content="Мониторинг — важнейшее звено стабильной функциональности системы любой сложности и предназначения. Очень важно наблюдать за ключевыми процессами организации, вникать в их суть, вести учет данных, следить за важными цифрами, строить тренды и графики."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Тюнинг Munin: выводим только нужную информацию &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,8 +80,6 @@
                 <section id="post-body">
                     <p>Мониторинг — важнейшее звено стабильной функциональности системы любой сложности и предназначения. Очень важно наблюдать за ключевыми процессами организации, вникать в их суть, вести учет данных, следить за важными цифрами, строить тренды и графики.</p>
 
-<p></p>
-
 <p>Для этого создано просто невероятное количество программных продуктов — как полнофункциональных пакетов, так и множество плагинов/расширений.</p>
 
 <p>Один из самых простых в настройке — <a href="http://munin-monitoring.org/">munin</a>, но он зачастую выводит излишнюю информацию. Давайте разберемся с этим на примере плагина <strong>[df]</strong>!</p>
@@ -91,18 +87,16 @@
 <p>Плагин <strong>[df]</strong> (от “disk free”) — выводит информацию о свободном/занятом месте на жестких дисках и разделах. Но, по умолчанию, плагин выводит информацию и о “псевдоразделах” — <code>/dev/shm</code>, <code>/run</code>, <code>/run/lock</code>, а также может дублировать вывод информации о корневом разделе (выводит два графика, один для <code>/rootfs</code>, один для <code>/</code>). Если у вас нет специальной цели следить за использованием <code>/dev/shm</code> (иногда может быть полезно), то выводить информацию о “настоящих” дисках можно следующим образом:</p>
 
 <ul>
-<li>переходим в каталог <code>/etc/munin/plugin-conf.d/</code>:</li>
-</ul>
+<li><p>переходим в каталог <code>/etc/munin/plugin-conf.d/</code>:</p>
 
 <pre><code class="language-bash">cd /etc/munin/plugin-conf.d/
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>редактируем конфигурационный файл <code>munin-node</code></li>
-</ul>
+<li><p>редактируем конфигурационный файл <code>munin-node</code></p>
 
 <pre><code class="language-bash">nano munin-node
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Параметры настройки плагина <strong>[df]</strong> должны быть следующими:</p>
 
@@ -118,25 +112,21 @@
 <p>Если нет надобности выводить на графике лимиты (черта при пересечении которой будет выводиться предупреждение или ошибка, а сам график будет подсвечиваться желтым или красным), то отключить их вывод можно так:</p>
 
 <ul>
-<li>переходим в каталог <code>/etc/munin/plugins/</code></li>
-</ul>
+<li><p>переходим в каталог <code>/etc/munin/plugins/</code></p>
 
 <pre><code class="language-bash">cd /etc/munin/plugins/
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>редактируем файл <code>@df</code>:</li>
-</ul>
+<li><p>редактируем файл <code>@df</code>:</p>
 
 <pre><code class="language-bash">nano df
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>закомментируем строку <code>print_thresholds($name,undef,undef,92,98);</code></li>
-</ul>
+<li><p>закомментируем строку <code>print_thresholds($name,undef,undef,92,98);</code></p>
 
 <pre><code class="language-bash">#print_thresholds($name,undef,undef,92,98);
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>На этом все, в дальнейшем вы будете видеть только нужную информацию.</p>
                 </section>
@@ -242,14 +232,17 @@
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

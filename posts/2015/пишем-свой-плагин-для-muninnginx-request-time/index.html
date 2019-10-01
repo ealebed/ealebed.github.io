@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Пишем свой плагин для Munin: nginx request time"/>
-  <meta name="twitter:description" content="Давайте разберемся с созданием плагина для munin, который в красивой и понятной форме даст нам представление о времени обработки запросов nginx’ом.
-
-"/>
+  <meta name="twitter:description" content="Давайте разберемся с созданием плагина для munin, который в красивой и понятной форме даст нам представление о времени обработки запросов nginx’ом."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Пишем свой плагин для Munin: nginx request time &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -84,8 +82,6 @@
                 <section id="post-body">
                     <p>Давайте разберемся с <strong>созданием плагина для munin</strong>, который в красивой и понятной форме даст нам представление о времени обработки запросов nginx’ом.</p>
 
-<p></p>
-
 <p>Итак, на графике нам нужно видеть количество запросов (в процентах от общего числа), время обработки которых:</p>
 
 <ul>
@@ -100,28 +96,26 @@
 <p>Алгоритм действий следующий:</p>
 
 <ul>
-<li>открываем на редактирование конфиг <code>/etc/nginx/nginx.conf</code>:</li>
-</ul>
+<li><p>открываем на редактирование конфиг <code>/etc/nginx/nginx.conf</code>:</p>
 
 <pre><code class="language-bash">nano /etc/nginx/nginx.conf
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>в секции <code>http</code> находим строку <code>log_format</code> и добавляем в нее параметр <code>$request_time</code>:</li>
-</ul>
+<li><p>в секции <code>http</code> находим строку <code>log_format</code> и добавляем в нее параметр <code>$request_time</code>:</p>
 
 <pre><code class="language-text">log_format  main  '$remote_addr $remote_user [$time_local] &quot;$request&quot; $status $request_time $bytes_sent '
-                          '&quot;$http_referer&quot; &quot;$http_user_agent&quot;';
-</code></pre>
+                      '&quot;$http_referer&quot; &quot;$http_user_agent&quot;';
+</code></pre></li>
+</ul>
 
 <p><strong>Примечание.</strong> <code>$request_time</code> — время обработки запроса в секундах с точностью до миллисекунд; время, прошедшее с момента чтения первых байт от клиента до момента записи в лог после отправки последних байт клиенту.</p>
 
 <ul>
-<li>перечитываем конфигурацию <code>nginx’а</code>:</li>
-</ul>
+<li><p>перечитываем конфигурацию <code>nginx’а</code>:</p>
 
 <pre><code class="language-bash">nginx -s reload
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>После этих действий <code>/var/log/nginx/access.log</code> должен выгдядеть примерно так:</p>
 
@@ -135,116 +129,104 @@
 <p>Далее непосредственно <strong>написание плагина для munin</strong>:</p>
 
 <ul>
-<li>переходим в каталог <code>/etc/munin/plugins</code>:</li>
-</ul>
+<li><p>переходим в каталог <code>/etc/munin/plugins</code>:</p>
 
 <pre><code class="language-bash">cd /etc/munin/plugins
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>создаем файл <code>nginx_request_time</code>:</li>
-</ul>
+<li><p>создаем файл <code>nginx_request_time</code>:</p>
 
 <pre><code class="language-bash">nano nginx_request_time
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>вставляем следующий код:</li>
-</ul>
+<li><p>вставляем следующий код:</p>
 
 <pre><code class="language-php">#!/usr/bin/php
 &lt;?php
 if ($argv[1] == 'config')
 {
-  echo &quot;graph_category nginx
-  graph_title Nginx request time
-  graph_vlabel %
-  graph_scale no
-  graph_args --base 1000 -r --lower-limit 0 --upper-limit 100
-  t0.label less 50ms
-  t0.draw AREA
-  t0.type GAUGE
-  t0.min 0
-  t1.label less 100ms
-  t1.draw STACK
-  t1.type GAUGE
-  t1.min 0
-  t2.label less 1s
-  t2.draw STACK
-  t2.type GAUGE
-  t2.min 0
-  t3.label more 1s
-  t3.draw STACK
-  t3.type GAUGE
-  t3.min 0
-  &quot;;
+echo &quot;graph_category nginx
+graph_title Nginx request time
+graph_vlabel %
+graph_scale no
+graph_args --base 1000 -r --lower-limit 0 --upper-limit 100
+t0.label less 50ms
+t0.draw AREA
+t0.type GAUGE
+t0.min 0
+t1.label less 100ms
+t1.draw STACK
+t1.type GAUGE
+t1.min 0
+t2.label less 1s
+t2.draw STACK
+t2.type GAUGE
+t2.min 0
+t3.label more 1s
+t3.draw STACK
+t3.type GAUGE
+t3.min 0
+&quot;;
 }
 else
 {
-  $result    = `grep '\&quot; 200 ' /var/log/nginx/access.log.0 | awk '{print $9;}'`;
-  $resultArray = explode(&quot;\n&quot;, $result);
-  $return    = array(0, 0, 0, 0);
-  if (count($resultArray))
+$result    = `grep '\&quot; 200 ' /var/log/nginx/access.log.0 | awk '{print $9;}'`;
+$resultArray = explode(&quot;\n&quot;, $result);
+$return    = array(0, 0, 0, 0);
+if (count($resultArray))
+{
+foreach ($resultArray as $one)
+{
+  if ($one &lt; 0.05)
   {
-    foreach ($resultArray as $one)
-    {
-      if ($one &lt; 0.05)
-      {
-        $return[0] ++;
-      }
-      elseif ($one &lt; 0.1)
-      {
-        $return[1] ++;
-      }
-      elseif ($one &lt; 1)
-      {
-        $return[2] ++;
-      }
-      else
-      {
-        $return[3] ++;
-      }
-    }
+    $return[0] ++;
   }
-  $all_request = array_sum($return);
-  foreach ($return as $key =&gt; $one)
+  elseif ($one &lt; 0.1)
   {
-    $value = round(($one / $all_request * 100), 4);
-    echo 't'.$key.'.value '.$value.&quot;\n&quot;;
+    $return[1] ++;
+  }
+  elseif ($one &lt; 1)
+  {
+    $return[2] ++;
+  }
+  else
+  {
+    $return[3] ++;
   }
 }
-</code></pre>
+}
+$all_request = array_sum($return);
+foreach ($return as $key =&gt; $one)
+{
+$value = round(($one / $all_request * 100), 4);
+echo 't'.$key.'.value '.$value.&quot;\n&quot;;
+}
+}
+</code></pre></li>
 
-<ul>
-<li>меняем права доступа для <code>nginx_request_time</code>:</li>
-</ul>
+<li><p>меняем права доступа для <code>nginx_request_time</code>:</p>
 
 <pre><code class="language-bash">chmod 755 nginx_request_time
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>переходим в каталог <code>/etc/munin/plugin-conf.d</code>:</li>
-</ul>
+<li><p>переходим в каталог <code>/etc/munin/plugin-conf.d</code>:</p>
 
 <pre><code class="language-bash">cd /etc/munin/plugin-conf.d
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>в файле <code>munin-node</code> находим (или создаем) секцию <code>nginx*</code>, где в качестве пользователя укажем <code>root</code>:</li>
-</ul>
+<li><p>в файле <code>munin-node</code> находим (или создаем) секцию <code>nginx*</code>, где в качестве пользователя укажем <code>root</code>:</p>
 
 <pre><code class="language-text">...
 [nginx*]
 user root
 ...
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>перезапускаем демон <code>munin-node</code>:</li>
-</ul>
+<li><p>перезапускаем демон <code>munin-node</code>:</p>
 
 <pre><code class="language-bash">/etc/init.d/munin-node restart
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Через некоторое время вы сможете увидеть результаты проделанной работы в виде графика.</p>
                 </section>
@@ -350,14 +332,17 @@ user root
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

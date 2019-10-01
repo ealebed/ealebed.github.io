@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Установка и настройка jail окружения в Debian Wheezy"/>
-  <meta name="twitter:description" content="В целях безопасности иногда требуется запускать приложения в отдельном окружении либо ограничивать доступ пользователям.
-
-"/>
+  <meta name="twitter:description" content="В целях безопасности иногда требуется запускать приложения в отдельном окружении либо ограничивать доступ пользователям."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Установка и настройка jail окружения в Debian Wheezy &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -80,8 +78,6 @@
                 <section id="post-body">
                     <p>В целях безопасности иногда требуется запускать приложения в отдельном окружении либо ограничивать доступ пользователям.</p>
 
-<p></p>
-
 <p>С этими задачами хорошо справляется технология <code>jail</code>, которая базируется на системном вызове <code>chroot</code>. В этой статье давайте разберемся как настроить jail-окружение в Debian Wheezy.</p>
 
 <p>Для начала установим требующиеся пакеты:</p>
@@ -90,24 +86,21 @@
 </code></pre>
 
 <ul>
-<li>устанавливать jail-окружение будем в каталог <code>/home/jail</code>, создаем его командой:</li>
-</ul>
+<li><p>устанавливать jail-окружение будем в каталог <code>/home/jail</code>, создаем его командой:</p>
 
 <pre><code class="language-bash">mkdir /home/jail
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p><strong>Примечание.</strong> Подключение к серверу будет осуществляться от имени пользователя test. Создать пользователя и добавить в необходимые группы можно утилитой <code>useradd</code>, установить пароль можно с помощью утилиты <code>passwd</code>.</p>
 
 <ul>
-<li>непосредственно установка jail-окружения в Debian Wheezy:</li>
-</ul>
+<li><p>непосредственно установка jail-окружения в Debian Wheezy:</p>
 
 <pre><code class="language-bash">debootstrap --variant=buildd --arch amd64 wheezy /home/jail http://ftp.uk.debian.org/debian
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>копируем конфигурационные файлы:</li>
-</ul>
+<li><p>копируем конфигурационные файлы:</p>
 
 <pre><code class="language-bash">cp /etc/resolv.conf /home/jail/etc/resolv.conf
 cp /etc/apt/sources.list /home/jail/etc/apt/
@@ -115,14 +108,13 @@ cp /etc/passwd /home/jail/etc/
 cp /etc/shadow /home/jail/etc/
 cp /etc/group /home/jail/etc/
 cp /etc/hosts /home/jail/etc/
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>копируем домашний каталог пользователя test:</li>
-</ul>
+<li><p>копируем домашний каталог пользователя test:</p>
 
 <pre><code class="language-bash">cp -a /home/test/ /home/jail/home/test/
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>в конце конфигурационного файла <code>/etc/ssh/sshd_config</code> добавляем следующие строки:</p>
 
@@ -134,58 +126,52 @@ Match User test
 </code></pre>
 
 <ul>
-<li>в конце конфигурационного файла <code>/home/jail/home/test/.bashrc</code> добавляем строку:</li>
-</ul>
+<li><p>в конце конфигурационного файла <code>/home/jail/home/test/.bashrc</code> добавляем строку:</p>
 
 <pre><code class="language-text">...
 cd /var/www/
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p><strong>Примечание.</strong> Последний пункт выполняем для того, чтобы при подключении пользователь test оказывался в директории <code>/var/www/</code></p>
 
 <ul>
-<li>создадим еще несколько директорий:</li>
-</ul>
+<li><p>создадим еще несколько директорий:</p>
 
 <pre><code class="language-bash">mkdir /home/jail/var/www
 mkdir /home/jail/var/www/code
 mkdir /home/jail/var/www/static
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>внесем правки в конфигурационный файл <code>/etc/fstab</code>, добавив:</li>
-</ul>
+<li><p>внесем правки в конфигурационный файл <code>/etc/fstab</code>, добавив:</p>
 
 <pre><code class="language-text">...
 192.168.0.16:/srv/www/static /home/jail/var/www/static nfs defaults,sync,ac,actimeo=60,noatime 0 0
 /var/www/code /home/jail/var/www/code none bind 0 0
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p><strong>Примечание.</strong> В данном примере статические файлы монтируются по nfs с соседнего сервера. Пользователь test может работать с кодом в директории <code>/home/jail/var/www/code</code> (для него будет видна как <code>/var/www/code</code>) без возможности сломать корневую систему.</p>
 
 <ul>
-<li>монтируем <code>/proc</code>, <code>/dev</code>, <code>/sys</code> и выполняем <code>chroot</code>:</li>
-</ul>
+<li><p>монтируем <code>/proc</code>, <code>/dev</code>, <code>/sys</code> и выполняем <code>chroot</code>:</p>
 
 <pre><code class="language-bash">mount -t proc none /home/jail/proc
 mount -o bind /dev /home/jail/dev
 mount -o bind /sys /home/jail/sys
 chroot /home/jail/ /bin/bash
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>теперь можно установить необходимые для работы пакеты (<code>aptitude</code>, <code>mc</code>, <code>wget</code>, <code>openssh</code>, <code>svn</code>, <code>vim</code> и т. д.):</li>
-</ul>
+<li><p>теперь можно установить необходимые для работы пакеты (<code>aptitude</code>, <code>mc</code>, <code>wget</code>, <code>openssh</code>, <code>svn</code>, <code>vim</code> и т. д.):</p>
 
 <pre><code class="language-bash">apt-get install aptitude mc wget subversion vim
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>подключаемся под пользователем test и проверяем работу jail-окружения:</li>
-</ul>
+<li><p>подключаемся под пользователем test и проверяем работу jail-окружения:</p>
 
 <pre><code class="language-bash">ssh test@hostname
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p><strong>Примечание.</strong> Чтобы не вводить каждый раз пароль, можно <a href="https://ealebed.github.io/posts/2015/ssh-%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-%D0%BF%D0%BE-%D0%BA%D0%BB%D1%8E%D1%87%D1%83/">настроить ssh авторизацию по ключу</a>, но это уже совсем другая история.</p>
 
@@ -293,14 +279,17 @@ chroot /home/jail/ /bin/bash
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

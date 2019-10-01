@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Базовая настройка Asterisk 11 в Debian Wheezy: обслуживание внутренних звонков"/>
-  <meta name="twitter:description" content="Мы успешно установили Asterisk PBX в операционной системе Debian Wheezy и теперь приступаем к его настройке. Первое, что мы сделаем — настроим Asterisk на обслуживание внутренних звонков — давайте разберемся!
-
-"/>
+  <meta name="twitter:description" content="Мы успешно установили Asterisk PBX в операционной системе Debian Wheezy и теперь приступаем к его настройке. Первое, что мы сделаем — настроим Asterisk на обслуживание внутренних звонков — давайте разберемся!"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Базовая настройка Asterisk 11 в Debian Wheezy: обслуживание внутренних звонков &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,8 +80,6 @@
                 <section id="post-body">
                     <p>Мы успешно <a href="https://ealebed.github.io/posts/2015/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2/">установили Asterisk PBX</a> в операционной системе Debian Wheezy и теперь приступаем к его настройке. Первое, что мы сделаем — <strong>настроим Asterisk на обслуживание внутренних звонков</strong> — давайте разберемся!</p>
 
-<p></p>
-
 <p>В моем случае используются телефоны Cisco SPA 504G и Linksys SPA 942, но вы можете использовать любой другой IP-телефон или софтофон (могу порекомендовать Zoiper или X-Lite).</p>
 
 <p>Для тестирования будем использовать трехзначные номера, например 101, 102, 103 и т. д.</p>
@@ -95,8 +91,7 @@
 <p>Алгоритм <strong>настройки Asterisk 11 для обслуживания внутренних звонков</strong> следующий:</p>
 
 <ul>
-<li>убедимся, что в конфигурационном файле <code>/etc/asterisk/sip.conf</code> в секции <code>[general]</code> присутствуют и раскомментированы следующие строки:</li>
-</ul>
+<li><p>убедимся, что в конфигурационном файле <code>/etc/asterisk/sip.conf</code> в секции <code>[general]</code> присутствуют и раскомментированы следующие строки:</p>
 
 <pre><code>[general]
 context=default
@@ -105,11 +100,9 @@ allowguest=no
 allowoverlap=no
 udpbindaddr=0.0.0.0
 language=ru
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>можно сразу настроить приоритет использования кодеков в этой же секции <code>[general]</code> (по желанию, все и так будет работать «из коробки»):</li>
-</ul>
+<li><p>можно сразу настроить приоритет использования кодеков в этой же секции <code>[general]</code> (по желанию, все и так будет работать «из коробки»):</p>
 
 <pre><code>...
 disallow=all                   ; First disallow all codecs
@@ -119,11 +112,9 @@ allow=gsm
 allow=g729
 allow=g723
 ...
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>переходим к секции <code>[authentication]</code> для настройки пользователей. Как и обещал, используем шаблон (общие параметры для всех):</li>
-</ul>
+<li><p>переходим к секции <code>[authentication]</code> для настройки пользователей. Как и обещал, используем шаблон (общие параметры для всех):</p>
 
 <pre><code>...
 [template-office](!)                
@@ -135,11 +126,9 @@ context=office
 deny=0.0.0.0/0.0.0.0
 permit=192.168.1.0/23
 ...
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>теперь настраиваем нескольких пользователей. Так как у нас уже есть шаблон с общими параметрами, то остается указать только <code>username</code> и <code>secret</code> — имя пользователя и пароль, которые должны использоваться клиентом при регистрации:</li>
-</ul>
+<li><p>теперь настраиваем нескольких пользователей. Так как у нас уже есть шаблон с общими параметрами, то остается указать только <code>username</code> и <code>secret</code> — имя пользователя и пароль, которые должны использоваться клиентом при регистрации:</p>
 
 <pre><code>;testuser_1
 [101](template-office)
@@ -155,22 +144,20 @@ secret=&lt;очень_сложный_пароль&gt;
 [103](template-office)
 username=user103
 secret=&lt;очень_сложный_пароль&gt;
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p><strong>Примечание.</strong> Строки <code>;testuser_*</code> можно пропустить — это комментарии, здесь я обычно указываю фамилию пользователя. Однако, если у вас будет несколько сотен пользователей, то без комментариев никак не обойтись</p>
 
 <p>После внесения настроек сохраняем файл <code>sip.conf</code> и переходим к <strong>настройке номерного плана Asterisk</strong>. Для этого:</p>
 
 <ul>
-<li>открываем файл <code>/etc/asterisk/extensions.conf</code>:</li>
-</ul>
+<li><p>открываем файл <code>/etc/asterisk/extensions.conf</code>:</p>
 
 <pre><code>nano /etc/asterisk/extensions.conf
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>создаем контекст <code>[office]</code> с таким содержимым:</li>
-</ul>
+<li><p>создаем контекст <code>[office]</code> с таким содержимым:</p>
 
 <pre><code>[office]
 ; внутренние 3-х значные номера, начинаются с 1
@@ -178,7 +165,8 @@ exten =&gt; _1XX,1,Set(fname=${STRFTIME(${EPOCH},,%Y%m%d)}-${UNIQUEID})
 exten =&gt; _1XX,n,MixMonitor(/var/spool/asterisk/monitor/${fname}.wav)
 exten =&gt; _1XX,n,Set(AUDIOHOOK_INHERIT(MixMonitor)=yes)
 exten =&gt; _1XX,n,Dial(SIP/${EXTEN})
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>На этом считаю <strong>базовую настройку Asterisk’а для обслуживания внутренних звонков законченной</strong>, в следующих статьях рассмотрим <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%B3%D0%BE%D0%BB%D0%BE%D1%81%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BF%D0%BE%D1%87%D1%82%D0%B0/">настройку голосовой почты</a> и <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%B2%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B8-%D0%B8%D1%81%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%B8/">входящих/исходящих звонков</a>.</p>
                 </section>
@@ -284,14 +272,17 @@ exten =&gt; _1XX,n,Dial(SIP/${EXTEN})
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

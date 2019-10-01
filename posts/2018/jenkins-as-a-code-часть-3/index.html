@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Jenkins as a code. Часть 3"/>
-  <meta name="twitter:description" content="В данной статье цикла &ldquo;Jenkins as a code&rdquo; рассмотрим самый интересный (и полезный) пример - автоматическое создание задач (job) при запуске сервиса. Давайте разберемся!
-
-"/>
+  <meta name="twitter:description" content="В данной статье цикла &ldquo;Jenkins as a code&rdquo; рассмотрим самый интересный (и полезный) пример - автоматическое создание задач (job) при запуске сервиса. Давайте разберемся!"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Jenkins as a code. Часть 3 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -84,8 +82,6 @@
                 <section id="post-body">
                     <p>В данной статье цикла &ldquo;Jenkins as a code&rdquo; рассмотрим самый интересный (и полезный) пример - автоматическое создание задач (job) при запуске сервиса. Давайте разберемся!</p>
 
-<p></p>
-
 <p>Создавать задания (jobs) в Jenkins можно несколькими способами - традиционно (через webUI), через REST API или &ldquo;подкладывая&rdquo; файлы <code>.xml.import</code> в <code>${JENKINS_HOME}</code>.</p>
 
 <p>Но традиционный способ настройки занимает слишком много времени, использование API невероятно неудобно (см. пример ниже), а создание файлов с расширением <code>.xml.import</code> для каждой задачи и рестарт сервиса Jenkins после их добавления даже звучит несерьезно.</p>
@@ -93,11 +89,11 @@
 <p>Чем плох REST API:</p>
 
 <ul>
-<li>сначала необходимо получить описание уже существующей задачи в формате <code>.xml</code>. Например, это можно сделать используя API:</li>
-</ul>
+<li><p>сначала необходимо получить описание уже существующей задачи в формате <code>.xml</code>. Например, это можно сделать используя API:</p>
 
 <pre><code class="language-bash">curl -X GET -u username:API_TOKEN 'http://JENKINS_HOST/job/MY_JOB_NAME/config.xml' -o config.xml
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>или</p>
 
@@ -106,11 +102,12 @@
 
 <ul>
 <li>потом полученный <code>xml</code>-файл нужно отредактировать под свои нужды;</li>
-<li>после редактирования можно создать новую задачу &ldquo;запостив&rdquo; этот файл через API, например:</li>
-</ul>
+
+<li><p>после редактирования можно создать новую задачу &ldquo;запостив&rdquo; этот файл через API, например:</p>
 
 <pre><code class="language-bash">curl -u username:password -s -XPOST 'http://JENKINS_HOST/createItem?name=newJobName' --data-binary config.xml -H &quot;Content-Type:text/xml&quot;
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Ах да, если вдруг столкнетесь с ошибкой:</p>
 
@@ -382,14 +379,17 @@ if(installed) {
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

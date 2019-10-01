@@ -14,9 +14,7 @@
   
   
   <meta name="twitter:title" content="Redis Cluster в Debian Wheezy: миграция и решардинг"/>
-  <meta name="twitter:description" content="В предыдущей статье мы успешно создали Redis Cluster из 3-х мастеров и 3-х слейвов, теперь давайте разберемся с миграцией и решардингом в кластере.
-
-"/>
+  <meta name="twitter:description" content="В предыдущей статье мы успешно создали Redis Cluster из 3-х мастеров и 3-х слейвов, теперь давайте разберемся с миграцией и решардингом в кластере."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -31,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.32.2" />
+		<meta name="generator" content="Hugo 0.58.3" />
 		<title>Redis Cluster в Debian Wheezy: миграция и решардинг &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -82,50 +80,44 @@
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2015/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-redis-cluster-%D0%B2-debian-wheezy/">предыдущей статье</a> мы успешно создали <strong>Redis Cluster</strong> из 3-х мастеров и 3-х слейвов, теперь давайте разберемся с миграцией и решардингом в кластере.</p>
 
-<p></p>
-
 <p>Миграция в <strong>Redis Cluster</strong> не представляет особых сложностей.</p>
 
 <p>Например, для перемещения слота 12182 с третьей ноды на первую нужно выполнить следующие действия:</p>
 
 <ul>
-<li>подключаемся к первой ноде:</li>
-</ul>
+<li><p>подключаемся к первой ноде:</p>
 
 <pre><code>redis-cli -c -p 7000
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>выполняем команду:</li>
-</ul>
+<li><p>выполняем команду:</p>
 
 <pre><code>CLUSTER SETSLOT 12182 IMPORTING 5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p><strong>Примечание.</strong> В данном примере 5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a — id третьей ноды (откуда импортируем слот)</p>
 
 <ul>
-<li>подключаемся к третьей ноде:</li>
-</ul>
+<li><p>подключаемся к третьей ноде:</p>
 
 <pre><code>redis-cli -c -p 7002
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>выполняем команду:</li>
-</ul>
+<li><p>выполняем команду:</p>
 
 <pre><code>CLUSTER SETSLOT 12182 MIGRATING c1783119d172d55becfcea8ec10855bf79d17c83
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p><strong>Примечание.</strong> В данном примере c1783119d172d55becfcea8ec10855bf79d17c83 — id первой ноды (куда импортируем слот)</p>
 
 <ul>
-<li>после этого выполняем:</li>
-</ul>
+<li><p>после этого выполняем:</p>
 
 <pre><code>./redis-trib.rb fix 127.0.0.1:7000
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Результат выполнения последней команды будет таким:</p>
 
@@ -170,28 +162,25 @@ Moving slot 12182 from 127.0.0.1:7002 to 127.0.0.1:7000: .
 <p>Убедиться, что после проведенной миграции слот 12182 действительно находится на первой ноде можно так:</p>
 
 <ul>
-<li>подключаемся к третьей ноде:</li>
-</ul>
+<li><p>подключаемся к третьей ноде:</p>
 
 <pre><code>redis-cli -c -p 7002
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>выполняем команду:</li>
-</ul>
+<li><p>выполняем команду:</p>
 
 <pre><code>127.0.0.1:7002&gt; get foo
 -&gt; Redirected to slot [12182] located at 127.0.0.1:7000
 &quot;bar&quot;
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Решардинг (Resharding the cluster) — перемещение части слотов с одной ноды на другую.</p>
 
 <p>В <strong>Redis Cluster</strong> для решардинга выполняем следующие шаги:</p>
 
 <ul>
-<li>запускаем скрипт <code>redis-trib</code> с командой <code>reshard</code>:</li>
-</ul>
+<li><p>запускаем скрипт <code>redis-trib</code> с командой <code>reshard</code>:</p>
 
 <pre><code>./redis-trib.rb reshard 127.0.0.1:7000
 Connecting to node 127.0.0.1:7000: OK
@@ -202,74 +191,67 @@ Connecting to node 127.0.0.1:7004: OK
 Connecting to node 127.0.0.1:7003: OK
 &gt;&gt;&gt; Performing Cluster Check (using node 127.0.0.1:7000)
 M: c1783119d172d55becfcea8ec10855bf79d17c83 127.0.0.1:7000
-   slots:0-5460,12182 (5462 slots) master
-   1 additional replica(s)
+slots:0-5460,12182 (5462 slots) master
+1 additional replica(s)
 S: 2043fdf0eaaf5fba69fd432a31d812720334e71f 127.0.0.1:7005
-   slots: (0 slots) slave
-   replicates 5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a
+slots: (0 slots) slave
+replicates 5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a
 M: 5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a 127.0.0.1:7002
-   slots:10923-12181,12183-16383 (5460 slots) master
-   1 additional replica(s)
+slots:10923-12181,12183-16383 (5460 slots) master
+1 additional replica(s)
 M: 6140050dc706b4d73362968316e6d5ddce184a10 127.0.0.1:7001
-   slots:5461-10922 (5462 slots) master
-   1 additional replica(s)
+slots:5461-10922 (5462 slots) master
+1 additional replica(s)
 S: cd50fe4e614a030ebfd31702f64b5c807ddf5e6d 127.0.0.1:7004
-   slots: (0 slots) slave
-   replicates 6140050dc706b4d73362968316e6d5ddce184a10
+slots: (0 slots) slave
+replicates 6140050dc706b4d73362968316e6d5ddce184a10
 S: 5367ea30f9db7e42bd3304ed4d7df56a541d6cb8 127.0.0.1:7003
-   slots: (0 slots) slave
-   replicates c1783119d172d55becfcea8ec10855bf79d17c83
+slots: (0 slots) slave
+replicates c1783119d172d55becfcea8ec10855bf79d17c83
 [OK] All nodes agree about slots configuration.
 &gt;&gt;&gt; Check for open slots...
 &gt;&gt;&gt; Check slots coverage...
 [OK] All 16384 slots covered.
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>вводим количество слотов для перемещения:</li>
-</ul>
+<li><p>вводим количество слотов для перемещения:</p>
 
 <pre><code>How many slots do you want to move (from 1 to 16384)? 200
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>вводим id ноды, на которую хотим переместить слоты:</li>
-</ul>
+<li><p>вводим id ноды, на которую хотим переместить слоты:</p>
 
 <pre><code>What is the receiving node ID? 6140050dc706b4d73362968316e6d5ddce184a10
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>вводим id нод, с каких хотим переместить слоты (можно выбрать несколько нод):</li>
-</ul>
+<li><p>вводим id нод, с каких хотим переместить слоты (можно выбрать несколько нод):</p>
 
 <pre><code>Please enter all the source node IDs.
-  Type 'all' to use all the nodes as source nodes for the hash slots.
-  Type 'done' once you entered all the source nodes IDs.
+Type 'all' to use all the nodes as source nodes for the hash slots.
+Type 'done' once you entered all the source nodes IDs.
 Source node #1:c1783119d172d55becfcea8ec10855bf79d17c83
 Source node #2:done
-</code></pre>
+</code></pre></li>
 
-<ul>
-<li>смотрим предложенный план перемещения и соглашаемся:</li>
-</ul>
+<li><p>смотрим предложенный план перемещения и соглашаемся:</p>
 
 <pre><code>Ready to move 200 slots.
-  Source nodes:
-    M: c1783119d172d55becfcea8ec10855bf79d17c83 127.0.0.1:7000
-   slots:0-5460,12182 (5462 slots) master
-   1 additional replica(s)
-  Destination node:
-    M: 6140050dc706b4d73362968316e6d5ddce184a10 127.0.0.1:7001
-   slots:5461-10922 (5462 slots) master
-   1 additional replica(s)
-  Resharding plan:
-    Moving slot 0 from c1783119d172d55becfcea8ec10855bf79d17c83
-    Moving slot 1 from c1783119d172d55becfcea8ec10855bf79d17c83
-    ...
-    Moving slot 199 from c1783119d172d55becfcea8ec10855bf79d17c83
+Source nodes:
+M: c1783119d172d55becfcea8ec10855bf79d17c83 127.0.0.1:7000
+slots:0-5460,12182 (5462 slots) master
+1 additional replica(s)
+Destination node:
+M: 6140050dc706b4d73362968316e6d5ddce184a10 127.0.0.1:7001
+slots:5461-10922 (5462 slots) master
+1 additional replica(s)
+Resharding plan:
+Moving slot 0 from c1783119d172d55becfcea8ec10855bf79d17c83
+Moving slot 1 from c1783119d172d55becfcea8ec10855bf79d17c83
+...
+Moving slot 199 from c1783119d172d55becfcea8ec10855bf79d17c83
 Do you want to proceed with the proposed reshard plan (yes/no)? yes
-</code></pre>
+</code></pre></li>
+</ul>
 
 <p>Результат перемещения слотов:</p>
 
@@ -394,14 +376,17 @@ c1783119d172d55becfcea8ec10855bf79d17c83 127.0.0.1:7000 myself,master - 0 0 7 co
 
 
   
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-112453311-1', 'auto');
-ga('send', 'pageview');
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
 </script>
 
 

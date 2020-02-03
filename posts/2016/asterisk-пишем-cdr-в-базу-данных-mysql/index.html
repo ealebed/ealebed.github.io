@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Asterisk: пишем CDR в базу данных MySQL &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,39 +90,22 @@
                 </header>
                 <section id="post-body">
                     <p>Детализированная информация о всех телефонных вызовах содержится в <strong>CDR</strong> (Call Detail Records). В Asterisk есть возможность сохранять CDR-записи в базе данных MySQL, вместо текстовых CSV файлов, использующихся по умолчанию. Давайте разберемся, <strong>как писать CDR в базу MySQL</strong>!</p>
-
 <p>Действия производятся на:</p>
-
 <pre><code>lsb_release -a
 No LSB modules are available.
 Distributor ID:	Debian
 Description:	Debian GNU/Linux 8.4 (jessie)
 Release:	8.4
 Codename:	jessie
-</code></pre>
-
-<p>Считаем, что MySQL-сервер у вас уже установлен и настроен. Если нет, то установить его можно командой:</p>
-
+</code></pre><p>Считаем, что MySQL-сервер у вас уже установлен и настроен. Если нет, то установить его можно командой:</p>
 <pre><code>apt-get install mysql-server mysql-client libmysqlclient-dev
-</code></pre>
-
-<p>Подключаемся к MySQL-серверу:</p>
-
+</code></pre><p>Подключаемся к MySQL-серверу:</p>
 <pre><code>mysql -u root -p
-</code></pre>
-
-<p>Cоздаем базу данных:</p>
-
+</code></pre><p>Cоздаем базу данных:</p>
 <pre><code>CREATE DATABASE asterisk;
-</code></pre>
-
-<p>Выбираем только что созданную базу данных:</p>
-
+</code></pre><p>Выбираем только что созданную базу данных:</p>
 <pre><code>USE asterisk;
-</code></pre>
-
-<p>Создаем таблицу для хранения записей CDR:</p>
-
+</code></pre><p>Создаем таблицу для хранения записей CDR:</p>
 <pre><code>CREATE TABLE cdr (
        calldate datetime NOT NULL default '0000-00-00 00:00:00',
        clid varchar(80) NOT NULL default '',
@@ -134,66 +128,34 @@ Codename:	jessie
 ALTER TABLE cdr ADD INDEX ( calldate );
 ALTER TABLE cdr ADD INDEX ( dst );
 ALTER TABLE cdr ADD INDEX ( uniqueid );
-</code></pre>
-
-<p>Создаем пользователя для работы с CDR:</p>
-
+</code></pre><p>Создаем пользователя для работы с CDR:</p>
 <pre><code>CREATE USER asterisk@localhost IDENTIFIED BY &lt; password &gt;;
-</code></pre>
-
-<p>Выставляем созданному пользователю необходимые права:</p>
-
+</code></pre><p>Выставляем созданному пользователю необходимые права:</p>
 <pre><code>GRANT ALL ON asterisk.* TO asterisk@localhost;
-</code></pre>
-
-<p>Asterisk должен быть собран с поддержкой <code>mysql</code> (модули <code>cdr_mysql</code>,<code>res_config_mysql</code>). Если нет, то в каталоге с исходным кодом выполняем:</p>
-
+</code></pre><p>Asterisk должен быть собран с поддержкой <code>mysql</code> (модули <code>cdr_mysql</code>,<code>res_config_mysql</code>). Если нет, то в каталоге с исходным кодом выполняем:</p>
 <pre><code>make clean
-</code></pre>
-
-<pre><code>./configure
-</code></pre>
-
-<pre><code>make menuselect
-</code></pre>
-
-<p>&hellip;выбираем нужные модули&hellip;</p>
-
+</code></pre><pre><code>./configure
+</code></pre><pre><code>make menuselect
+</code></pre><p>&hellip;выбираем нужные модули&hellip;</p>
 <pre><code>make
-</code></pre>
-
-<pre><code>make install
-</code></pre>
-
-<p>Открываем конфигурационный файл <code>/etc/asterisk/cdr.conf</code>, проверяем следующий параметр:</p>
-
+</code></pre><pre><code>make install
+</code></pre><p>Открываем конфигурационный файл <code>/etc/asterisk/cdr.conf</code>, проверяем следующий параметр:</p>
 <pre><code>[global]
 enable=yes
-</code></pre>
-
-<p>Открываем конфигурационный файл <code>/etc/asterisk/cdr_mysql.conf</code>, приводим к следующему виду:</p>
-
+</code></pre><p>Открываем конфигурационный файл <code>/etc/asterisk/cdr_mysql.conf</code>, приводим к следующему виду:</p>
 <pre><code>[global]
 hostname=localhost
 dbname=asterisk
 table=cdr
 user=asterisk
 password=&lt;password&gt;
-</code></pre>
-
-<p>Для применения изменений перезапускаем Asterisk командой:</p>
-
+</code></pre><p>Для применения изменений перезапускаем Asterisk командой:</p>
 <pre><code>/etc/init.d/asterisk restart
-</code></pre>
-
-<p>Проверить, что все было сделано правильно можно так:</p>
-
+</code></pre><p>Проверить, что все было сделано правильно можно так:</p>
 <pre><code>asterisk -rx &quot;cdr mysql status&quot;
 Connected to asterisk on socket file default using table cdr for 2 seconds.
   Wrote 0 records since last restart.
-</code></pre>
-
-<pre><code>asterisk -rx &quot;cdr show status&quot;
+</code></pre><pre><code>asterisk -rx &quot;cdr show status&quot;
 
 Call Detail Record (CDR) settings
 ----------------------------------
@@ -250,23 +212,23 @@ Call Detail Record (CDR) settings
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

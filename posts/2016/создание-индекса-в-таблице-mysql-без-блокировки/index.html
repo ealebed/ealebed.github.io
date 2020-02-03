@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Создание индекса в таблице MySQL без блокировки &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,31 +88,23 @@
                 </header>
                 <section id="post-body">
                     <p>Порой возникает необходимость добавить индексы в таблицу MySQL в процессе ее эксплуатации. Добавление индексов с помощью <code>ALTER TABLE</code> будет блокировать таблицу, и при серьезных объемах данных время блокировки может оказаться довольно большим. Давайте разберемся, как создать индекс в таблице MySQL без блокировки!</p>
-
 <p>Для добавления индексов «на лету» в таблицу MySQL используется утилита <code>pt-online-schema-change</code> из пакета Percona Toolkit (подробнее об установке этого набора инструментов читайте <a href="https://ealebed.github.io/posts/2016/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-percona-toolkit-%D0%B2-debian-wheezy/">здесь</a>). Утилита работает по следующей схеме:</p>
-
 <ul>
 <li>создает новую таблицу с такой же структурой;</li>
 <li>добавляет нужные индексы в новую (пустую) таблицу;</li>
-<li>создает необходимые триггеры (<code>INSERT</code>&lsquo;ы в новую таблицу, <code>SELECT</code>&lsquo;ы из старой, и т.д.);</li>
+<li>создает необходимые триггеры (<code>INSERT</code>'ы в новую таблицу, <code>SELECT</code>'ы из старой, и т.д.);</li>
 <li>копирует данные из старой таблицы в новую (это может быть долго, но зато без блокировок);</li>
 <li>переименовывает новую и удаляет старую таблицу.</li>
 </ul>
-
 <p>Чтобы добавить индекс в таблицу MySQL без блокировки достаточно выполнить следующую команду:</p>
-
-<pre><code class="language-bash">pt-online-schema-change --alter-foreign-keys-method=auto --critical-load Threads_running=150 --alter &quot;ADD INDEX id (id)&quot; D=test_auto_agent,t=test_activity_tmp,u=&lt;ПОЛЬЗОВАТЕЛЬ&gt;,p=&lt;ПАРОЛЬ&gt; --execute
-</code></pre>
-
-<p>Параметры утилиты <code>pt-online-schema-change</code> аналогичны тем, которые мы использовали при <a href="https://ealebed.github.io/posts/2016/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%83%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D1%8B-pt-online-schema-change-%D0%B4%D0%BB%D1%8F-optimize-table/">дефрагментации таблиц</a> (за исключением имени базы данных/таблицы).</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pt-online-schema-change --alter-foreign-keys-method<span style="color:#f92672">=</span>auto --critical-load Threads_running<span style="color:#f92672">=</span><span style="color:#ae81ff">150</span> --alter <span style="color:#e6db74">&#34;ADD INDEX id (id)&#34;</span> D<span style="color:#f92672">=</span>test_auto_agent,t<span style="color:#f92672">=</span>test_activity_tmp,u<span style="color:#f92672">=</span>&lt;ПОЛЬЗОВАТЕЛЬ&gt;,p<span style="color:#f92672">=</span>&lt;ПАРОЛЬ&gt; --execute
+</code></pre></div><p>Параметры утилиты <code>pt-online-schema-change</code> аналогичны тем, которые мы использовали при <a href="https://ealebed.github.io/posts/2016/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%83%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D1%8B-pt-online-schema-change-%D0%B4%D0%BB%D1%8F-optimize-table/">дефрагментации таблиц</a> (за исключением имени базы данных/таблицы).</p>
 <p>В результате выполнения вы должны увидеть примерно следующую строку:</p>
-
-<pre><code class="language-bash">...
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
 2016-06-30T12:35:31 Dropping triggers...
 2016-06-30T12:35:31 Dropped triggers OK.
-Successfully altered `test_auto_agent`.`test_activity_tmp`.
-</code></pre>
+Successfully altered <span style="color:#e6db74">`</span>test_auto_agent<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>test_activity_tmp<span style="color:#e6db74">`</span>.
+</code></pre></div>
                 </section>
             </article>
 
@@ -143,23 +146,23 @@ Successfully altered `test_auto_agent`.`test_activity_tmp`.
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

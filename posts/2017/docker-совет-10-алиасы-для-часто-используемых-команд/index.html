@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №10: Алиасы для часто используемых команд &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,40 +88,21 @@
                 </header>
                 <section id="post-body">
                     <p>Алиасы и функции, связанные с docker, позволяют сэкономить довольно много времени на вводе команд. Давайте разберемся на нескольких практических примерах!</p>
-
 <p>Я знаю людей, которые любят создавать алиасы даже для таких команд, как <code>git clone</code> (например, <code>gc</code>). Спустя несколько месяцев можно напрочь забыть, как работать с полной версией команды, поэтому с алиасами лучше не перегибать и использовать их только для реально длинных команд.</p>
-
 <p>Мне довольно часто приходится запускать <code>docker-compose exec --user www-data workspace</code> за которой следует команда, которая выполняется внутри контейнера.</p>
-
 <p>Например:</p>
-
-<pre><code class="language-bash">docker-compose exec --user www-data workspace sh -c &quot;composer install -vv&quot;
-</code></pre>
-
-<p>или</p>
-
-<pre><code class="language-bash">docker-compose exec --user www-data workspace ./zf cache clean-modified-content
-</code></pre>
-
-<p>Частое использование столь длинных команд не может не раздражать, поэтому самое время написать bash-функцию, которая будет работать как алиас. Открываем на редактирование файл <code>~/.bashrc</code> (или отдельный файл <code>.bash_aliases</code>, если он у вас есть), а затем добавляем в него следующую функцию:</p>
-
-<pre><code class="language-bash">dcw() {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose exec --user www-data workspace sh -c <span style="color:#e6db74">&#34;composer install -vv&#34;</span>
+</code></pre></div><p>или</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose exec --user www-data workspace ./zf cache clean-modified-content
+</code></pre></div><p>Частое использование столь длинных команд не может не раздражать, поэтому самое время написать bash-функцию, которая будет работать как алиас. Открываем на редактирование файл <code>~/.bashrc</code> (или отдельный файл <code>.bash_aliases</code>, если он у вас есть), а затем добавляем в него следующую функцию:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dcw<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
   docker-compose exec --user www-data workspace $@
-}
-</code></pre>
-
-<p>Параметр <code>$@</code> принимает все аргументы, переданные функции. Теперь я могу делать так:</p>
-
-<pre><code class="language-bash">dcw sh -c &quot;composer install -vv&quot;
-</code></pre>
-
-<p>Вышеизложенное будет также работать, если вместо bash-функции использовать алиас, но для алиасов мы рассмотрим другой пример. В файле <code>~/.bashrc</code> можно добавить строку:</p>
-
-<pre><code class="language-bash">alias up='docker-compose up'
-</code></pre>
-
-<p>Думаю, объяснения излишни.</p>
-
+<span style="color:#f92672">}</span>
+</code></pre></div><p>Параметр <code>$@</code> принимает все аргументы, переданные функции. Теперь я могу делать так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dcw sh -c <span style="color:#e6db74">&#34;composer install -vv&#34;</span>
+</code></pre></div><p>Вышеизложенное будет также работать, если вместо bash-функции использовать алиас, но для алиасов мы рассмотрим другой пример. В файле <code>~/.bashrc</code> можно добавить строку:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">alias up<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;docker-compose up&#39;</span>
+</code></pre></div><p>Думаю, объяснения излишни.</p>
 <p>Кроме того, можно использовать утилиту <code>make</code> для управления docker-контейнерами как описано в <a href="https://ealebed.github.io/posts/2017/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-make-%D0%B4%D0%BB%D1%8F-%D1%83%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F-docker-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0%D0%BC%D0%B8/">этой статье</a>.</p>
                 </section>
             </article>
@@ -153,23 +145,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

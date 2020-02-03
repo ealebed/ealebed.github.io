@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Резервное копирование MySQL 5.7 с помощью Percona Xtrabackup &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,59 +90,40 @@
                 </header>
                 <section id="post-body">
                     <p>Утилита для <strong>создания резервных копий баз данных Percona Xtrabackup</strong> всем хорошо <a href="https://ealebed.github.io/posts/2015/%D1%80%D0%B5%D0%B7%D0%B5%D1%80%D0%B2%D0%BD%D0%BE%D0%B5-%D0%BA%D0%BE%D0%BF%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B1%D0%B0%D0%B7%D1%8B-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-percona-xtrabackup/">известна</a>, я сам давно использую ее на многих проектах.</p>
-
 <p>Каково же было мое удивление, когда после обновления Percona Server до версии 5.7 перестали создаваться бекапы! Давайте разберемся!</p>
-
 <p>На одном из серверов под управлением ОС Centos 7 был обновлен Percona Server с версии 5.6 до 5.7 (по <a href="https://www.percona.com/doc/percona-server/LATEST/upgrading_guide_56_57.html">официальной инструкции</a> от разработчиков). После обновления перестали создаваться резервные копии баз данных, скрипт завершался следующей ошибкой:</p>
-
-<pre><code class="language-bash">170721 00:35:01 innobackupex: Starting the backup operation
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#ae81ff">170721</span> 00:35:01 innobackupex: Starting the backup operation
 
 IMPORTANT: Please check that the backup run completes successfully.
            At the end of a successful backup run innobackupex
-           prints &quot;completed OK!&quot;.
+           prints <span style="color:#e6db74">&#34;completed OK!&#34;</span>.
 
-170721 00:35:01  version_check Connecting to MySQL server with DSN 'dbi:mysql:;mysql_read_default_group=xtrabackup;host=127.0.0.1;port=3306' as 'root'  (using password: YES).
-170721 00:35:01  version_check Connected to MySQL server
-170721 00:35:01  version_check Executing a version check against the server...
-170721 00:35:01  version_check Done.
-170721 00:35:01 Connecting to MySQL server host: 127.0.0.1, user: root, password: set, port: 3306, socket: (null)
-Error: Unsupported server version: '5.7.18-15-log'. Please report a bug at https://bugs.launchpad.net/percona-xtrabackup
-</code></pre>
-
-<p>Выяснилось, что установленная на сервере версия 2.3 утилиты Percona Xtrabackup не поддерживает возможность создания резервных копий MySQL 5.7, поэтому необходимо установить более свежую версию утилиты.</p>
-
+<span style="color:#ae81ff">170721</span> 00:35:01  version_check Connecting to MySQL server with DSN <span style="color:#e6db74">&#39;dbi:mysql:;mysql_read_default_group=xtrabackup;host=127.0.0.1;port=3306&#39;</span> as <span style="color:#e6db74">&#39;root&#39;</span>  <span style="color:#f92672">(</span>using password: YES<span style="color:#f92672">)</span>.
+<span style="color:#ae81ff">170721</span> 00:35:01  version_check Connected to MySQL server
+<span style="color:#ae81ff">170721</span> 00:35:01  version_check Executing a version check against the server...
+<span style="color:#ae81ff">170721</span> 00:35:01  version_check Done.
+<span style="color:#ae81ff">170721</span> 00:35:01 Connecting to MySQL server host: 127.0.0.1, user: root, password: set, port: 3306, socket: <span style="color:#f92672">(</span>null<span style="color:#f92672">)</span>
+Error: Unsupported server version: <span style="color:#e6db74">&#39;5.7.18-15-log&#39;</span>. Please report a bug at https://bugs.launchpad.net/percona-xtrabackup
+</code></pre></div><p>Выяснилось, что установленная на сервере версия 2.3 утилиты Percona Xtrabackup не поддерживает возможность создания резервных копий MySQL 5.7, поэтому необходимо установить более свежую версию утилиты.</p>
 <p>Стоит сразу отметить, что пакет <code>percona-xtrabackup-24</code> конфликтует с установленным ранее пакетом <code>percona-xtrabackup</code>, так что его придется удалить.</p>
-
 <p>Проверяем установленную версию пакета:</p>
-
-<pre><code class="language-bash">yum list installed | grep xtrabackup
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">yum list installed | grep xtrabackup
 percona-xtrabackup.x86_64              2.3.5-1.el7                     installed
-</code></pre>
-
-<p>Удаляем ее:</p>
-
-<pre><code class="language-bash">yum remove percona-xtrabackup.x86_64
-</code></pre>
-
-<p>И устанавливаем новую версию:</p>
-
-<pre><code class="language-bash">yum install http://www.percona.com/downloads/percona-release/redhat/0.1-4/percona-release-0.1-4.noarch.rpm
-</code></pre>
-
-<pre><code class="language-bash">yum install percona-xtrabackup-24
-</code></pre>
-
-<p>Снова запускаем <strong>создание резервной копии базы данных с помощью утилиты Percona Xtrabackup</strong> и на этот раз все завершается успешно:</p>
-
-<pre><code class="language-bash">170721 05:57:00 innobackupex: Starting the backup operation
+</code></pre></div><p>Удаляем ее:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">yum remove percona-xtrabackup.x86_64
+</code></pre></div><p>И устанавливаем новую версию:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">yum install http://www.percona.com/downloads/percona-release/redhat/0.1-4/percona-release-0.1-4.noarch.rpm
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">yum install percona-xtrabackup-24
+</code></pre></div><p>Снова запускаем <strong>создание резервной копии базы данных с помощью утилиты Percona Xtrabackup</strong> и на этот раз все завершается успешно:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#ae81ff">170721</span> 05:57:00 innobackupex: Starting the backup operation
 
 IMPORTANT: Please check that the backup run completes successfully.
            At the end of a successful backup run innobackupex
-           prints &quot;completed OK!&quot;.
+           prints <span style="color:#e6db74">&#34;completed OK!&#34;</span>.
 ...
 
-170721 06:01:21 completed OK!
-</code></pre>
+<span style="color:#ae81ff">170721</span> 06:01:21 completed OK!
+</code></pre></div>
                 </section>
             </article>
 
@@ -173,23 +165,23 @@ IMPORTANT: Please check that the backup run completes successfully.
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

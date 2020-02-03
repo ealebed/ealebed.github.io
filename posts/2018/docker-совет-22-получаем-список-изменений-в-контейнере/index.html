@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №22: Получаем список изменений в контейнере &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,43 +88,29 @@
                 </header>
                 <section id="post-body">
                     <p>Бывают случаи, когда вносятся изменения внутри уже запущенного docker-контейнера, после чего нужно увидеть, насколько измененный контейнер отличается от оригинального образа. Давайте разберемся!</p>
-
 <p>Всем хорошо известно, что контейнеры являются идемпотентными - внесенные изменения внутри запущенного контейнера будут утеряны при следующем запуске контейнера. Именно поэтому, все внесенные изменения (если, конечно, в них есть смысл и они привели к нужному результату) внутри запущенного docker-контейнера необходимо дописать в <code>Dockerfile</code> и пересобрать docker-образ. Как же получить список изменений внутри контейнера?</p>
-
 <p>Все просто - используйте команду <code>docker container diff &lt;container_name&gt;</code>. Рассмотрим конкретный пример - запускаем docker-контейнер из образа alpine и вносим некоторые изменения:</p>
-
-<pre><code class="language-bash">docker run --rm -it --name difftest alpine:3.7
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm -it --name difftest alpine:3.7
 &gt; mkdir exampledir
 &gt; cd /tmp
 &gt; touch hello.txt
-</code></pre>
-
-<p>Во второй вкладке терминала проверим, что же изменилось внутри docker-контейнера с именем <code>difftest</code>:</p>
-
-<pre><code class="language-bash">docker container diff difftest
+</code></pre></div><p>Во второй вкладке терминала проверим, что же изменилось внутри docker-контейнера с именем <code>difftest</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker container diff difftest
 &gt; A /exampledir
 &gt; C /root
 &gt; A /root/.ash_history
 &gt; C /tmp
 &gt; A /tmp/hello.txt
-</code></pre>
-
-<p>При выводе результата команды <code>docker container diff &lt;container_name&gt;</code> можно увидеть, что каждая строка вначале содержит один из трех возможных символов - A,C,D:</p>
-
+</code></pre></div><p>При выводе результата команды <code>docker container diff &lt;container_name&gt;</code> можно увидеть, что каждая строка вначале содержит один из трех возможных символов - A,C,D:</p>
 <ul>
 <li>A - файл (помним, что с точки зрения Linux каталог это тоже файл) был добавлен;</li>
 <li>C - файл был изменен;</li>
 <li>В - файл был удален.</li>
 </ul>
-
 <p>В нашем примере мы ничего не удаляли, поэтому в результате вывода есть только строки с символами A и С. Файл <code>/root/.ash_history</code>, как вы наверняка уже догадались, это стандартный файл с историей команд.</p>
-
 <p>Команда <code>diff</code> выведет в результате только те файлы, которые были добавлены/изменены/удалены. Если нужно получить <strong>всю</strong> историю действий в запущенном docker-контейнере, то можно воспользоваться такой командой:</p>
-
-<pre><code class="language-bash">docker exec difftest cat /root/.ash_history
-</code></pre>
-
-<p>Обе команды имеют разное предназначение, поэтому в каждом конкретном случае лучше пользоваться более подходящей командой. Благодаря команде <code>diff</code> можно быстро получить представление о том, что изменялось, а благодаря файлу с историей команд можно воспроизвести каждый шаг вносимых изменений.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec difftest cat /root/.ash_history
+</code></pre></div><p>Обе команды имеют разное предназначение, поэтому в каждом конкретном случае лучше пользоваться более подходящей командой. Благодаря команде <code>diff</code> можно быстро получить представление о том, что изменялось, а благодаря файлу с историей команд можно воспроизвести каждый шаг вносимых изменений.</p>
                 </section>
             </article>
 
@@ -155,23 +152,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

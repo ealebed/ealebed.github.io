@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Восстановление DRBD после split brain &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,16 +88,10 @@
                 </header>
                 <section id="post-body">
                     <p><strong>DRBD</strong> — распределённое реплицируемое блочное устройство, которое используется для построения отказоустойчивых кластеров под управлением ОС Linux. <strong>DRBD</strong> отражает все операции с блочным устройством по сети, поэтому принято считать что это сетевой RAID-1.</p>
-
 <p>Больше информации о <strong>DRBD</strong> можно найти <a href="http://xgu.ru/wiki/DRBD">здесь</a>, а мы в данной статье разберемся как восстанавливать блочное устройство после <a href="https://en.wikipedia.org/wiki/Split-brain_(computing)">split brain</a>.</p>
-
 <p>Из-за возникновения split brain на обоих хостах DRBD-ресурсы находятся в режиме <code>Primary</code>, а состояние соединения <code>StandAlone</code>. В <code>/var/log/kern.log</code> можно увидеть такие строки:</p>
-
 <pre><code>kernel: block drbd0: Split-Brain detected, dropping connection!
-</code></pre>
-
-<p>Смотрим состояние <strong>DRBD</strong> на первом хосте:</p>
-
+</code></pre><p>Смотрим состояние <strong>DRBD</strong> на первом хосте:</p>
 <pre><code>cat /proc/drbd 
 version: 8.3.11 (api:88/proto:86-96)
 srcversion: F937DCB2E5D83C6CCE4A6C9 
@@ -95,10 +100,7 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
 
  2: cs:StandAlone ro:Primary/Unknown ds:UpToDate/DUnknown C r-----
     ns:499963084 nr:1132592 dw:501095676 dr:857543433 al:2345239 bm:941 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
-</code></pre>
-
-<p>на втором:</p>
-
+</code></pre><p>на втором:</p>
 <pre><code>cat /proc/drbd 
 version: 8.3.11 (api:88/proto:86-96)
 srcversion: F937DCB2E5D83C6CCE4A6C9 
@@ -107,36 +109,20 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
 
  2: cs:StandAlone ro:Primary/Unknown ds:UpToDate/DUnknown C r-----
     ns:0 nr:348016128 dw:348016128 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
-</code></pre>
-
-<p>Исправить данную ситуацию можно с помощью следующих шагов:</p>
-
+</code></pre><p>Исправить данную ситуацию можно с помощью следующих шагов:</p>
 <ul>
-<li><p>перевести один из хостов в режим <code>Secondary</code> и отменить на нем все внесенные изменения, выполнив следующие команды:</p>
-
-<pre><code>drbdadm secondary all
-</code></pre>
-
-<pre><code>drbdadm disconnect all
-</code></pre>
-
-<pre><code>drbdadm -- --discard-my-data connect all
-</code></pre></li>
-
-<li><p>второй хост перевести в режим <code>Primary</code> и отключить/подключить ресурсы такими командами:</p>
-
-<pre><code>drbdadm primary all
-</code></pre>
-
-<pre><code>drbdadm disconnect all
-</code></pre>
-
-<pre><code>drbdadm connect all
-</code></pre></li>
+<li>перевести один из хостов в режим <code>Secondary</code> и отменить на нем все внесенные изменения, выполнив следующие команды:</li>
 </ul>
-
-<p>Проблема решена, после завершения синхронизации состояние <strong>DRBD</strong> на первом хосте:</p>
-
+<pre><code>drbdadm secondary all
+</code></pre><pre><code>drbdadm disconnect all
+</code></pre><pre><code>drbdadm -- --discard-my-data connect all
+</code></pre><ul>
+<li>второй хост перевести в режим <code>Primary</code> и отключить/подключить ресурсы такими командами:</li>
+</ul>
+<pre><code>drbdadm primary all
+</code></pre><pre><code>drbdadm disconnect all
+</code></pre><pre><code>drbdadm connect all
+</code></pre><p>Проблема решена, после завершения синхронизации состояние <strong>DRBD</strong> на первом хосте:</p>
 <pre><code>cat /proc/drbd 
 version: 8.3.11 (api:88/proto:86-96)
 srcversion: F937DCB2E5D83C6CCE4A6C9 
@@ -145,10 +131,7 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
 
  2: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
     ns:500025956 nr:1132592 dw:501158548 dr:857725017 al:2345912 bm:941 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
-</code></pre>
-
-<p>на втором:</p>
-
+</code></pre><p>на втором:</p>
 <pre><code>cat /proc/drbd 
 version: 8.3.11 (api:88/proto:86-96)
 srcversion: F937DCB2E5D83C6CCE4A6C9 
@@ -199,23 +182,23 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

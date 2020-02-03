@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Sphinxsearch в docker-контейнере &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Mar 12, 2018 08:50
-                    · 459 words
+                    · 447 words
                     · 3 minute read
                       <span class="tags">
                       
@@ -79,57 +90,47 @@
                 </header>
                 <section id="post-body">
                     <p>В данной статье рассмотрим процесс сборки docker-образа включающего в себя систему полнотекстового поиска Sphinxsearch с возможностью переиндексации - давайте разберемся!</p>
-
 <p>Несмотря на то, что в данный момент уже есть <a href="http://sphinxsearch.com/blog/2017/12/18/sphinx-3-0-1-released/">Sphinxsearch версии 3.0.1</a>, в данном примере мы будем использовать стабильную и &ldquo;обкатанную&rdquo; версию поискового движка - 2.2.11.</p>
-
 <p>За основу для нашего docker-образа возьмем ubuntu:16.04, и наш Dockerfile будет выглядеть следующим образом:</p>
-
-<pre><code class="language-Dockerfile">FROM ubuntu:16.04
-
-ARG APP_ENV=dev
-RUN apt-get update \
-    &amp;&amp; apt-get -y install \
-        software-properties-common
-
-RUN add-apt-repository ppa:builds/sphinxsearch-rel22 \
-    &amp;&amp; apt-get update \
-    &amp;&amp; apt-get -y install \
-        mysql-client \
-        unixodbc \
-        libpq5 \
-        sphinxsearch \
-    &amp;&amp; apt-get remove -y software-properties-common \
-    &amp;&amp; apt-get autoremove -y \
-    &amp;&amp; apt-get autoclean \
-    &amp;&amp; rm -r /var/lib/apt/lists/*
-
-RUN ln -sf /dev/stdout /var/log/sphinxsearch/searchd.log \
-    &amp;&amp; ln -sf /dev/stderr /var/log/sphinxsearch/query.log
-
-COPY start.sh /start.sh
-COPY sphinx.conf.${APP_ENV} /etc/sphinxsearch/sphinx.conf
-
-VOLUME [&quot;/etc/sphinxsearch&quot;]
-VOLUME [&quot;/var/lib/sphinxsearch/data&quot;]
-
-EXPOSE 9312 9306
-
-CMD [&quot;/start.sh&quot;]
-</code></pre>
-
-<p>В зависимости от переданного при сборке docker-образа значения аргумента <code>APP_ENV</code> (по умолчанию это dev), в образ будет скопирован соответствующий конфигурационный файл <code>sphinx.conf.${APP_ENV}</code>.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> ubuntu:16.04</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> APP_ENV<span style="color:#f92672">=</span>dev
+<span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get -y install <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        software-properties-common<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> add-apt-repository ppa:builds/sphinxsearch-rel22 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get update <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get -y install <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        mysql-client <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        unixodbc <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        libpq5 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        sphinxsearch <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get remove -y software-properties-common <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoremove -y <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoclean <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -r /var/lib/apt/lists/*<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> ln -sf /dev/stdout /var/log/sphinxsearch/searchd.log <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ln -sf /dev/stderr /var/log/sphinxsearch/query.log<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> start.sh /start.sh<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> sphinx.conf.<span style="color:#e6db74">${</span>APP_ENV<span style="color:#e6db74">}</span> /etc/sphinxsearch/sphinx.conf<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span> [<span style="color:#e6db74">&#34;/etc/sphinxsearch&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span> [<span style="color:#e6db74">&#34;/var/lib/sphinxsearch/data&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 9312 9306</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;/start.sh&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>В зависимости от переданного при сборке docker-образа значения аргумента <code>APP_ENV</code> (по умолчанию это dev), в образ будет скопирован соответствующий конфигурационный файл <code>sphinx.conf.${APP_ENV}</code>.</p>
 <p>При старте docker-контейнера будет выполнен bash-скрипт <code>start.sh</code>, который выполняет переиндексацию и запуск поискового движка. Содержимое скрипта довольно простое:</p>
-
-<pre><code class="language-bash">#!/usr/bin/env bash
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env bash
+</span><span style="color:#75715e"></span>
 indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
 searchd --config /etc/sphinxsearch/sphinx.conf --nodetach
-</code></pre>
-
-<p>Пример конфигурационного файла <code>sphinx.conf</code>:</p>
-
-<pre><code class="language-text">source parent_source
+</code></pre></div><p>Пример конфигурационного файла <code>sphinx.conf</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">source parent_source
 {
     type			= mysql
 
@@ -195,43 +196,31 @@ searchd
     collation_server		= utf8_general_ci
     watchdog			= 1
 }
-</code></pre>
-
-<p>Собираем docker-образ находясь в каталоге с Dockerfile с помощью следующей команды:</p>
-
-<pre><code class="language-bash">docker build -t sphinx:latest .
-</code></pre>
-
-<p>Запустить docker-контейнер из созданного нами образа можно так:</p>
-
-<pre><code class="language-bash">docker run -d \
-	--name sphinxsearch \
-	-v $(pwd)/sphinx.conf:/etc/sphinxsearch/sphinx.conf \
-	-v $(pwd)/sphinxdata:/var/lib/sphinxsearch/data \
-sphinx:latest
-</code></pre>
-
-<p>Или с помощью <code>docker-compose.yml</code> (для удобства редактирования конфиг sphinx монтируем с хост-машины в docker-контейнер):</p>
-
-<pre><code class="language-yml">...
-### Sphinxsearch Container ##################################
-  sphinxsearch:
-    container_name: sphinxsearch
-    image: sphinx:latest
-    volumes:
+</code></pre></div><p>Собираем docker-образ находясь в каталоге с Dockerfile с помощью следующей команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t sphinx:latest .
+</code></pre></div><p>Запустить docker-контейнер из созданного нами образа можно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--name sphinxsearch <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-v <span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>/sphinx.conf:/etc/sphinxsearch/sphinx.conf <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-v <span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>/sphinxdata:/var/lib/sphinxsearch/data <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>sphinx:latest
+</code></pre></div><p>Или с помощью <code>docker-compose.yml</code> (для удобства редактирования конфиг sphinx монтируем с хост-машины в docker-контейнер):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
+<span style="color:#75715e">### Sphinxsearch Container ##################################</span>
+  <span style="color:#66d9ef">sphinxsearch</span>:
+    <span style="color:#66d9ef">container_name</span>: sphinxsearch
+    <span style="color:#66d9ef">image</span>: sphinx:latest
+    <span style="color:#66d9ef">volumes</span>:
       - ./sphinx/sphinx.conf:/etc/sphinxsearch/sphinx.conf
       - sphinx:/var/lib/sphinxsearch/data
 ...
-### Volumes Setup ###########################################
-volumes:
-  sphinx:
-    driver: &quot;local&quot;
-</code></pre>
-
-<p>При необходимости можно запустить переиндексацию с помощью команды:</p>
-
-<pre><code class="language-bash">docker exec -it sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
-</code></pre>
+<span style="color:#75715e">### Volumes Setup ###########################################</span>
+<span style="color:#66d9ef">volumes</span>:
+  <span style="color:#66d9ef">sphinx</span>:
+    <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</code></pre></div><p>При необходимости можно запустить переиндексацию с помощью команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
+</code></pre></div>
                 </section>
             </article>
 
@@ -273,23 +262,23 @@ volumes:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

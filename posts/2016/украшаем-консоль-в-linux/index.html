@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Украшаем консоль в Linux &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Sep 1, 2016 20:53
-                    · 368 words
+                    · 367 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -77,75 +88,64 @@
                 </header>
                 <section id="post-body">
                     <p>На просторах интернета можно найти множество статей о настройке и «раскраске» консоли в Linux. Предлагаю измененный вариант ssh-приветствия и настройки <code>.bashrc</code> и <code>.profile</code> для комфортной работы в консоли!</p>
-
 <p>Все необходимые настройки для работы в консоли хранятся в конфигурационных файлах <code>.bashrc</code> и <code>.profile</code> в домашнем каталоге пользователя. Подробно останавливаться на их содержимом нет смысла — информацию ищите <a href="https://www.google.com.ua/">здесь</a> или используйте <code>man bash</code>. Часть информационного сообщения, выводимого при подключении на сервер по ssh находятся в <code>/etc/motd</code> (информацию о последнем логине считаем полезной и удалять не будем).</p>
-
 <p>Итак, для <strong>изменения настроек консоли Linux</strong> нужно подключиться на сервер и, находясь в домашней директории пользователя для которого применяются изменения, выполнить следующие команды:</p>
-
-<pre><code class="language-bash">mv .bashrc .bashrc.mybackup
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mv .bashrc .bashrc.mybackup
 mv .profile .profile.mybackup
 cp /etc/skel/.bashrc ~/
 cp /etc/skel/.profile ~/
-sed -i 's/#force/force/' ~/.bashrc
-sed -i 's/#force/force/;s/32/31/' ~/.bashrc
-sed -i 's/#alias/alias/g' ~/.bashrc
-sed -i 's/#alias/alias/g' ~/.bashrc
-sed -i 's/ls --color=auto/ls --color=always/' ~/.bashrc
-echo -e '\nexport LESS=-R' &gt;&gt;~/.bashrc
-</code></pre>
-
-<p>Для изменения ssh-приветствия делаем следующее:</p>
-
-<pre><code class="language-bash">&gt; /etc/motd
+sed -i <span style="color:#e6db74">&#39;s/#force/force/&#39;</span> ~/.bashrc
+sed -i <span style="color:#e6db74">&#39;s/#force/force/;s/32/31/&#39;</span> ~/.bashrc
+sed -i <span style="color:#e6db74">&#39;s/#alias/alias/g&#39;</span> ~/.bashrc
+sed -i <span style="color:#e6db74">&#39;s/#alias/alias/g&#39;</span> ~/.bashrc
+sed -i <span style="color:#e6db74">&#39;s/ls --color=auto/ls --color=always/&#39;</span> ~/.bashrc
+echo -e <span style="color:#e6db74">&#39;\nexport LESS=-R&#39;</span> &gt;&gt;~/.bashrc
+</code></pre></div><p>Для изменения ssh-приветствия делаем следующее:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">&gt; /etc/motd
 touch /etc/profile.d/sshinfo.sh
 chmod +x /etc/profile.d/sshinfo.sh
-</code></pre>
-
-<p>Содержимое созданного нами файла <code>/etc/profile.d/sshinfo.sh</code> должно быть следующим:</p>
-
-<pre><code class="language-bash">SystemMountPoint=&quot;/&quot;;
-LinesPrefix=&quot;  &quot;;
-b=$(tput bold); n=$(tput sgr0);
+</code></pre></div><p>Содержимое созданного нами файла <code>/etc/profile.d/sshinfo.sh</code> должно быть следующим:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">SystemMountPoint<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/&#34;</span>;
+LinesPrefix<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;  &#34;</span>;
+b<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>tput bold<span style="color:#66d9ef">)</span>; n<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>tput sgr0<span style="color:#66d9ef">)</span>;
  
-UserName=$(whoami);
+UserName<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>whoami<span style="color:#66d9ef">)</span>;
  
-WAN_IP=$(/sbin/ifconfig | grep -A 1 eth0 | grep &quot;inet addr&quot; | cut -d&quot;:&quot; -f2 | cut -d&quot; &quot; -f1);
-LAN_IP=$(/sbin/ifconfig | grep -A 1 eth1 | grep &quot;inet addr&quot; | cut -d&quot;:&quot; -f2 | cut -d&quot; &quot; -f1);
-HOST=$(hostname -f);
+WAN_IP<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>/sbin/ifconfig | grep -A <span style="color:#ae81ff">1</span> eth0 | grep <span style="color:#e6db74">&#34;inet addr&#34;</span> | cut -d<span style="color:#e6db74">&#34;:&#34;</span> -f2 | cut -d<span style="color:#e6db74">&#34; &#34;</span> -f1<span style="color:#66d9ef">)</span>;
+LAN_IP<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>/sbin/ifconfig | grep -A <span style="color:#ae81ff">1</span> eth1 | grep <span style="color:#e6db74">&#34;inet addr&#34;</span> | cut -d<span style="color:#e6db74">&#34;:&#34;</span> -f2 | cut -d<span style="color:#e6db74">&#34; &#34;</span> -f1<span style="color:#66d9ef">)</span>;
+HOST<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>hostname -f<span style="color:#66d9ef">)</span>;
  
-SystemLoad=$(cat /proc/loadavg | cut -d&quot; &quot; -f1);
-ProcessesCount=$(cat /proc/loadavg | cut -d&quot;/&quot; -f2 | cut -d&quot; &quot; -f1);
+SystemLoad<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>cat /proc/loadavg | cut -d<span style="color:#e6db74">&#34; &#34;</span> -f1<span style="color:#66d9ef">)</span>;
+ProcessesCount<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>cat /proc/loadavg | cut -d<span style="color:#e6db74">&#34;/&#34;</span> -f2 | cut -d<span style="color:#e6db74">&#34; &#34;</span> -f1<span style="color:#66d9ef">)</span>;
  
-MountPointInfo=$(/bin/df -Th $SystemMountPoint 2&gt;/dev/null | tail -n 1);
-MountPointFreeSpace=( \
-  $(echo $MountPointInfo | awk '{ print $6 }') \
-  $(echo $MountPointInfo | awk '{ print $3 }') \
-);
-UsersOnlineCount=$(users | wc -w);
+MountPointInfo<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>/bin/df -Th $SystemMountPoint 2&gt;/dev/null | tail -n 1<span style="color:#66d9ef">)</span>;
+MountPointFreeSpace<span style="color:#f92672">=</span><span style="color:#f92672">(</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  <span style="color:#66d9ef">$(</span>echo $MountPointInfo | awk <span style="color:#e6db74">&#39;{ print $6 }&#39;</span><span style="color:#66d9ef">)</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  <span style="color:#66d9ef">$(</span>echo $MountPointInfo | awk <span style="color:#e6db74">&#39;{ print $3 }&#39;</span><span style="color:#66d9ef">)</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span><span style="color:#f92672">)</span>;
+UsersOnlineCount<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>users | wc -w<span style="color:#66d9ef">)</span>;
  
-UsedRAMsize=$(free | awk 'FNR == 3 {printf(&quot;%.0f&quot;, $3/($3+$4)*100);}');
+UsedRAMsize<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>free | awk <span style="color:#e6db74">&#39;FNR == 3 {printf(&#34;%.0f&#34;, $3/($3+$4)*100);}&#39;</span><span style="color:#66d9ef">)</span>;
  
-SystemUptime=$(uptime | sed 's/.*up \([^,]*\), .*/\1/');
+SystemUptime<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>uptime | sed <span style="color:#e6db74">&#39;s/.*up \([^,]*\), .*/\1/&#39;</span><span style="color:#66d9ef">)</span>;
  
-echo -e &quot;${LinesPrefix}${n}Hello, ${b}${UserName}${n}! Welcome to ${b}${HOST}\n&quot;;
+echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">Hello, </span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>UserName<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">! Welcome to </span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>HOST<span style="color:#e6db74">}</span><span style="color:#e6db74">\n</span><span style="color:#e6db74">&#34;</span>;
  
-if [ ! -z &quot;${LinesPrefix}&quot; ] &amp;&amp; [ ! -z &quot;${SystemLoad}&quot; ]; then
-  echo -e &quot;${LinesPrefix}${b}System load:${n}\t${SystemLoad}\t\t\t${LinesPrefix}${b}Processes:${n}\t\t${ProcessesCount}&quot;;
-fi;
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[</span> ! -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SystemLoad<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+  echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">System load:</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">\t</span><span style="color:#e6db74">${</span>SystemLoad<span style="color:#e6db74">}</span><span style="color:#e6db74">\t\t\t</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">Processes:</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">\t\t</span><span style="color:#e6db74">${</span>ProcessesCount<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>;
+<span style="color:#66d9ef">fi</span>;
  
-if [ ! -z &quot;${MountPointFreeSpace[0]}&quot; ] &amp;&amp; [ ! -z &quot;${MountPointFreeSpace[1]}&quot; ]; then
-  echo -ne &quot;${LinesPrefix}${b}Usage of $SystemMountPoint:${n}\t${MountPointFreeSpace[0]} of ${MountPointFreeSpace[1]}\t\t&quot;;
-fi;
-echo -e &quot;${LinesPrefix}${b}Users logged in:${n}\t${UsersOnlineCount}&quot;;
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MountPointFreeSpace[0]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[</span> ! -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MountPointFreeSpace[1]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+  echo -ne <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">Usage of </span>$SystemMountPoint<span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">\t</span><span style="color:#e6db74">${</span>MountPointFreeSpace[0]<span style="color:#e6db74">}</span><span style="color:#e6db74"> of </span><span style="color:#e6db74">${</span>MountPointFreeSpace[1]<span style="color:#e6db74">}</span><span style="color:#e6db74">\t\t</span><span style="color:#e6db74">&#34;</span>;
+<span style="color:#66d9ef">fi</span>;
+echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">Users logged in:</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">\t</span><span style="color:#e6db74">${</span>UsersOnlineCount<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>;
  
-if [ ! -z &quot;${UsedRAMsize}&quot; ]; then
-  echo -ne &quot;${LinesPrefix}${b}Memory usage:${n}\t${UsedRAMsize}%\t\t\t&quot;;
-fi;
-echo -e &quot;${LinesPrefix}${b}System uptime:${n}\t${SystemUptime}&quot;;
-echo -e &quot;${LinesPrefix}${b}WAN ip:${n}\t${WAN_IP}\t\t${LinesPrefix}${b}LAN ip:${n}\t\t${LAN_IP}&quot;;
-</code></pre>
-
-<p>Возможно, потребуется внести изменения в предложенный код — например, в зависимости от количества сетевых интерфейсов на сервере.</p>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>UsedRAMsize<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+  echo -ne <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">Memory usage:</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">\t</span><span style="color:#e6db74">${</span>UsedRAMsize<span style="color:#e6db74">}</span><span style="color:#e6db74">%\t\t\t</span><span style="color:#e6db74">&#34;</span>;
+<span style="color:#66d9ef">fi</span>;
+echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">System uptime:</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">\t</span><span style="color:#e6db74">${</span>SystemUptime<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>;
+echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">WAN ip:</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">\t</span><span style="color:#e6db74">${</span>WAN_IP<span style="color:#e6db74">}</span><span style="color:#e6db74">\t\t</span><span style="color:#e6db74">${</span>LinesPrefix<span style="color:#e6db74">}</span><span style="color:#e6db74">${</span>b<span style="color:#e6db74">}</span><span style="color:#e6db74">LAN ip:</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74">\t\t</span><span style="color:#e6db74">${</span>LAN_IP<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>;
+</code></pre></div><p>Возможно, потребуется внести изменения в предложенный код — например, в зависимости от количества сетевых интерфейсов на сервере.</p>
                 </section>
             </article>
 
@@ -187,23 +187,23 @@ echo -e &quot;${LinesPrefix}${b}WAN ip:${n}\t${WAN_IP}\t\t${LinesPrefix}${b}LAN 
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

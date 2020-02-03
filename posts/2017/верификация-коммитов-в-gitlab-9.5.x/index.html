@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Верификация коммитов в GitLab 9.5.x &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,38 +88,24 @@
                 </header>
                 <section id="post-body">
                     <p>В <strong>GitLab</strong> последней версии (на момент написания статьи 9.5) появилось важное нововведение — <strong>верификация подписанных коммитов</strong>. Теперь у всех коммитов с подписью GPG будет отображаться статус их верификации рядом с автором коммита.</p>
-
 <p>Давайте разберемся, как настроить <strong>подпись коммитов GPG</strong>!</p>
-
 <p>Не секрет, что при коммите изменений в Git-репозиторий существует возможность указать их автора. При этом не производится дополнительная проверка «авторства», поэтому можно представиться другим человеком. Данную проблему решает подпись коммитов — GPG-подпись однозначно указывает на автора, поскольку только у него есть приватный ключ, соответствующий публичному.</p>
-
 <p>В <strong>GitLab</strong> начиная с версии 9.5 включена <strong>поддержка подписей коммитов GPG</strong>. Свой публичный ключ можно загрузить в меню &ldquo;Settings → GPG Keys&rdquo;, после чего коммиты будут отображаться в <strong>GitLab</strong> как «подтвержденные».</p>
-
 <p>Если у вас нет GPG ключа, то его легко можно создать. Прежде всего, установите утилиту <a href="https://www.gnupg.org/download/index.html">GPG</a> если ее нет в вашей ОС.
 Генерируем пару (приватный/публичный) ключей командой (в процессе нужно будет отвечать на вопросы):</p>
-
 <pre><code>gpg --gen-key
-</code></pre>
-
-<p>На первом шаге нужно выбрать алгоритм шифрования:</p>
-
+</code></pre><p>На первом шаге нужно выбрать алгоритм шифрования:</p>
 <pre><code>Please select what kind of key you want:
    (1) RSA and RSA (default)
    (2) DSA and Elgamal
    (3) DSA (sign only)
    (4) RSA (sign only)
 Your selection? 1
-</code></pre>
-
-<p>Далее вводим желаемую длину ключа:</p>
-
+</code></pre><p>Далее вводим желаемую длину ключа:</p>
 <pre><code>RSA keys may be between 1024 and 4096 bits long.
 What keysize do you want? (2048) 4096
 Requested keysize is 4096 bits
-</code></pre>
-
-<p>Определяем срок действия ключей (в данном примере — ключи бессрочные):</p>
-
+</code></pre><p>Определяем срок действия ключей (в данном примере — ключи бессрочные):</p>
 <pre><code>Please specify how long the key should be valid.
          0 = key does not expire
       &lt;n&gt;  = key expires in n days
@@ -117,15 +114,9 @@ Requested keysize is 4096 bits
       &lt;n&gt;y = key expires in n years
 Key is valid for? (0) 0
 Key does not expire at all
-</code></pre>
-
-<p>Подтверждаем введенные данные:</p>
-
+</code></pre><p>Подтверждаем введенные данные:</p>
 <pre><code>Is this correct? (y/N) y
-</code></pre>
-
-<p>Вводим имя, email-адрес (должен соответствовать основному email-адресу в <strong>GitLab</strong>) и комментарий (опционально):</p>
-
+</code></pre><p>Вводим имя, email-адрес (должен соответствовать основному email-адресу в <strong>GitLab</strong>) и комментарий (опционально):</p>
 <pre><code>GnuPG needs to construct a user ID to identify your key.
  
 Real name: Evgen Lebed
@@ -135,45 +126,23 @@ You selected this USER-ID:
     &quot;Evgen Lebed &lt;ealebed@gmail.com&gt;&quot;
  
 Change (N)ame, (C)omment, (E)mail or (O)kay/(Q)uit? O
-</code></pre>
-
-<p>На следующем шаге дважды вводим пароль (его нужно будет вводить при каждом коммите изменений в git-репозиторий).</p>
-
+</code></pre><p>На следующем шаге дважды вводим пароль (его нужно будет вводить при каждом коммите изменений в git-репозиторий).</p>
 <p>С помощью следующей команды получаем информацию о приватной части созданного GPG ключа:</p>
-
 <pre><code>gpg --list-secret-keys ealebed@gmail.com
-</code></pre>
-
-<p>Вывод будет примерно следующим:</p>
-
+</code></pre><p>Вывод будет примерно следующим:</p>
 <pre><code>sec   4096R/435A8DF5 2017-09-06
 uid                  Evgen Lebed (DevOps) &lt;ealebed@gmail.com&gt;
 ssb   4096R/BEC4F3BC 2017-09-06
-</code></pre>
-
-<p>Копируем ID GPG ключа из первой строки (в данном примере это 435A8DF5) и получаем публичную часть ключа с помощью команды:</p>
-
+</code></pre><p>Копируем ID GPG ключа из первой строки (в данном примере это 435A8DF5) и получаем публичную часть ключа с помощью команды:</p>
 <pre><code>gpg --armor --export 435A8DF5
-</code></pre>
-
-<p>Полученный вывод копируем и вставляем в web-интерфейсе <strong>GitLab</strong> в меню &ldquo;Settings → GPG Keys&rdquo;.</p>
-
+</code></pre><p>Полученный вывод копируем и вставляем в web-интерфейсе <strong>GitLab</strong> в меню &ldquo;Settings → GPG Keys&rdquo;.</p>
 <p>Указываем в настройках <code>git</code> какой GPG ключ использовать для подписи коммитов:</p>
-
 <pre><code>git config --global user.signingkey 435A8DF5
-</code></pre>
-
-<p>Теперь для коммита изменений с GPG подписью нужно использовать флаг <code>-S</code>:</p>
-
+</code></pre><p>Теперь для коммита изменений с GPG подписью нужно использовать флаг <code>-S</code>:</p>
 <pre><code>git commit -S -m &quot;My commit msg&quot;
-</code></pre>
-
-<p>на мой взгляд добавлять флаг <code>-S</code> при каждом коммите утомительно, поэтому попросим <code>git</code> подписывать все коммиты автоматически:</p>
-
+</code></pre><p>на мой взгляд добавлять флаг <code>-S</code> при каждом коммите утомительно, поэтому попросим <code>git</code> подписывать все коммиты автоматически:</p>
 <pre><code>git config --global commit.gpgsign true
-</code></pre>
-
-<p>При следующем коммите/пуше изменений в git-репозиторий коммит будет отображаться в списке как «подтвержденный».</p>
+</code></pre><p>При следующем коммите/пуше изменений в git-репозиторий коммит будет отображаться в списке как «подтвержденный».</p>
                 </section>
             </article>
 
@@ -215,23 +184,23 @@ ssb   4096R/BEC4F3BC 2017-09-06
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

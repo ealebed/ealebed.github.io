@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Добавление и удаление &#39;кирпичей&#39; в GlusterFS &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,41 +88,29 @@
                 </header>
                 <section id="post-body">
                     <p>Ранее мы уже рассматривали процесс <a href="https://ealebed.github.io/posts/2016/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-glusterfs-server-3.5.2-%D0%B2-%D0%BE%D1%81-debian/">установки и настройки GlusterFS-server</a> в ОС Debian, теперь возникла необходимость добавить новый &lsquo;кирпич&rsquo; (brick) в существующее хранилище. Давайте разберемся!</p>
-
 <p>Считаем, что все необходимые разделы на новом сервере уже созданы и отформатированы. Локальный ip-адрес нового сервера 192.168.0.15, остальные сервера на которых настроен <strong>GlusterFS</strong> доступны по сети.</p>
-
 <p>Действия производятся на:</p>
-
-<pre><code class="language-bash">lsb_release -a
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
 No LSB modules are available.
 Distributor ID:	Debian
-Description:	Debian GNU/Linux 8.6 (jessie)
+Description:	Debian GNU/Linux 8.6 <span style="color:#f92672">(</span>jessie<span style="color:#f92672">)</span>
 Release:	8.6
 Codename:	jessie
-</code></pre>
-
-<p><strong>Установка GlusterFS-server</strong> на новом сервере под управлением Debian Jessie самую малость отличается от установки на Debian Wheezy:</p>
-
-<pre><code class="language-bash">aptitude install glusterfs-server glusterfs-client
-</code></pre>
-
-<p>Проверим версию установленных пакетов (должна быть 3.5.2):</p>
-
-<pre><code class="language-bash">dpkg -l | grep gluster
-ii  glusterfs-client                     3.5.2-2+deb8u2                     amd64        clustered file-system (client package)
+</code></pre></div><p><strong>Установка GlusterFS-server</strong> на новом сервере под управлением Debian Jessie самую малость отличается от установки на Debian Wheezy:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install glusterfs-server glusterfs-client
+</code></pre></div><p>Проверим версию установленных пакетов (должна быть 3.5.2):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dpkg -l | grep gluster
+ii  glusterfs-client                     3.5.2-2+deb8u2                     amd64        clustered file-system <span style="color:#f92672">(</span>client package<span style="color:#f92672">)</span>
 ii  glusterfs-common                     3.5.2-2+deb8u2                     amd64        GlusterFS common libraries and translator modules
-ii  glusterfs-server                     3.5.2-2+deb8u2                     amd64        clustered file-system (server package)
-</code></pre>
-
-<p>Логинимся по SSH на любой из серверов, на котором уже настроен <strong>GlusterFS</strong> (допустим, это будет хост с локальным ip-адресом 192.168.0.1) и проверяем состояние хранилища:</p>
-
-<pre><code class="language-bash">gluster volume info
+ii  glusterfs-server                     3.5.2-2+deb8u2                     amd64        clustered file-system <span style="color:#f92672">(</span>server package<span style="color:#f92672">)</span>
+</code></pre></div><p>Логинимся по SSH на любой из серверов, на котором уже настроен <strong>GlusterFS</strong> (допустим, это будет хост с локальным ip-адресом 192.168.0.1) и проверяем состояние хранилища:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume info
 
 Volume Name: www
 Type: Replicate
 Volume ID: 782e8fd8-0a72-4966-9590-77c244bce3b6
 Status: Started
-Number of Bricks: 1 x 5 = 5
+Number of Bricks: <span style="color:#ae81ff">1</span> x 5 <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>
 Transport-type: tcp
 Bricks:
 Brick1: 192.168.0.1:/var/www/testsite
@@ -119,39 +118,29 @@ Brick2: 192.168.0.7:/var/www/testsite
 Brick3: 192.168.0.3:/var/www/testsite
 Brick4: 192.168.0.13:/var/www/testsite
 Brick5: 192.168.0.14:/var/www/testsite
-</code></pre>
-
-<p>Далее выполняем:</p>
-
-<pre><code class="language-bash">gluster peer probe 192.168.0.15
+</code></pre></div><p>Далее выполняем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer probe 192.168.0.15
 peer probe: success.
-</code></pre>
-
-<p>И добавляем новый &lsquo;кирпич&rsquo;:</p>
-
-<pre><code class="language-bash">gluster volume add-brick www replica 6 192.168.0.15:/var/www/testsite
+</code></pre></div><p>И добавляем новый &lsquo;кирпич&rsquo;:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume add-brick www replica <span style="color:#ae81ff">6</span> 192.168.0.15:/var/www/testsite
 volume add-brick: success
-</code></pre>
-
-<p>Где:</p>
-
+</code></pre></div><p>Где:</p>
 <ul>
 <li><code>gluster</code> — команда для <strong>GlusterFS</strong>;</li>
 <li><code>volume</code> — команду следует применить к хранилищу (<code>volume</code>);</li>
 <li><code>add-brick</code> — добавить «кирпич» (<code>brick</code>);</li>
 <li><code>www</code> — имя хранилища, к которому добавляется «кирпич»;</li>
 <li><code>replica 6</code> — указываем, что тип хранилища реплицируемый, а количество &lsquo;кирпичей&rsquo; увеличится на 1;</li>
-
-<li><p><code>192.168.0.15:/var/www/testsite</code> — ip-адрес и абсолютный путь к месту, где будут храниться данные.
-Проверим состояние хранилища еще раз:</p>
-
-<pre><code class="language-bash">gluster volume info
+<li><code>192.168.0.15:/var/www/testsite</code> — ip-адрес и абсолютный путь к месту, где будут храниться данные.
+Проверим состояние хранилища еще раз:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume info
 
 Volume Name: www
 Type: Replicate
 Volume ID: 782e8fd8-0a72-4966-9590-77c244bce3b6
 Status: Started
-Number of Bricks: 1 x 6 = 6
+Number of Bricks: <span style="color:#ae81ff">1</span> x 6 <span style="color:#f92672">=</span> <span style="color:#ae81ff">6</span>
 Transport-type: tcp
 Bricks:
 Brick1: 192.168.0.1:/var/www/testsite
@@ -160,19 +149,12 @@ Brick3: 192.168.0.3:/var/www/testsite
 Brick4: 192.168.0.13:/var/www/testsite
 Brick5: 192.168.0.14:/var/www/testsite
 Brick6: 192.168.0.15:/var/www/testsite
-</code></pre></li>
-</ul>
-
-<p>Отлично, &lsquo;кирпич&rsquo; добавлен.</p>
-
+</code></pre></div><p>Отлично, &lsquo;кирпич&rsquo; добавлен.</p>
 <p>Если необходимо удалить «кирпич» из хранилища <strong>GlusterFS</strong>, то следует выполнить следующую команду:</p>
-
-<pre><code class="language-bahs">gluster volume remove-brick www replica 5 192.168.0.15:/var/www/testsite
+<pre><code class="language-bahs" data-lang="bahs">gluster volume remove-brick www replica 5 192.168.0.15:/var/www/testsite
 Removing brick(s) can result in data loss. Do you want to Continue? (y/n) y
 volume remove-brick commit force: success
-</code></pre>
-
-<p>Здесь вместо <code>add-brick</code> используем команду <code>remove-brick</code> и количество реплик уменьшаем на 1 (было 6 станет 5).</p>
+</code></pre><p>Здесь вместо <code>add-brick</code> используем команду <code>remove-brick</code> и количество реплик уменьшаем на 1 (было 6 станет 5).</p>
                 </section>
             </article>
 
@@ -214,23 +196,23 @@ volume remove-brick commit force: success
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

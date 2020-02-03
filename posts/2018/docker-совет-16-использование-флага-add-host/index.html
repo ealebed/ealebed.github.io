@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №16: Использование флага --add-host &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,38 +90,25 @@
                 </header>
                 <section id="post-body">
                     <p>В данной статье рассмотрим один из весьма полезных флагов, - <code>--add-host</code>, который можно использовать при запуске docker-контейнеров с помощью команды <code>docker run</code>.</p>
-
 <p>С помощью данного флага мы можем легко изменить сопоставление DNS-имя сервиса определенному ip-адресу внутри контейнера. Параметр <code>--add-host</code> может быть полезен, например, когда нужно подключить службу внутри контейнера к внешнему хосту.</p>
-
 <p>В официальной документации об этом флаге есть краткая, но вполне достаточная информация:</p>
-
 <p><em>The <code>--add-host</code> flag can be used to add additional lines to <code>/etc/hosts</code></em></p>
-
 <p>Проверим с помощью контейнера <a href="https://hub.docker.com/r/appropriate/curl/">appropriate/curl</a> (это маленький, alpine-based образ с установленной утилитой <code>curl</code>) доступность сервиса (назовем его test.example.com):</p>
-
-<pre><code class="language-bash">docker run --rm appropriate/curl -sSI test.example.com
-curl: (6) Could not resolve host: test.example.com
-</code></pre>
-
-<p>Все честно - из контейнера не резолвится DNS-имя test.example.com, о чем <code>curl</code> нам и сообщил.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm appropriate/curl -sSI test.example.com
+curl: <span style="color:#f92672">(</span>6<span style="color:#f92672">)</span> Could not resolve host: test.example.com
+</code></pre></div><p>Все честно - из контейнера не резолвится DNS-имя test.example.com, о чем <code>curl</code> нам и сообщил.</p>
 <p>Воспользуемся флагом <code>--add-host</code>:</p>
-
-<pre><code class="language-bash">docker run --rm --add-host=test.example.com:10.0.0.1 appropriate/curl -sSI test.example.com
-HTTP/1.1 301 Moved Permanently
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm --add-host<span style="color:#f92672">=</span>test.example.com:10.0.0.1 appropriate/curl -sSI test.example.com
+HTTP/1.1 <span style="color:#ae81ff">301</span> Moved Permanently
 Server: nginx
-Date: Fri, 23 Feb 2018 13:52:47 GMT
+Date: Fri, <span style="color:#ae81ff">23</span> Feb <span style="color:#ae81ff">2018</span> 13:52:47 GMT
 Content-Type: text/html
-Content-Length: 178
+Content-Length: <span style="color:#ae81ff">178</span>
 Connection: keep-alive
 Location: https://test.example.com/
-</code></pre>
-
-<p><strong>Примечание.</strong> Конечно же, чтобы получить такой результат, сервис test.example.com должен быть запущен. Если нет желания поднимать отдельный web-сервис только для проверки работы флага <code>--add-host</code>, можно для тестирования использовать <code>ping</code>, а не <code>curl</code>.</p>
-
+</code></pre></div><p><strong>Примечание.</strong> Конечно же, чтобы получить такой результат, сервис test.example.com должен быть запущен. Если нет желания поднимать отдельный web-сервис только для проверки работы флага <code>--add-host</code>, можно для тестирования использовать <code>ping</code>, а не <code>curl</code>.</p>
 <p>Еще один способ проверить, что пара ip-адрес и DNS-имя добавлена, проверить содержимое файла <code>/etc/hosts</code> внутри docker-контейнера:</p>
-
-<pre><code class="language-bash">docker run --rm --add-host=test.example.com:10.0.0.1 appropriate/curl cat /etc/hosts
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm --add-host<span style="color:#f92672">=</span>test.example.com:10.0.0.1 appropriate/curl cat /etc/hosts
 127.0.0.1	localhost
 ::1	localhost ip6-localhost ip6-loopback
 fe00::0	ip6-localnet
@@ -119,15 +117,12 @@ ff02::1	ip6-allnodes
 ff02::2	ip6-allrouters
 10.0.0.1	test.example.com
 172.17.0.5	56837f12305b
-</code></pre>
-
-<p>При работе с утилитой <code>docker-compose</code> и <code>*.yaml</code>-файлами, аналогом ключа <code>--add-host</code> будет конструкция:</p>
-
-<pre><code class="language-yml">...
-    extra_hosts:
-      - &quot;test.example.com:10.0.0.1&quot;
+</code></pre></div><p>При работе с утилитой <code>docker-compose</code> и <code>*.yaml</code>-файлами, аналогом ключа <code>--add-host</code> будет конструкция:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
+    <span style="color:#66d9ef">extra_hosts</span>:
+      - <span style="color:#e6db74">&#34;test.example.com:10.0.0.1&#34;</span>
 ...
-</code></pre>
+</code></pre></div>
                 </section>
             </article>
 
@@ -169,23 +164,23 @@ ff02::2	ip6-allrouters
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

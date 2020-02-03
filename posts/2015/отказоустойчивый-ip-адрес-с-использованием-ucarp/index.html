@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Отказоустойчивый IP-адрес с использованием ucarp &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,81 +90,61 @@
                 </header>
                 <section id="post-body">
                     <p>Одно из самых простых решений для обеспечения отказоустойчивости ip-адреса в debian — утилита <code>ucarp</code> (user-space реализация протокола отказоустойчивой маршрутизации CARP). Давайте разберемся с настройкой <strong>отказоустойчивого ip-адреса</strong> в ОС Debian Wheezy!</p>
-
 <p>В нашем примере для решения задачи будем использовать два сервера под управлением ОС Debian Wheezy. Настройки сети на первом:</p>
-
-<pre><code class="language-bash">cat /etc/network/interfaces
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /etc/network/interfaces
 auto eth0
 iface eth0 inet static
 	address 192.168.0.23
 	netmask 255.255.255.0
 	gateway 192.168.0.5
 	dns-nameservers 192.168.0.1 192.168.0.13
-</code></pre>
-
-<p>на втором:</p>
-
-<pre><code class="language-bash">cat /etc/network/interfaces
+</code></pre></div><p>на втором:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /etc/network/interfaces
 auto eth0
 iface eth0 inet static
 	address 192.168.0.11
 	netmask 255.255.255.0
 	gateway 192.168.0.5
 	dns-nameservers 192.168.0.1 192.168.0.13
-</code></pre>
-
-<p>Прежде всего установим необходимый пакет <code>ucarp</code> на оба сервера:</p>
-
-<pre><code class="language-bash">aptitude install ucarp
-</code></pre>
-
-<p>Теперь приведем конфигурационный файл <code>/etc/network/interfaces</code> на первом сервере к следующему виду:</p>
-
-<pre><code class="language-bash">auto eth0
+</code></pre></div><p>Прежде всего установим необходимый пакет <code>ucarp</code> на оба сервера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install ucarp
+</code></pre></div><p>Теперь приведем конфигурационный файл <code>/etc/network/interfaces</code> на первом сервере к следующему виду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">auto eth0
 iface eth0 inet static
 	address 192.168.0.23
 	netmask 255.255.255.0
 	gateway 192.168.0.5
 	dns-nameservers 192.168.0.1 192.168.0.13
-	ucarp-vid 1
+	ucarp-vid <span style="color:#ae81ff">1</span>
 	ucarp-vip 192.168.0.15
 	ucarp-password cff9987d8b260afb0
-	ucarp-advskew 10
-	ucarp-advbase 1
+	ucarp-advskew <span style="color:#ae81ff">10</span>
+	ucarp-advbase <span style="color:#ae81ff">1</span>
 	ucarp-master yes
  
 iface eth0:ucarp inet static
 	address 192.168.0.15
 	netmask 255.255.255.255
-</code></pre>
-
-<p>На втором сервера конфигурационный файл <code>/etc/network/interfaces</code> должен выглядеть так:</p>
-
-<pre><code class="language-bash">auto eth0
+</code></pre></div><p>На втором сервера конфигурационный файл <code>/etc/network/interfaces</code> должен выглядеть так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">auto eth0
 iface eth0 inet static
 	address 192.168.0.11
 	netmask 255.255.255.0
 	gateway 192.168.0.5
 	dns-nameservers 192.168.0.1 192.168.0.13
-	ucarp-vid 1
+	ucarp-vid <span style="color:#ae81ff">1</span>
 	ucarp-vip 192.168.0.15
 	ucarp-password cff9987d8b260afb0
-	ucarp-advskew 10
-	ucarp-advbase 1
+	ucarp-advskew <span style="color:#ae81ff">10</span>
+	ucarp-advbase <span style="color:#ae81ff">1</span>
 	ucarp-master no
  
 iface eth0:ucarp inet static
 	address 192.168.0.15
 	netmask 255.255.255.255
-</code></pre>
-
-<p>И выполняем:</p>
-
-<pre><code class="language-bash">/etc/init.d/networking restart
-</code></pre>
-
-<p>Подробнее об использованных параметрах:</p>
-
+</code></pre></div><p>И выполняем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/networking restart
+</code></pre></div><p>Подробнее об использованных параметрах:</p>
 <ul>
 <li><code>ucarp-vid</code> — номер группы (число от 1 до 255) одинаковый для всех серверов;</li>
 <li><code>ucarp-vip</code> — отказоустойчивый ip-адрес;</li>
@@ -162,43 +153,24 @@ iface eth0:ucarp inet static
 <li><code>ucarp-advbase</code> — интервал оповещения хостов в группе о своем статусе;</li>
 <li><code>ucarp-master</code> — используется для повышения приоритета при выборе мастера.</li>
 </ul>
-
 <p>Выбор <code>ucarp</code>-мастера среди нескольких кандидатов происходит следующим образом:</p>
-
 <ul>
 <li>проверяется директива <code>ucarp-master</code>, если установлена в yes — больший приоритет;</li>
 <li>рассчитывается формула <code>advbase + advskew/255</code>, меньшее значение — больший приоритет;</li>
 <li>сравниваются ip-адреса хостов, меньший ip-адрес — больший приоритет.</li>
 </ul>
-
 <p>Проверка правильности настройки отказоустойчивости ip-адреса.
 Убедиться, что на обоих серверах запущен экземпляр процесса <code>ucarp</code> можно с помощью команды:</p>
-
-<pre><code class="language-bash">ps axww | grep ucarp
-</code></pre>
-
-<p>Убедиться, что на первом сервере появился новый интерфейс можно с помощью команд:</p>
-
-<pre><code class="language-bash">ip a
-</code></pre>
-
-<p>или</p>
-
-<pre><code class="language-bash">ifconfig
-</code></pre>
-
-<p>Далее на тестовом компьютере запускаем</p>
-
-<pre><code class="language-bash">ping 192.168.0.15
-</code></pre>
-
-<p>и при наличии доступа к физической консоли первого сервера выполняем на нем:</p>
-
-<pre><code class="language-bash">/etc/init.d/networking stop
-</code></pre>
-
-<p>На тестовом компьютере пинг возобновится спустя пару секунд.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps axww | grep ucarp
+</code></pre></div><p>Убедиться, что на первом сервере появился новый интерфейс можно с помощью команд:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ip a
+</code></pre></div><p>или</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ifconfig
+</code></pre></div><p>Далее на тестовом компьютере запускаем</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ping 192.168.0.15
+</code></pre></div><p>и при наличии доступа к физической консоли первого сервера выполняем на нем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/networking stop
+</code></pre></div><p>На тестовом компьютере пинг возобновится спустя пару секунд.</p>
 <p>На этом все, <strong>настройка отказоустойчивого ip-адреса с использованием <code>ucarp</code></strong> закончена.</p>
                 </section>
             </article>
@@ -241,23 +213,23 @@ iface eth0:ucarp inet static
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Восстановление программных RAID-массивов &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,9 +88,7 @@
                 </header>
                 <section id="post-body">
                     <p>Работа с <strong>программными RAID-массивами</strong> в GNU/Linux осуществляется с помощью утилиты <code>mdadm</code> (ранее <code>mdctl</code>). Весьма подробно работа с RAID-массивами описана <a href="http://xgu.ru/wiki/mdadm">здесь</a>, ну а мы давайте разберемся с восстановлением работоспособности программных рейдов.</p>
-
 <p>После незначительного сбоя (например, при неправильном выключении питания) может быть нарушена целостность RAID-массива:</p>
-
 <pre><code>cat /proc/mdstat 
 Personalities : [raid1] 
 md1 : active raid1 sdb5[1]
@@ -87,56 +96,30 @@ md1 : active raid1 sdb5[1]
       
 md0 : active raid1 sda1[0] sdb1[1]
       52427704 blocks super 1.2 [2/2] [UU]
-</code></pre>
-
-<p>Видим проблему с программным массивом md1.</p>
-
+</code></pre><p>Видим проблему с программным массивом md1.</p>
 <p>Более подробно получить информацию об ошибке можно командой:</p>
-
 <pre><code>mdadm --query --detail /dev/md1
-</code></pre>
-
-<p>Пытаемся добавить недостающий диск sda5 обратно в <strong>программный RAID-массив</strong>:</p>
-
+</code></pre><p>Пытаемся добавить недостающий диск sda5 обратно в <strong>программный RAID-массив</strong>:</p>
 <pre><code>mdadm -a /dev/md1 /dev/sda5
 mdadm: added /dev/sda5
-</code></pre>
-
-<p>Если диск нормально добавился, то начнется синхронизация массива:</p>
-
+</code></pre><p>Если диск нормально добавился, то начнется синхронизация массива:</p>
 <pre><code>cat /proc/mdstat
 Personalities : [raid1] 
 md1 : active raid1 sda5[0] sdb5[1]
       860160192 blocks [2/1] [_U]
       [===&gt;.................]  recovery = 18.0% (154891584/860160192) finish=108.7min speed=108091K/sec
-</code></pre>
-
-<p>Если сбой был более серьезным и вышеописанные действия не помогают, но необходимо заменить проблемный жесткий диск на аналогичный по размеру (желательно того же производителя). После замены винчестера утилитой <code>sfdisk</code> копируем структуру разделов с работоспособного жесткого диска (sdb) на новый:</p>
-
+</code></pre><p>Если сбой был более серьезным и вышеописанные действия не помогают, но необходимо заменить проблемный жесткий диск на аналогичный по размеру (желательно того же производителя). После замены винчестера утилитой <code>sfdisk</code> копируем структуру разделов с работоспособного жесткого диска (sdb) на новый:</p>
 <pre><code>sfdisk -d /dev/sdb | sfdisk /dev/sda
-</code></pre>
-
-<p><strong>Примечание.</strong> Убедиться, что на жестких дисках таблицы разделов идентичны можно командой <code>fdisk -l</code>.</p>
-
+</code></pre><p><strong>Примечание.</strong> Убедиться, что на жестких дисках таблицы разделов идентичны можно командой <code>fdisk -l</code>.</p>
 <p>После проделанных действий внимательно добавляем каждый раздел нового винчестера в соответствующий RAID-массив:</p>
-
 <pre><code>mdadm --add /dev/md1 /dev/sda5
 mdadm: added /dev/sda5
-</code></pre>
-
-<p>и</p>
-
+</code></pre><p>и</p>
 <pre><code>mdadm --add /dev/md0 /dev/sda1
 mdadm: added /dev/sda1
-</code></pre>
-
-<p>После успешного добавления можно проверить состояние синхронизации <strong>программных RAID-массивов</strong> с помощью:</p>
-
+</code></pre><p>После успешного добавления можно проверить состояние синхронизации <strong>программных RAID-массивов</strong> с помощью:</p>
 <pre><code>cat /proc/mdstat
-</code></pre>
-
-<p>В руководствах по утилите <code>mdadm</code> после сборки массивов рекомендуется добавлять в файл <code>/etc/mdadm/mdadm.conf</code> результат вывода команды <code>mdadm --detail --scan</code>, например так:</p>
-
+</code></pre><p>В руководствах по утилите <code>mdadm</code> после сборки массивов рекомендуется добавлять в файл <code>/etc/mdadm/mdadm.conf</code> результат вывода команды <code>mdadm --detail --scan</code>, например так:</p>
 <pre><code>mdadm --detail --scan &gt; /etc/mdadm/mdadm.conf
 </code></pre>
                 </section>
@@ -180,23 +163,23 @@ mdadm: added /dev/sda1
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

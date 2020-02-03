@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Бесплатный мониторинг сервера с оповещением в Telegram/sms &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,20 +92,12 @@
                 </header>
                 <section id="post-body">
                     <p><a href="https://nixstats.com/">Nixstats</a> — бесплатный сервис для мониторинга, отображения статистики сервера и оповещения о проблемах. По заверениям автора сервис находится в процессе разработки, поэтому он пока бесплатен.</p>
-
 <p>Давайте разберемся с настройкой мониторинга сервера и рассмотрим простой пример отправки оповещений о проблемах!</p>
-
 <p>Для мониторинга сервера необходимо зарегистрироваться на сервисе и установить агент на сервер. Сделать это можно командой:</p>
-
 <pre><code>wget --no-check-certificate -N https://www.nixstats.com/nixstatsagent.sh &amp;&amp; bash nixstatsagent.sh your_token_id
-</code></pre>
-
-<p>Токен придет в письме после регистрации, и будет выглядеть примерно так: <code>535cae83389a4b05f304185b</code>. Через несколько минут после установки агента данные уже будут доступны в web-интерфейсе сервиса Nixstats.</p>
-
+</code></pre><p>Токен придет в письме после регистрации, и будет выглядеть примерно так: <code>535cae83389a4b05f304185b</code>. Через несколько минут после установки агента данные уже будут доступны в web-интерфейсе сервиса Nixstats.</p>
 <p>Далее можно настроить мониторинг домена (вкладка Monitors) и страницу статуса, но самое главное — необходимо создать <a href="https://nixstats.com/settings/contacts">контакт</a> для получения оповещений о проблемах. На момент написания статьи доступны следующие варианты уведомлений: e-mail, sms (бесплатный лимит 5 шт/мес), pushover, pushbullet, webhook, hipchat и slack. Стоит отметить, что у меня не заработал вариант с оповещением о проблемах через sms — на мой взгляд, самый важный и полезный вариант уведомлений.</p>
-
 <p>Nixstats передает данные для вебхука в следующем формате:</p>
-
 <pre><code>{
     &quot;server_id&quot;: &quot;server_id&quot;,
     &quot;notification_id&quot;: &quot;notification_id&quot;,
@@ -108,9 +111,7 @@
     &quot;start_time&quot;: 1491992292,
     &quot;time&quot;: 1491992322
 }
-</code></pre>
-
-<pre><code>{
+</code></pre><pre><code>{
     &quot;domain_id&quot;: &quot;554be6e94303ed9c2d8b4568&quot;,
     &quot;notification_id&quot;: &quot;58eb5d0d22607e0791308ac5&quot;,
     &quot;name&quot;: &quot;uptimetest.nixstats.com&quot;,
@@ -120,12 +121,8 @@
     &quot;end_time&quot;: 1492187938,
     &quot;time&quot;: 1492187938
 }
-</code></pre>
-
-<p>Для отправки уведомлений о проблемах на сервере в Telegram, необходимо создать бота (как это сделать <a href="https://core.telegram.org/bots#creating-a-new-bot">здесь</a>) и выяснить ваш chat_id (<a href="https://telegram.me/myidbot">подробнее</a>). Напомню, чтобы бот заработал, необходимо первым отправить ему сообщение (любого содержания).</p>
-
+</code></pre><p>Для отправки уведомлений о проблемах на сервере в Telegram, необходимо создать бота (как это сделать <a href="https://core.telegram.org/bots#creating-a-new-bot">здесь</a>) и выяснить ваш chat_id (<a href="https://telegram.me/myidbot">подробнее</a>). Напомню, чтобы бот заработал, необходимо первым отправить ему сообщение (любого содержания).</p>
 <p>Далее создаем файл <code>webhook.php</code> следующего содержания:</p>
-
 <pre><code>&lt;?php
 $telegrambot = &quot;123456789:SCR8NwQtqFoD3dPSmu99z8um8vN8jfQNYps&quot;;
 $telegramchatid = &quot;12345678&quot;;
@@ -189,10 +186,7 @@ if(isset($_POST['payload']))
     }
   }
 }
-</code></pre>
-
-<p>Этот же webhook можно доработать, и слать с его помощью sms-оповещения. В качестве провайдера будем использовать шлюз TURBOSMS (выбран исключительно за низкую стоимость услуг) — естественно, сначала регистрируемся и пополняем счет. Функция отправки sms будет выглядеть так:</p>
-
+</code></pre><p>Этот же webhook можно доработать, и слать с его помощью sms-оповещения. В качестве провайдера будем использовать шлюз TURBOSMS (выбран исключительно за низкую стоимость услуг) — естественно, сначала регистрируемся и пополняем счет. Функция отправки sms будет выглядеть так:</p>
 <pre><code>...
 function sms($message)
 {
@@ -204,10 +198,7 @@ function sms($message)
         return $result;
 }
 ...
-</code></pre>
-
-<p>Полностью готовое решение можно взять <a href="https://github.com/ealebed/NIXStats-Webhook-Telegram">здесь</a>.</p>
-
+</code></pre><p>Полностью готовое решение можно взять <a href="https://github.com/ealebed/NIXStats-Webhook-Telegram">здесь</a>.</p>
 <p>После написания вебхука в настройках <a href="https://nixstats.com/settings/contacts">контакта</a> нужно вставить ссылку на него. Далее в настройках мониторинга отдельного сервиса указываем своего пользователя и ставим чекбокс Webhook.</p>
                 </section>
             </article>
@@ -250,23 +241,23 @@ function sms($message)
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

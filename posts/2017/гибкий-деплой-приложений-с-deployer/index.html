@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Гибкий деплой приложений с Deployer &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,70 +88,41 @@
                 </header>
                 <section id="post-body">
                     <p>Несомненно, тема уже хорошо известна, ведь многие стараются автоматизировать процессы развертывания приложений, тестирования, настройки серверов и обновления программного кода.</p>
-
 <p>Для этого можно использовать множество разных инструментов — Phing, Envoyer, Capistrano, Ansistrano и конечно же Deployer. Давайте разберемся!</p>
-
 <p><a href="https://github.com/deployphp/deployer">Deployer</a> мне пришелся по душе по многим причинам — написан на php, устанавливается и настраивается очень просто, код скрипта получается коротким и понятным, хорошо документирован и есть много рабочих примеров.</p>
-
 <p>Установка не должна вызвать никаких трудностей:</p>
-
-<pre><code class="language-bash">curl -LO https://deployer.org/deployer.phar
-</code></pre>
-
-<pre><code class="language-bash">mv deployer.phar /usr/local/bin/dep
-</code></pre>
-
-<pre><code class="language-bash">chmod +x /usr/local/bin/dep
-</code></pre>
-
-<p>Далее в каталоге с исходным кодом проекта необходимо создать файл <code>eploy.php</code>, в котором и будем описывать процесс развертывания приложения:</p>
-
-<pre><code class="language-bash">touch deploy.php
-</code></pre>
-
-<p>Во-первых, необходимо настроить путь к репозиторию приложения, например:</p>
-
-<pre><code class="language-php">...
-set('repository', '{ваш-git-репозиторий.git}');
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -LO https://deployer.org/deployer.phar
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mv deployer.phar /usr/local/bin/dep
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod +x /usr/local/bin/dep
+</code></pre></div><p>Далее в каталоге с исходным кодом проекта необходимо создать файл <code>eploy.php</code>, в котором и будем описывать процесс развертывания приложения:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch deploy.php
+</code></pre></div><p>Во-первых, необходимо настроить путь к репозиторию приложения, например:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">...
+set(&#39;repository&#39;, &#39;{ваш-git-репозиторий.git}&#39;);
 ...
-</code></pre>
-
-<p>Во-вторых, необходимо описать хотя бы один сервер, на который будет производиться деплой:</p>
-
-<pre><code class="language-php">...
-server('production', 'example.com')
-    -&gt;user('{пользователь-для-деплоя}')
+</code></pre></div><p>Во-вторых, необходимо описать хотя бы один сервер, на который будет производиться деплой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">...
+server(&#39;production&#39;, &#39;example.com&#39;)
+    -&gt;user(&#39;{пользователь-для-деплоя}&#39;)
     -&gt;identityFile()
-    -&gt;set('deploy_path', '/var/www/example');
+    -&gt;set(&#39;deploy_path&#39;, &#39;/var/www/example&#39;);
 ...
-</code></pre>
-
-<p>Самый простой способ подключения к серверу для деплоя — <a href="https://ealebed.github.io/posts/2015/ssh-%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-%D0%BF%D0%BE-%D0%BA%D0%BB%D1%8E%D1%87%D1%83/">авторизация по ssh-ключу</a>. По умолчанию используются ключи <code>~/.ssh/id_rsa</code> и <code>~/.ssh/id_rsa.pub</code>, но если вы хотите использовать другие ssh-ключи или ключи, созданные с паролем, то нужно использовать параметр <code>identityFile</code>, например:</p>
-
-<pre><code class="language-php">...
-    -&gt;identityFile('~/Code/.ssh/id_rsa.pub', '~/Code/.ssh/id_rsa', 'password_for_keys')
+</code></pre></div><p>Самый простой способ подключения к серверу для деплоя — <a href="https://ealebed.github.io/posts/2015/ssh-%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-%D0%BF%D0%BE-%D0%BA%D0%BB%D1%8E%D1%87%D1%83/">авторизация по ssh-ключу</a>. По умолчанию используются ключи <code>~/.ssh/id_rsa</code> и <code>~/.ssh/id_rsa.pub</code>, но если вы хотите использовать другие ssh-ключи или ключи, созданные с паролем, то нужно использовать параметр <code>identityFile</code>, например:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">...
+    -&gt;identityFile(&#39;~/Code/.ssh/id_rsa.pub&#39;, &#39;~/Code/.ssh/id_rsa&#39;, &#39;password_for_keys&#39;)
 ...
-</code></pre>
-
-<p>Добавим также в скрипт деплоя так называемые «шары» — общие файлы и папки для всех релизов (например, это могут быть файлы настроек и каталог с логами/сессиями/кешем и т.д.):</p>
-
-<pre><code class="language-php">...
-add('shared_files', [
-    '.env'
+</code></pre></div><p>Добавим также в скрипт деплоя так называемые «шары» — общие файлы и папки для всех релизов (например, это могут быть файлы настроек и каталог с логами/сессиями/кешем и т.д.):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">...
+add(&#39;shared_files&#39;, [
+    &#39;.env&#39;
 ]);
-add('shared_dirs', [
-    'storage'
+add(&#39;shared_dirs&#39;, [
+    &#39;storage&#39;
 ]);
 ...
-</code></pre>
-
-<p>С такой минимальной конфигурацией уже можно выполнять развертывание приложения:</p>
-
-<pre><code class="language-bash">dep deploy
-</code></pre>
-
-<p>Данная команда при выполнении создаст на сервере «example.com» в каталоге <code>/var/www/example</code> следующую структуру проекта:</p>
-
+</code></pre></div><p>С такой минимальной конфигурацией уже можно выполнять развертывание приложения:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dep deploy
+</code></pre></div><p>Данная команда при выполнении создаст на сервере «example.com» в каталоге <code>/var/www/example</code> следующую структуру проекта:</p>
 <pre><code>├── .dep
 ├── current -&gt; releases/1
 ├── releases
@@ -148,32 +130,21 @@ add('shared_dirs', [
 └── shared
     ├── .env
     └── storage
-</code></pre>
-
-<p>В каталоге <code>releases</code> будут находиться релизы (по умолчанию сохраняется 5 последних релизов, это значение можно изменить добавив в скрипт деплоя строку <code>set('keep_releases', 3);</code>).</p>
-
+</code></pre><p>В каталоге <code>releases</code> будут находиться релизы (по умолчанию сохраняется 5 последних релизов, это значение можно изменить добавив в скрипт деплоя строку <code>set('keep_releases', 3);</code>).</p>
 <p>В каталоге <code>shared</code> находятся общие файлы/папки для всех релизов, которые будут подключаться с помощью симлинков.</p>
-
 <p>Несложно догадаться, что <code>current</code> — это симлинк на последний успешно развернутый релиз (ссылка будет указывать на предыдущий релиз пока не выполнятся успешно все задачи из скрипта деплоя).</p>
-
-<p>В каталоге <code>.dep</code> хранятся метаданные для <code>deployer</code>&lsquo;a — логи скрипта, логи релизов, файл <code>.lock</code> (создается в момент деплоя) и т. д.</p>
-
+<p>В каталоге <code>.dep</code> хранятся метаданные для <code>deployer</code>'a — логи скрипта, логи релизов, файл <code>.lock</code> (создается в момент деплоя) и т. д.</p>
 <p>Как правило, минимальной конфигурации скрипта деплоя недостаточно для «реальных» проектов, поэтому некоторые задачи приходится дописывать самостоятельно. Например, если нам нужно после обновления программного кода перезапустить <code>php-fpm</code> на сервере, то скрипт деплоя нужно дополнить:</p>
-
-<pre><code class="language-php">...
-desc('Restart PHP-FPM service');
-task('php-fpm:restart', function () {
-    run('sudo systemctl restart php7.0-fpm.service');
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">...
+desc(&#39;Restart PHP-FPM service&#39;);
+task(&#39;php-fpm:restart&#39;, function () {
+    run(&#39;sudo systemctl restart php7.0-fpm.service&#39;);
 });
  
-after('deploy:symlink', 'php-fpm:restart');
+after(&#39;deploy:symlink&#39;, &#39;php-fpm:restart&#39;);
 ...
-</code></pre>
-
-<p><strong>Примечание.</strong> Пользователь, от которого выполняется деплой, должен иметь права на перезапуск сервиса <code>php-fpm</code> на сервере.</p>
-
+</code></pre></div><p><strong>Примечание.</strong> Пользователь, от которого выполняется деплой, должен иметь права на перезапуск сервиса <code>php-fpm</code> на сервере.</p>
 <p>После проделанных действий также нужно изменить путь к каталогу с кодом в настройках web-сервера, для Nginx это может выглядеть так:</p>
-
 <pre><code>server {
   listen 80;
   server_name example.com www.example.com;
@@ -184,72 +155,68 @@ after('deploy:symlink', 'php-fpm:restart');
     try_files $uri /index.php$is_args$args;
   }
 }
-</code></pre>
-
-<p>Существуют также готовые рецепты для многих популярных фреймворков, таких как Laravel, Symfony, Yii, Zend и т.д., которые еще больше упрощают настройку деплоя, подробнее о них можно узнать <a href="https://github.com/deployphp/deployer/tree/master/recipe">здесь</a>.</p>
-
+</code></pre><p>Существуют также готовые рецепты для многих популярных фреймворков, таких как Laravel, Symfony, Yii, Zend и т.д., которые еще больше упрощают настройку деплоя, подробнее о них можно узнать <a href="https://github.com/deployphp/deployer/tree/master/recipe">здесь</a>.</p>
 <p>Мой скрипт деплоя полностью выглядит так:</p>
-
-<pre><code class="language-php">&lt;?php
-namespace Deployer;
-require 'recipe/laravel.php';
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?php</span>
+<span style="color:#66d9ef">namespace</span> <span style="color:#a6e22e">Deployer</span>;
+<span style="color:#66d9ef">require</span> <span style="color:#e6db74">&#39;recipe/laravel.php&#39;</span>;
  
-// Configuration
-set('repository', '{git-репозиторий.git}');
-set('keep_releases', 3);
+<span style="color:#75715e">// Configuration
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;repository&#39;</span>, <span style="color:#e6db74">&#39;{git-репозиторий.git}&#39;</span>);
+<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;keep_releases&#39;</span>, <span style="color:#ae81ff">3</span>);
  
-add('shared_files', [
-    '.env'
+<span style="color:#a6e22e">add</span>(<span style="color:#e6db74">&#39;shared_files&#39;</span>, [
+    <span style="color:#e6db74">&#39;.env&#39;</span>
 ]);
-add('shared_dirs', [
-    'storage'
+<span style="color:#a6e22e">add</span>(<span style="color:#e6db74">&#39;shared_dirs&#39;</span>, [
+    <span style="color:#e6db74">&#39;storage&#39;</span>
 ]);
-add('writable_dirs', [
-    'bootstrap/cache',
-    'storage',
-    'node_modules',
-    'vendor'
+<span style="color:#a6e22e">add</span>(<span style="color:#e6db74">&#39;writable_dirs&#39;</span>, [
+    <span style="color:#e6db74">&#39;bootstrap/cache&#39;</span>,
+    <span style="color:#e6db74">&#39;storage&#39;</span>,
+    <span style="color:#e6db74">&#39;node_modules&#39;</span>,
+    <span style="color:#e6db74">&#39;vendor&#39;</span>
 ]);
  
-// Servers
-set('default_stage', 'dev');
+<span style="color:#75715e">// Servers
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;default_stage&#39;</span>, <span style="color:#e6db74">&#39;dev&#39;</span>);
  
-server('dev', '{dev-server}')
-    -&gt;user('deployer')
-    -&gt;identityFile('~/Code/.ssh/id_rsa.pub', '~/Code/.ssh/id_rsa')
-    -&gt;stage('dev')
-    -&gt;set('deploy_path', '/var/www/html');
+<span style="color:#a6e22e">server</span>(<span style="color:#e6db74">&#39;dev&#39;</span>, <span style="color:#e6db74">&#39;{dev-server}&#39;</span>)
+    <span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">user</span>(<span style="color:#e6db74">&#39;deployer&#39;</span>)
+    <span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">identityFile</span>(<span style="color:#e6db74">&#39;~/Code/.ssh/id_rsa.pub&#39;</span>, <span style="color:#e6db74">&#39;~/Code/.ssh/id_rsa&#39;</span>)
+    <span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">stage</span>(<span style="color:#e6db74">&#39;dev&#39;</span>)
+    <span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;deploy_path&#39;</span>, <span style="color:#e6db74">&#39;/var/www/html&#39;</span>);
  
-server('prod', '{prod-server}')
-    -&gt;user('deployer')
-    -&gt;identityFile('~/Code/.ssh/id_rsa.pub', '~/Code/.ssh/id_rsa')
-    -&gt;stage('prod')
-    -&gt;set('deploy_path', '/var/www/html');
+<span style="color:#a6e22e">server</span>(<span style="color:#e6db74">&#39;prod&#39;</span>, <span style="color:#e6db74">&#39;{prod-server}&#39;</span>)
+    <span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">user</span>(<span style="color:#e6db74">&#39;deployer&#39;</span>)
+    <span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">identityFile</span>(<span style="color:#e6db74">&#39;~/Code/.ssh/id_rsa.pub&#39;</span>, <span style="color:#e6db74">&#39;~/Code/.ssh/id_rsa&#39;</span>)
+    <span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">stage</span>(<span style="color:#e6db74">&#39;prod&#39;</span>)
+    <span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;deploy_path&#39;</span>, <span style="color:#e6db74">&#39;/var/www/html&#39;</span>);
  
  
-// Tasks
-desc('Run NPM install');
-task('deploy:install-npm', function () {
-    cd('{{release_path}}');
-    run('npm install');
+<span style="color:#75715e">// Tasks
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">desc</span>(<span style="color:#e6db74">&#39;Run NPM install&#39;</span>);
+<span style="color:#a6e22e">task</span>(<span style="color:#e6db74">&#39;deploy:install-npm&#39;</span>, <span style="color:#66d9ef">function</span> () {
+    <span style="color:#a6e22e">cd</span>(<span style="color:#e6db74">&#39;{{release_path}}&#39;</span>);
+    <span style="color:#a6e22e">run</span>(<span style="color:#e6db74">&#39;npm install&#39;</span>);
 });
  
-desc('Run GULP');
-task('deploy:compile-assets', function () {
-    cd('{{release_path}}');
-    run('gulp --production');
+<span style="color:#a6e22e">desc</span>(<span style="color:#e6db74">&#39;Run GULP&#39;</span>);
+<span style="color:#a6e22e">task</span>(<span style="color:#e6db74">&#39;deploy:compile-assets&#39;</span>, <span style="color:#66d9ef">function</span> () {
+    <span style="color:#a6e22e">cd</span>(<span style="color:#e6db74">&#39;{{release_path}}&#39;</span>);
+    <span style="color:#a6e22e">run</span>(<span style="color:#e6db74">&#39;gulp --production&#39;</span>);
 });
  
-desc('Restart PHP-FPM service');
-task('php-fpm:restart', function () {
-    run('sudo systemctl restart php7.0-fpm.service');
+<span style="color:#a6e22e">desc</span>(<span style="color:#e6db74">&#39;Restart PHP-FPM service&#39;</span>);
+<span style="color:#a6e22e">task</span>(<span style="color:#e6db74">&#39;php-fpm:restart&#39;</span>, <span style="color:#66d9ef">function</span> () {
+    <span style="color:#a6e22e">run</span>(<span style="color:#e6db74">&#39;sudo systemctl restart php7.0-fpm.service&#39;</span>);
 });
  
-after('artisan:config:cache', 'deploy:install-npm');
-after('deploy:install-npm', 'deploy:compile-assets');
-after('deploy:writable', 'artisan:migrate');
-after('deploy:symlink', 'php-fpm:restart');
-</code></pre>
+<span style="color:#a6e22e">after</span>(<span style="color:#e6db74">&#39;artisan:config:cache&#39;</span>, <span style="color:#e6db74">&#39;deploy:install-npm&#39;</span>);
+<span style="color:#a6e22e">after</span>(<span style="color:#e6db74">&#39;deploy:install-npm&#39;</span>, <span style="color:#e6db74">&#39;deploy:compile-assets&#39;</span>);
+<span style="color:#a6e22e">after</span>(<span style="color:#e6db74">&#39;deploy:writable&#39;</span>, <span style="color:#e6db74">&#39;artisan:migrate&#39;</span>);
+<span style="color:#a6e22e">after</span>(<span style="color:#e6db74">&#39;deploy:symlink&#39;</span>, <span style="color:#e6db74">&#39;php-fpm:restart&#39;</span>);
+</code></pre></div>
                 </section>
             </article>
 
@@ -291,23 +258,23 @@ after('deploy:symlink', 'php-fpm:restart');
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Знакомство с Kubernetes. Часть 17: Введение в YAML &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,151 +88,111 @@
                 </header>
                 <section id="post-body">
                     <p>В предыдущих статьях цикла мы создавали объекты в кластере <code>Kubernetes</code> несколькими способами - исключительно с помощью командной строки или с использованием манифестов в формате JSON или YAML. В этой статье подробнее остановимся на описании манифестов с помощью YAML-синтаксиса - как наиболее удобного (на мой взгляд).</p>
-
 <p>YAML (Yet Another Markup Language или YAML Ain’t Markup Language) - расшифровка зависит от вашего восприятия - это простой для понимания человеком, структурированный формат описания конфигурации.</p>
-
 <p>Использование YAML для описания k8s-манифестов предоставляет целый ряд преимуществ, например:</p>
-
 <ul>
 <li><strong>удобство</strong> - больше не нужно добавлять все параметры в командной строке при создании объекта в кластере;</li>
 <li><strong>поддержка</strong>: YAML-файлы могут храниться в системе контроля версий, благодаря чему легко можно отслеживать их изменения;</li>
 <li><strong>гибкость</strong>: с помощью YAML-манифестов можно создавать гораздо более сложные структуры, чем только в командной строке.</li>
 </ul>
-
 <p>По сути, YAML - это надмножество (superset) JSON, следовательно любой валидный (правильный) JSON-файл также является валидным файлом YAML. То есть, если вы ничего не слышали о YAML-формате, но хорошо знаете JSON - у вас уже есть все необходимое для старта. Ни в коем случае не призываю целиком и полностью отказываться от JSON - могут быть ситуации, когда он более удобен.</p>
-
 <p>К счастью, для создания корректного описания манифеста в YAML-формате достаточно знать только два типа структур:</p>
-
 <ul>
 <li>списки (lists);</li>
 <li>мапы (maps).</li>
 </ul>
-
 <p>Этого достаточно. Конечно, это могут быть мапы списков (или списки мап), но наличия этих двух структур вполне хватит.</p>
-
 <p>Начнем со знакомства с мапами (maps). Мапы позволяют связывать (маппить) пары ключ-значение - это именно то, что нужно при описании конфигурационных файлов. Например, у вас может быть файл конфигурации, который выглядит следующим образом:</p>
-
-<pre><code class="language-yaml">---
-apiVersion: v1
-kind: Pod
-</code></pre>
-
-<p>Здесь первая линия (три дефиса) - это разделитель (нужен, если вы планируете использовать несколько разных структур в одном файле), далее описаны два ключа (<code>apiVersion</code> и <code>kind</code>) и их значения (<code>v1</code> и <code>Pod</code> соответственно).</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
+<span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">kind</span>: Pod
+</code></pre></div><p>Здесь первая линия (три дефиса) - это разделитель (нужен, если вы планируете использовать несколько разных структур в одном файле), далее описаны два ключа (<code>apiVersion</code> и <code>kind</code>) и их значения (<code>v1</code> и <code>Pod</code> соответственно).</p>
 <p>В формате JSON это выглядело бы так:</p>
-
-<pre><code class="language-json">{
-   &quot;apiVersion&quot;: &quot;v1&quot;,
-   &quot;kind&quot;: &quot;Pod&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+   <span style="color:#f92672">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;v1&#34;</span>,
+   <span style="color:#f92672">&#34;kind&#34;</span>: <span style="color:#e6db74">&#34;Pod&#34;</span>
 }
-</code></pre>
-
-<p>Можно описывать более сложные структуры, у которых значением для определенного ключа может быть еще одна мапа:</p>
-
-<pre><code class="language-yaml">---
-apiVersion: v1
-kind: Pod
-metadata:
-  name: test-site
-  labels:
-    app: web
-</code></pre>
-
-<p>Как видим, у ключа <code>metadata</code> значением будут еще две мапы (с ключами <code>name</code> и <code>labels</code>), а у ключа <code>labels</code>, в свою очередь, значением будет мапа с ключом <code>app</code>. Можно создавать такие структуры любого уровня вложенности - все зависит от ваших потребностей.</p>
-
+</code></pre></div><p>Можно описывать более сложные структуры, у которых значением для определенного ключа может быть еще одна мапа:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
+<span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">kind</span>: Pod
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: test-site
+  <span style="color:#66d9ef">labels</span>:
+    <span style="color:#66d9ef">app</span>: web
+</code></pre></div><p>Как видим, у ключа <code>metadata</code> значением будут еще две мапы (с ключами <code>name</code> и <code>labels</code>), а у ключа <code>labels</code>, в свою очередь, значением будет мапа с ключом <code>app</code>. Можно создавать такие структуры любого уровня вложенности - все зависит от ваших потребностей.</p>
 <p>YAML-процессор &ldquo;понимает&rdquo; связанность этих элементов благодаря форматированию - обратите внимание на отступы. В этом примере для отступов используются 2 пробела, но на самом деле количество пробелов не имеет значения - главное соблюдать уровни отступов. Например, ключи <code>name</code> и <code>labels</code> находятся на одном уровне отступов, следовательно процессор будет считать, что они являются значением для ключа одной и той же мапы; точно также YAML-процессор знает, что <code>app</code> - это значение для ключа <code>labels</code>.</p>
-
 <p>Небольшой совет: не стоит использовать в YAML-файле в качестве отступов табуляцию.</p>
-
 <p>Итак, если второй пример преобразовать в JSON, то получим следующее:</p>
-
-<pre><code class="language-json">{
-  &quot;apiVersion&quot;: &quot;v1&quot;,
-  &quot;kind&quot;: &quot;Pod&quot;,
-  &quot;metadata&quot;: {
-               &quot;name&quot;: &quot;test-site&quot;,
-               &quot;labels&quot;: {
-                          &quot;app&quot;: &quot;web&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;v1&#34;</span>,
+  <span style="color:#f92672">&#34;kind&#34;</span>: <span style="color:#e6db74">&#34;Pod&#34;</span>,
+  <span style="color:#f92672">&#34;metadata&#34;</span>: {
+               <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;test-site&#34;</span>,
+               <span style="color:#f92672">&#34;labels&#34;</span>: {
+                          <span style="color:#f92672">&#34;app&#34;</span>: <span style="color:#e6db74">&#34;web&#34;</span>
                          }
               }
 }
-</code></pre>
-
-<p>Что касается YAML-списков, то по сути это просто перечисление объектов, например:</p>
-
-<pre><code class="language-yaml">args
+</code></pre></div><p>Что касается YAML-списков, то по сути это просто перечисление объектов, например:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">args
   - sleep
-  - &quot;1000&quot;
+  - <span style="color:#e6db74">&#34;1000&#34;</span>
   - message
-  - &quot;Hello world!&quot;
-</code></pre>
-
-<p>Как видно из примера, можно указать любое количество элементов в списке (главное, чтобы каждый новый элемент находится в отдельной строке и начинался с дефиса). В JSON это будет выглядеть так:</p>
-
-<pre><code class="language-json">{
-   &quot;args&quot;: [&quot;sleep&quot;, &quot;1000&quot;, &quot;message&quot;, &quot;Hello world!&quot;]
+  - <span style="color:#e6db74">&#34;Hello world!&#34;</span>
+</code></pre></div><p>Как видно из примера, можно указать любое количество элементов в списке (главное, чтобы каждый новый элемент находится в отдельной строке и начинался с дефиса). В JSON это будет выглядеть так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+   <span style="color:#f92672">&#34;args&#34;</span>: [<span style="color:#e6db74">&#34;sleep&#34;</span>, <span style="color:#e6db74">&#34;1000&#34;</span>, <span style="color:#e6db74">&#34;message&#34;</span>, <span style="color:#e6db74">&#34;Hello world!&#34;</span>]
 }
-</code></pre>
-
-<p>Ну и конечно же элементами списка могут быть мапы:</p>
-
-<pre><code class="language-yaml">---
-apiVersion: v1
-kind: Pod
-metadata:
-  name: test-site
-  labels:
-    app: web
-spec:
-  containers:
-    - name: front-end
-      image: nginx
-      ports:
-        - containerPort: 80
-    - name: test
-      image: ealebed/test:v1
-      ports:
-        - containerPort: 88
-</code></pre>
-
-<p>Эквивалент в JSON-формате:</p>
-
-<pre><code class="language-json">{
-   &quot;apiVersion&quot;: &quot;v1&quot;,
-   &quot;kind&quot;: &quot;Pod&quot;,
-   &quot;metadata&quot;: {
-                 &quot;name&quot;: &quot;test-site&quot;,
-                 &quot;labels&quot;: {
-                             &quot;app&quot;: &quot;web&quot;
+</code></pre></div><p>Ну и конечно же элементами списка могут быть мапы:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
+<span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">kind</span>: Pod
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: test-site
+  <span style="color:#66d9ef">labels</span>:
+    <span style="color:#66d9ef">app</span>: web
+<span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">containers</span>:
+    - <span style="color:#66d9ef">name</span>: front-end
+      <span style="color:#66d9ef">image</span>: nginx
+      <span style="color:#66d9ef">ports</span>:
+        - <span style="color:#66d9ef">containerPort</span>: <span style="color:#ae81ff">80</span>
+    - <span style="color:#66d9ef">name</span>: test
+      <span style="color:#66d9ef">image</span>: ealebed/test:v1
+      <span style="color:#66d9ef">ports</span>:
+        - <span style="color:#66d9ef">containerPort</span>: <span style="color:#ae81ff">88</span>
+</code></pre></div><p>Эквивалент в JSON-формате:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+   <span style="color:#f92672">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;v1&#34;</span>,
+   <span style="color:#f92672">&#34;kind&#34;</span>: <span style="color:#e6db74">&#34;Pod&#34;</span>,
+   <span style="color:#f92672">&#34;metadata&#34;</span>: {
+                 <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;test-site&#34;</span>,
+                 <span style="color:#f92672">&#34;labels&#34;</span>: {
+                             <span style="color:#f92672">&#34;app&#34;</span>: <span style="color:#e6db74">&#34;web&#34;</span>
                            }
                },
-    &quot;spec&quot;: {
-       &quot;containers&quot;: [{
-                       &quot;name&quot;: &quot;front-end&quot;,
-                       &quot;image&quot;: &quot;nginx&quot;,
-                       &quot;ports&quot;: [{
-                                  &quot;containerPort&quot;: &quot;80&quot;
+    <span style="color:#f92672">&#34;spec&#34;</span>: {
+       <span style="color:#f92672">&#34;containers&#34;</span>: [{
+                       <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;front-end&#34;</span>,
+                       <span style="color:#f92672">&#34;image&#34;</span>: <span style="color:#e6db74">&#34;nginx&#34;</span>,
+                       <span style="color:#f92672">&#34;ports&#34;</span>: [{
+                                  <span style="color:#f92672">&#34;containerPort&#34;</span>: <span style="color:#e6db74">&#34;80&#34;</span>
                                  }]
                       }, 
                       {
-                       &quot;name&quot;: &quot;test&quot;,
-                       &quot;image&quot;: &quot;ealebed/test:v1&quot;,
-                       &quot;ports&quot;: [{
-                                  &quot;containerPort&quot;: &quot;88&quot;
+                       <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;test&#34;</span>,
+                       <span style="color:#f92672">&#34;image&#34;</span>: <span style="color:#e6db74">&#34;ealebed/test:v1&#34;</span>,
+                       <span style="color:#f92672">&#34;ports&#34;</span>: [{
+                                  <span style="color:#f92672">&#34;containerPort&#34;</span>: <span style="color:#e6db74">&#34;88&#34;</span>
                                  }]
                       }]
             }
 }
-</code></pre>
-
-<p>Используя описанный в YAML-файле манифест, можно создать в <code>Kubernetes</code> объект под (<code>Pod</code>). Для этого нужно выполнить команду:</p>
-
-<pre><code class="language-bash">kubectl create -f pod.yaml
-pod &quot;test-site&quot; created
-</code></pre>
-
-<p>Подробнее о подах и их описании в YAML-формате мы уже говорили в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/">этой</a> статье, кроме того дополнительную информацию можно найти в <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod/">официальной документации</a>.</p>
-
+</code></pre></div><p>Используя описанный в YAML-файле манифест, можно создать в <code>Kubernetes</code> объект под (<code>Pod</code>). Для этого нужно выполнить команду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f pod.yaml
+pod <span style="color:#e6db74">&#34;test-site&#34;</span> created
+</code></pre></div><p>Подробнее о подах и их описании в YAML-формате мы уже говорили в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/">этой</a> статье, кроме того дополнительную информацию можно найти в <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod/">официальной документации</a>.</p>
 <p>Что касается YAML-формата, то всю необходимую информацию можно найти <a href="http://yaml.org/">здесь</a>.</p>
                 </section>
             </article>
@@ -264,23 +235,23 @@ pod &quot;test-site&quot; created
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

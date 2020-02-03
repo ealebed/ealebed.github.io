@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>GitLab: Custom hooks &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Jul 10, 2017 09:58
-                    · 584 words
+                    · 583 words
                     · 3 minute read
                       <span class="tags">
                       
@@ -77,119 +88,96 @@
                 </header>
                 <section id="post-body">
                     <p>В <strong>GitLab Enterprise Edition</strong> существует довольно удобная, а порой и просто необходимая возможность дополнительной настройки правил обновления кода в репозитории под названием <a href="http://docs.gitlab.com/ee/push_rules/push_rules.html">Push Rules</a>.</p>
-
 <p>В <strong>GitLab CE</strong> для реализации подобного функционала приходится использовать кастомные git-хуки — давайте разберемся, как их правильно готовить!</p>
-
 <p>Git изначально поддерживает хуки (hooks), которые выполняются при определенных действиях — например, <code>pre-receive</code>, <code>post-receive</code>, <code>update</code>… Больше о хуках можно прочитать <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks#Server-Side-Hooks">здесь</a>, а мы приступим к рассмотрению конкретного <strong>примера настройки кастомного (custom) хука для GitLab CE</strong>.</p>
-
 <p>Считаем, что у нас используется docker-установка <strong>GitLab</strong>, как описано в <a href="https://ealebed.github.io/posts/2017/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">этой статье</a>. Тогда для создания кастомного git-хука, который запрещает пуш файлов размером больше 5Mb в репозиторий необходимо проделать следующие шаги:</p>
-
 <ul>
 <li>выбрать проект, для которого необходимо сделать кастомный хук;</li>
-
-<li><p>на сервере с GitLab перейти в каталоге репозитория проекта (в нашем случае — <code>/srv/gitlab/data/repositories/MYGROUP/MYREPO.git/</code>) создать новый каталог с именем <code>custom_hooks</code>:</p>
-
-<pre><code class="language-bash">mkdir -p /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks
-</code></pre></li>
-
-<li><p>в каталоге …/custom_hooks создать файл с именем, соответствующим типу хука (например, для <code>pre-receive</code> хука файл должен называться <code>pre-receive</code>) без расширения:</p>
-
-<pre><code class="language-bash">touch /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
-</code></pre></li>
-
-<li><p>сделать файл исполняемым и рекурсивно сменить владельца директории <code>custom_hooks</code> на пользователя, от которого запускаются docker-контейнеры (обычно у него id=1000):</p>
-
-<pre><code class="language-bash">chmod +x /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
-</code></pre>
-
-<pre><code class="language-bahs">chown -R 1000:1000 /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/
-</code></pre></li>
-
-<li><p>в созданном файле написать git-хука (можно использовать любой язык программирования, главное не забыть в первой строке вставить &ldquo;shebang&rdquo; — <code>!#</code>). В нашем случае хук, выглядит так:</p>
-
-<pre><code class="language-bash">#!/bin/sh
-  
-GITCMD=&quot;/usr/bin/git&quot;
-NULLSHA=&quot;0000000000000000000000000000000000000000&quot;
-MAXSIZE=&quot;5242880&quot; # 5MB limit on file size
-EXIT=0
-  
-# Read stdin for ref information
-while read oldref newref refname; do
-# Skip branch deletions
-if [ &quot;${newref}&quot; = &quot;${NULLSHA}&quot; ]; then
-continue;
-fi
-  
-# Set oldref properly if this is branch creation.
-if [ &quot;${oldref}&quot; = &quot;${NULLSHA}&quot; ]; then
-oldref=&quot;HEAD&quot;
-fi
-  
-# Get list of files to look at using git diff
-for file in $($GITCMD diff --stat --name-only --diff-filter=ACMRT ${oldref}..${newref}); do
-# Get the size of this file
-size=$($GITCMD cat-file -s ${newref}:${file})
-# Check to see if for some reason we didn't get a size
-if [ ! -z ${size} ]; then
- # Compare filesize to MAXSIZE
- if [ &quot;${size}&quot; -gt &quot;${MAXSIZE}&quot; ]; then
-   # Send output back to the user about oversized files.
-   echo &quot;ERROR: ${file} larger than ${MAXSIZE}.&quot;
-   EXIT=1
- fi # End size comparison
-fi   # End check for empty size
-done   # End list of files
-done     # End reading stdin
-  
-# If we have oversized files, write more information out to the user
-if [ &quot;${EXIT}&quot; = &quot;1&quot; ]; then
-echo &quot;ERROR: Your commit has been blocked due to certain files being oversized.&quot;
-echo &quot;ERROR: Check output above for more information.&quot;
-fi
-exit $EXIT
-</code></pre></li>
+<li>на сервере с GitLab перейти в каталоге репозитория проекта (в нашем случае — <code>/srv/gitlab/data/repositories/MYGROUP/MYREPO.git/</code>) создать новый каталог с именем <code>custom_hooks</code>:</li>
 </ul>
-
-<p>Добавляем в каталог с кодом проекта файл, заведомо большего размера (~12Mb), коммитим его:</p>
-
-<pre><code class="language-bash">git status
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks
+</code></pre></div><ul>
+<li>в каталоге …/custom_hooks создать файл с именем, соответствующим типу хука (например, для <code>pre-receive</code> хука файл должен называться <code>pre-receive</code>) без расширения:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
+</code></pre></div><ul>
+<li>сделать файл исполняемым и рекурсивно сменить владельца директории <code>custom_hooks</code> на пользователя, от которого запускаются docker-контейнеры (обычно у него id=1000):</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod +x /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
+</code></pre></div><pre><code class="language-bahs" data-lang="bahs">chown -R 1000:1000 /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/
+</code></pre><ul>
+<li>в созданном файле написать git-хука (можно использовать любой язык программирования, главное не забыть в первой строке вставить &ldquo;shebang&rdquo; — <code>!#</code>). В нашем случае хук, выглядит так:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/sh
+</span><span style="color:#75715e"></span>  
+GITCMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/bin/git&#34;</span>
+NULLSHA<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0000000000000000000000000000000000000000&#34;</span>
+MAXSIZE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;5242880&#34;</span> <span style="color:#75715e"># 5MB limit on file size</span>
+EXIT<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+  
+<span style="color:#75715e"># Read stdin for ref information</span>
+<span style="color:#66d9ef">while</span> read oldref newref refname; <span style="color:#66d9ef">do</span>
+ <span style="color:#75715e"># Skip branch deletions</span>
+ <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>newref<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>NULLSHA<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+   <span style="color:#66d9ef">continue</span>;
+ <span style="color:#66d9ef">fi</span>
+  
+ <span style="color:#75715e"># Set oldref properly if this is branch creation.</span>
+ <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>oldref<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>NULLSHA<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+   oldref<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;HEAD&#34;</span>
+ <span style="color:#66d9ef">fi</span>
+  
+ <span style="color:#75715e"># Get list of files to look at using git diff</span>
+ <span style="color:#66d9ef">for</span> file in <span style="color:#66d9ef">$(</span>$GITCMD diff --stat --name-only --diff-filter<span style="color:#f92672">=</span>ACMRT <span style="color:#e6db74">${</span>oldref<span style="color:#e6db74">}</span>..<span style="color:#e6db74">${</span>newref<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">do</span>
+   <span style="color:#75715e"># Get the size of this file</span>
+   size<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>$GITCMD cat-file -s <span style="color:#e6db74">${</span>newref<span style="color:#e6db74">}</span>:<span style="color:#e6db74">${</span>file<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>
+   <span style="color:#75715e"># Check to see if for some reason we didn&#39;t get a size</span>
+   <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -z <span style="color:#e6db74">${</span>size<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+     <span style="color:#75715e"># Compare filesize to MAXSIZE</span>
+     <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>size<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -gt <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MAXSIZE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+       <span style="color:#75715e"># Send output back to the user about oversized files.</span>
+       echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">ERROR: </span><span style="color:#e6db74">${</span>file<span style="color:#e6db74">}</span><span style="color:#e6db74"> larger than </span><span style="color:#e6db74">${</span>MAXSIZE<span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">&#34;</span>
+       EXIT<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+     <span style="color:#66d9ef">fi</span> <span style="color:#75715e"># End size comparison</span>
+   <span style="color:#66d9ef">fi</span>   <span style="color:#75715e"># End check for empty size</span>
+ <span style="color:#66d9ef">done</span>   <span style="color:#75715e"># End list of files</span>
+<span style="color:#66d9ef">done</span>     <span style="color:#75715e"># End reading stdin</span>
+  
+<span style="color:#75715e"># If we have oversized files, write more information out to the user</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>EXIT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+ echo <span style="color:#e6db74">&#34;ERROR: Your commit has been blocked due to certain files being oversized.&#34;</span>
+ echo <span style="color:#e6db74">&#34;ERROR: Check output above for more information.&#34;</span>
+<span style="color:#66d9ef">fi</span>
+exit $EXIT
+</code></pre></div><p>Добавляем в каталог с кодом проекта файл, заведомо большего размера (~12Mb), коммитим его:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git status
 On branch docker
-Your branch is up-to-date with 'upstream/docker'.
+Your branch is up-to-date with <span style="color:#e6db74">&#39;upstream/docker&#39;</span>.
 Untracked files:
-  (use &quot;git add ...&quot; to include in what will be committed)
+  <span style="color:#f92672">(</span>use <span style="color:#e6db74">&#34;git add ...&#34;</span> to include in what will be committed<span style="color:#f92672">)</span>
 
         Apresyan.dict.dz_3
 
-nothing added to commit but untracked files present (use &quot;git add&quot; to track)
-</code></pre>
-
-<pre><code class="language-bash">git add .
-</code></pre>
-
-<pre><code class="language-bash">git commit -am 'test commit large file' 
-[docker 73549ab] test commit large file
- 1 file changed, 0 insertions(+), 0 deletions(-)
- create mode 100644 Apresyan.dict.dz_3
-</code></pre>
-
-<p>Пробуем запушить в репозиторий:</p>
-
-<pre><code class="language-bash">git push
-Counting objects: 3, done.
-Delta compression using up to 4 threads.
-Compressing objects: 100% (3/3), done.
-Writing objects: 100% (3/3), 12.69 MiB | 0 bytes/s, done.
-Total 3 (delta 1), reused 0 (delta 0)
+nothing added to commit but untracked files present <span style="color:#f92672">(</span>use <span style="color:#e6db74">&#34;git add&#34;</span> to track<span style="color:#f92672">)</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git add .
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git commit -am <span style="color:#e6db74">&#39;test commit large file&#39;</span> 
+<span style="color:#f92672">[</span>docker 73549ab<span style="color:#f92672">]</span> test commit large file
+ <span style="color:#ae81ff">1</span> file changed, <span style="color:#ae81ff">0</span> insertions<span style="color:#f92672">(</span>+<span style="color:#f92672">)</span>, <span style="color:#ae81ff">0</span> deletions<span style="color:#f92672">(</span>-<span style="color:#f92672">)</span>
+ create mode <span style="color:#ae81ff">100644</span> Apresyan.dict.dz_3
+</code></pre></div><p>Пробуем запушить в репозиторий:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git push
+Counting objects: 3, <span style="color:#66d9ef">done</span>.
+Delta compression using up to <span style="color:#ae81ff">4</span> threads.
+Compressing objects: 100% <span style="color:#f92672">(</span>3/3<span style="color:#f92672">)</span>, <span style="color:#66d9ef">done</span>.
+Writing objects: 100% <span style="color:#f92672">(</span>3/3<span style="color:#f92672">)</span>, 12.69 MiB | <span style="color:#ae81ff">0</span> bytes/s, <span style="color:#66d9ef">done</span>.
+Total <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>delta 1<span style="color:#f92672">)</span>, reused <span style="color:#ae81ff">0</span> <span style="color:#f92672">(</span>delta 0<span style="color:#f92672">)</span>
 remote: ERROR: Apresyan.dict.dz_3 larger than 5242880.
 remote: ERROR: Your commit has been blocked due to certain files being oversized.
-remote: ERROR: Check output above for more information.
+remote: ERROR: Check output above <span style="color:#66d9ef">for</span> more information.
 To ssh://git@gitlab.lc:23/MYGROUP/MYREPO.git
- ! [remote rejected] docker -&gt; docker (pre-receive hook declined)
-error: failed to push some refs to 'ssh://git@gitlab.lc:23/MYGROUP/MYREPO.git'
-</code></pre>
-
-<p>Отлично, git-хук отработал как и ожидалось!</p>
+ ! <span style="color:#f92672">[</span>remote rejected<span style="color:#f92672">]</span> docker -&gt; docker <span style="color:#f92672">(</span>pre-receive hook declined<span style="color:#f92672">)</span>
+error: failed to push some refs to <span style="color:#e6db74">&#39;ssh://git@gitlab.lc:23/MYGROUP/MYREPO.git&#39;</span>
+</code></pre></div><p>Отлично, git-хук отработал как и ожидалось!</p>
                 </section>
             </article>
 
@@ -231,23 +219,23 @@ error: failed to push some refs to 'ssh://git@gitlab.lc:23/MYGROUP/MYREPO.git'
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

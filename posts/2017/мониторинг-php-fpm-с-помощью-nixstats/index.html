@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Мониторинг PHP-FPM с помощью Nixstats &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,11 +92,8 @@
                 </header>
                 <section id="post-body">
                     <p><a href="https://ealebed.github.io/posts/2017/%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9-%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D1%81-%D0%BE%D0%BF%D0%BE%D0%B2%D0%B5%D1%89%D0%B5%D0%BD%D0%B8%D0%B5%D0%BC-%D0%B2-telegram-sms/">Ранее</a> мы уже рассматривали Nixstats — бесплатный сервис для мониторинга, отображения статистики сервера и оповещения о проблемах и даже научились собирать <a href="https://ealebed.github.io/posts/2017/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-nginx-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-nixstats/">метрики от web-сервера Nginx</a>.</p>
-
 <p>Давайте разберемся с настройкой сбора метрик <code>php-fpm</code> с помощью сервиса Nixstats!</p>
-
 <p>От <code>php-fpm</code> сервис Nixstats принимает следующие метрики:</p>
-
 <ul>
 <li>Accepted connections (per second, total);</li>
 <li>Active processes;</li>
@@ -102,16 +110,11 @@
 <li>Process manager;</li>
 <li>Slow requests.</li>
 </ul>
-
 <p>Страница статуса <code>php-fpm</code> должна быть включена — сделать это можно в конфигурационном файле пула (<code>/etc/php-fpm.d/www.conf</code>) добавлением параметра:</p>
-
 <pre><code>...
 pm.status_path = /status_phpfpm
 ...
-</code></pre>
-
-<p>Не забудьте также включить доступ к странице статуса <code>php-fpm</code> в конфигах web-сервера Nginx, например:</p>
-
+</code></pre><p>Не забудьте также включить доступ к странице статуса <code>php-fpm</code> в конфигах web-сервера Nginx, например:</p>
 <pre><code>server {
     listen 127.0.0.1:8080;
     server_name localhost;
@@ -123,53 +126,36 @@ pm.status_path = /status_phpfpm
         deny all;
     }
 }
-</code></pre>
-
-<p>Проверить корректность настройки страницы статуса можно <code>php-fpm</code> так:</p>
-
-<pre><code class="language-bash">wget -qO- http://127.0.0.1:8080/status_phpfpm?json
-</code></pre>
-
-<p>Далее необходимо настроить плагин Nixstats — открываем конфигурационный файл <code>/etc/nixstats.ini</code> и добавляем в него следующие строки:</p>
-
+</code></pre><p>Проверить корректность настройки страницы статуса можно <code>php-fpm</code> так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget -qO- http://127.0.0.1:8080/status_phpfpm?json
+</code></pre></div><p>Далее необходимо настроить плагин Nixstats — открываем конфигурационный файл <code>/etc/nixstats.ini</code> и добавляем в него следующие строки:</p>
 <pre><code>[phpfpm] 
 enabled = yes
 status_page_url = http://127.0.0.1:8080/status_phpfpm?json
-</code></pre>
-
-<p>Тестируем:</p>
-
-<pre><code class="language-bash">nixstatsagent --test phpfpm
-</code></pre>
-
-<p>Результат должен быть примерно следующим:</p>
-
-<pre><code class="language-bash">phpfpm:
-{
-    &quot;accepted_conn&quot;: 3015,
-    &quot;accepted_conn_per_second&quot;: 0.0,
-    &quot;active_processes&quot;: 1,
-    &quot;idle_processes&quot;: 0,
-    &quot;listen_queue&quot;: 0,
-    &quot;listen_queue_len&quot;: 128,
-    &quot;max_active_processes&quot;: 1,
-    &quot;max_children_reached&quot;: 0,
-    &quot;max_listen_queue&quot;: 1,
-    &quot;pool&quot;: &quot;www&quot;,
-    &quot;process_manager&quot;: &quot;ondemand&quot;,
-    &quot;slow_requests&quot;: 0,
-    &quot;start_since&quot;: 294686,
-    &quot;start_time&quot;: 1492504250,
-    &quot;total_processes&quot;: 1
-}
-</code></pre>
-
-<p>Теперь перезапускаем агент мониторинга:</p>
-
-<pre><code class="language-bash">service nixstatsagent restart
-</code></pre>
-
-<p>И ждем появления метрик в веб-интерфейсе сервиса мониторинга.</p>
+</code></pre><p>Тестируем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nixstatsagent --test phpfpm
+</code></pre></div><p>Результат должен быть примерно следующим:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">phpfpm:
+<span style="color:#f92672">{</span>
+    <span style="color:#e6db74">&#34;accepted_conn&#34;</span>: 3015,
+    <span style="color:#e6db74">&#34;accepted_conn_per_second&#34;</span>: 0.0,
+    <span style="color:#e6db74">&#34;active_processes&#34;</span>: 1,
+    <span style="color:#e6db74">&#34;idle_processes&#34;</span>: 0,
+    <span style="color:#e6db74">&#34;listen_queue&#34;</span>: 0,
+    <span style="color:#e6db74">&#34;listen_queue_len&#34;</span>: 128,
+    <span style="color:#e6db74">&#34;max_active_processes&#34;</span>: 1,
+    <span style="color:#e6db74">&#34;max_children_reached&#34;</span>: 0,
+    <span style="color:#e6db74">&#34;max_listen_queue&#34;</span>: 1,
+    <span style="color:#e6db74">&#34;pool&#34;</span>: <span style="color:#e6db74">&#34;www&#34;</span>,
+    <span style="color:#e6db74">&#34;process_manager&#34;</span>: <span style="color:#e6db74">&#34;ondemand&#34;</span>,
+    <span style="color:#e6db74">&#34;slow_requests&#34;</span>: 0,
+    <span style="color:#e6db74">&#34;start_since&#34;</span>: 294686,
+    <span style="color:#e6db74">&#34;start_time&#34;</span>: 1492504250,
+    <span style="color:#e6db74">&#34;total_processes&#34;</span>: <span style="color:#ae81ff">1</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>Теперь перезапускаем агент мониторинга:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service nixstatsagent restart
+</code></pre></div><p>И ждем появления метрик в веб-интерфейсе сервиса мониторинга.</p>
                 </section>
             </article>
 
@@ -211,23 +197,23 @@ status_page_url = http://127.0.0.1:8080/status_phpfpm?json
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

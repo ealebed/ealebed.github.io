@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Как узнать время отклика сайта из командной строки Linux &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,70 +90,42 @@
                 </header>
                 <section id="post-body">
                     <p>Узнать <strong>время отклика сайта из командной строки Linux</strong> проще всего с помощью <code>curl</code> — утилиты с открытым исходным кодом, которая позволяет взаимодействовать с серверами по множеству протоколов.</p>
-
 <p>Давайте разберемся с использованием данной весьма полезной утилиты!</p>
-
 <p>Установить утилиту можно с помощью команды:</p>
-
-<pre><code class="language-bash">aptitude install curl
-</code></pre>
-
-<p>Проверить версию установленной утилиты <code>curl</code> можно так:</p>
-
-<pre><code class="language-bash">curl --version
-</code></pre>
-
-<p>Для получения суммарного <strong>времени отклика сайта (в секундах)</strong> воспользуемся следующей командой:</p>
-
-<pre><code class="language-bash">curl -s -w %{time_total}\\n -o /dev/null https://letsclearitup.com.ua/
-</code></pre>
-
-<p>Результатом будет:</p>
-
-<pre><code class="language-bash">0.182
-</code></pre>
-
-<p>Описание используемых параметров:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install curl
+</code></pre></div><p>Проверить версию установленной утилиты <code>curl</code> можно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl --version
+</code></pre></div><p>Для получения суммарного <strong>времени отклика сайта (в секундах)</strong> воспользуемся следующей командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -s -w %<span style="color:#f92672">{</span>time_total<span style="color:#f92672">}</span><span style="color:#ae81ff">\\</span>n -o /dev/null https://letsclearitup.com.ua/
+</code></pre></div><p>Результатом будет:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">0.182
+</code></pre></div><p>Описание используемых параметров:</p>
 <ul>
 <li><code>-s</code> — не отображать индикатор выполнения или сообщения об ошибках (тихий режим);</li>
 <li><code>-w</code> — что отображать после завершенной и успешной операции;</li>
 <li><code>-o</code> — перенаправление вывода в <code>/dev/null</code>;</li>
 <li><code>time_total</code> — время выполнения операции (в секундах).</li>
 </ul>
-
 <p>Для получения суммарного <strong>времени отклика сайта</strong>, а также времени затраченного на <code>lookup</code>, <code>connect</code>, <code>pretransfer</code>, <code>starttransfer</code> (в секундах) используем следующую команду:</p>
-
-<pre><code class="language-bash">curl -s -w '\nLookup time:\t%{time_namelookup}\nConnect time:\t%{time_connect}\nPreXfer time:\t%{time_pretransfer}\nStartXfer time:\t%{time_starttransfer}\n\nTotal time:\t%{time_total}\n' -o /dev/null https://letsclearitup.com.ua/
-</code></pre>
-
-<p>Результатом выполнения команды будет:</p>
-
-<pre><code class="language-bash">Lookup time:	0.001
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -s -w <span style="color:#e6db74">&#39;\nLookup time:\t%{time_namelookup}\nConnect time:\t%{time_connect}\nPreXfer time:\t%{time_pretransfer}\nStartXfer time:\t%{time_starttransfer}\n\nTotal time:\t%{time_total}\n&#39;</span> -o /dev/null https://letsclearitup.com.ua/
+</code></pre></div><p>Результатом выполнения команды будет:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Lookup time:	0.001
 Connect time:	0.012
 PreXfer time:	0.012
 StartXfer time:	0.088
 
 Total time:	0.101
-</code></pre>
-
-<p>Здесь используется несколько новых параметров:</p>
-
+</code></pre></div><p>Здесь используется несколько новых параметров:</p>
 <ul>
 <li><code>time_namelookup</code> — время, затраченное на преобразование доменного имени в IP-адрес;</li>
 <li><code>time_connect</code> — время, затраченное на подключение к удаленному серверу по TCP;</li>
 <li><code>time_pretransfer</code> — время, затраченное на подготовку к обмену данными (включает в себя «обмен рукопожатиями»);</li>
 <li><code>time_starttransfer</code> — время, затраченное на действия до начала передачи первого байта данных (включает в себя <code>time_pretransfer</code>).</li>
 </ul>
-
 <p>В последних версиях утилиты <code>curl</code> (&gt;7.12) появилась возможность получать время (в секундах), затраченное на <code>appconnect</code> и <code>redirect</code>. Для этого выполняем следующую команду:</p>
-
-<pre><code class="language-bash">curl -s -w '\nLookup time:\t%{time_namelookup}\nConnect time:\t%{time_connect}\nAppCon time:\t%{time_appconnect}\nRedirect time:\t%{time_redirect}\nPreXfer time:\t%{time_pretransfer}\nStartXfer time:\t%{time_starttransfer}\n\nTotal time:\t%{time_total}\n' -o /dev/null https://letsclearitup.com.ua/
-</code></pre>
-
-<p>Результат выполнения команды:</p>
-
-<pre><code class="language-bash">Lookup time:	0.001
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -s -w <span style="color:#e6db74">&#39;\nLookup time:\t%{time_namelookup}\nConnect time:\t%{time_connect}\nAppCon time:\t%{time_appconnect}\nRedirect time:\t%{time_redirect}\nPreXfer time:\t%{time_pretransfer}\nStartXfer time:\t%{time_starttransfer}\n\nTotal time:\t%{time_total}\n&#39;</span> -o /dev/null https://letsclearitup.com.ua/
+</code></pre></div><p>Результат выполнения команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Lookup time:	0.001
 Connect time:	0.012
 AppCon time:	0.000
 Redirect time:	0.000
@@ -150,19 +133,14 @@ PreXfer time:	0.012
 StartXfer time:	0.089
 
 Total time:	0.102
-</code></pre>
-
-<p>В данном примере появилось два новых параметра:</p>
-
+</code></pre></div><p>В данном примере появилось два новых параметра:</p>
 <ul>
 <li><code>time_appconnect</code> — время до завершения соединения/рукопожатия по протоколу SSL/SSH (доступно с версии 7.19.0);</li>
 <li><code>time_redirect</code> — время, затраченное на редиректы (суммарное время всех редиректов. Доступно с версии 7.12.3).</li>
 </ul>
-
 <p><strong>Примечание.</strong> Доверять одному значению, полученному в результате замеров, не совсем правильно. Поэтому лучше несколько раз <strong>измерить время отклика сайта из командной строки Linux</strong>, например так:</p>
-
-<pre><code class="language-bash">seq 5 | xargs -I@ -n1 curl -s -w %{time_total}\\n -o /dev/null https://letsclearitup.com.ua/
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">seq <span style="color:#ae81ff">5</span> | xargs -I@ -n1 curl -s -w %<span style="color:#f92672">{</span>time_total<span style="color:#f92672">}</span><span style="color:#ae81ff">\\</span>n -o /dev/null https://letsclearitup.com.ua/
+</code></pre></div>
                 </section>
             </article>
 
@@ -204,23 +182,23 @@ Total time:	0.102
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Что такое SPF (Sender Policy Framework)? &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,21 +88,13 @@
                 </header>
                 <section id="post-body">
                     <p>Если вы пользуетесь услугами популярных почтовых провайдеров, таких как Gmail или Mail.ru, которые поддерживают требования безопасности на высоком уровне, то вам совершенно не о чем беспокоиться.</p>
-
 <p>Но если вы администратор или владелец домена (и шлете почту не только себе), то следует знать, <strong>что такое SPF (Sender Policy Framework)</strong>. Давайте разберемся!</p>
-
 <p>Понятие <strong>SPF (Sender Policy Framework)</strong> неразрывно связано с противодействием спуфингу (англ. spoofing) — попыткой человека или программы представиться кем-то (чем-то) другим и получить незаконные преимущества. Например, информацию об отправителе письма (поле <code>From:</code>) можно легко подделать, и этот метод наиболее часто используется спамерами.</p>
-
 <p><strong>Sender Policy Framework</strong> — это расширение для протокола отправки почты (SMTP), с помощью которого можно проверить, не подделан ли домен отправителя почтового сообщения. Для корректной работы SPF владелец домена в соответствующей TXT-записи должен указать список серверов, имеющих право отправлять письма от имени e-mail адресов этого домена.</p>
-
 <p>Давайте рассмотрим конкретный пример:</p>
-
-<pre><code class="language-bash">dig work.ua TXT | grep spf
-work.ua.                57416   IN      TXT     &quot;v=spf1 a mx ip4:89.184.80.167 ip4:89.184.66.189 ip4:89.184.66.22 ip4:89.184.66.23 ip4:89.184.80.160/28 -all&quot;
-</code></pre>
-
-<p>В данном примере:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig work.ua TXT | grep spf
+work.ua.                <span style="color:#ae81ff">57416</span>   IN      TXT     <span style="color:#e6db74">&#34;v=spf1 a mx ip4:89.184.80.167 ip4:89.184.66.189 ip4:89.184.66.22 ip4:89.184.66.23 ip4:89.184.80.160/28 -all&#34;</span>
+</code></pre></div><p>В данном примере:</p>
 <ul>
 <li><code>v=spf1</code> — версия используемой SPF-записи;</li>
 <li><code>a</code> — принимать почту с сервера, IP-адрес которого стоит в A-записи домена (проще говоря с сервера, где размещен сайт);</li>
@@ -100,53 +103,36 @@ work.ua.                57416   IN      TXT     &quot;v=spf1 a mx ip4:89.184.80.
 <li><code>ip4:89.184.80.160/28</code> — принимать почту с серверов, IP-адреса которых находятся в указанной подсети (диапазоне);</li>
 <li><code>-all</code> — письмо с сервера, который не входит в вышеперечисленный список, отвергается.</li>
 </ul>
-
 <p>Еще один пример:</p>
-
-<pre><code class="language-bash">dig gmail.com TXT | grep spf
-gmail.com.              100     IN      TXT     &quot;v=spf1 redirect=_spf.google.com&quot;
-</code></pre>
-
-<p>В данном примере:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig gmail.com TXT | grep spf
+gmail.com.              <span style="color:#ae81ff">100</span>     IN      TXT     <span style="color:#e6db74">&#34;v=spf1 redirect=_spf.google.com&#34;</span>
+</code></pre></div><p>В данном примере:</p>
 <ul>
 <li><code>v=spf1</code> — версия используемой SPF-записи;</li>
-
-<li><p><code>redirect</code> — SPF-записи для данного домена определены в другом домене (<code>_spf.google.com</code>).
-Копнем глубже:</p>
-
-<pre><code class="language-bash">dig _spf.google.com TXT | grep spf
+<li><code>redirect</code> — SPF-записи для данного домена определены в другом домене (<code>_spf.google.com</code>).
+Копнем глубже:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig _spf.google.com TXT | grep spf
 ; &lt;&lt;&gt;&gt; DiG 9.9.5-9+deb8u9-Debian &lt;&lt;&gt;&gt; _spf.google.com TXT
 ;_spf.google.com.               IN      TXT
-_spf.google.com.        33      IN      TXT     &quot;v=spf1 include:_netblocks.google.com include:_netblocks2.google.com include:_netblocks3.google.com ~all&quot;
-</code></pre></li>
-</ul>
-
-<p>В данном примере:</p>
-
+_spf.google.com.        <span style="color:#ae81ff">33</span>      IN      TXT     <span style="color:#e6db74">&#34;v=spf1 include:_netblocks.google.com include:_netblocks2.google.com include:_netblocks3.google.com ~all&#34;</span>
+</code></pre></div><p>В данном примере:</p>
 <ul>
 <li><code>v=spf1</code> — версия используемой SPF-записи;</li>
 <li><code>include</code> — включает в текущую SPF-запись значение SPF-записи другого домена(ов), здесь это домены <code>_netblocks.google.com</code>, <code>_netblocks2.google.com</code> и <code>_netblocks3.google.com</code>;</li>
 <li><code>~all</code> — письмо с сервера, который не входит в вышеперечисленный список, стоит проанализировать более тщательно.</li>
 </ul>
-
 <p>Погрузимся еще на один уровень:</p>
-
-<pre><code class="language-bash">dig _netblocks.google.com TXT | grep spf
-_netblocks.google.com.  2251    IN      TXT     &quot;v=spf1 ip4:64.18.0.0/20 ip4:64.233.160.0/19 ip4:66.102.0.0/20 ip4:66.249.80.0/20 ip4:72.14.192.0/18 ip4:74.125.0.0/16 ip4:108.177.8.0/21 ip4:173.194.0.0/16 ip4:207.126.144.0/20 ip4:209.85.128.0/17 ip4:216.58.192.0/19 ip4:216.239.32.0/19 ~all&quot;
-</code></pre>
-
-<p>В данной SPF-записи уже привычно указана версия (<code>v=spf1</code>), перечислен список «доверенных» диапазонов IP-адресов для отправки почты и требование проанализировать тщательнее почту, отправленную с остальных (не «доверенных») серверов.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig _netblocks.google.com TXT | grep spf
+_netblocks.google.com.  <span style="color:#ae81ff">2251</span>    IN      TXT     <span style="color:#e6db74">&#34;v=spf1 ip4:64.18.0.0/20 ip4:64.233.160.0/19 ip4:66.102.0.0/20 ip4:66.249.80.0/20 ip4:72.14.192.0/18 ip4:74.125.0.0/16 ip4:108.177.8.0/21 ip4:173.194.0.0/16 ip4:207.126.144.0/20 ip4:209.85.128.0/17 ip4:216.58.192.0/19 ip4:216.239.32.0/19 ~all&#34;</span>
+</code></pre></div><p>В данной SPF-записи уже привычно указана версия (<code>v=spf1</code>), перечислен список «доверенных» диапазонов IP-адресов для отправки почты и требование проанализировать тщательнее почту, отправленную с остальных (не «доверенных») серверов.</p>
 <p>Согласно <a href="https://tools.ietf.org/html/rfc7208#page-33">спецификации</a> <strong>Sender Policy Framework</strong> существует четыре классификатора:</p>
-
 <ul>
 <li><code>+ pass</code> — клиенту разрешено слать письма от имени e-mail адресов этого домена;</li>
 <li><code>- fail</code> — клиенту не разрешено слать письма от имени e-mail адресов этого домена;</li>
 <li><code>~ soft fail</code> — среднее между <code>fail</code> и <code>none</code> — необходимо дополнительно проанализировать письмо;</li>
 <li><code>? neutral</code> — аналогично <code>none</code> — нельзя утверждать, разрешено или нет клиенту слать письма от имени e-mail адресов этого домена.</li>
 </ul>
-
 <p>Конечно, стоит помнить, что SPF — это не &lsquo;серебрянная пуля&rsquo; от спамеров, а всего лишь один дополнительный признак при фильтрации спама.</p>
                 </section>
             </article>
@@ -189,23 +175,23 @@ _netblocks.google.com.  2251    IN      TXT     &quot;v=spf1 ip4:64.18.0.0/20 ip
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

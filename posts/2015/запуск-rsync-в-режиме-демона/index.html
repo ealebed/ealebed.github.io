@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Запуск rsync в режиме демона &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,18 +90,11 @@
                 </header>
                 <section id="post-body">
                     <p>Утилита <code>rsync</code> используется для синхронизации файлов и позволяет значительно сократить использование траффика за счет инкрементального копирования изменений.</p>
-
 <p>Кроме синхронизации файлов и каталогов, данная утилита часто используется в схемах резервного копирования — давайте разберемся с <strong>запуском <code>rsync</code> в режиме демона</strong>!</p>
-
 <p>В данном примере с помощью утилиты <code>rsync</code> будем копировать резервные копии с нескольких серверов в одно хранилище.</p>
-
 <p>Прежде всего, на сервере-хранилище создаем (или редактируем, если такой файл уже есть) конфигурационный файл <code>/etc/rsyncd.conf</code>:</p>
-
 <pre><code>touch /etc/rsyncd.conf
-</code></pre>
-
-<p>Пример содержимого файла следующий:</p>
-
+</code></pre><p>Пример содержимого файла следующий:</p>
 <pre><code>uid = admin 
 gid = root
 max connections = 50
@@ -127,20 +131,15 @@ pid file = /var/run/rsyncd.pid
   dont compress = *
   hosts allow = 192.168.0.9
   hosts deny = *
-</code></pre>
-
-<p>В данном примере параметры можно разделить на глобальные (общие для всех) и локальные (параметры для каждого модуля). К глобальным параметрам относятся:</p>
-
+</code></pre><p>В данном примере параметры можно разделить на глобальные (общие для всех) и локальные (параметры для каждого модуля). К глобальным параметрам относятся:</p>
 <ul>
 <li><code>uid</code> — имя или <code>id</code> пользователя, от которого происходят прием и передача файлов;</li>
 <li><code>gid</code> — имя или <code>id</code> группы, от которой происходят прием и передача файлов;</li>
 <li><code>max connections</code> — максимальное количество одновременных подключений;</li>
 <li><code>pid file</code> — файл, с котором хранится идентификатор процесса (pid).</li>
 </ul>
-
 <p>Модуль создается при указании его имени в квадратных скобках, в нашем примере созданы модули [web1], [web2], [db1] и [db2].
 Для каждого модуля были указаны следующие параметры:</p>
-
 <ul>
 <li><code>path</code> — директория сервера, доступная утилите rsync по имени модуля;</li>
 <li><code>comment</code> — строка описания модуля;</li>
@@ -149,44 +148,21 @@ pid file = /var/run/rsyncd.pid
 <li><code>hosts allow</code> — шаблон доменных имен и ip-адресов, с которых разрешен доступ к серверу;</li>
 <li><code>hosts deny</code> — шаблон доменных имен и ip-адресов, с которых запрещен доступ к серверу.</li>
 </ul>
-
 <p><strong>Примечание.</strong> Для более безопасного использования утилиты можно с помощью параметра <code>secrets file</code> указать путь к файлу, в котором хранятся пары вида <code>username:password</code> для аутентификации подключений к модулю.</p>
-
 <p>Создадим необходимые каталоги:</p>
-
 <pre><code>mkdir /backups/web1
-</code></pre>
-
-<pre><code>mkdir /backups/web2
-</code></pre>
-
-<pre><code>mkdir /backups/db1
-</code></pre>
-
-<pre><code>mkdir /backups/db2
-</code></pre>
-
-<p>В конфигурационном файле <code>/etc/default/rsync</code> установим параметр <code>RSYNC_ENABLE</code> в:</p>
-
+</code></pre><pre><code>mkdir /backups/web2
+</code></pre><pre><code>mkdir /backups/db1
+</code></pre><pre><code>mkdir /backups/db2
+</code></pre><p>В конфигурационном файле <code>/etc/default/rsync</code> установим параметр <code>RSYNC_ENABLE</code> в:</p>
 <pre><code>RSYNC_ENABLE=true
-</code></pre>
-
-<p>После этого <strong>запускаем <code>rsync</code> в режиме демона</strong> командой:</p>
-
+</code></pre><p>После этого <strong>запускаем <code>rsync</code> в режиме демона</strong> командой:</p>
 <pre><code>/etc/init.d/rsync start
-</code></pre>
-
-<p><strong>Примечание.</strong> По умолчанию, <code>rsync</code>-демон для клиентских подключений использует порт 873.</p>
-
+</code></pre><p><strong>Примечание.</strong> По умолчанию, <code>rsync</code>-демон для клиентских подключений использует порт 873.</p>
 <p>Теперь для копирования в хранилище резервных копий с сервера web1, на сервере достаточно запустить команду:</p>
-
 <pre><code>rsync -a --bwlimit=3000 /var/backup/ storage.com.ua::web1
-</code></pre>
-
-<p>Резервные копии, которые находятся в каталоге <code>/var/backup/</code> на сервере web1 будут скопированы на сервер storage.com.ua, в каталог <code>/backups/web1</code> (именно этот каталог доступен по имени модуля web1) с ограничением скорости 24 Mbps.</p>
-
+</code></pre><p>Резервные копии, которые находятся в каталоге <code>/var/backup/</code> на сервере web1 будут скопированы на сервер storage.com.ua, в каталог <code>/backups/web1</code> (именно этот каталог доступен по имени модуля web1) с ограничением скорости 24 Mbps.</p>
 <p><strong>Примечание.</strong> Параметр <code>--bwlimit</code> позволяет задать скорость передачи в килобайтах за секунду, 3000 kB/s = 24 Mbps</p>
-
 <p>Далее на каждом сервере эту команду следует добавить отдельным заданием в <code>cron</code> или дописать в скрипт, выполняющий резервное копирование.</p>
                 </section>
             </article>
@@ -229,23 +205,23 @@ pid file = /var/run/rsyncd.pid
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

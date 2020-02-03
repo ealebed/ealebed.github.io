@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Знакомство с Kubernetes. Часть 7: Образы (Images) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,25 +88,17 @@
                 </header>
                 <section id="post-body">
                     <p>Перед тем, как описывать в манифесте какого-либо объекта <code>Kubernetes</code> образ контейнера, его необходимо создать и разместить в реестре образов. Давайте разберемся!</p>
-
 <p><strong>Примечание.</strong> В данной статье будем говорить прежде всего о docker-образах и docker-registry.</p>
-
 <p>Поле <code>image</code> в описании контейнера поддерживает тот же синтаксис, что и команда <code>docker</code>, включая частные реестры (private registries) и тэги.</p>
-
 <p>По умолчанию для скачивания docker-образов установлена политика <code>IfNotPresent</code>, которая заставляет Kubelet пропускать скачивание образа, если он уже существует локально. Если необходимо всегда скачивать docker-образы перед запуском контейнеров, изменить данную политику можно следующими вариантами:</p>
-
 <ul>
 <li>установить для поля <code>imagePullPolicy</code> контейнера значение Always;</li>
 <li>использовать тэг <code>:latest</code> при описании образа;</li>
 <li>включить контроллер <a href="https://kubernetes.io/docs/admin/admission-controllers/#alwayspullimages"><code>AlwaysPullImages</code></a>.</li>
 </ul>
-
 <p>Если не задать в явном виде тэг docker-образа, то он будет автоматически установлен в <code>:latest</code>, а политика скачивания образа будет иметь вид <code>imagePullPolicy=Always</code>.</p>
-
 <p><strong>Примечание.</strong> Следует избегать использования тэга <code>:latest</code> - подробнее <a href="https://kubernetes.io/docs/concepts/configuration/overview/#container-images">здесь</a>.</p>
-
 <p>При использовании частных реестров образов (private registries) могут потребоваться учетные данные для скачивания образов. Такие данные (ключи) можно предоставлять несколькими способами, в зависимости от типа реестра:</p>
-
 <ul>
 <li>средствами GCR (Google Container Registry);</li>
 <li>средствами AWS EC2 Container Registry (ECR);</li>
@@ -104,17 +107,12 @@
 <li>скачивая образы до запуска подов;</li>
 <li>указывая <code>ImagePullSecrets</code> в описании пода.</li>
 </ul>
-
 <p>Рассмотрим каждый вариант более детально.</p>
-
 <p><strong>GCR</strong>
 <code>Kubernetes</code> имеет встроенную поддержку Google Container Registry (GCR) при работе c GCE/GKE. Если используется кластер в Google Compute Engine или Google Kubernetes Engine, достаточно указать полное имя образа, например, <code>gcr.io/my_project/image:tag</code>. Все поды кластера будут иметь доступ к данному реестру образов. Kubelet получит доступ к GCR с помощью служебной учетной записи (instance’s Google service account) с правами read_only.</p>
-
 <p><strong>ECR</strong>
 <code>Kubernetes</code> имеет встроенную поддержку реестра контейнеров AWS EC2, если узлы кластера являются экземплярами AWS EC2. В таком случае достаточно использовать полное имя образа - например, <code>ACCOUNT.dkr.ecr.REGION.amazonaws.com/imagename:tag</code> в описании пода. Все пользователи кластера с правами запуска подов получают также права на скачивание docker-образов из ECR.</p>
-
 <p>Kubelet (начиная с версии v1.2.0) будет проверять и периодически обновлять учетные данные ECR. Для этого ему необходимы следующие разрешения:</p>
-
 <ul>
 <li><code>ecr:GetAuthorizationToken</code></li>
 <li><code>ecr:BatchCheckLayerAvailability</code></li>
@@ -124,90 +122,65 @@
 <li><code>ecr:ListImages</code></li>
 <li><code>ecr:BatchGetImage</code></li>
 </ul>
-
 <p><strong>ACR</strong>
 При работе с Azure Container Registry можно получить доступ к реестру образов либо с учетными данными администратора, либо с помощью стандартной аутентификации Docker. Второй вариант предполагает использование инструмента командной строки <code>azure-cli</code>. Создать реестр и сгенерировать учетные данные можно следуя <a href="https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-azure-cli">документации</a>, после чего можно использовать учетные данные для входа в систему:</p>
-
 <p><code>DOCKER_USER:</code> главный администратор или администратор службы
 <code>DOCKER_PASSWORD:</code> пароль главного администратора или администратора службы
 <code>DOCKER_REGISTRY_SERVER: $ {some-registry-name} .azurecr.io</code>
 <code>DOCKER_EMAIL: $ {some-email-address}</code></p>
-
 <p><strong>Настройка узлов кластера для аутентификации в частных реестрах</strong>
 Docker хранит ключи для частных реестров образов в файле <code>$HOME/.dockercfg</code> или <code>$HOME/.docker/config.json</code>. Необходимо разместить этот файл в домашнем каталоге пользователя root на всех узлах кластера с запущенным kubelet. Для этого:</p>
-
 <ul>
 <li>На рабочем компьютере нужно выполнить <code>docker login [server]</code> для всех наборов учетных записей / реестров, которые вы планируете использовать. Эти команды актуализируют конфигурационный файл <code>$HOME/.docker/config.json</code>.</li>
 <li>Проверьте данный файл (<code>$HOME/.docker/config.json</code>) в текстовом редакторе и убедитесь, что в нем есть все необходимые данные.</li>
-
-<li><p>Получите все имена или ip-адреса узлов кластера <code>Kubernetes</code>:</p>
-
-<pre><code class="language-bash">nodes=$(kubectl get nodes -o jsonpath='{range.items[*].metadata}{.name} {end}')
-</code></pre></li>
+<li>Получите все имена или ip-адреса узлов кластера <code>Kubernetes</code>:</li>
 </ul>
-
-<p>или</p>
-
-<pre><code class="language-bash">nodes=$(kubectl get nodes -o jsonpath='{range .items[*].status.addresses[?(@.type==&quot;ExternalIP&quot;)]}{.address} {end}')
-</code></pre>
-
-<ul>
-<li><p>Скопируйте конфигурационный файл <code>$HOME/.docker/config.json</code> на все узлы кластера, например так:</p>
-
-<pre><code class="language-bash">for n in $nodes; do scp ~/.docker/config.json root@$n:/root/.docker/config.json; done
-</code></pre></li>
-
-<li><p>Проверьте доступ в частному реестру - например, создайте манифест для пода, использующий образ из реестра.</p></li>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nodes<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl get nodes -o jsonpath<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{range.items[*].metadata}{.name} {end}&#39;</span><span style="color:#66d9ef">)</span>
+</code></pre></div><p>или</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nodes<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl get nodes -o jsonpath<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{range .items[*].status.addresses[?(@.type==&#34;ExternalIP&#34;)]}{.address} {end}&#39;</span><span style="color:#66d9ef">)</span>
+</code></pre></div><ul>
+<li>Скопируйте конфигурационный файл <code>$HOME/.docker/config.json</code> на все узлы кластера, например так:</li>
 </ul>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#66d9ef">for</span> n in $nodes; <span style="color:#66d9ef">do</span> scp ~/.docker/config.json root@$n:/root/.docker/config.json; <span style="color:#66d9ef">done</span>
+</code></pre></div><ul>
+<li>Проверьте доступ в частному реестру - например, создайте манифест для пода, использующий образ из реестра.</li>
+</ul>
 <p><strong>Скачивая образы до запуска подов</strong>
 Не самый оптимальный вариант, но все же - если вы хотите использовать локально размещенные docker-образы (например, если хотите сэкономить время на скачивании образов из реестра или нет учетных данных для доступа к реестру), то убедитесь, что эти образы есть на всех узлах кластера.</p>
-
 <p><strong>Указывая <code>ImagePullSecrets</code> в описании пода</strong>
 С помощью следующей команды (с заменой соответствующих значений на ваши) генерируем секретную переменную (создание секретов рассмотрим в одной из <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-14-%D1%81%D0%B5%D0%BA%D1%80%D0%B5%D1%82%D1%8B-secrets/">следующих статей</a>):</p>
-
-<pre><code class="language-bash">kubectl create secret docker-registry myregistrykey --docker-server=DOCKER_REGISTRY_SERVER --docker-username=DOCKER_USER --docker-password=DOCKER_PASSWORD --docker-email=DOCKER_EMAIL
-secret &quot;myregistrykey&quot; created.
-</code></pre>
-
-<p><strong>Примечание.</strong> Если необходим доступ к нескольким частным реестрам образов, для каждого из них генерируем отдельный secret.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create secret docker-registry myregistrykey --docker-server<span style="color:#f92672">=</span>DOCKER_REGISTRY_SERVER --docker-username<span style="color:#f92672">=</span>DOCKER_USER --docker-password<span style="color:#f92672">=</span>DOCKER_PASSWORD --docker-email<span style="color:#f92672">=</span>DOCKER_EMAIL
+secret <span style="color:#e6db74">&#34;myregistrykey&#34;</span> created.
+</code></pre></div><p><strong>Примечание.</strong> Если необходим доступ к нескольким частным реестрам образов, для каждого из них генерируем отдельный secret.</p>
 <p>Альтернативный вариант описания секретной переменной - создаем манифест для объекта <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-14-%D1%81%D0%B5%D0%BA%D1%80%D0%B5%D1%82%D1%8B-secrets/"><code>Secret</code></a> следующего вида:</p>
-
-<pre><code class="language-yaml">apiVersion: v1
-kind: Secret
-metadata:
-  name: myregistrykey
-  namespace: awesomeapps
-data:
-  .dockerconfigjson: ewogICJhdXRocyIgOiB7CiAgICAiaHR0cHM6Ly9yZWdpc3RyeS5naXRsYWIubGM6NTAwMCIgOiB7CgogICAgfSwKICAgICJyZWdpc3RyeS5naXRsYWIubGM6NTAwMCIgOiB7CgogICAgfQogIH0sCiAgIkh0dHBIZWFkZXJzIiA6IHsKICAgICJVc2VyLUFnZW50IiA6ICJEb2NrZXItQ2xpZW50LzE4LjAyLjAtY2UtcmMyIChkYXJ3aW4pIgogIH0sCiAgImV4cGVyaW1lbnRhbCIgOiAiZW5hYmxlZCIsCiAgImNyZWRzU3RvcmUiIDogIm9zeGtleWNoYWluIiwKICAib3JjaGVzdHJhdG9yIiA6ICJzd2FybSIKfQ==
-type: kubernetes.io/dockerconfigjson
-</code></pre>
-
-<p>Убедитесь, что:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">kind</span>: Secret
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: myregistrykey
+  <span style="color:#66d9ef">namespace</span>: awesomeapps
+<span style="color:#66d9ef">data</span>:
+  <span style="color:#66d9ef">.dockerconfigjson</span>: ewogICJhdXRocyIgOiB7CiAgICAiaHR0cHM6Ly9yZWdpc3RyeS5naXRsYWIubGM6NTAwMCIgOiB7CgogICAgfSwKICAgICJyZWdpc3RyeS5naXRsYWIubGM6NTAwMCIgOiB7CgogICAgfQogIH0sCiAgIkh0dHBIZWFkZXJzIiA6IHsKICAgICJVc2VyLUFnZW50IiA6ICJEb2NrZXItQ2xpZW50LzE4LjAyLjAtY2UtcmMyIChkYXJ3aW4pIgogIH0sCiAgImV4cGVyaW1lbnRhbCIgOiAiZW5hYmxlZCIsCiAgImNyZWRzU3RvcmUiIDogIm9zeGtleWNoYWluIiwKICAib3JjaGVzdHJhdG9yIiA6ICJzd2FybSIKfQ==
+<span style="color:#66d9ef">type</span>: kubernetes.io/dockerconfigjson
+</code></pre></div><p>Убедитесь, что:</p>
 <ul>
 <li>имя элемента данных в поле <code>data</code> установлено в <code>.dockerconfigjson</code>;</li>
 <li>значением для параметра <code>.dockerconfigjson</code> установлена строка, полученная как результат кодирования файла <code>$HOME/.docker/config.json</code> (см. выше) в base64;</li>
 <li>тип (type) объекта установлен в <code>kubernetes.io/dockerconfigjson</code>.</li>
 </ul>
-
 <p><strong>Примечание.</strong> Команда для кодирования строки выглядит так: <code>cat ~/.docker/config.json | base64</code>.</p>
-
 <p>Теперь, при описании манифеста для каждого пода, использующего частный реестр образов, не забудьте добавить поле <code>imagePullSecrets</code>:</p>
-
-<pre><code class="language-yaml">apiVersion: v1
-kind: Pod
-metadata:
-  name: foo
-  namespace: awesomeapps
-spec:
-  containers:
-    - name: foo
-      image: janedoe/awesomeapp:v1
-  imagePullSecrets:
-    - name: myregistrykey
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">kind</span>: Pod
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: foo
+  <span style="color:#66d9ef">namespace</span>: awesomeapps
+<span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">containers</span>:
+    - <span style="color:#66d9ef">name</span>: foo
+      <span style="color:#66d9ef">image</span>: janedoe/awesomeapp:v1
+  <span style="color:#66d9ef">imagePullSecrets</span>:
+    - <span style="color:#66d9ef">name</span>: myregistrykey
+</code></pre></div>
                 </section>
             </article>
 
@@ -249,23 +222,23 @@ spec:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -14,7 +14,7 @@
   
   
   <meta name="twitter:title" content="Docker совет №7: Измеряйте ресурсы, используемые контейнерами"/>
-  <meta name="twitter:description" content="В docker&rsquo;е существует встроенная команда, позволяющая увидеть сколько CPU, памяти, сетевых операций ввода-вывода (network I/O) и блочных операций ввода-вывода (block I/O) используют запущенные контейнеры. Давайте разберемся!"/>
+  <meta name="twitter:description" content="В docker&#39;е существует встроенная команда, позволяющая увидеть сколько CPU, памяти, сетевых операций ввода-вывода (network I/O) и блочных операций ввода-вывода (block I/O) используют запущенные контейнеры. Давайте разберемся!"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №7: Измеряйте ресурсы, используемые контейнерами &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -76,12 +87,9 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>В docker&rsquo;е существует встроенная команда, позволяющая увидеть сколько CPU, памяти, сетевых операций ввода-вывода (network I/O) и блочных операций ввода-вывода (block I/O) используют запущенные контейнеры. Давайте разберемся!</p>
-
+                    <p>В docker'е существует встроенная команда, позволяющая увидеть сколько CPU, памяти, сетевых операций ввода-вывода (network I/O) и блочных операций ввода-вывода (block I/O) используют запущенные контейнеры. Давайте разберемся!</p>
 <p>Знать, сколько ресурсов используется тем или иным docker-контейнером очень полезно. Вооружившись этими знаниями, можно планировать апгрейд существующих и разворачивать дополнительные docker-хосты, соответствующие используемым ресурсам. В перспективе это знание позволяет сэкономить серьезные деньги на инфраструктуре.</p>
-
 <p>Все, что вам нужно сделать, — запустить команду <code>docker stats</code> на docker-хосте. Вывод команды будет примерно следующим:</p>
-
 <pre><code>CONTAINER           CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
 1fbfd146c892        0.00%               7.562MiB / 15.57GiB   0.05%               58MB / 84.4MB       831kB / 0B          4
 3e18760df407        0.03%               21.7MiB / 15.57GiB    0.14%               43.4MB / 56MB       17.5MB / 29.4MB     21
@@ -104,17 +112,11 @@ a173fb7cacda        0.00%               15.04MiB / 15.57GiB   0.09%             
 304cd30dbc10        15.82%              3.824GiB / 15.57GiB   24.56%              49.2GB / 14.4GB     12.6GB / 9.64GB     170
 74a23eb1bdf0        1.18%               3.083GiB / 15.57GiB   19.80%              170GB / 56.4GB      111GB / 106GB       210
 9a14993f1238        6.52%               1.123GiB / 15.57GiB   7.21%               66.9GB / 213GB      69.1GB / 679GB      127
-</code></pre>
-
-<p>При желании, вывод данной статистики можно сузить, добавив в него один или несколько ID контейнеров в качестве параметров для команды. Например, так <code>docker stats 304cd30dbc10 74a23eb1bdf0</code>:</p>
-
+</code></pre><p>При желании, вывод данной статистики можно сузить, добавив в него один или несколько ID контейнеров в качестве параметров для команды. Например, так <code>docker stats 304cd30dbc10 74a23eb1bdf0</code>:</p>
 <pre><code>CONTAINER           CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
 304cd30dbc10        0.98%               3.824GiB / 15.57GiB   24.56%              49.2GB / 14.4GB     12.6GB / 9.64GB     163
 74a23eb1bdf0        0.19%               3.083GiB / 15.57GiB   19.80%              170GB / 56.4GB      111GB / 106GB       210
-</code></pre>
-
-<p>Также можно использовать флаг <code>--format</code>, чтобы выводить только интересующие столбцы информации. Например, для вывода статистики использования CPU и памяти используйте:</p>
-
+</code></pre><p>Также можно использовать флаг <code>--format</code>, чтобы выводить только интересующие столбцы информации. Например, для вывода статистики использования CPU и памяти используйте:</p>
 <pre><code>docker stats --format &quot;table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}&quot;
 
 CONTAINER           CPU %               MEM USAGE / LIMIT
@@ -139,10 +141,7 @@ a173fb7cacda        0.00%               15.04MiB / 15.57GiB
 304cd30dbc10        0.16%               3.836GiB / 15.57GiB
 74a23eb1bdf0        0.24%               3.083GiB / 15.57GiB
 9a14993f1238        0.08%               1.123GiB / 15.57GiB
-</code></pre>
-
-<p>Или комбинируйте эти команды:</p>
-
+</code></pre><p>Или комбинируйте эти команды:</p>
 <pre><code>docker stats --format &quot;table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}&quot; 304cd30dbc10 74a23eb1bdf0
 
 CONTAINER           CPU %               MEM USAGE / LIMIT
@@ -190,23 +189,23 @@ CONTAINER           CPU %               MEM USAGE / LIMIT
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

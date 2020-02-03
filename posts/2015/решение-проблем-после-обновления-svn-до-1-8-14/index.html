@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Решение проблем после обновления SVN до 1.8.14 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Oct 15, 2015 17:31
-                    · 220 words
+                    · 221 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -79,39 +90,28 @@
                 </header>
                 <section id="post-body">
                     <p>В одной из предыдущих статей рассматривалась <a href="https://ealebed.github.io/posts/2015/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-subversion-1-8-%D0%B2-debian-wheezy/">установка SVN (<code>subversion</code>) 1.8 в Debian Wheezy</a>. И если с установкой вопросов не возникло, то при обновлении на более свежую версию SVN (пакет от WANdisco) я столкнулся со следующей ошибкой:</p>
-
-<pre><code class="language-bash">apache2: Syntax error on line 244 of /etc/apache2/apache2.conf: Syntax error on line 2 of /etc/apache2/mods-enabled/authz_svn.load: Cannot load /usr/lib/apache2/modules/mod_authz_svn.so into server: /usr/lib/apache2/modules/mod_authz_svn.so: undefined symbol: dav_svn_get_repos_path
-Action 'configtest' failed.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apache2: Syntax error on line <span style="color:#ae81ff">244</span> of /etc/apache2/apache2.conf: Syntax error on line <span style="color:#ae81ff">2</span> of /etc/apache2/mods-enabled/authz_svn.load: Cannot load /usr/lib/apache2/modules/mod_authz_svn.so into server: /usr/lib/apache2/modules/mod_authz_svn.so: undefined symbol: dav_svn_get_repos_path
+Action <span style="color:#e6db74">&#39;configtest&#39;</span> failed.
 The Apache error log may have more information.
  failed!
-</code></pre>
-
-<p>Необходимые модули (<code>dav</code>, <code>dav_svn</code> и <code>authz_svn</code>) в системе присутствуют. Как показали дальнейшие разбирательства, важно не только наличие модулей, но и порядок их загрузки. В данном примере модули должны загружаться в следующем порядке: 1) <code>dav</code> 2) <code>dav_svn_module</code> 3) <code>authz_svn_module</code>, но <code>apache2</code>загружает модули, перечисленные в каталоге <code>/etc/apache2/mods-enabled/</code> в алфавитном порядке.</p>
-
+</code></pre></div><p>Необходимые модули (<code>dav</code>, <code>dav_svn</code> и <code>authz_svn</code>) в системе присутствуют. Как показали дальнейшие разбирательства, важно не только наличие модулей, но и порядок их загрузки. В данном примере модули должны загружаться в следующем порядке: 1) <code>dav</code> 2) <code>dav_svn_module</code> 3) <code>authz_svn_module</code>, но <code>apache2 </code>загружает модули, перечисленные в каталоге <code>/etc/apache2/mods-enabled/</code> в алфавитном порядке.</p>
 <p><strong>Примечание.</strong> <code>apache2</code> честно пытается загрузить модуль, указанный в <code>authz_svn.load</code> и получает ошибку, так как модуль, указанный в файле <code>dav_svn.load</code> еще не загружен.</p>
-
 <p>Эти зависимости также описаны в первой строке самих <code>*.load</code> файлов:</p>
-
-<pre><code class="language-bash">cat /etc/apache2/mods-available/dav_svn.load
-# Depends: dav
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /etc/apache2/mods-available/dav_svn.load
+<span style="color:#75715e"># Depends: dav</span>
 LoadModule dav_svn_module /usr/lib/apache2/modules/mod_dav_svn.so
 
 cat /etc/apache2/mods-available/authz_svn.load
-# Depends: dav_svn
+<span style="color:#75715e"># Depends: dav_svn</span>
 LoadModule authz_svn_module /usr/lib/apache2/modules/mod_authz_svn.so
-</code></pre>
-
-<p>Устранить эту проблему, возникшую после <strong>обновления SVN до 1.8.14</strong> можно двумя способами:</p>
-
+</code></pre></div><p>Устранить эту проблему, возникшую после <strong>обновления SVN до 1.8.14</strong> можно двумя способами:</p>
 <ul>
 <li>переименовать модули в каталоге <code>/etc/apache2/mods-enabled/</code> таким образом, чтобы они находились в нужном вам порядке — <code>@10-dav.load</code>, <code>@20-dav_svn_module</code> и <code>@30-authz_svn_module</code>;</li>
-
-<li><p>удалить файлы <code>@dav_svn.load</code> и <code>@authz_svn.load</code> в каталоге <code>/etc/apache2/mods-enabled/</code> и добавить в конфиг <code>/etc/apache2/apache2.conf</code> следующие строки:</p>
-
-<pre><code class="language-bash">LoadModule dav_svn_module /usr/lib/apache2/modules/mod_dav_svn.so
-LoadModule authz_svn_module /usr/lib/apache2/modules/mod_authz_svn.so
-</code></pre></li>
+<li>удалить файлы <code>@dav_svn.load</code> и <code>@authz_svn.load</code> в каталоге <code>/etc/apache2/mods-enabled/</code> и добавить в конфиг <code>/etc/apache2/apache2.conf</code> следующие строки:</li>
 </ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">LoadModule dav_svn_module /usr/lib/apache2/modules/mod_dav_svn.so
+LoadModule authz_svn_module /usr/lib/apache2/modules/mod_authz_svn.so
+</code></pre></div>
                 </section>
             </article>
 
@@ -153,23 +153,23 @@ LoadModule authz_svn_module /usr/lib/apache2/modules/mod_authz_svn.so
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

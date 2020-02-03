@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Установка и настройка сервера очередей Beanstalkd в CentOS 7 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,82 +88,36 @@
                 </header>
                 <section id="post-body">
                     <p>Ранее мы уже рассматривали процесс <a href="https://ealebed.github.io/posts/2017/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D0%BE%D1%87%D0%B5%D1%80%D0%B5%D0%B4%D0%B5%D0%B9-beanstalkd-%D0%B2-debian-jessie/">установки сервера очередей <code>beanstalkd</code></a> в операционной системе Debian Jessie. Как показала практика, в <code>rpm</code>-based операционных системах <strong>установка и настройка <code>beanstalkd</code></strong> несколько отличается и не всегда выполняется одной командой.</p>
-
 <p>Давайте разберемся с несколькими возможными вариантами <strong>установки сервера очередей <code>beanstalkd</code> в CentOS 7</strong>!</p>
-
 <p>Итак, вариант первый (самый простой). Устанавливаем <code>beanstalkd</code>:</p>
-
-<pre><code class="language-bash">sudo yum install beanstalkd -y
-</code></pre>
-
-<pre><code class="language-bash">sudo chkconfig beanstalkd on
-</code></pre>
-
-<p>Запускаем и проверяем текущий статус:</p>
-
-<pre><code class="language-bash">sudo service beanstalkd start
-</code></pre>
-
-<pre><code class="language-bash">sudo service beanstalkd status
-</code></pre>
-
-<p>Вариант второй. Скачиваем пакеты <code>beanstalkd</code> и <code>beanstalkd-debuginfo</code> с помощью <code>wget</code>:</p>
-
-<pre><code class="language-bash">wget http://cbs.centos.org/kojifiles/packages/beanstalkd/1.9/3.el7/x86_64/beanstalkd-1.9-3.el7.x86_64.rpm
-</code></pre>
-
-<pre><code class="language-bash">wget http://cbs.centos.org/kojifiles/packages/beanstalkd/1.9/3.el7/x86_64/beanstalkd-debuginfo-1.9-3.el7.x86_64.rpm
-</code></pre>
-
-<p>Устанавливаем скачанные пакеты:</p>
-
-<pre><code class="language-bash">rpm -ivh beanstalkd-1.9-3.el7.x86_64.rpm
-</code></pre>
-
-<pre><code class="language-bash">rpm -ivh beanstalkd-debuginfo-1.9-3.el7.x86_64.rpm
-</code></pre>
-
-<p>Добавляем <code>beanstalkd</code> в автозагрузку:</p>
-
-<pre><code class="language-bash">systemctl enable beanstalkd
-</code></pre>
-
-<p>Запускаем:</p>
-
-<pre><code class="language-bash">systemctl start beanstalkd
-</code></pre>
-
-<p>Проверяем:</p>
-
-<pre><code class="language-bash">ps aux | grep beanstalkd
-root 8772 0.0 0.0 4444 616 ? Ss 08:58 0:00 /usr/bin/beanstalkd -b /var/lib/beanstalkd
-</code></pre>
-
-<p>Вариант третий, сборка из исходников. Установим пакет <code>git</code>, если его еще нет в системе:</p>
-
-<pre><code class="language-bash">yum install git
-</code></pre>
-
-<p>Устанавливаем:</p>
-
-<pre><code class="language-bash">git clone git://github.com/kr/beanstalkd.git
-</code></pre>
-
-<pre><code class="language-bash">cd beanstalkd
-</code></pre>
-
-<pre><code class="language-bash">make
-</code></pre>
-
-<pre><code class="language-bash">cp beanstalkd /usr/bin/beanstalkd
-</code></pre>
-
-<pre><code class="language-bash">mkdir /var/lib/beanstalkd
-</code></pre>
-
-<p>Далее создаем <code>ystemd</code>-юнит <code>/etc/systemd/system/beanstalkd.service</code> следующего содержания:</p>
-
-<pre><code class="language-text">[Unit]
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo yum install beanstalkd -y
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo chkconfig beanstalkd on
+</code></pre></div><p>Запускаем и проверяем текущий статус:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo service beanstalkd start
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo service beanstalkd status
+</code></pre></div><p>Вариант второй. Скачиваем пакеты <code>beanstalkd</code> и <code>beanstalkd-debuginfo</code> с помощью <code>wget</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://cbs.centos.org/kojifiles/packages/beanstalkd/1.9/3.el7/x86_64/beanstalkd-1.9-3.el7.x86_64.rpm
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://cbs.centos.org/kojifiles/packages/beanstalkd/1.9/3.el7/x86_64/beanstalkd-debuginfo-1.9-3.el7.x86_64.rpm
+</code></pre></div><p>Устанавливаем скачанные пакеты:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">rpm -ivh beanstalkd-1.9-3.el7.x86_64.rpm
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">rpm -ivh beanstalkd-debuginfo-1.9-3.el7.x86_64.rpm
+</code></pre></div><p>Добавляем <code>beanstalkd</code> в автозагрузку:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl enable beanstalkd
+</code></pre></div><p>Запускаем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl start beanstalkd
+</code></pre></div><p>Проверяем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps aux | grep beanstalkd
+root <span style="color:#ae81ff">8772</span> 0.0 0.0 <span style="color:#ae81ff">4444</span> <span style="color:#ae81ff">616</span> ? Ss 08:58 0:00 /usr/bin/beanstalkd -b /var/lib/beanstalkd
+</code></pre></div><p>Вариант третий, сборка из исходников. Установим пакет <code>git</code>, если его еще нет в системе:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">yum install git
+</code></pre></div><p>Устанавливаем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone git://github.com/kr/beanstalkd.git
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd beanstalkd
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp beanstalkd /usr/bin/beanstalkd
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /var/lib/beanstalkd
+</code></pre></div><p>Далее создаем <code>ystemd</code>-юнит <code>/etc/systemd/system/beanstalkd.service</code> следующего содержания:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">[Unit]
 Description=Beanstalkd is a simple, fast work queue
  
 [Service]
@@ -161,15 +126,10 @@ ExecStart=/usr/bin/beanstalkd -b /var/lib/beanstalkd
  
 [Install]
 WantedBy=multi-user.target
-</code></pre>
-
-<p>Добавляем в автозагрузку и запускаем:</p>
-
-<pre><code class="language-bash">systemctl enable beanstalkd
-</code></pre>
-
-<pre><code class="language-bash">systemctl start beanstalkd
-</code></pre>
+</code></pre></div><p>Добавляем в автозагрузку и запускаем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl enable beanstalkd
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl start beanstalkd
+</code></pre></div>
                 </section>
             </article>
 
@@ -211,23 +171,23 @@ WantedBy=multi-user.target
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

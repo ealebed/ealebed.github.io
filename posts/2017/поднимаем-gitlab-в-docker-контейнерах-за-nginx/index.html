@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Поднимаем Gitlab в docker-контейнерах за Nginx &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,61 +92,43 @@
                 </header>
                 <section id="post-body">
                     <p>Мы уже упоминали о <strong>GitLab</strong> — одной из самых популярных систем контроля версий и управления Git-репозиториями с открытым исходным кодом и очень широкой функциональностью. Рассматривались варианты <a href="https://ealebed.github.io/posts/2017/gitlab-%D0%BF%D0%B5%D1%80%D0%B5%D0%BD%D0%BE%D1%81-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D1%81-omnibus-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B8-%D0%B2-docker-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D1%83/">переноса <strong>GitLab</strong> в docker-установку</a> и <a href="https://ealebed.github.io/posts/2017/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">организация процесса CI</a> с помощью <code>docker-compose</code>.</p>
-
 <p>Еще один довольно часто встречающийся вариант установки — <strong>размещение Gitlab в docker-контейнерах за веб-сервером Nginx</strong>, выступающим в качестве фронтенда. Давайте разберемся!</p>
-
 <p>Считаем, что все необходимые для работы установлены и настроены. Действия производятся на:</p>
-
-<pre><code class="language-bash">lsb_release -a
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
 No LSB modules are available.
 Distributor ID: Debian
-Description:    Debian GNU/Linux 8.7 (jessie)
+Description:    Debian GNU/Linux 8.7 <span style="color:#f92672">(</span>jessie<span style="color:#f92672">)</span>
 Release:        8.7
 Codename:       jessie
-</code></pre>
-
-<p>Версия веб-сервера Nginx:</p>
-
-<pre><code class="language-bash">nginx -v
+</code></pre></div><p>Версия веб-сервера Nginx:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -v
 nginx version: nginx/1.11.9
-</code></pre>
-
-<p>Версия docker:</p>
-
-<pre><code class="language-bash">docker version
+</code></pre></div><p>Версия docker:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version
 Client:
  Version:      17.03.1-ce
  API version:  1.27
  Go version:   go1.7.5
  Git commit:   c6d412e
- Built:        Mon Mar 27 17:07:28 2017
+ Built:        Mon Mar <span style="color:#ae81ff">27</span> 17:07:28 <span style="color:#ae81ff">2017</span>
  OS/Arch:      linux/amd64
 
 Server:
  Version:      17.03.1-ce
- API version:  1.27 (minimum version 1.12)
+ API version:  1.27 <span style="color:#f92672">(</span>minimum version 1.12<span style="color:#f92672">)</span>
  Go version:   go1.7.5
  Git commit:   c6d412e
- Built:        Mon Mar 27 17:07:28 2017
+ Built:        Mon Mar <span style="color:#ae81ff">27</span> 17:07:28 <span style="color:#ae81ff">2017</span>
  OS/Arch:      linux/amd64
  Experimental: false
-</code></pre>
-
-<p>Версия <code>docker-compose</code>:</p>
-
-<pre><code class="language-bash">docker-compose -v
+</code></pre></div><p>Версия <code>docker-compose</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose -v
 docker-compose version 1.11.2, build dfed245
-</code></pre>
-
-<p><strong>Примечание.</strong> В нашем примере Nginx установлен в хост-системе, однако веб-сервер также можно разместить в docker-контейнере.</p>
-
+</code></pre></div><p><strong>Примечание.</strong> В нашем примере Nginx установлен в хост-системе, однако веб-сервер также можно разместить в docker-контейнере.</p>
 <p>Для веб-сервера получены и подключены бесплатные SSL-сертификаты от Let’s Encrypt (о том как это сделать читайте <a href="https://ealebed.github.io/posts/2017/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-ssl-%D0%BE%D1%82-lets-encrypt-%D0%B2%D0%B0%D1%80%D0%B8%D0%B0%D0%BD%D1%82-2-%D1%8D%D0%BB%D0%B5%D0%B3%D0%B0%D0%BD%D1%82%D0%BD%D1%8B%D0%B9/">здесь</a> или <a href="https://ealebed.github.io/posts/2016/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-%D0%B8-ssl-%D0%BE%D1%82-lets-encrypt-%D0%BD%D0%B0-debian-8/">здесь</a>).</p>
-
 <p>Конфигурационные файлы Nginx расположены в каталоге <code>/etc/nginx</code> и выглядят следующим образом:</p>
-
 <p>файл <code>/etc/nginx/conf.d/gitlab.conf</code>:</p>
-
-<pre><code class="language-text">server {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">server {
     listen 80;
     server_name gitlab.example.com;
  
@@ -179,11 +172,8 @@ server {
         proxy_pass http://gitlab.example.com:10080;
     }
 }
-</code></pre>
-
-<p>файл <code>/etc/nginx/ssl/ssl.conf</code>:</p>
-
-<pre><code class="language-text">ssl_certificate /etc/letsencrypt/live/gitlab.example.com/fullchain.pem;
+</code></pre></div><p>файл <code>/etc/nginx/ssl/ssl.conf</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">ssl_certificate /etc/letsencrypt/live/gitlab.example.com/fullchain.pem;
 ssl_certificate_key /etc/letsencrypt/live/gitlab.example.com/privkey.pem;
 ssl_trusted_certificate /etc/letsencrypt/live/gitlab.example.com/chain.pem;
  
@@ -197,116 +187,102 @@ ssl_stapling on;
 ssl_stapling_verify on;
  
 add_header Strict-Transport-Security max-age=15768000;
-add_header X-Frame-Options &quot;SAMEORIGIN&quot; always;
-add_header X-Xss-Protection &quot;1; mode=block&quot; always;
-add_header X-Content-Type-Options &quot;nosniff&quot; always;
+add_header X-Frame-Options &#34;SAMEORIGIN&#34; always;
+add_header X-Xss-Protection &#34;1; mode=block&#34; always;
+add_header X-Content-Type-Options &#34;nosniff&#34; always;
  
 resolver 8.8.8.8 valid=300s;
 resolver_timeout 10s;
-</code></pre>
-
-<p>файл <code>/etc/nginx/ssl/acme.conf</code>:</p>
-
-<pre><code class="language-text"># Lets Encrypt Webroot
+</code></pre></div><p>файл <code>/etc/nginx/ssl/acme.conf</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"># Lets Encrypt Webroot
 location /.well-known {
     root /var/www/le;
 }
-</code></pre>
-
-<p>Gitlab будем поднимать с помощью инструмента <code>docker-compose</code>, инструкции для которого описаны в конфигурационном файле <code>docker-compose.yml</code> и выглядят следующим образом:</p>
-
-<pre><code class="language-yaml">version: '2'
-services:
-  redis:
-    container_name: gitlab-redis
-    restart: always
-    image: sameersbn/redis:latest
-    command:
+</code></pre></div><p>Gitlab будем поднимать с помощью инструмента <code>docker-compose</code>, инструкции для которого описаны в конфигурационном файле <code>docker-compose.yml</code> и выглядят следующим образом:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+<span style="color:#66d9ef">services</span>:
+  <span style="color:#66d9ef">redis</span>:
+    <span style="color:#66d9ef">container_name</span>: gitlab-redis
+    <span style="color:#66d9ef">restart</span>: always
+    <span style="color:#66d9ef">image</span>: sameersbn/redis:latest
+    <span style="color:#66d9ef">command</span>:
     - --loglevel warning
-    volumes:
+    <span style="color:#66d9ef">volumes</span>:
     - /srv/redis:/var/lib/redis:Z
-    networks:
+    <span style="color:#66d9ef">networks</span>:
     - mynet
  
-  postgresql:
-    container_name: gitlab-postgres
-    restart: always
-    image: sameersbn/postgresql:9.6-2
-    volumes:
+  <span style="color:#66d9ef">postgresql</span>:
+    <span style="color:#66d9ef">container_name</span>: gitlab-postgres
+    <span style="color:#66d9ef">restart</span>: always
+    <span style="color:#66d9ef">image</span>: sameersbn/postgresql:<span style="color:#ae81ff">9.6</span><span style="color:#ae81ff">-2</span>
+    <span style="color:#66d9ef">volumes</span>:
     - /srv/postgresql:/var/lib/postgresql:Z
-    environment:
+    <span style="color:#66d9ef">environment</span>:
     - DB_USER=gitlab
     - DB_PASS=password
     - DB_NAME=gitlabhq_production
     - DB_EXTENSION=pg_trgm
-    networks:
+    <span style="color:#66d9ef">networks</span>:
     - mynet
  
-  gitlab:
-    container_name: gitlab
-    restart: always
-    image: sameersbn/gitlab:9.0.2
-    depends_on:
+  <span style="color:#66d9ef">gitlab</span>:
+    <span style="color:#66d9ef">container_name</span>: gitlab
+    <span style="color:#66d9ef">restart</span>: always
+    <span style="color:#66d9ef">image</span>: sameersbn/gitlab:<span style="color:#ae81ff">9.0</span><span style="color:#ae81ff">.2</span>
+    <span style="color:#66d9ef">depends_on</span>:
     - redis
     - postgresql
-    ports:
-    - &quot;10080:80&quot;
-    - &quot;10022:22&quot;
-    volumes:
+    <span style="color:#66d9ef">ports</span>:
+    - <span style="color:#e6db74">&#34;10080:80&#34;</span>
+    - <span style="color:#e6db74">&#34;10022:22&#34;</span>
+    <span style="color:#66d9ef">volumes</span>:
     - /srv/gitlab/data:/home/git/data:Z
     - /srv/gitlab/logs:/var/log/gitlab
     - /srv/certs:/certs
-    environment:
-    - DEBUG=false
+    <span style="color:#66d9ef">environment</span>:
+    - DEBUG=<span style="color:#66d9ef">false</span>
  
     - DB_ADAPTER=postgresql
     - DB_HOST=postgresql
-    - DB_PORT=5432
+    - DB_PORT=<span style="color:#ae81ff">5432</span>
     - DB_USER=gitlab
     - DB_PASS=password
     - DB_NAME=gitlabhq_production
  
     - REDIS_HOST=redis
-    - REDIS_PORT=6379
-    - GITLAB_SSH_PORT=10022
-    - GITLAB_PORT=443
-    - GITLAB_HTTPS=true
+    - REDIS_PORT=<span style="color:#ae81ff">6379</span>
+    - GITLAB_SSH_PORT=<span style="color:#ae81ff">10022</span>
+    - GITLAB_PORT=<span style="color:#ae81ff">443</span>
+    - GITLAB_HTTPS=<span style="color:#66d9ef">true</span>
     - GITLAB_HOST=gitlab.example.com
  
-    - GITLAB_SECRETS_SECRET_KEY_BASE=&lt;случайная строка длиной 64 символа&gt;
-    - GITLAB_SECRETS_OTP_KEY_BASE=&lt;случайная строка длиной 64 символа&gt;
-    - GITLAB_SECRETS_DB_KEY_BASE=&lt;случайная строка длиной 64 символа&gt;
- 
-    - GITLAB_EMAIL=gitlab@test.example.com
-    - SMTP_ENABLED=true
+    - GITLAB_SECRETS_SECRET_KEY_BASE=&lt;случайная строка длиной <span style="color:#ae81ff">64</span> символа<span style="color:#e6db74">&gt;
+</span><span style="color:#e6db74">   </span><span style="color:#e6db74"> </span><span style="color:#e6db74">- GITLAB_SECRETS_OTP_KEY_BASE=&lt;случайная строка длиной 64 символа&gt;</span>
+    - GITLAB_SECRETS_DB_KEY_BASE=&lt;случайная строка длиной <span style="color:#ae81ff">64</span> символа<span style="color:#e6db74">&gt;
+</span><span style="color:#e6db74"> 
+</span><span style="color:#e6db74">   </span><span style="color:#e6db74"> </span><span style="color:#e6db74">- GITLAB_EMAIL=gitlab@test.example.com</span>
+    - SMTP_ENABLED=<span style="color:#66d9ef">true</span>
     - SMTP_DOMAIN=test.example.com
     - SMTP_HOST=smtp.yandex.ru
-    - SMTP_PORT=587
+    - SMTP_PORT=<span style="color:#ae81ff">587</span>
     - SMTP_USER=gitlab@test.example.com
     - SMTP_PASS=supersecretpassword
-    - SMTP_STARTTLS=true
+    - SMTP_STARTTLS=<span style="color:#66d9ef">true</span>
     - SMTP_AUTHENTICATION=login
  
-    networks:
-     mynet:
-      aliases:
+    <span style="color:#66d9ef">networks</span>:
+     <span style="color:#66d9ef">mynet</span>:
+      <span style="color:#66d9ef">aliases</span>:
       - gitlab.example.com
  
-networks:
-  mynet:
-</code></pre>
-
-<p>Сгенерировать случайные значения для параметров <code>GITLAB_SECRETS_SECRET_KEY_BASE</code>, <code>GITLAB_SECRETS_OTP_KEY_BASE</code> и <code>GITLAB_SECRETS_DB_KEY_BASE</code> можно с помощью <a href="https://ealebed.github.io/posts/2016/%D0%B3%D0%B5%D0%BD%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F-%D0%BD%D0%B0%D0%B4%D0%B5%D0%B6%D0%BD%D1%8B%D1%85-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D0%B5%D0%B9-%D0%B2-linux-4-%D0%BF%D1%80%D0%BE%D1%81%D1%82%D1%8B%D1%85-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%B0/">утилиты <code>pwgen</code></a>, например так:</p>
-
-<pre><code class="language-bash">pwgen -Bsv1 64
-</code></pre>
-
-<p>После этого, находясь в каталоге с файлом <code>docker-compose.yml</code> выполняем команду:</p>
-
-<pre><code class="language-bash">docker-compose up -d
-</code></pre>
-
-<p>Как только docker-контейнеры запустятся, можно будет залогиниться в веб-интерфейс GitLab по адресу gitlab.example.com. По умолчанию используется имя пользователя <code>root</code> и пароль <code>5iveL!fe</code>.</p>
+<span style="color:#66d9ef">networks</span>:
+  <span style="color:#66d9ef">mynet</span>:
+</code></pre></div><p>Сгенерировать случайные значения для параметров <code>GITLAB_SECRETS_SECRET_KEY_BASE</code>, <code>GITLAB_SECRETS_OTP_KEY_BASE</code> и <code>GITLAB_SECRETS_DB_KEY_BASE</code> можно с помощью <a href="https://ealebed.github.io/posts/2016/%D0%B3%D0%B5%D0%BD%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F-%D0%BD%D0%B0%D0%B4%D0%B5%D0%B6%D0%BD%D1%8B%D1%85-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D0%B5%D0%B9-%D0%B2-linux-4-%D0%BF%D1%80%D0%BE%D1%81%D1%82%D1%8B%D1%85-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%B0/">утилиты <code>pwgen</code></a>, например так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pwgen -Bsv1 <span style="color:#ae81ff">64</span>
+</code></pre></div><p>После этого, находясь в каталоге с файлом <code>docker-compose.yml</code> выполняем команду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
+</code></pre></div><p>Как только docker-контейнеры запустятся, можно будет залогиниться в веб-интерфейс GitLab по адресу gitlab.example.com. По умолчанию используется имя пользователя <code>root</code> и пароль <code>5iveL!fe</code>.</p>
                 </section>
             </article>
 
@@ -348,23 +324,23 @@ networks:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

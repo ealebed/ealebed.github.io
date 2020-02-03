@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Очистка места на диске после docker &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,59 +88,31 @@
                 </header>
                 <section id="post-body">
                     <p>Технология Docker позволяет упаковать приложение или сервис в контейнер, который легко может быть запущен в любом окружении. Однако при <a href="https://ealebed.github.io/posts/2017/docker-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0-%D1%81-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0%D0%BC%D0%B8/">активной работе с Docker</a> жесткий диск быстро засоряется неиспользуемыми образами, контейнерами и томами данных.</p>
-
 <p>Давайте разберемся с набором инструментов для чистки системы, предоставляемым Docker и рассмотрим несколько примеров!</p>
-
 <p>Как мы уже упоминали <a href="https://ealebed.github.io/posts/2017/docker-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0-%D1%81-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0%D0%BC%D0%B8/">ранее</a>, для очистки неиспользуемых данных можно воспользоваться командой:</p>
-
-<pre><code class="language-bash">docker system prune
-</code></pre>
-
-<p>Однако данная команда появилась в <code>docker-engine</code> начиная с версии 1.13.0, а в предыдущих версиях приходилось исхитряться самостоятельно. Например, чтобы удалить недействительные образы (у которых нет метки), я вводил в консоли:</p>
-
-<pre><code class="language-bash">docker images --no-trunc | grep '' | awk '{ print $3 }' | xargs -r docker rmi
-</code></pre>
-
-<p>Как оказалось, все можно было сделать намного проще. Для поиска недействительных образов используется команда:</p>
-
-<pre><code class="language-bash">docker images -f dangling=true
-</code></pre>
-
-<p>Тогда для удаления ненужных образов можем использовать конструкцию:</p>
-
-<pre><code class="language-bash">docker rmi $(docker images -f dangling=true -q)
-</code></pre>
-
-<p><strong>Примечание.</strong> Недействительные образы – это уровень образов, которые больше не имеют никакого отношения к образам с метками — они впустую потребляют дисковое пространство.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker system prune
+</code></pre></div><p>Однако данная команда появилась в <code>docker-engine</code> начиная с версии 1.13.0, а в предыдущих версиях приходилось исхитряться самостоятельно. Например, чтобы удалить недействительные образы (у которых нет метки), я вводил в консоли:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images --no-trunc | grep <span style="color:#e6db74">&#39;&#39;</span> | awk <span style="color:#e6db74">&#39;{ print $3 }&#39;</span> | xargs -r docker rmi
+</code></pre></div><p>Как оказалось, все можно было сделать намного проще. Для поиска недействительных образов используется команда:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images -f dangling<span style="color:#f92672">=</span>true
+</code></pre></div><p>Тогда для удаления ненужных образов можем использовать конструкцию:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker rmi <span style="color:#66d9ef">$(</span>docker images -f dangling<span style="color:#f92672">=</span>true -q<span style="color:#66d9ef">)</span>
+</code></pre></div><p><strong>Примечание.</strong> Недействительные образы – это уровень образов, которые больше не имеют никакого отношения к образам с метками — они впустую потребляют дисковое пространство.</p>
 <p>Для удаления остановленных контейнеров ранее я использовал команду:</p>
-
-<pre><code class="language-bash">docker ps --filter status=exited -aq | xargs docker rm -v
-</code></pre>
-
-<p>Но гораздо проще воспользоваться ввести в консоли:</p>
-
-<pre><code class="language-bash">docker rm $(docker ps -a -f status=exited -q)
-</code></pre>
-
-<p>В идеологии docker том хранения данных должен существовать независимо от контейнера. Следовательно, когда контейнер удаляется, том не удаляется автоматически. Он остаётся в системе, хотя больше не обслуживает ни один контейнер. Для удаления неиспользуемых томов в ранних версиях docker можно было использовать следующий скрипт:</p>
-
-<pre><code class="language-bash">#!/usr/bin/bash
- 
-find '/var/lib/docker/volumes/' -mindepth 1 -maxdepth 1 -type d | grep -vFf &lt;(
-  docker ps -aq | xargs docker inspect | jq -r '.[]|.Mounts|.[]|.Name|select(.)'
-)
-</code></pre>
-
-<p>Начиная с версии <code>docker-engine</code> 1.9 все неиспользуемые (недействительные) тома можно найти с помощь такой командой:</p>
-
-<pre><code class="language-bash">docker volume ls -f dangling=true
-</code></pre>
-
-<p>а удалить с помощью такой:</p>
-
-<pre><code class="language-bash">docker volume rm $(docker volume ls -f dangling=true -q)
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps --filter status<span style="color:#f92672">=</span>exited -aq | xargs docker rm -v
+</code></pre></div><p>Но гораздо проще воспользоваться ввести в консоли:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker rm <span style="color:#66d9ef">$(</span>docker ps -a -f status<span style="color:#f92672">=</span>exited -q<span style="color:#66d9ef">)</span>
+</code></pre></div><p>В идеологии docker том хранения данных должен существовать независимо от контейнера. Следовательно, когда контейнер удаляется, том не удаляется автоматически. Он остаётся в системе, хотя больше не обслуживает ни один контейнер. Для удаления неиспользуемых томов в ранних версиях docker можно было использовать следующий скрипт:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/bash
+</span><span style="color:#75715e"></span> 
+find <span style="color:#e6db74">&#39;/var/lib/docker/volumes/&#39;</span> -mindepth <span style="color:#ae81ff">1</span> -maxdepth <span style="color:#ae81ff">1</span> -type d | grep -vFf &lt;<span style="color:#f92672">(</span>
+  docker ps -aq | xargs docker inspect | jq -r <span style="color:#e6db74">&#39;.[]|.Mounts|.[]|.Name|select(.)&#39;</span>
+<span style="color:#f92672">)</span>
+</code></pre></div><p>Начиная с версии <code>docker-engine</code> 1.9 все неиспользуемые (недействительные) тома можно найти с помощь такой командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker volume ls -f dangling<span style="color:#f92672">=</span>true
+</code></pre></div><p>а удалить с помощью такой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker volume rm <span style="color:#66d9ef">$(</span>docker volume ls -f dangling<span style="color:#f92672">=</span>true -q<span style="color:#66d9ef">)</span>
+</code></pre></div>
                 </section>
             </article>
 
@@ -171,23 +154,23 @@ find '/var/lib/docker/volumes/' -mindepth 1 -maxdepth 1 -type d | grep -vFf &lt;
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

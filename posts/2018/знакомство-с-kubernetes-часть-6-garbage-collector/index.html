@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Знакомство с Kubernetes. Часть 6: Сборщик мусора (Garbage Collector) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,42 +88,31 @@
                 </header>
                 <section id="post-body">
                     <p>Задача сборщика мусора (<code>Garbage Collector</code>) в <code>Kubernetes</code> заключается в удалении определенных объектов, которые больше не имеют владельца. Давайте разберемся, что это значит!</p>
-
 <p>Некоторые сущности (объекты) в <code>Kubernetes</code> могут быть владельцами других объектов. Например, набор реплик (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>ReplicaSet</code></a>) является владельцем нескольких подов (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>). В данном примере объекты-поды будут зависимыми от объекта-владельца (набора реплик). Каждый зависимый объект имеет поле <code>metadata.ownerReferences</code>, которое указывает на объект-владелец.</p>
-
 <p>Чаще всего, <code>Kubernetes</code> автоматически устанавливает значение поля <code>ownerReference</code>. Начиная с версии 1.8, значение <code>ownerReference</code> автоматически устанавливается для объектов, созданных с помощью <code>ReplicationController</code>, <code>ReplicaSet</code>, <code>StatefulSet</code>, <code>DaemonSet</code>, <code>Deployment</code>, <code>Job</code> и <code>CronJob</code>.</p>
-
 <p>Есть возможность самостоятельно указать отношения между объектами-владельцами и зависимыми объектами вручную, установив поле <code>ownerReference</code> при описании манифеста в <code>yaml</code>-файле.</p>
-
 <p>Рассмотрим конкретный пример. Конфигурационный файл (манифест) для набора реплик из трех элементов выглядит так:</p>
-
-<pre><code class="language-yaml">apiVersion: extensions/v1beta1
-kind: ReplicaSet
-metadata:
-  name: my-repset
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      pod-is-for: garbage-collection-example
-  template:
-    metadata:
-      labels:
-        pod-is-for: garbage-collection-example
-    spec:
-      containers:
-      - name: nginx
-        image: nginx
-</code></pre>
-
-<p>Сохраним данное описание в файле <code>my-repset.yaml</code> и запустим его в кластере <code>Kubernetes</code> командой:</p>
-
-<pre><code class="language-bash">kubectl create -f my-repset.yaml
-</code></pre>
-
-<p>Получим информацию о запущенных подах в кластере (вывод сильно сокращен):</p>
-
-<pre><code class="language-bash">kubectl get pods --output=yaml
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: extensions/v1beta1
+<span style="color:#66d9ef">kind</span>: ReplicaSet
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: my-repset
+<span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">3</span>
+  <span style="color:#66d9ef">selector</span>:
+    <span style="color:#66d9ef">matchLabels</span>:
+      <span style="color:#66d9ef">pod-is-for</span>: garbage-collection-example
+  <span style="color:#66d9ef">template</span>:
+    <span style="color:#66d9ef">metadata</span>:
+      <span style="color:#66d9ef">labels</span>:
+        <span style="color:#66d9ef">pod-is-for</span>: garbage-collection-example
+    <span style="color:#66d9ef">spec</span>:
+      <span style="color:#66d9ef">containers</span>:
+      - <span style="color:#66d9ef">name</span>: nginx
+        <span style="color:#66d9ef">image</span>: nginx
+</code></pre></div><p>Сохраним данное описание в файле <code>my-repset.yaml</code> и запустим его в кластере <code>Kubernetes</code> командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f my-repset.yaml
+</code></pre></div><p>Получим информацию о запущенных подах в кластере (вывод сильно сокращен):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get pods --output<span style="color:#f92672">=</span>yaml
 
 apiVersion: v1
 kind: Pod
@@ -126,52 +126,33 @@ metadata:
     name: my-repset
     uid: d9607e19-f88f-11e6-a518-42010a800195
   ...
-</code></pre>
-
-<p>При удалении объекта-владельца есть возможность автоматически удалять зависимые объекты - такое удаление называется каскадным удалением. Существует также два режима каскадного удаления: фоновое (background) и приоритетное (foreground). Если при удалении объекта-владельца зависимые объекты не удаляются автоматически, то они становятся осиротевшими (orphaned).</p>
-
+</code></pre></div><p>При удалении объекта-владельца есть возможность автоматически удалять зависимые объекты - такое удаление называется каскадным удалением. Существует также два режима каскадного удаления: фоновое (background) и приоритетное (foreground). Если при удалении объекта-владельца зависимые объекты не удаляются автоматически, то они становятся осиротевшими (orphaned).</p>
 <p>При приоритетном (foreground) каскадном удалении объект-владелец сначала переходит в состояние &ldquo;удаление в процессе&rdquo; (deletion in progress). В этом состоянии выполняется следующее:</p>
-
 <ul>
 <li>объект по-прежнему можно увидеть через REST API;</li>
 <li>устанавливается значение <code>deletionTimestamp</code> объекта;</li>
 <li>поле <code>metadata.finalizers</code> содержит значение &ldquo;foregroundDeletion&rdquo;.</li>
 </ul>
-
 <p>После перехода объекта-владельца в состояние &ldquo;удаление в процессе&rdquo; сборщик мусора (<code>Garbage Collector</code>) удаляет зависимые объекты. Как только будут удалены все блокирующие зависимости (объекты с <code>ownerReference.blockOwnerDeletion=true</code>), сборщик мусора удалит и объект-владелец.</p>
-
 <p>При фоновом (background) каскадном удалении <code>Kubernetes</code> немедленно удаляет объект-владелец, а сборщик мусора (<code>Garbage Collector</code>) удаляет зависимые объекты в фоновом режиме.</p>
-
 <p>Управлять политикой каскадного удаления можно изменяя поле <code>propagationPolicy</code> в аргументе <code>deleteOptions</code> при удалении объекта. Допустимые значения данного поля - &ldquo;Orphan&rdquo;, &ldquo;Foreground&rdquo; или &ldquo;Background&rdquo;. Пример удаления зависимых объектов в фоновом режиме:</p>
-
-<pre><code class="language-bash">kubectl proxy --port=8080
-curl -X DELETE localhost:8080/apis/extensions/v1beta1/namespaces/default/replicasets/my-repset \
--d '{&quot;kind&quot;:&quot;DeleteOptions&quot;,&quot;apiVersion&quot;:&quot;v1&quot;,&quot;propagationPolicy&quot;:&quot;Background&quot;}' \
--H &quot;Content-Type: application/json&quot;
-</code></pre>
-
-<p>Пример удаления зависимых объектов в приоритетном режиме:</p>
-
-<pre><code class="language-bash">kubectl proxy --port=8080
-curl -X DELETE localhost:8080/apis/extensions/v1beta1/namespaces/default/replicasets/my-repset \
--d '{&quot;kind&quot;:&quot;DeleteOptions&quot;,&quot;apiVersion&quot;:&quot;v1&quot;,&quot;propagationPolicy&quot;:&quot;Foreground&quot;}' \
--H &quot;Content-Type: application/json&quot;
-</code></pre>
-
-<p>Оставить &ldquo;осиротевшие&rdquo; зависимости можно так:</p>
-
-<pre><code class="language-bash">kubectl proxy --port=8080
-curl -X DELETE localhost:8080/apis/extensions/v1beta1/namespaces/default/replicasets/my-repset \
--d '{&quot;kind&quot;:&quot;DeleteOptions&quot;,&quot;apiVersion&quot;:&quot;v1&quot;,&quot;propagationPolicy&quot;:&quot;Orphan&quot;}' \
--H &quot;Content-Type: application/json&quot;
-</code></pre>
-
-<p>Утилита <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-15-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-kubectl/"><code>kubectl</code></a> также поддерживает каскадное удаление. Чтобы автоматически удалить зависимые объекты с помощью <code>kubectl</code> нужно использовать параметр <code>--cascade</code> со значением true (установлено по умолчанию). Не удалять (оставить) зависимые объекты в кластере можно так:</p>
-
-<pre><code class="language-bash">kubectl delete replicaset my-repset --cascade=false
-</code></pre>
-
-<p>На этом с &ldquo;уборкой мусора&rdquo; в кластере <code>Kubernetes</code> все, в следующей статье цикла рассмотрим <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-7-images/">образы</a>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl proxy --port<span style="color:#f92672">=</span><span style="color:#ae81ff">8080</span>
+curl -X DELETE localhost:8080/apis/extensions/v1beta1/namespaces/default/replicasets/my-repset <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>-d <span style="color:#e6db74">&#39;{&#34;kind&#34;:&#34;DeleteOptions&#34;,&#34;apiVersion&#34;:&#34;v1&#34;,&#34;propagationPolicy&#34;:&#34;Background&#34;}&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>-H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+</code></pre></div><p>Пример удаления зависимых объектов в приоритетном режиме:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl proxy --port<span style="color:#f92672">=</span><span style="color:#ae81ff">8080</span>
+curl -X DELETE localhost:8080/apis/extensions/v1beta1/namespaces/default/replicasets/my-repset <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>-d <span style="color:#e6db74">&#39;{&#34;kind&#34;:&#34;DeleteOptions&#34;,&#34;apiVersion&#34;:&#34;v1&#34;,&#34;propagationPolicy&#34;:&#34;Foreground&#34;}&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>-H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+</code></pre></div><p>Оставить &ldquo;осиротевшие&rdquo; зависимости можно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl proxy --port<span style="color:#f92672">=</span><span style="color:#ae81ff">8080</span>
+curl -X DELETE localhost:8080/apis/extensions/v1beta1/namespaces/default/replicasets/my-repset <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>-d <span style="color:#e6db74">&#39;{&#34;kind&#34;:&#34;DeleteOptions&#34;,&#34;apiVersion&#34;:&#34;v1&#34;,&#34;propagationPolicy&#34;:&#34;Orphan&#34;}&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>-H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+</code></pre></div><p>Утилита <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-15-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-kubectl/"><code>kubectl</code></a> также поддерживает каскадное удаление. Чтобы автоматически удалить зависимые объекты с помощью <code>kubectl</code> нужно использовать параметр <code>--cascade</code> со значением true (установлено по умолчанию). Не удалять (оставить) зависимые объекты в кластере можно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl delete replicaset my-repset --cascade<span style="color:#f92672">=</span>false
+</code></pre></div><p>На этом с &ldquo;уборкой мусора&rdquo; в кластере <code>Kubernetes</code> все, в следующей статье цикла рассмотрим <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-7-images/">образы</a>.</p>
                 </section>
             </article>
 
@@ -213,23 +194,23 @@ curl -X DELETE localhost:8080/apis/extensions/v1beta1/namespaces/default/replica
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

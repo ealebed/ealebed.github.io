@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>GitLab CI: Часть 5, этап build в .gitlab-ci.yml (первый подход) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,38 +90,30 @@
                 </header>
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-%D1%8D%D1%82%D0%B0%D0%BF-spawn-%D0%B2-.gitlab-ci.yml/">предыдущей статье</a> цикла о <strong>настройке continuous integration в GitLab</strong> мы подробно рассмотрели первый этап (stage) описанный в файле <code>.gitlab-ci.yml</code>, который должен создавать и запускать docker-контейнеры, необходимые для сборки проекта.</p>
-
 <p>В данной статье давайте разберемся с первой работоспособной версией второго этапа — непосредственно сборки проекта!</p>
-
 <p>В нашем случае, для сборки проекта с помощью <strong>GitLab CI</strong> достаточно выполнения таких инструкций из специального файла <code>.gitlab-ci.yml</code>:</p>
-
-<pre><code class="language-yaml">...
-compile:
-  stage: build
-  script:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+<span style="color:#66d9ef">compile</span>:
+  <span style="color:#66d9ef">stage</span>: build
+  <span style="color:#66d9ef">script</span>:
     - cp -u .env.develop .env
-    - docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &quot;composer install&quot;
-    - docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &quot;./zf routes compile&quot;
-    - docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &quot;./zf cache clean-modified-content&quot;
-    - docker-compose -f docker/docker-compose-build.yml run -T --rm node sh -c &quot;npm install --production &amp;&amp; grunt install-build --no-dev&quot;
-    - docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &quot;./zf user-default-avatar&quot;
-  only:
+    - docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c <span style="color:#e6db74">&#34;composer install&#34;</span>
+    - docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c <span style="color:#e6db74">&#34;./zf routes compile&#34;</span>
+    - docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c <span style="color:#e6db74">&#34;./zf cache clean-modified-content&#34;</span>
+    - docker-compose -f docker/docker-compose-build.yml run -T --rm node sh -c <span style="color:#e6db74">&#34;npm install --production &amp;&amp; grunt install-build --no-dev&#34;</span>
+    - docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c <span style="color:#e6db74">&#34;./zf user-default-avatar&#34;</span>
+  <span style="color:#66d9ef">only</span>:
     - develop
     - docker
 ...
-</code></pre>
-
-<p>Согласно данным инструкциям, будут выполнены следующие действия:</p>
-
+</code></pre></div><p>Согласно данным инструкциям, будут выполнены следующие действия:</p>
 <ul>
 <li>из файла <code>.env.develop</code> создается файл <code>.env</code> с переменными окружения;</li>
 <li>в docker-контейнере workspace выполняется сборка бекенда (<code>composer</code> + кастомные задачи по генерации роутов и очистке кеша);</li>
 <li>в docker-контейнере node выполняется сборка фронтенда (<code>npm install</code> и <code>grunt install-build</code>);</li>
 <li>в docker-контейнере workspace запускается кастомная задача по созданию аватаров.</li>
 </ul>
-
 <p>Выполнение представленных здесь инструкций занимает 7-8 минут, детали на вкладке pipelines при успешном завершении выглядят примерно так (вывод очень сокращен):</p>
-
 <pre><code> Running with gitlab-ci-multi-runner 1.11.0 (33af656)
  on lebed-build-runner (d58fbc5e)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
@@ -188,10 +191,7 @@ Done, without errors.
 
 $ docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &quot;./zf user-default-avatar&quot;
 Done!
-</code></pre>
-
-<p>Если в процессе выполнения инструкций что-то пойдет не по плану, то в деталях можно будет увидеть ошибку, например:</p>
-
+</code></pre><p>Если в процессе выполнения инструкций что-то пойдет не по плану, то в деталях можно будет увидеть ошибку, например:</p>
 <pre><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
 Starting service registry.gitlab.lc/develop/ed:my-docker-dind ...
@@ -209,10 +209,7 @@ The WS_PORT variable is not set. Defaulting to a blank string.
 The Compose file './docker/docker-compose-build.yml' is invalid because:
 services.websocket.ports is invalid: Invalid port &quot;:&quot;, should be [[remote_ip:]remote_port[-remote_port]:]port[/protocol]
 ERROR: Build failed: exit code 1
-</code></pre>
-
-<p>В предложенном варианте инструкций для сборки проекта есть как минимум два проблемных момента: во-первых, файлы созданные на этом этапе (например, роуты <code>public/dsd/js/utils/routes.js</code>) не передаются на следующий этап <strong>GitLab CI</strong>; во-вторых, 7-8 минут для сборки это достаточно много.</p>
-
+</code></pre><p>В предложенном варианте инструкций для сборки проекта есть как минимум два проблемных момента: во-первых, файлы созданные на этом этапе (например, роуты <code>public/dsd/js/utils/routes.js</code>) не передаются на следующий этап <strong>GitLab CI</strong>; во-вторых, 7-8 минут для сборки это достаточно много.</p>
 <p>В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-6-%D1%8D%D1%82%D0%B0%D0%BF-build-%D0%B2-.gitlab-ci.yml-2/">следующей статье</a> мы разберемся с этими недостатками и устраним их.</p>
                 </section>
             </article>
@@ -255,23 +252,23 @@ ERROR: Build failed: exit code 1
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

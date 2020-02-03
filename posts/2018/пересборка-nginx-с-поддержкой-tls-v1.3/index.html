@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Пересборка Nginx с поддержкой TLS v1.3 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,114 +90,82 @@
                 </header>
                 <section id="post-body">
                     <p>В рамках этой статьи исключительно из &ldquo;спортивного интереса&rdquo; рассмотрим процесс <strong>пересборки Nginx с поддержкой TLS v1.3</strong> - данная возможность уже существует, хотя сам стандарт TLSv1.3 пока находится в драфте. Давайте разберемся!</p>
-
 <p>Еще в <a href="http://mailman.nginx.org/pipermail/nginx-announce/2017/000195.html">апреле 2017 года</a> вышла версия популярного веб-сервера Nginx (1.13.0), которая поддерживает новый стандарт OpenSSL. Сначала я просто попытался прописать в конфигурационном файле с настройками ssl строку:</p>
-
-<pre><code class="language-text">ssl_protocols TLSv1.3 TLSv1.2;
-</code></pre>
-
-<p>и перечитать конфиг nginx - ошибок в консоли не появилось, но при проверке сайта на <a href="https://www.ssllabs.com/ssltest/">ssllabs</a> по прежнему выводилось сообщение, что TLSv1.3 не поддерживается.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">ssl_protocols TLSv1.3 TLSv1.2;
+</code></pre></div><p>и перечитать конфиг nginx - ошибок в консоли не появилось, но при проверке сайта на <a href="https://www.ssllabs.com/ssltest/">ssllabs</a> по прежнему выводилось сообщение, что TLSv1.3 не поддерживается.</p>
 <p>На том же <a href="https://www.ssllabs.com/ssltest/">ssllabs</a> любезно указано, что для проверки работы нового стандарта используется <a href="https://github.com/openssl/openssl/tree/tls1.3-draft-18">черновик 18-й версии TLSv1.3</a> - похоже, без пересборки не обойтись!</p>
-
 <p>Скачиваем и распаковываем исходники версии Nginx не ниже 1.13.0 (на момент написания статьи актуальная версия 1.13.8):</p>
-
-<pre><code class="language-bash">cd /opt \
-	&amp;&amp; wget http://nginx.org/download/nginx-1.13.8.tar.gz \
-	&amp;&amp; tar xf nginx-1.13.8.tar.gz \
-	&amp;&amp; rm nginx-1.13.8.tar.gz
-</code></pre>
-
-<p>Скачиваем и распаковываем исходники <code>openssl 1.1.1 tls1.3 draft 18</code>:</p>
-
-<pre><code class="language-bash">wget https://github.com/openssl/openssl/archive/tls1.3-draft-18.zip \
-	&amp;&amp; unzip tls1.3-draft-18.zip -d tls1.3-draft-18 \
-	&amp;&amp; rm tls1.3-draft-18.zip
-</code></pre>
-
-<p>Получаем код модуля <code>ngx_brotli</code> (подробнее о данном модуле можно почитать <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">здесь</a>):</p>
-
-<pre><code class="language-bash">git clone https://github.com/google/ngx_brotli.git \
-	&amp;&amp; cd /opt/ngx_brotli \
-	&amp;&amp; git submodule update --init \
-	&amp;&amp; cd /opt
-</code></pre>
-
-<p>Скачиваем код модуля <code>ngx_cache_purge</code> (подробности <a href="https://ealebed.github.io/posts/2017/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D1%8F-ngx_cache_purge-%D0%B4%D0%BB%D1%8F-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D0%BA%D1%8D%D1%88%D0%B0-fastcgi/">здесь</a>):</p>
-
-<pre><code class="language-bash">wget http://labs.frickle.com/files/ngx_cache_purge-2.3.tar.gz \
-	&amp;&amp; tar -zxvf ngx_cache_purge-2.3.tar.gz \
-	&amp;&amp; mv ngx_cache_purge-2.3 ngx_cache_purge \
-	&amp;&amp; rm ngx_cache_purge-2.3.tar.gz
-</code></pre>
-
-<p>Приступаем к <strong>сборке Nginx с поддержкой TLS v1.3</strong>:</p>
-
-<pre><code class="language-bash">cd /opt/nginx-1.13.8
-</code></pre>
-
-<pre><code class="language-bash">./configure \
-	--prefix=/etc/nginx \
-	--sbin-path=/usr/sbin/nginx \
-	--modules-path=/usr/lib/nginx/modules \
-	--conf-path=/etc/nginx/nginx.conf \
-	--error-log-path=/var/log/nginx/error.log \
-	--http-log-path=/var/log/nginx/access.log \
-	--pid-path=/var/run/nginx.pid \
-	--lock-path=/var/run/nginx.lock \
-	--http-client-body-temp-path=/var/cache/nginx/client_temp \
-	--http-proxy-temp-path=/var/cache/nginx/proxy_temp \
-	--http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
-	--http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
-	--http-scgi-temp-path=/var/cache/nginx/scgi_temp \
-	--user=nginx \
-	--group=nginx \
-	--with-http_ssl_module \
-	--with-http_realip_module \
-	--with-http_addition_module \
-	--with-http_sub_module \
-	--with-http_dav_module \
-	--with-http_flv_module \
-	--with-http_gunzip_module \
-	--with-http_gzip_static_module \
-	--with-http_random_index_module \
-	--with-http_secure_link_module \
-	--with-http_stub_status_module \
-	--with-http_auth_request_module \
-	--with-http_slice_module \
-	--with-threads \
-	--with-stream \
-	--with-stream_ssl_module \
-	--with-mail \
-	--with-mail_ssl_module \
-	--with-file-aio \
-	--with-http_v2_module \
-	--with-cc-opt='-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2' \
-	--with-ld-opt='-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed' \
-	--with-openssl=/opt/tls1.3-draft-18/openssl-tls1.3-draft-18 \
-	--with-openssl-opt='enable-tls1_3' \
-	--add-module=/opt/ngx_brotli \
-	--add-module=/opt/ngx_cache_purge
-</code></pre>
-
-<p><strong>Примечание.</strong> На этапе конфигурирования могут появиться ошибки (возможно, будет не хватать каких-то библиотек), в основном лечатся обычным гуглением.</p>
-
-<pre><code class="language-bash">make &amp;&amp; make install
-</code></pre>
-
-<pre><code class="language-bash">service nginx restart
-</code></pre>
-
-<p>Теперь можем внести правки в конфигурационный файл <code>ssl.conf</code> (у меня это отдельный файл, который включается в контексте <code>server</code> с помощью директивы <code>include</code>) - добавляем в переменную <code>ssl_protocols</code> значение TLSv1.3 и добавляем новые шифры в переменную <code>ssl_ciphers</code>:</p>
-
-<pre><code class="language-text">ssl_protocols TLSv1.3 TLSv1.2;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /opt <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> wget http://nginx.org/download/nginx-1.13.8.tar.gz <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> tar xf nginx-1.13.8.tar.gz <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> rm nginx-1.13.8.tar.gz
+</code></pre></div><p>Скачиваем и распаковываем исходники <code>openssl 1.1.1 tls1.3 draft 18</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget https://github.com/openssl/openssl/archive/tls1.3-draft-18.zip <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> unzip tls1.3-draft-18.zip -d tls1.3-draft-18 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> rm tls1.3-draft-18.zip
+</code></pre></div><p>Получаем код модуля <code>ngx_brotli</code> (подробнее о данном модуле можно почитать <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">здесь</a>):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/google/ngx_brotli.git <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> cd /opt/ngx_brotli <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> git submodule update --init <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> cd /opt
+</code></pre></div><p>Скачиваем код модуля <code>ngx_cache_purge</code> (подробности <a href="https://ealebed.github.io/posts/2017/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D1%8F-ngx_cache_purge-%D0%B4%D0%BB%D1%8F-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D0%BA%D1%8D%D1%88%D0%B0-fastcgi/">здесь</a>):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://labs.frickle.com/files/ngx_cache_purge-2.3.tar.gz <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> tar -zxvf ngx_cache_purge-2.3.tar.gz <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> mv ngx_cache_purge-2.3 ngx_cache_purge <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> rm ngx_cache_purge-2.3.tar.gz
+</code></pre></div><p>Приступаем к <strong>сборке Nginx с поддержкой TLS v1.3</strong>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /opt/nginx-1.13.8
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./configure <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--prefix<span style="color:#f92672">=</span>/etc/nginx <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--sbin-path<span style="color:#f92672">=</span>/usr/sbin/nginx <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--modules-path<span style="color:#f92672">=</span>/usr/lib/nginx/modules <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--conf-path<span style="color:#f92672">=</span>/etc/nginx/nginx.conf <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--error-log-path<span style="color:#f92672">=</span>/var/log/nginx/error.log <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--http-log-path<span style="color:#f92672">=</span>/var/log/nginx/access.log <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--pid-path<span style="color:#f92672">=</span>/var/run/nginx.pid <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--lock-path<span style="color:#f92672">=</span>/var/run/nginx.lock <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--http-client-body-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/client_temp <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--http-proxy-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/proxy_temp <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--http-fastcgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/fastcgi_temp <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--http-uwsgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/uwsgi_temp <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--http-scgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/scgi_temp <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--user<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--group<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_ssl_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_realip_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_addition_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_sub_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_dav_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_flv_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_gunzip_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_gzip_static_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_random_index_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_secure_link_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_stub_status_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_auth_request_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_slice_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-threads <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-stream <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-stream_ssl_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-mail <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-mail_ssl_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-file-aio <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-http_v2_module <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-cc-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-ld-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-openssl<span style="color:#f92672">=</span>/opt/tls1.3-draft-18/openssl-tls1.3-draft-18 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--with-openssl-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;enable-tls1_3&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--add-module<span style="color:#f92672">=</span>/opt/ngx_brotli <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--add-module<span style="color:#f92672">=</span>/opt/ngx_cache_purge
+</code></pre></div><p><strong>Примечание.</strong> На этапе конфигурирования могут появиться ошибки (возможно, будет не хватать каких-то библиотек), в основном лечатся обычным гуглением.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make <span style="color:#f92672">&amp;&amp;</span> make install
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service nginx restart
+</code></pre></div><p>Теперь можем внести правки в конфигурационный файл <code>ssl.conf</code> (у меня это отдельный файл, который включается в контексте <code>server</code> с помощью директивы <code>include</code>) - добавляем в переменную <code>ssl_protocols</code> значение TLSv1.3 и добавляем новые шифры в переменную <code>ssl_ciphers</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">ssl_protocols TLSv1.3 TLSv1.2;
 ...
 ssl_ciphers TLS13-AES-128-GCM-SHA256:TLS13-AES-128-CCM-SHA256:TLS13-AES-128-CCM-8-SHA256:TLS13-AES-256-GCM-SHA384:TLS13-CHACHA20-POLY1305-SHA256;
-</code></pre>
-
-<p>В моем случае файл целиком выглядит так:</p>
-
-<pre><code class="language-text">ssl_protocols TLSv1.3 TLSv1.2;
+</code></pre></div><p>В моем случае файл целиком выглядит так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">ssl_protocols TLSv1.3 TLSv1.2;
 ssl_prefer_server_ciphers on;
 ssl_dhparam /etc/nginx/ssl/dhparam.pem;
 ssl_ciphers TLS13-AES-128-GCM-SHA256:TLS13-AES-128-CCM-SHA256:TLS13-AES-128-CCM-8-SHA256:TLS13-AES-256-GCM-SHA384:TLS13-CHACHA20-POLY1305-SHA256:EECDH+AES128:EECDH+AES256:EECDH+3DES:RSA+3DES:!MD5;
@@ -202,22 +181,17 @@ ssl_certificate_key /etc/letsencrypt/live/letsclearitup.com.ua/privkey.pem;
 ssl_trusted_certificate /etc/letsencrypt/live/letsclearitup.com.ua/chain.pem;
 
 add_header Strict-Transport-Security max-age=15768000;
-add_header X-Frame-Options &quot;SAMEORIGIN&quot; always;
-add_header X-Xss-Protection &quot;1; mode=block&quot; always;
-add_header X-Content-Type-Options &quot;nosniff&quot; always;
-add_header Referrer-Policy &quot;origin-when-cross-origin&quot;;
-add_header Content-Security-Policy &quot;default-src 'self'; script-src https: 'self' 'unsafe-inline' 'unsafe-eval'; object-src *.googlesyndication.com 'self'; style-src https://fonts.googleapis.com *.wp.com 'self' 'unsafe-inline'; connect-src https: 'self'; frame-src https:; font-src https: data:; img-src data: *;&quot;;
+add_header X-Frame-Options &#34;SAMEORIGIN&#34; always;
+add_header X-Xss-Protection &#34;1; mode=block&#34; always;
+add_header X-Content-Type-Options &#34;nosniff&#34; always;
+add_header Referrer-Policy &#34;origin-when-cross-origin&#34;;
+add_header Content-Security-Policy &#34;default-src &#39;self&#39;; script-src https: &#39;self&#39; &#39;unsafe-inline&#39; &#39;unsafe-eval&#39;; object-src *.googlesyndication.com &#39;self&#39;; style-src https://fonts.googleapis.com *.wp.com &#39;self&#39; &#39;unsafe-inline&#39;; connect-src https: &#39;self&#39;; frame-src https:; font-src https: data:; img-src data: *;&#34;;
 
 resolver 8.8.8.8 valid=300s;
 resolver_timeout 10s;
-</code></pre>
-
-<p>Применяем изменения:</p>
-
-<pre><code class="language-bash">nginx -t &amp;&amp; nginx -s reload
-</code></pre>
-
-<p>Проверяем сайт на <a href="https://www.ssllabs.com/ssltest/">ssllabs</a> - теперь вы должны увидеть сообщение о <strong>включенной поддержке TLS v1.3</strong>.</p>
+</code></pre></div><p>Применяем изменения:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -t <span style="color:#f92672">&amp;&amp;</span> nginx -s reload
+</code></pre></div><p>Проверяем сайт на <a href="https://www.ssllabs.com/ssltest/">ssllabs</a> - теперь вы должны увидеть сообщение о <strong>включенной поддержке TLS v1.3</strong>.</p>
                 </section>
             </article>
 
@@ -259,23 +233,23 @@ resolver_timeout 10s;
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

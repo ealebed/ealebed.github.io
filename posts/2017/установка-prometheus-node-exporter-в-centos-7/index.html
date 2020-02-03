@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Установка Prometheus Node Exporter в CentOS 7 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,29 +90,16 @@
                 </header>
                 <section id="post-body">
                     <p>Ранее мы уже рассматривали процесс <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">установки и настройки</a> инструмента для мониторинга и сбора метрик под названием <strong>Prometheus</strong> и его дополнительного компонента — <code>node_exporter</code> в операционной системе Debian Jessie.</p>
-
 <p>Давайте разберемся с <strong>установкой компонента <code>node_exporter</code></strong> и его запуском в качестве сервиса в ОС CentOS 7!</p>
-
 <p>Инструмент <code>node_exporter</code> крайне необходим для отслеживания серверных параметров. Этот компонент экспортирует различные метрики (например, статистику I/O, нагрузку CPU, использование памяти, сетевую статистику и многое другое) в формате, понятном программе <strong>Prometheus</strong>.</p>
-
 <p>Создаем новый каталог <code>node_exporter</code> в каталоге <code>/opt</code>:</p>
-
-<pre><code class="language-bash">mkdir -p /opt/node_exporter
-</code></pre>
-
-<p>Скачиваем последнюю сборку <code>node_exporter</code> с GitHub:</p>
-
-<pre><code class="language-bash">curl -LO &quot;https://github.com/prometheus/node_exporter/releases/download/0.14.0/node_exporter-0.14.0.linux-amd64.tar.gz&quot;
-</code></pre>
-
-<p>Распаковываем архив и копируем исполняемый файл <code>node_exporter</code> в ранее созданный каталог:</p>
-
-<pre><code class="language-bash">tar -xvzf ~/node_exporter-0.14.0.linux-amd64.tar.gz &amp;&amp; cp ~/node_exporter-0.14.0.linux-amd64/node_exporter /opt/node_exporter
-</code></pre>
-
-<p>В каталоге <code>/etc/systemd/system/</code> создаем конфигурационный файл <code>node_exporter.service</code> следующего содержания:</p>
-
-<pre><code class="language-text">[Unit]
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /opt/node_exporter
+</code></pre></div><p>Скачиваем последнюю сборку <code>node_exporter</code> с GitHub:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -LO <span style="color:#e6db74">&#34;https://github.com/prometheus/node_exporter/releases/download/0.14.0/node_exporter-0.14.0.linux-amd64.tar.gz&#34;</span>
+</code></pre></div><p>Распаковываем архив и копируем исполняемый файл <code>node_exporter</code> в ранее созданный каталог:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar -xvzf ~/node_exporter-0.14.0.linux-amd64.tar.gz <span style="color:#f92672">&amp;&amp;</span> cp ~/node_exporter-0.14.0.linux-amd64/node_exporter /opt/node_exporter
+</code></pre></div><p>В каталоге <code>/etc/systemd/system/</code> создаем конфигурационный файл <code>node_exporter.service</code> следующего содержания:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">[Unit]
 Description=Node Exporter
  
 [Service]
@@ -109,30 +107,19 @@ ExecStart=/opt/node_exporter/node_exporter
  
 [Install]
 WantedBy=default.target
-</code></pre>
-
-<p>Далее выполняем:</p>
-
-<pre><code class="language-bash">sudo systemctl daemon-reload
-</code></pre>
-
-<pre><code class="language-bash">sudo systemctl enable node_exporter.service
-</code></pre>
-
-<pre><code class="language-bash">sudo systemctl start node_exporter.service
-</code></pre>
-
-<p>Через мгновение, как только <code>node_exporter</code>соберет данные, они будут доступны в веб-интерфейсе по адресу http://[IP-адрес сервера]:9100.</p>
-
+</code></pre></div><p>Далее выполняем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo systemctl daemon-reload
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo systemctl enable node_exporter.service
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo systemctl start node_exporter.service
+</code></pre></div><p>Через мгновение, как только <code>node_exporter</code>соберет данные, они будут доступны в веб-интерфейсе по адресу http://[IP-адрес сервера]:9100.</p>
 <p>Не забываем добавить в конфигурационный файл <strong>Prometheus</strong> (<code>/etc/prometheus/prometheus.yml</code>) новую задачу, например так:</p>
-
-<pre><code class="language-yaml">...
-  - job_name: &quot;node&quot;
-    target_groups:
-    - targets:
-        - &quot;localhost:9100&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+  - <span style="color:#66d9ef">job_name</span>: <span style="color:#e6db74">&#34;node&#34;</span>
+    <span style="color:#66d9ef">target_groups</span>:
+    - <span style="color:#66d9ef">targets</span>:
+        - <span style="color:#e6db74">&#34;localhost:9100&#34;</span>
 ...
-</code></pre>
+</code></pre></div>
                 </section>
             </article>
 
@@ -174,23 +161,23 @@ WantedBy=default.target
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

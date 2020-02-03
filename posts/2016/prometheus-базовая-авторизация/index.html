@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Prometheus: базовая авторизация &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,13 +90,9 @@
                 </header>
                 <section id="post-body">
                     <p>По заверениям разработчиков <strong>системы мониторинга Prometheus</strong>, они специально не уделяли внимания поддержке авторизации, сконцентрировавшись на более важных и «революционных» вещах.</p>
-
 <p>В итоге, метрики, которые собирает, например, <code>node_exporter</code>, доступны для просмотра любому желающему по адресу http://[IP-адрес сервера]:9100/metrics. Как добавить <strong>базовую авторизацию в Prometheus</strong> — давайте разберемся!</p>
-
 <p>Считаем, что у нас <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">установлены</a> все необходимые компоненты <strong>системы мониторинга Prometheus</strong>, а также веб-сервер Nginx.</p>
-
 <p>В конфигурационном файле <code>/etc/nginx/nginx.conf</code> добавим описание нашего сервера:</p>
-
 <pre><code>...
 server {
     listen 0.0.0.0:19100;
@@ -97,30 +104,17 @@ server {
     }
   }
 ...
-</code></pre>
-
-<p><strong>Примечание.</strong> Это лишь базовый пример настройки, если у вас на сервере расположено несколько веб-сайтов то конфиг будет выглядеть иначе.</p>
-
+</code></pre><p><strong>Примечание.</strong> Это лишь базовый пример настройки, если у вас на сервере расположено несколько веб-сайтов то конфиг будет выглядеть иначе.</p>
 <p>С помощью утилиты <code>htpasswd</code>, которая входит в состав пакета <code>apache2-utils</code>, создадим нового пользователя, учетные данные которого будут использоваться для доступа к метрикам <code>node_exporter</code>. Назовем его «testuser»:</p>
-
-<pre><code class="language-bash">htpasswd -c .htpasswd testuser
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">htpasswd -c .htpasswd testuser
 New password: 
 Re-type new password: 
-Adding password for user testuser
-</code></pre>
-
-<p>Файл <code>.htpasswd</code> состоит из строк, каждая из которых соответствует паре логин/хеш пароля. Логин отделяется от хеша пароля двоеточием. Пример содержимого файла <code>.htpasswd</code>:</p>
-
+Adding password <span style="color:#66d9ef">for</span> user testuser
+</code></pre></div><p>Файл <code>.htpasswd</code> состоит из строк, каждая из которых соответствует паре логин/хеш пароля. Логин отделяется от хеша пароля двоеточием. Пример содержимого файла <code>.htpasswd</code>:</p>
 <pre><code>testuser:eCc5ls0kn3MEXyserbY
-</code></pre>
-
-<p>Перечитаем конфиг веб-сервера Nginx командой:</p>
-
-<pre><code class="language-bash">nginx -s reload
-</code></pre>
-
-<p>Теперь при переходе по адресу http://[IP-адрес сервера]:19100 необходимо будет ввести логин/пароль созданного с помощью утилиты <code>htpasswd</code> пользователя.</p>
-
+</code></pre><p>Перечитаем конфиг веб-сервера Nginx командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -s reload
+</code></pre></div><p>Теперь при переходе по адресу http://[IP-адрес сервера]:19100 необходимо будет ввести логин/пароль созданного с помощью утилиты <code>htpasswd</code> пользователя.</p>
 <p>Аналогичным образом можно настроить базовую авторизацию и для остальных компонентов <strong>системы мониторинга Prometheus</strong>, например <code>Alertmanager</code>, <code>Pushgateway</code> и т. д.</p>
                 </section>
             </article>
@@ -163,23 +157,23 @@ Adding password for user testuser
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

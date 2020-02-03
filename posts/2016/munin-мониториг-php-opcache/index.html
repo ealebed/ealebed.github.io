@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Munin: мониторинг PHP OPcache &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,30 +90,18 @@
                 </header>
                 <section id="post-body">
                     <p>Давайте разберемся, как отслеживать метрики php-расширения OPCache и отображать их на графиках в <strong>системе мониторинга Munin</strong>!</p>
-
 <p>Считаем, что у нас уже установлен <strong>Munin</strong> не ниже версии 1.4.0 со всеми необходимыми зависимостями. Скачиваем интересующий нас плагин с github:</p>
-
 <pre><code>git clone https://github.com/nyroDev/munin-php-opcache.git
-</code></pre>
-
-<p>Далее копируем файл <code>php_opcache.php</code> в каталог, с которым работает web-сервер, например:</p>
-
+</code></pre><p>Далее копируем файл <code>php_opcache.php</code> в каталог, с которым работает web-сервер, например:</p>
 <pre><code>cp php_opcache.php /var/www/example/opcache/php_opcache.php
-</code></pre>
-
-<p><strong>Примечание.</strong> Убедитесь, что данный скрипт доступен в браузере, например по адресу www.example.com/opcache/php_opcache.php</p>
-
+</code></pre><p><strong>Примечание.</strong> Убедитесь, что данный скрипт доступен в браузере, например по адресу <a href="http://www.example.com/opcache/php_opcache.php">www.example.com/opcache/php_opcache.php</a></p>
 <p>В конфигурационный файл <code>/etc/munin/plugin-conf.d/munin-node</code> нужно добавить следующие строки:</p>
-
 <pre><code>...
 [php_opcache_*]
 user root
 env.URL http://www.example.com/opcache/php_opcache.php
 ...
-</code></pre>
-
-<p>Плагин <code>php_opcache_</code> может выводить собранные метрики на пяти разных графиках, а именно:</p>
-
+</code></pre><p>Плагин <code>php_opcache_</code> может выводить собранные метрики на пяти разных графиках, а именно:</p>
 <ul>
 <li><code>php_opcache_memory</code></li>
 <li><code>php_opcache_hitrate</code></li>
@@ -110,35 +109,17 @@ env.URL http://www.example.com/opcache/php_opcache.php
 <li><code>php_opcache_misses</code></li>
 <li><code>php_opcache_keys</code></li>
 </ul>
-
 <p>Для этого совсем не обязательно держать 5 копий плагина в каталоге <code>/etc/munin/plugins/</code>, разумнее скопировать файл <code>php_opcache_</code> в каталог <code>/usr/share/munin/plugins/</code>:</p>
-
 <pre><code>cp php_opcache_ /usr/share/munin/plugins/
-</code></pre>
-
-<p>и добавить ссылки (с разными именами) на этот файл из каталога <code>/etc/munin/plugins/</code>:</p>
-
+</code></pre><p>и добавить ссылки (с разными именами) на этот файл из каталога <code>/etc/munin/plugins/</code>:</p>
 <pre><code>sudo ln -s /usr/share/munin/plugins/php_opcache_ /etc/munin/plugins/php_opcache_memory
-</code></pre>
-
-<pre><code>sudo ln -s /usr/share/munin/plugins/php_opcache_ /etc/munin/plugins/php_opcache_hitrate
-</code></pre>
-
-<pre><code>sudo ln -s /usr/share/munin/plugins/php_opcache_ /etc/munin/plugins/php_opcache_hits
-</code></pre>
-
-<pre><code>sudo ln -s /usr/share/munin/plugins/php_opcache_ /etc/munin/plugins/php_opcache_misses
-</code></pre>
-
-<pre><code>sudo ln -s /usr/share/munin/plugins/php_opcache_ /etc/munin/plugins/php_opcache_keys
-</code></pre>
-
-<p>После проделанных действий не забудьте перезапустить <strong>Munin</strong>:</p>
-
+</code></pre><pre><code>sudo ln -s /usr/share/munin/plugins/php_opcache_ /etc/munin/plugins/php_opcache_hitrate
+</code></pre><pre><code>sudo ln -s /usr/share/munin/plugins/php_opcache_ /etc/munin/plugins/php_opcache_hits
+</code></pre><pre><code>sudo ln -s /usr/share/munin/plugins/php_opcache_ /etc/munin/plugins/php_opcache_misses
+</code></pre><pre><code>sudo ln -s /usr/share/munin/plugins/php_opcache_ /etc/munin/plugins/php_opcache_keys
+</code></pre><p>После проделанных действий не забудьте перезапустить <strong>Munin</strong>:</p>
 <pre><code>sudo service munin-node restart
-</code></pre>
-
-<p>Через некоторое время в web-интерфейсе системы мониторинга появятся нужные нам графики.</p>
+</code></pre><p>Через некоторое время в web-интерфейсе системы мониторинга появятся нужные нам графики.</p>
                 </section>
             </article>
 
@@ -180,23 +161,23 @@ env.URL http://www.example.com/opcache/php_opcache.php
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

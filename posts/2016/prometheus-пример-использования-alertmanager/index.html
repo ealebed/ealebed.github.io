@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Prometheus: пример использования Alertmanager &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,48 +90,27 @@
                 </header>
                 <section id="post-body">
                     <p>Наиболее простой <strong>пример использования alertmanager</strong> в <strong>системе мониторинга Prometheus</strong> — получение предупреждений о доступном свободном месте на жестких дисках.</p>
-
 <p>Давайте разберемся, как с помощью функции <code>predict_linear()</code> получать полезные и своевременные предупреждения!</p>
-
 <p>Чаще всего предупреждения о заканчивающемся свободном месте на жестких дисках приходят когда диск заполнен на 80-90%. Иногда можно настроить получение уведомлений при оставшемся свободном месте объемом, например, 10 гигабайт. Эти подходы хороши когда жесткие диски на серверах заполняются постепенно и медленно, но что делать если вдруг диск начинает заполняться экспоненциально?</p>
-
 <p>Функция <code>predict_linear()</code> в <strong>системе мониторинга Prometheus</strong> позволяет получить предупреждение когда диск будет заполнен, например, в течении 4 часов.</p>
-
 <p><strong>Примечание.</strong> Несложно догадаться, что название функции происходит от английского to predict — предсказывать.</p>
-
 <p>Выглядеть это будет примерно так:</p>
-
 <pre><code>ALERT DiskWillFillIn4Hours
   IF predict_linear(node_filesystem_free{job='node'}[1h], 4*3600) &lt; 0
   FOR 5m
   LABELS {
     severity=&quot;page&quot;
   }
-</code></pre>
-
-<p>Рассмотрим данный пример подробнее. В первой строке</p>
-
+</code></pre><p>Рассмотрим данный пример подробнее. В первой строке</p>
 <pre><code>ALERT DiskWillFillIn4Hours
-</code></pre>
-
-<p>начало описания уведомления и его название. Вторая строка — самая важная</p>
-
+</code></pre><p>начало описания уведомления и его название. Вторая строка — самая важная</p>
 <pre><code>IF predict_linear(node_filesystem_free{job='node'}[1h], 4*3600) &lt; 0
-</code></pre>
-
-<p>Выражение <code>node_filesystem_free{job='node'}[1h]</code> вычисляет динамику заполнения диска за последний час и с помощью <code>predict_linear()</code> прогнозирует заполненность диска на следующие 4 часа (4 * 3600 секунд), и если свободного места предположительно остается меньше 0, то будет отправлено предупреждение.</p>
-
+</code></pre><p>Выражение <code>node_filesystem_free{job='node'}[1h]</code> вычисляет динамику заполнения диска за последний час и с помощью <code>predict_linear()</code> прогнозирует заполненность диска на следующие 4 часа (4 * 3600 секунд), и если свободного места предположительно остается меньше 0, то будет отправлено предупреждение.</p>
 <p><strong>Примечание.</strong> Способ отправки предупреждения будет зависеть от ваших индивидуальных настроек <code>alertmanager</code> - это может быть письмо или смс-сообщение.</p>
-
 <p>Строка</p>
-
 <pre><code>FOR 5m
-</code></pre>
-
-<p>позволяет подождать 5 минут перед отправкой предупреждения, для того чтобы исключить из прогнозирования внезапные и аномальные всплески. Метки (<code>LABELS</code>) вы можете добавить по своему вкусу и необходимости.</p>
-
+</code></pre><p>позволяет подождать 5 минут перед отправкой предупреждения, для того чтобы исключить из прогнозирования внезапные и аномальные всплески. Метки (<code>LABELS</code>) вы можете добавить по своему вкусу и необходимости.</p>
 <p>Все это можно поместить в файл правил (назовем его <code>node.rules</code>) и дописать путь к этому файлу в конфиг <strong>Prometheus</strong> (<code>prometheus.yml</code>):</p>
-
 <pre><code>global:
   scrape_interval: &quot;15s&quot;
  
@@ -132,9 +122,7 @@ scrape_configs:
   - 
   - 
   -
-</code></pre>
-
-<p>Не забываем перезапустить <strong>Prometheus</strong> для применения изменений.</p>
+</code></pre><p>Не забываем перезапустить <strong>Prometheus</strong> для применения изменений.</p>
                 </section>
             </article>
 
@@ -176,23 +164,23 @@ scrape_configs:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

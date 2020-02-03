@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>GitLab CI: Часть 8, этап release в .gitlab-ci.yml &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Jun 12, 2017 08:30
-                    · 813 words
+                    · 798 words
                     · 4 minute read
                       <span class="tags">
                       
@@ -79,69 +90,54 @@
                 </header>
                 <section id="post-body">
                     <p>В продолжении цикла о настройке <strong>GitLab CI</strong> после этапов сборки и тестирования проекта мы рассмотрим этап подготовки docker-образа с исходниками и его загрузку в локальный docker-registry.</p>
-
 <p>Данный этап (stage) в конфигурационном файле проекта <code>.gitlab-ci.yml</code> я назвал <code>release</code> — давайте разберемся!</p>
-
 <p>Инструкции для этапа подготовки docker-образа выглядят следующим образом:</p>
-
-<pre><code class="language-yaml">...
-release-image:
-  stage: release
-  dependencies:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+<span style="color:#66d9ef">release-image</span>:
+  <span style="color:#66d9ef">stage</span>: release
+  <span style="color:#66d9ef">dependencies</span>:
   - compile
   - testing
-  before_script:
+  <span style="color:#66d9ef">before_script</span>:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-  script:
+  <span style="color:#66d9ef">script</span>:
     - docker build -t $CONTAINER_RELEASE_IMAGE -f Dockerfile . --build-arg BRANCH_NAME=$CI_COMMIT_REF_SLUG
-  after_script:
+  <span style="color:#66d9ef">after_script</span>:
     - docker push $CONTAINER_RELEASE_IMAGE
-  only:
+  <span style="color:#66d9ef">only</span>:
     - develop
     - docker
 ...
-</code></pre>
-
-<p>Задача называется <code>release-image</code>, для корректного выполнения действий нам необходимы артефакты с этапов <code>compile</code> и <code>testing</code> (зависимости описаны в секции <code>dependencies</code>). Запускать данные действия будем только для веток develop и docker.</p>
-
+</code></pre></div><p>Задача называется <code>release-image</code>, для корректного выполнения действий нам необходимы артефакты с этапов <code>compile</code> и <code>testing</code> (зависимости описаны в секции <code>dependencies</code>). Запускать данные действия будем только для веток develop и docker.</p>
 <p>Основная команда данного этапа уже привычно описана в секции <code>script</code> и выполняет сборку docker-образа из Dockerfile с аргументом <code>BRANCH_NAME</code> (для каждой из наших веток будет отличаться как имя образа, так и код). Имя docker-образа — значение переменной <code>$CONTAINER_RELEASE_IMAGE</code>, которая также описывается в конфигурационном файла <code>.gitlab-ci.yml</code>:</p>
-
 <pre><code>...
 CONTAINER_RELEASE_IMAGE: $CI_REGISTRY/develop/ed:$CI_COMMIT_REF_SLUG.sources.last
 ...
-</code></pre>
-
-<p><strong>Примечание.</strong> Переменные <code>$CI_REGISTRY</code> и <code>$CI_COMMIT_REF_SLUG</code> — зарезервированные, подробности о них <a href="https://docs.gitlab.com/ce/ci/variables/README.html">здесь</a>.</p>
-
+</code></pre><p><strong>Примечание.</strong> Переменные <code>$CI_REGISTRY</code> и <code>$CI_COMMIT_REF_SLUG</code> — зарезервированные, подробности о них <a href="https://docs.gitlab.com/ce/ci/variables/README.html">здесь</a>.</p>
 <p>Перед выполнением основной команды необходимо залогиниться в локальный docker-registry (секция <code>before_script</code>), а после — выполнить пуш образа в этот самый реджистри (секция <code>after_script</code>).</p>
-
 <p>Как мы уже знаем, для <a href="https://ealebed.github.io/posts/2017/%D0%BE%D0%BF%D1%82%D0%B8%D0%BC%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-docker-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%BE%D0%B2/">сборки docker-образа</a> необходим Dockerfile, и в нашем проекте он выглядит так:</p>
-
-<pre><code class="language-Dockerfile">FROM busybox
- 
-ARG BRANCH_NAME=
- 
-COPY ./bin /var/www/${BRANCH_NAME}/bin
-COPY ./build /var/www/${BRANCH_NAME}/build
-COPY ./config /var/www/${BRANCH_NAME}/config
-COPY ./data /var/www/${BRANCH_NAME}/data
-COPY ./.env /var/www/${BRANCH_NAME}/
-COPY ./grunt /var/www/${BRANCH_NAME}/grunt
-COPY ./init_autoloader.php /var/www/${BRANCH_NAME}/
-COPY ./library /var/www/${BRANCH_NAME}/library
-COPY ./module /var/www/${BRANCH_NAME}/module
-COPY ./postcss.config.js /var/www/${BRANCH_NAME}/
-COPY ./public /var/www/${BRANCH_NAME}/public
-COPY ./vendor /var/www/${BRANCH_NAME}/vendor
-COPY ./zf /var/www/${BRANCH_NAME}/
- 
-RUN mkdir -p /var/www/${BRANCH_NAME}/public/static &amp;&amp; chmod 777 /var/www/${BRANCH_NAME}/public/static
- 
-VOLUME /var/www/${BRANCH_NAME}
-</code></pre>
-
-<p>Сборка образа и его загрузка в реджистри занимает полторы минуты (01:33), а подробности выполнения задачи выглядят следующим образом:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> busybox</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> BRANCH_NAME<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./bin /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/bin<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./build /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/build<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./config /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/config<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./data /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/data<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./.env /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./grunt /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/grunt<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./init_autoloader.php /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./library /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/library<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./module /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/module<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./postcss.config.js /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./public /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/public<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./vendor /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/vendor<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./zf /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> mkdir -p /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/public/static <span style="color:#f92672">&amp;&amp;</span> chmod <span style="color:#ae81ff">777</span> /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/public/static<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span><span style="color:#e6db74"> /var/www/${BRANCH_NAME}</span><span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>Сборка образа и его загрузка в реджистри занимает полторы минуты (01:33), а подробности выполнения задачи выглядят следующим образом:</p>
 <pre><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
 Starting service registry.gitlab.lc/develop/ed:my-docker-dind ...
@@ -293,9 +289,7 @@ e848528b313f: Pushed
 d3dbf156ad15: Pushed
 develop.sources.last: digest: sha256:fdea81e5367ba5c37f1a19c4bdb0900b0702ab38c8b4d675a5305d03eacd2bfe size: 3455
 Build succeeded
-</code></pre>
-
-<p>На этом этап подготовки docker-образа завершается, а в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D1%8D%D1%82%D0%B0%D0%BF-deploy-%D0%B2-.gitlab-ci.yml/">следующей статье</a> мы рассмотрим процесс деплоя данного образа на ревью (rewiev).</p>
+</code></pre><p>На этом этап подготовки docker-образа завершается, а в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D1%8D%D1%82%D0%B0%D0%BF-deploy-%D0%B2-.gitlab-ci.yml/">следующей статье</a> мы рассмотрим процесс деплоя данного образа на ревью (rewiev).</p>
                 </section>
             </article>
 
@@ -337,23 +331,23 @@ Build succeeded
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

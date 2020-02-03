@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Использование Percona XtraBackup при большом количестве таблиц в БД &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,75 +90,43 @@
                 </header>
                 <section id="post-body">
                     <p>При наличии очень <strong>большого количества таблиц в базе данных MySQL</strong> и включенной опции <strong>innodb_file_per_table</strong> (<a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BE%D0%BF%D1%86%D0%B8%D0%B8-innodb_file_per_table/">подробнее</a>) могут возникнуть проблемы с созданием резервных копий. Давайте разберемся!</p>
-
 <p>Речь идет о следующей ошибке при создании резервной копии БД:</p>
-
-<pre><code class="language-bash">...
-InnoDB: Operating system error number 24 in a file operation.
-InnoDB: Error number 24 means 'Too many open files' 
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
+InnoDB: Operating system error number <span style="color:#ae81ff">24</span> in a file operation.
+InnoDB: Error number <span style="color:#ae81ff">24</span> means <span style="color:#e6db74">&#39;Too many open files&#39;</span> 
 InnoDB: Some operating system error numbers are described at http://dev.mysql.com/doc/refman/5.7/en/operating-system-error-codes.html 
-InnoDB: File ./sbtest/sbtest132841.ibd: 'open' returned OS error 124. Cannot continue operation 
-InnoDB: Cannot continue operation.
-</code></pre>
-
-<p>Давайте посмотрим, сколько же это &ldquo;Too many open files&rdquo;:</p>
-
-<pre><code class="language-bash">find /var/lib/mysql/ -name &quot;*.ibd&quot; | wc -l
-1000005
-</code></pre>
-
-<p>Далее следует узнать какое максимальное количество файлов можно держать открытыми в системе:</p>
-
-<pre><code class="language-bash">cat /proc/sys/fs/file-max
-1635229
-</code></pre>
-
-<p><strong>Примечание.</strong> Если это число небольшое, то <strong>Percona XtraBackup</strong> вполне может «монополизировать» файлы, что повлечет за собой некорректную работу остальных сервисов.</p>
-
+InnoDB: File ./sbtest/sbtest132841.ibd: <span style="color:#e6db74">&#39;open&#39;</span> returned OS error 124. Cannot <span style="color:#66d9ef">continue</span> operation 
+InnoDB: Cannot <span style="color:#66d9ef">continue</span> operation.
+</code></pre></div><p>Давайте посмотрим, сколько же это &ldquo;Too many open files&rdquo;:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find /var/lib/mysql/ -name <span style="color:#e6db74">&#34;*.ibd&#34;</span> | wc -l
+<span style="color:#ae81ff">1000005</span>
+</code></pre></div><p>Далее следует узнать какое максимальное количество файлов можно держать открытыми в системе:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/sys/fs/file-max
+<span style="color:#ae81ff">1635229</span>
+</code></pre></div><p><strong>Примечание.</strong> Если это число небольшое, то <strong>Percona XtraBackup</strong> вполне может «монополизировать» файлы, что повлечет за собой некорректную работу остальных сервисов.</p>
 <p>Увеличить максимальное количество файлов, которые могут быть открыты в системе можно так:</p>
-
-<pre><code class="language-bash">sysctl -w fs.file-max=5000000 &amp;&amp; echo &quot;fs.file-max=5000000&quot; &gt;&gt; /etc/sysctl.conf
-</code></pre>
-
-<p>Также можно <strong>увеличить лимит на количество открытых файлов процессом Percona XtraBackup</strong>, оптимальный вариант — использовать параметр <code>--open-files-limit</code>. Например, можно добавить в конфигурационный файл <code>/etc/mysql/my.cnf</code> следующее:</p>
-
-<pre><code class="language-bash">...
-[xtrabackup]
-open-files-limit=2000000
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -w fs.file-max<span style="color:#f92672">=</span><span style="color:#ae81ff">5000000</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;fs.file-max=5000000&#34;</span> &gt;&gt; /etc/sysctl.conf
+</code></pre></div><p>Также можно <strong>увеличить лимит на количество открытых файлов процессом Percona XtraBackup</strong>, оптимальный вариант — использовать параметр <code>--open-files-limit</code>. Например, можно добавить в конфигурационный файл <code>/etc/mysql/my.cnf</code> следующее:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
+<span style="color:#f92672">[</span>xtrabackup<span style="color:#f92672">]</span>
+open-files-limit<span style="color:#f92672">=</span><span style="color:#ae81ff">2000000</span>
 ...
-</code></pre>
-
-<p>Также можно изменить этот параметр в командной строке или запускать <code>ulimit -n 2000000</code> перед стартом резервного копирования. Перед запуском предложенной команды нужно убедиться, что у пользователя есть необходимые привилегии для изменения лимита открытых файлов.</p>
-
+</code></pre></div><p>Также можно изменить этот параметр в командной строке или запускать <code>ulimit -n 2000000</code> перед стартом резервного копирования. Перед запуском предложенной команды нужно убедиться, что у пользователя есть необходимые привилегии для изменения лимита открытых файлов.</p>
 <p>Еще один вариант изменения лимитов — добавить в конфигурационный файл <code>/etc/security/limits.conf</code> строки:</p>
-
-<pre><code class="language-bash">...
-mysql hard nofile 2000000
-mysql soft nofile 2000000
-</code></pre>
-
-<p>На одном из хостов при выполнении команды <code>ulimit -n 2000000</code> столкнулся с ошибкой:</p>
-
-<pre><code class="language-bash">ulimit -n 2000000
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
+mysql hard nofile <span style="color:#ae81ff">2000000</span>
+mysql soft nofile <span style="color:#ae81ff">2000000</span>
+</code></pre></div><p>На одном из хостов при выполнении команды <code>ulimit -n 2000000</code> столкнулся с ошибкой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -n <span style="color:#ae81ff">2000000</span>
 -su: ulimit: open files: cannot modify limit: Operation not permitted
-</code></pre>
-
-<p>Это лечится увеличением значения параметра <code>fs.nr_open</code> (лимит ядра на количество запускаемых процессов), например:</p>
-
-<pre><code class="language-bash">cat /proc/sys/fs/nr_open
-1048576
-</code></pre>
-
-<pre><code class="language-bash">sysctl -w fs.nr_open=2000000 &amp;&amp; echo &quot;fs.nr_open=2000000&quot; &gt;&gt; /etc/sysctl.conf
-fs.nr_open = 2000000
-</code></pre>
-
-<pre><code class="language-bash">cat /proc/sys/fs/nr_open
-2000000
-</code></pre>
-
-<p>После всех проделанных изменений вы сможете без проблем бекапить базы данных MySQL с миллионами таблиц <strong>утилитой Percona XtraBackup</strong>.</p>
-
+</code></pre></div><p>Это лечится увеличением значения параметра <code>fs.nr_open</code> (лимит ядра на количество запускаемых процессов), например:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/sys/fs/nr_open
+<span style="color:#ae81ff">1048576</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -w fs.nr_open<span style="color:#f92672">=</span><span style="color:#ae81ff">2000000</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;fs.nr_open=2000000&#34;</span> &gt;&gt; /etc/sysctl.conf
+fs.nr_open <span style="color:#f92672">=</span> <span style="color:#ae81ff">2000000</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/sys/fs/nr_open
+<span style="color:#ae81ff">2000000</span>
+</code></pre></div><p>После всех проделанных изменений вы сможете без проблем бекапить базы данных MySQL с миллионами таблиц <strong>утилитой Percona XtraBackup</strong>.</p>
 <p>А что делать, если нет возможности позволить <strong>Percona XtraBackup</strong> открывать такое количество файлов? В таком случае на свой страх и риск можно использовать опцию <code>--open-files-limit</code> (<a href="https://www.percona.com/doc/percona-xtrabackup/2.4/innobackupex/innobackupex_option_reference.html#cmdoption-innobackupex--close-files">подробнее</a>) и не делать никаких DDL во время бекапа!</p>
                 </section>
             </article>
@@ -190,23 +169,23 @@ fs.nr_open = 2000000
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

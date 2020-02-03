@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Редиректы на Nginx: Rewrite vs Return &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,12 +88,9 @@
                 </header>
                 <section id="post-body">
                     <p>Довольно часто при обращении к сайту используются <strong>редиректы на уровне вебсервера Nginx</strong>. Чаще всего редиректы применяют для изменения имени домена (без www на домен с www) или протокола (с HTTP на HTTPS).</p>
-
 <p>Настройку на редиректов в NGINX можно сделать двумя способами — давайте разберемся!</p>
-
 <p>Пример настройки редиректа с домена без www на домен с www:</p>
-
-<pre><code class="language-text">server {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">server {
         server_name example.com;
         # Вариант 1
         return 301 $scheme://www.$host$request_uri;
@@ -90,11 +98,8 @@
         # Вариант 2
         rewrite ^ http://www.$host$request_uri? permanent;
 }
-</code></pre>
-
-<p>Пример редиректа с HTTP на HTTPS:</p>
-
-<pre><code class="language-text">server {
+</code></pre></div><p>Пример редиректа с HTTP на HTTPS:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">server {
         server_name example.com;
         # Вариант 1
         return 301 https://$server_name$request_uri;
@@ -102,51 +107,33 @@
         # Вариант 2
         rewrite ^ https://$server_name$request_uri? permanent;
 }
-</code></pre>
-
-<p>Рассмотрим подробнее вариант с использованием директивы <code>rewrite</code>:</p>
-
-<pre><code class="language-text">rewrite ^ http://$host$request_uri? &lt;флаг&gt;; 
-</code></pre>
-
-<p>Здесь:</p>
-
+</code></pre></div><p>Рассмотрим подробнее вариант с использованием директивы <code>rewrite</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">rewrite ^ http://$host$request_uri? &lt;флаг&gt;; 
+</code></pre></div><p>Здесь:</p>
 <ul>
 <li><code>$host</code> — имя хоста из запроса, если отсутствует — имя в поле «Host» заголовка, если тоже отсутствует — имя сервера;</li>
 <li><code>$request_uri</code> — первоначальный запрос с аргументами (все, что идет после доменного имени).</li>
 </ul>
-
 <p>Флаги могут принимать следующие значения:</p>
-
 <ul>
 <li><code>permanent</code> — редирект с кодом 301.</li>
 <li><code>redirect</code> — редирект с кодом 302.</li>
 <li><code>last</code> — закончить обработку с переходом в новый <code>location</code>.</li>
 <li><code>break</code> — закончить обработку и остаться в текущем <code>location</code>.</li>
 </ul>
-
 <p>В вариант с использованием директивы <code>return</code>:</p>
-
-<pre><code class="language-text">return &lt;код&gt; https://$host$request_uri;
-</code></pre>
-
-<p>коды могут использоваться любые, но чаще всего — 301, 302, 404.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">return &lt;код&gt; https://$host$request_uri;
+</code></pre></div><p>коды могут использоваться любые, но чаще всего — 301, 302, 404.</p>
 <p>Для обычного посетителя сайта разницы между кодами 301 и 302 нет. А вот для поискового робота разница огромная — 301-й редирект говорит о «склеивании» страниц. Это означает для поисковика то, что старая и новая страницы — это одно и тоже. Таким образом результаты ранжирования необходимо сохранить для новой страницы. 302-й редирект просто говорит о том, что нужно перейти по другому адресу. Поисковый робот не сохраняет результат выдачи для новой страницы, индексируя его с нуля.</p>
-
 <p>Ключевые особенности обоих вариантов:</p>
-
 <p><strong>REWRITE</strong></p>
-
 <ul>
 <li>переписывается только та часть исходного URL, которая соответствует регулярному выражению;</li>
 <li>медленнее, чем <code>return</code>;</li>
 <li>возвращает HTTP 302 (Moved Temporarily) во всех случаях, кроме явно указанного флага permanent;</li>
 <li>лучше подходит для временного изменения URL.</li>
 </ul>
-
 <p><strong>RETURN</strong></p>
-
 <ul>
 <li>весь URL-адрес переписывается на указанный URL-адрес;</li>
 <li>быстрее, чем <code>rewrite</code>;</li>
@@ -195,23 +182,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

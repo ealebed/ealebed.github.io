@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Reboot in Ansible 2.1.1.0 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,9 +88,7 @@
                 </header>
                 <section id="post-body">
                     <p>После обновления <code>Ansible</code> до версии 2.1.1.0 перестал работать довольно простой набор инструкций для удаленной перезагрузки хостов, который успешно работал в <code>Ansible</code> версии 1.9. Давайте разберемся!</p>
-
 <p>Работавший ранее плейбук <code>reboot.yml</code> выглядел так:</p>
-
 <pre><code>---
 - hosts: test
   sudo: yes
@@ -92,10 +101,7 @@
   - name: Wait for the host to finish rebooting
     local_action: wait_for host={{ inventory_hostname }} state=started
     sudo: false
-</code></pre>
-
-<p>После обновления версии <code>Ansible</code> выполнение данного набора инструкций завершается следующим образом:</p>
-
+</code></pre><p>После обновления версии <code>Ansible</code> выполнение данного набора инструкций завершается следующим образом:</p>
 <pre><code>ansible-playbook playbooks/reboot.yml
 
 PLAY [test] ********************************************************************
@@ -109,12 +115,8 @@ fatal: [test]: UNREACHABLE! =&gt; {&quot;changed&quot;: false, &quot;msg&quot;: 
 
 PLAY RECAP *********************************************************************
 test                   : ok=1    changed=0    unreachable=1    failed=0
-</code></pre>
-
-<p><strong>Примечание.</strong> При этом удаленный хост перезагружается — можем в этом убедиться с помощью пинга в соседней консоли (или просто проверить <code>uptime</code> удаленной машины).</p>
-
+</code></pre><p><strong>Примечание.</strong> При этом удаленный хост перезагружается — можем в этом убедиться с помощью пинга в соседней консоли (или просто проверить <code>uptime</code> удаленной машины).</p>
 <p>Для корректного выполнения данного набора инструкций (перезагрузки и ожидания пока удаленный хост вновь появится онлайн) в текущей версии <code>Ansible</code> необходимо привести плейбук к следующему виду:</p>
-
 <pre><code>---
 - hosts: test
   become: yes
@@ -128,10 +130,7 @@ test                   : ok=1    changed=0    unreachable=1    failed=0
     local_action: wait_for host={{ inventory_hostname }} port=22 delay=20 connect_timeout=200
     become: false
     delegate_to: localhost
-</code></pre>
-
-<p>Теперь плейбук выполнится с ожидаемым результатом:</p>
-
+</code></pre><p>Теперь плейбук выполнится с ожидаемым результатом:</p>
 <pre><code>ansible-playbook playbooks/reboot.yml
 
 PLAY [test] ********************************************************************
@@ -189,23 +188,23 @@ test                   : ok=3    changed=0    unreachable=0    failed=0
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

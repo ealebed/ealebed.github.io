@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Как удалить записи из таблицы mysql.slow_log? &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,34 +90,22 @@
                 </header>
                 <section id="post-body">
                     <p>В нашем примере используется операционная система Debian Wheezy, версия MySQL-сервера 5.5. Давайте разберемся, <strong>как удалить записи из таблицы mysql.slow_log</strong>!</p>
-
 <p>При попытке удалить записи из таблицы <code>slow_log</code> базы <code>mysql</code> получаем сообщение об ошибке:</p>
-
-<pre><code class="language-text">#1556 - You can't use locks with log tables
-</code></pre>
-
-<p>Для решения это проблемы подключаемся к MySQL с привилегиями суперпользователя, отключаем лог медленных запросов, переименовываем таблицу, удаляем из нее записи, переименовываем обратно и включаем лог:</p>
-
-<pre><code class="language-bash">mysql -uroot -p&lt;СЛОЖНЫЙ_ПАРОЛЬ&gt;
-</code></pre>
-
-<p>и выполняем следующие запросы:</p>
-
-<pre><code class="language-sql">use mysql;
-SET GLOBAL slow_log='OFF';
-RENAME TABLE slow_log TO slow_log_temp;
-DELETE FROM `slow_log_temp` WHERE `start_time` &lt; DATE(NOW());;
-RENAME TABLE slow_log_temp TO slow_log;
-SET GLOBAL slow_log='ON';
-</code></pre>
-
-<p><strong>Примечание.</strong> Данное решение справедливо и для таблицы <code>general_log</code> базы <code>mysql</code>, только вместо <code>SET GLOBAL slow_log='OFF'/'ON'</code> используйте <code>SET GLOBAL general_log='OFF'/'ON'</code>.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">#1556 - You can&#39;t use locks with log tables
+</code></pre></div><p>Для решения это проблемы подключаемся к MySQL с привилегиями суперпользователя, отключаем лог медленных запросов, переименовываем таблицу, удаляем из нее записи, переименовываем обратно и включаем лог:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mysql -uroot -p&lt;СЛОЖНЫЙ_ПАРОЛЬ&gt;
+</code></pre></div><p>и выполняем следующие запросы:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql">use mysql;
+<span style="color:#66d9ef">SET</span> <span style="color:#66d9ef">GLOBAL</span> slow_log<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">OFF</span><span style="color:#e6db74">&#39;</span>;
+<span style="color:#66d9ef">RENAME</span> <span style="color:#66d9ef">TABLE</span> slow_log <span style="color:#66d9ef">TO</span> slow_log_temp;
+<span style="color:#66d9ef">DELETE</span> <span style="color:#66d9ef">FROM</span> <span style="color:#f92672">`</span>slow_log_temp<span style="color:#f92672">`</span> <span style="color:#66d9ef">WHERE</span> <span style="color:#f92672">`</span>start_time<span style="color:#f92672">`</span> <span style="color:#f92672">&lt;</span> DATE(NOW());;
+<span style="color:#66d9ef">RENAME</span> <span style="color:#66d9ef">TABLE</span> slow_log_temp <span style="color:#66d9ef">TO</span> slow_log;
+<span style="color:#66d9ef">SET</span> <span style="color:#66d9ef">GLOBAL</span> slow_log<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">ON</span><span style="color:#e6db74">&#39;</span>;
+</code></pre></div><p><strong>Примечание.</strong> Данное решение справедливо и для таблицы <code>general_log</code> базы <code>mysql</code>, только вместо <code>SET GLOBAL slow_log='OFF'/'ON'</code> используйте <code>SET GLOBAL general_log='OFF'/'ON'</code>.</p>
 <p>Если же вы используете Amazon rds, то удалить записи из таблицы <code>mysql.slow_log</code> значительно проще — достаточно воспользоваться встроенной процедурой <code>rotate</code>:</p>
-
-<pre><code class="language-sql">CALL mysql.rds_rotate_slow_log;
-DELETE FROM mysql.slow_log_backup;
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CALL</span> mysql.rds_rotate_slow_log;
+<span style="color:#66d9ef">DELETE</span> <span style="color:#66d9ef">FROM</span> mysql.slow_log_backup;
+</code></pre></div>
                 </section>
             </article>
 
@@ -148,23 +147,23 @@ DELETE FROM mysql.slow_log_backup;
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Базовая настройка Asterisk 11 в Debian Wheezy: голосовая почта &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,9 +90,7 @@
                 </header>
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B2%D0%BD%D1%83%D1%82%D1%80%D0%B5%D0%BD%D0%BD%D0%B8%D1%85-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%BE%D0%B2/">предыдущей</a> статье мы успешно настроили Asterisk для обслуживания внутренних звонков, теперь давайте разберемся с <strong>настройкой голосовой почты в Asterisk 11</strong>.</p>
-
 <p>Прежде всего, нужно отредактировать конфигурационный файл <code>/etc/asterisk/extensions.conf</code> и привести его к следующему виду:</p>
-
 <pre><code>[office]
 ; внутренние 3-х значные номера, начинаются с 1
 exten =&gt; _1XX,1,Set(TARGETNO=${EXTEN})
@@ -103,45 +112,29 @@ exten =&gt; voicemail,1,Playback(vm-nobodyavail)
 exten =&gt; voicemail,n,VoiceMail(${TARGETNO})
 exten =&gt; voicemail,n,Playback(vm-goodbye)
 exten =&gt; voicemail,n,Hangup
-</code></pre>
-
-<p>Таким образом, если в течении 15 секунд вызываемый абонент не ответит и в переменной <code>DIALSTATUS</code> мы получим одно из трех значений — <code>BUSY</code>, <code>NOANSWER</code> или <code>CHANUNAVAIL</code>, то звонящему будет проиграно сообщение «К сожалению сейчас никто не может принять Ваш звонок» и будет предложено оставить сообщение голосовой почты. После сохранения голосового сообщения с помощью приложения <code>VoiceMail()</code> на всякий случай попрощаемся со звонящим и положим трубку.</p>
-
+</code></pre><p>Таким образом, если в течении 15 секунд вызываемый абонент не ответит и в переменной <code>DIALSTATUS</code> мы получим одно из трех значений — <code>BUSY</code>, <code>NOANSWER</code> или <code>CHANUNAVAIL</code>, то звонящему будет проиграно сообщение «К сожалению сейчас никто не может принять Ваш звонок» и будет предложено оставить сообщение голосовой почты. После сохранения голосового сообщения с помощью приложения <code>VoiceMail()</code> на всякий случай попрощаемся со звонящим и положим трубку.</p>
 <p><strong>Примечание.</strong> Переменная <code>DIALSTATUS</code> может принимать девять (!) значений, но мы не будем обрабатывать их все</p>
-
 <p>За <strong>настройку голосовой почты в Asterisk’е</strong> отвечает конфигурационный файл <code>/etc/asterisk/voicemail.conf</code>. В этом файле:</p>
-
 <ul>
-<li><p>в секции <code>[general]</code> должны быть раскомментированы следующие строки:</p>
-
+<li>в секции <code>[general]</code> должны быть раскомментированы следующие строки:</li>
+</ul>
 <pre><code>[general]
 format=wav
 serveremail=asterisk
 attach=yes
-</code></pre></li>
-</ul>
-
-<p><strong>Примечание.</strong> Также на мой взгляд очень полезна опция <code>externnotify</code>, позволяющая вызывать указанный вами скрипт после сохранения голосового сообщения.</p>
-
+</code></pre><p><strong>Примечание.</strong> Также на мой взгляд очень полезна опция <code>externnotify</code>, позволяющая вызывать указанный вами скрипт после сохранения голосового сообщения.</p>
 <ul>
-<li><p>создадим секцию <code>[office]</code> такого вида:</p>
-
+<li>создадим секцию <code>[office]</code> такого вида:</li>
+</ul>
 <pre><code>[office]
 101 =&gt; ,&lt;Имя&gt; &lt;Фамилия&gt;,&lt;почтовый_ящик&gt;
 102 =&gt; ,&lt;Имя&gt; &lt;Фамилия&gt;,&lt;почтовый_ящик&gt;
 103 =&gt; ,&lt;Имя&gt; &lt;Фамилия&gt;,&lt;почтовый_ящик&gt;
 ...
-</code></pre></li>
-</ul>
-
-<p>Здесь мы настраиваем ящики голосовой почты (без пароля). При поступлении нового голосового сообщения пользователю будет отправляться письмо с вложением на указанный почтовый ящик. Во вложении письма будет присутствовать само голосовое сообщение в формате <code>*.wav</code>.</p>
-
+</code></pre><p>Здесь мы настраиваем ящики голосовой почты (без пароля). При поступлении нового голосового сообщения пользователю будет отправляться письмо с вложением на указанный почтовый ящик. Во вложении письма будет присутствовать само голосовое сообщение в формате <code>*.wav</code>.</p>
 <p>После внесения изменений в конфигурационные файлы не забываем выполнить:</p>
-
 <pre><code>/etc/init.d/asterisk reload
-</code></pre>
-
-<p>На этом <strong>базовая настройка голосовой почты в Asterisk’е</strong> закончена, далее рассмотрим <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%B2%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B8-%D0%B8%D1%81%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%B8/">настройку входящих и исходящих звонков</a>.</p>
+</code></pre><p>На этом <strong>базовая настройка голосовой почты в Asterisk’е</strong> закончена, далее рассмотрим <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%B2%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B8-%D0%B8%D1%81%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%B8/">настройку входящих и исходящих звонков</a>.</p>
                 </section>
             </article>
 
@@ -183,23 +176,23 @@ attach=yes
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

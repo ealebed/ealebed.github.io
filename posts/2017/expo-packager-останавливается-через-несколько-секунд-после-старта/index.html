@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Expo: Packager останавливается через несколько секунд после старта &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,9 +88,7 @@
                 </header>
                 <section id="post-body">
                     <p>При запуске проекта при помощи команды <code>exp</code> через несколько секунд после старта React Native packager отваливается без каких-либо сообщений в логах. Давайте разберемся!</p>
-
 <p>Сразу после запуска команды <code>exp start --tunnel --send-to ealebed@gmail.com</code> в консоли можно увидеть следующее:</p>
-
 <pre><code>[exp] Starting React Native packager...
 [exp] Scanning folders for symlinks in /var/www/mobile/node_modules (19ms)
 [exp] Loading dependency graph.
@@ -93,65 +102,41 @@
 [exp] Sending URL to ealebed@gmail.com
 [exp] Sent.
 [exp] Logs for your project will appear below. Press Ctrl+C to exit.
-</code></pre>
-
-<p>В этот момент можно «засечь» порт, на котором запускается React Native packager (19001):</p>
-
+</code></pre><p>В этот момент можно «засечь» порт, на котором запускается React Native packager (19001):</p>
 <pre><code>netstat -napl | grep 1900
 tcp6       0      0 :::19000                :::*                    LISTEN      10899/node      
 tcp6       0      0 127.0.0.1:19001         127.0.0.1:45950         TIME_WAIT   -               
 tcp6       0      0 127.0.0.1:19000         127.0.0.1:38556         TIME_WAIT   -              
-</code></pre>
-
-<p>Но спустя несколько секунд он пропадает:</p>
-
+</code></pre><p>Но спустя несколько секунд он пропадает:</p>
 <pre><code>netstat -napl | grep 1900
 tcp6       0      0 :::19000                :::*                    LISTEN      10899/node
-</code></pre>
-
-<p>Ситуация повторяется и при запуске exp в docker-контейнере, и при запуске непосредственно с хост-машины. Мы знаем, что LISTEN использует <a href="http://linux.die.net/man/7/inotify"><code>inotify</code></a> по умолчанию для отслеживания изменений в файлах и каталогах Linux. Иногда происходит ситуация, когда можно «упереться» в лимит количества файлов, за которыми ведется наблюдение — в таком случае его необходимо увеличить.</p>
-
+</code></pre><p>Ситуация повторяется и при запуске exp в docker-контейнере, и при запуске непосредственно с хост-машины. Мы знаем, что LISTEN использует <a href="http://linux.die.net/man/7/inotify"><code>inotify</code></a> по умолчанию для отслеживания изменений в файлах и каталогах Linux. Иногда происходит ситуация, когда можно «упереться» в лимит количества файлов, за которыми ведется наблюдение — в таком случае его необходимо увеличить.</p>
 <p>У <code>inotify</code> есть три параметра (<code>ls /proc/sys/fs/inotify/</code>), на которые мы можем повлиять:</p>
-
 <ul>
 <li><code>max_queued_events</code> — максимальное число событий в очереди (default = 16384);</li>
 <li><code>max_user_instances</code> — сколько инстансов <code>inotify</code> может запустить один пользователь (default = 128);</li>
 <li><code>max_user_watches</code> — сколько файлов может отслеживать один пользоваль (default = 8192).</li>
 </ul>
-
 <p>Проверим значение этих параметров на хост-машине:</p>
-
 <pre><code>sysctl -a | grep fs.inotify
 fs.inotify.max_queued_events = 16384
 fs.inotify.max_user_instances = 128
 fs.inotify.max_user_watches = 8192
-</code></pre>
-
-<p>Очевидно, что внутри docker-контейнера значения будут такими же:</p>
-
+</code></pre><p>Очевидно, что внутри docker-контейнера значения будут такими же:</p>
 <pre><code>docker exec -it node-expo sysctl -a | grep fs.inotify
 fs.inotify.max_queued_events = 16384
 fs.inotify.max_user_instances = 128
 fs.inotify.max_user_watches = 8192
-</code></pre>
-
-<p>Увеличиваем значения параметра <code>fs.inotify.max_user_watches</code> на хост-машине:</p>
-
+</code></pre><p>Увеличиваем значения параметра <code>fs.inotify.max_user_watches</code> на хост-машине:</p>
 <pre><code>echo fs.inotify.max_user_watches = 524288 | sudo tee -a /etc/sysctl.conf &amp;&amp; sudo sysctl -p
 fs.inotify.max_user_watches = 524288
 fs.inotify.max_user_watches = 524288
-</code></pre>
-
-<p>Проверим, изменилось ли значение внутри docker-контейнера:</p>
-
+</code></pre><p>Проверим, изменилось ли значение внутри docker-контейнера:</p>
 <pre><code>docker exec -it node-expo sysctl -a | grep fs.inotify
 fs.inotify.max_queued_events = 16384
 fs.inotify.max_user_instances = 128
 fs.inotify.max_user_watches = 524288
-</code></pre>
-
-<p>Запускаем <code>exp</code> в docker-контейнере, через несколько секунд проверяем открытые порты на хост-машине:</p>
-
+</code></pre><p>Запускаем <code>exp</code> в docker-контейнере, через несколько секунд проверяем открытые порты на хост-машине:</p>
 <pre><code>netstat -napl | grep 1900
 tcp        0      0 127.0.0.1:34540         127.0.0.1:19000         ESTABLISHED 19602/ngrok     
 tcp        0      0 127.0.0.1:42368         127.0.0.1:19001         ESTABLISHED 19602/ngrok     
@@ -161,9 +146,7 @@ tcp6       0      0 127.0.0.1:19000         127.0.0.1:34540         ESTABLISHED 
 tcp6       0      0 127.0.0.1:19000         127.0.0.1:33104         TIME_WAIT   -               
 tcp6       0      0 127.0.0.1:19001         127.0.0.1:42368         ESTABLISHED 19540/node      
 tcp6       0      0 127.0.0.1:19001         127.0.0.1:40498         TIME_WAIT   -   
-</code></pre>
-
-<p>После внесенных изменений React Native packager больше не отваливается и все работает, как ожидалось.</p>
+</code></pre><p>После внесенных изменений React Native packager больше не отваливается и все работает, как ожидалось.</p>
                 </section>
             </article>
 
@@ -205,23 +188,23 @@ tcp6       0      0 127.0.0.1:19001         127.0.0.1:40498         TIME_WAIT   
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

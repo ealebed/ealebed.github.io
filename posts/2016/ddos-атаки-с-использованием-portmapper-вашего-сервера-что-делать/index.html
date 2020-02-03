@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>DDoS-атаки с использованием Portmapper вашего сервера: что делать? &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,24 +88,16 @@
                 </header>
                 <section id="post-body">
                     <p>Получил письмо с темой <code>Exploitable portmapper service used for an attack: &lt;IP-address моего сервера&gt;</code>. Есстественно, хостер недоволен таким положением вещей и требует устранить проблему. Давайте разберемся!</p>
-
 <p>В самом письме проблема раскрыта шире, присутствуют логи и ссылка на более <a href="http://blog.level3.com/security/a-new-ddos-reflection-attack-portmapper-an-early-warning-to-the-industry/">подробную информацию</a> (с надписью <code>we did not create this content</code>).</p>
-
 <p>Оказывается проблема не нова, впервые с ней столкнулись в середине июня 2015 года, серьезные масштабы данный вид атак приобрел 10-12 августа 2015 года. Специалисты телекоммуникационного и интернет-провайдера Level 3 охарактеризовали этот новый тип DDoS-атаки как модификацию NTP DDoS двухлетней давности.</p>
-
 <p>Новый вид DDoS использует <strong>Portmapper (RPC Portmapper)</strong>, который работает на сетевых узлах, обеспечивающих сервисы Remote Procedure Call (например, NIS и NFS), и всегда работает по 111 порту TCP или UDP. Сама атака заключается в отправке UDP-пакета (с указанием ip-адреса жертвы как исходящего) на сервер, использующий <strong>Portmapper</strong>. В ответ <strong>Portmapper</strong> честно шлет список сетевых сервисов для переназначения портов, но уже на адрес жертвы.</p>
-
 <p>Итак, кто виноват выяснили. Что делать?
 Вариант первый — отключить сервисы <strong>Portmapper</strong> и RPC. Если эти сервисы все же необходимы, вариант второй — перенастроить <strong>Portmapper</strong> и RPC на работу по протоколу TCP или третий — с помощью файрволла закрыть доступ к этим сервисам извне.</p>
-
 <p>Мне больше всего пришелся по душе третий вариант, поэтому логинимся на «проблемный» сервер и правами суперпользователя выполняем следующие команды:</p>
-
 <pre><code>iptables -A INPUT -p udp -s 192.168.0.0/24 --dport 111 -j ACCEPT
 iptables -A INPUT -p udp -s 127.0.0.1 --dport 111 -j ACCEPT
 iptables -A INPUT -p udp --dport 111 -j DROP
-</code></pre>
-
-<p>Не лишним также будет изменить пароли пользователей и выполнить проверку системы на вирусы, например, с помощью ClamAV.</p>
+</code></pre><p>Не лишним также будет изменить пароли пользователей и выполнить проверку системы на вирусы, например, с помощью ClamAV.</p>
                 </section>
             </article>
 
@@ -136,23 +139,23 @@ iptables -A INPUT -p udp --dport 111 -j DROP
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

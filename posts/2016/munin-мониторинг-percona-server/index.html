@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Munin: мониторинг Percona Server &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,96 +92,63 @@
                 </header>
                 <section id="post-body">
                     <p>Давайте разберемся, как <strong>отслеживать важные параметры Percona Server</strong> и отображать их на графиках в <strong>системе мониторинга Munin</strong>!</p>
-
 <p>Считаем, что у нас уже установлен Munin со всеми необходимыми зависимостями и Percona Server. Как уже упоминалось <a href="https://ealebed.github.io/posts/2016/missing-dependency-cache-cache-at-etc-munin-plugins-mysql_/">ранее</a>, настройки плагинов <code>mysql*</code> находятся в файле <code>/etc/munin/plugin-conf.d/munin-node</code> и имеют примерно следующий вид:</p>
-
 <pre><code>[mysql*]
 user root
 env.mysqlopts --defaults-file=/etc/mysql/debian.cnf
 env.mysqluser munin
 env.mysqlpassword &lt;Очень_сложный_пароль&gt;
 env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
-</code></pre>
-
-<p>Не забываем создать соответствующего пользователя в базе данных с помощью следующих запросов:</p>
-
-<pre><code class="language-sql">CREATE USER munin@127.0.0.1 IDENTIFIED BY '&lt; Очень_сложный_пароль &gt;';
-GRANT SUPER,PROCESS ON *.* TO munin@127.0.0.1;
-GRANT SELECT ON mysql.* TO munin@127.0.0.1;
-FLUSH PRIVILEGES;
-</code></pre>
-
-<p>Просмотрим все доступные для использования плагины мониторинга баз данных MySQL командой:</p>
-
-<pre><code class="language-bash">munin-node-configure --suggest 2&gt;&amp;1 | grep mysql
-</code></pre>
-
-<p>Результат выполнения команды выглядит примерно так:</p>
-
+</code></pre><p>Не забываем создать соответствующего пользователя в базе данных с помощью следующих запросов:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">USER</span> munin<span style="color:#f92672">@</span><span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span> IDENTIFIED <span style="color:#66d9ef">BY</span> <span style="color:#e6db74">&#39;</span><span style="color:#e6db74">&lt; Очень_сложный_пароль &gt;</span><span style="color:#e6db74">&#39;</span>;
+<span style="color:#66d9ef">GRANT</span> SUPER,PROCESS <span style="color:#66d9ef">ON</span> <span style="color:#f92672">*</span>.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> munin<span style="color:#f92672">@</span><span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span>;
+<span style="color:#66d9ef">GRANT</span> <span style="color:#66d9ef">SELECT</span> <span style="color:#66d9ef">ON</span> mysql.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> munin<span style="color:#f92672">@</span><span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span>;
+FLUSH <span style="color:#66d9ef">PRIVILEGES</span>;
+</code></pre></div><p>Просмотрим все доступные для использования плагины мониторинга баз данных MySQL командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">munin-node-configure --suggest 2&gt;&amp;<span style="color:#ae81ff">1</span> | grep mysql
+</code></pre></div><p>Результат выполнения команды выглядит примерно так:</p>
 <pre><code>mysql_                     | yes  | yes (innodb_bpool innodb_bpool_act innodb_io tmp_tables +bin_relay_log +commands +connections +files_tables +innodb_insert_buf +innodb_io_pend +innodb_log +innodb_rows +innodb_semaphores +innodb_tnx +myisam_indexes +network_traffic +qcache +qcache_mem +replication +select_types +slow +sorts +table_locks)
-</code></pre>
-
-<p>Для создания симлинков на все плагины в директории <code>/etc/munin/plugins/</code> запускаем:</p>
-
-<pre><code class="language-bash">munin-node-configure --shell 2&gt;&amp;1 | grep mysql | /bin/bash
-</code></pre>
-
-<p><strong>Примечание.</strong> Гораздо лучше из списка доступных выбрать только действительно необходимые плагины и включить их вручную.</p>
-
+</code></pre><p>Для создания симлинков на все плагины в директории <code>/etc/munin/plugins/</code> запускаем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">munin-node-configure --shell 2&gt;&amp;<span style="color:#ae81ff">1</span> | grep mysql | /bin/bash
+</code></pre></div><p><strong>Примечание.</strong> Гораздо лучше из списка доступных выбрать только действительно необходимые плагины и включить их вручную.</p>
 <p>Проверим корректность работы плагина с помощью <code>munin-run</code>:</p>
-
-<pre><code class="language-bash">munin-run mysql_innodb_bpool_act
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">munin-run mysql_innodb_bpool_act
 Unknown section: Main thread process no. 4159, id 140055130330880, state: sleeping at /etc/munin/plugins/mysql_innodb_bpool_act line 1098.
-</code></pre>
-
-<p>Получаем сообщение об ошибке, которое можно довольно легко исправить. Открываем на редактирование файл <code>/usr/share/munin/plugins/mysql_</code>:</p>
-
-<pre><code class="language-bash">nano /usr/share/munin/plugins/mysql_
-</code></pre>
-
-<p>Находим процедуру <code>update_innodb</code> (в моем случае это 965 строка) и в ней после строки <code>$sth-&gt;finish();</code> добавляем еще одну <code>$status =~ s/-----------------\nMain thread//g;</code></p>
-
+</code></pre></div><p>Получаем сообщение об ошибке, которое можно довольно легко исправить. Открываем на редактирование файл <code>/usr/share/munin/plugins/mysql_</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano /usr/share/munin/plugins/mysql_
+</code></pre></div><p>Находим процедуру <code>update_innodb</code> (в моем случае это 965 строка) и в ней после строки <code>$sth-&gt;finish();</code> добавляем еще одну <code>$status =~ s/-----------------\nMain thread//g;</code></p>
 <p>В результате эта процедура будет выглядеть следующим образом:</p>
-
-<pre><code class="language-py">...
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py" data-lang="py"><span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
 sub update_innodb {
-    my ($dbh) = @_;
+    my (<span style="color:#960050;background-color:#1e0010">$</span>dbh) <span style="color:#f92672">=</span> <span style="color:#a6e22e">@_</span>;
  
-    my $sth = $dbh-&gt;prepare('SHOW /*!50000 ENGINE*/ INNODB STATUS');
+    my <span style="color:#960050;background-color:#1e0010">$</span>sth <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">$</span>dbh<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>prepare(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">SHOW /*!50000 ENGINE*/ INNODB STATUS</span><span style="color:#e6db74">&#39;</span>);
     eval {
-  $sth-&gt;execute();
+  <span style="color:#960050;background-color:#1e0010">$</span>sth<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>execute();
     };
-    if ($@) {
-  if ($@ =~ /Unknown (storage|table) engine 'INNODB'|Cannot call SHOW INNODB STATUS because skip-innodb is defined/i) {
-      $data-&gt;{_innodb_disabled} = 1;
-      return;
+    <span style="color:#66d9ef">if</span> (<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#960050;background-color:#1e0010">@</span>) {
+  <span style="color:#66d9ef">if</span> (<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#960050;background-color:#1e0010">@</span> <span style="color:#f92672">=</span><span style="color:#f92672">~</span> <span style="color:#f92672">/</span>Unknown (storage<span style="color:#f92672">|</span>table) engine <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">INNODB</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">|</span>Cannot call SHOW INNODB STATUS because skip<span style="color:#f92672">-</span>innodb <span style="color:#f92672">is</span> defined<span style="color:#f92672">/</span>i) {
+      <span style="color:#960050;background-color:#1e0010">$</span>data<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>{_innodb_disabled} <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+      <span style="color:#66d9ef">return</span>;
   }
-  die $@;
+  die <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#960050;background-color:#1e0010">@</span>;
     }
-    my $row = $sth-&gt;fetchrow_hashref();
-    my $status = $row-&gt;{'status'};
-    $sth-&gt;finish();
-    $status =~ s/-----------------\nMain thread//g;
-    parse_innodb_status($status);
+    my <span style="color:#960050;background-color:#1e0010">$</span>row <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">$</span>sth<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>fetchrow_hashref();
+    my <span style="color:#960050;background-color:#1e0010">$</span>status <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">$</span>row<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>{<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">status</span><span style="color:#e6db74">&#39;</span>};
+    <span style="color:#960050;background-color:#1e0010">$</span>sth<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>finish();
+    <span style="color:#960050;background-color:#1e0010">$</span>status <span style="color:#f92672">=</span><span style="color:#f92672">~</span> s<span style="color:#f92672">/</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span>\nMain thread<span style="color:#f92672">/</span><span style="color:#f92672">/</span>g;
+    parse_innodb_status(<span style="color:#960050;background-color:#1e0010">$</span>status);
 }
-...
-</code></pre>
-
-<p>Еще раз проверим работоспособность плагина:</p>
-
-<pre><code class="language-bash">munin-run mysql_innodb_bpool
-ib_bpool_size.value 4194303
-ib_bpool_dbpages.value 3527649
-ib_bpool_free.value 0
-ib_bpool_modpages.value 30115
-</code></pre>
-
-<p>Не забываем перезапустить <code>munin-node</code>:</p>
-
-<pre><code class="language-bash">/etc/init.d/munin-node restart
-</code></pre>
-
-<p>Спустя несколько минут графики появятся в web-интерфейсе системы мониторинга.</p>
+<span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
+</code></pre></div><p>Еще раз проверим работоспособность плагина:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">munin-run mysql_innodb_bpool
+ib_bpool_size.value <span style="color:#ae81ff">4194303</span>
+ib_bpool_dbpages.value <span style="color:#ae81ff">3527649</span>
+ib_bpool_free.value <span style="color:#ae81ff">0</span>
+ib_bpool_modpages.value <span style="color:#ae81ff">30115</span>
+</code></pre></div><p>Не забываем перезапустить <code>munin-node</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/munin-node restart
+</code></pre></div><p>Спустя несколько минут графики появятся в web-интерфейсе системы мониторинга.</p>
                 </section>
             </article>
 
@@ -212,23 +190,23 @@ ib_bpool_modpages.value 30115
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

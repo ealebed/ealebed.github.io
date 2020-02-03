@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker: перенаправление логов в Graylog2 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,13 +90,9 @@
                 </header>
                 <section id="post-body">
                     <p>Мы уже упоминали о Graylog2 - централизованном хранилище логов и рассматривали вариант <a href="https://ealebed.github.io/posts/2017/%D1%81%D0%B1%D0%BE%D1%80-%D0%B8-%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-nginx-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-graylog2/">сбора и анализа логов от популярного веб-сервера Nginx</a>. В данной статье настроим отправку логов в Graylog2 от docker-контейнеров - давайте разберемся!</p>
-
 <p>Docker поддерживает более десятка различных механизмов логирования, которые позволяют получать информацию от запущенных контейнеров и сервисов. Эти механизмы называются <strong>logging drivers</strong>, ознакомиться с их полным списком можно <a href="https://docs.docker.com/config/containers/logging/configure/#supported-logging-drivers">здесь</a>. Из данного списка нас больше всего интересует драйвер под названием <code>gelf</code> - остановимся на нем подробнее.</p>
-
 <p>GELF - сокращение от <strong>Graylog Extended Log Format</strong> - специального формата логов, разработанного для <a href="https://www.graylog.org/">Graylog</a>. Этот формат получил широкое распространение и сейчас внедрен в множество других систем сбора, хранения и обработки логов (самые известные - <a href="https://www.elastic.co/products/logstash">Logstash</a> и <a href="http://www.fluentd.org/">Fluentd</a>).</p>
-
 <p>Согласно стандарту GELF, в каждом лог-сообщении существует следующий набор полей:</p>
-
 <ul>
 <li>версия;</li>
 <li>хост (откуда пришло сообщение);</li>
@@ -93,52 +100,34 @@
 <li>сокращенный и полный вариант сообщения;</li>
 <li>другие поля, настроенные самостоятельно.</li>
 </ul>
-
 <p>Иначе говоря, строка из лога:</p>
-
-<pre><code class="language-text">127.0.0.1 - frank [10/Oct/2010:11:55:36 -0700] &quot;GET /apache_pb.gif HTTP/1.0&quot; 200 2326
-</code></pre>
-
-<p>В GELF-формате может выглядеть, например, как структурированный json-объект (что в свою очередь значительно облегчает хранение и обработку логов):</p>
-
-<pre><code class="language-json">{
-  &quot;client&quot;: &quot;127.0.0.1&quot;,
-  &quot;user&quot;: &quot;frank&quot;,
-  &quot;timestamp&quot;: &quot;2010-10-10 11:55:36 -0700&quot;,
-  &quot;method&quot;: &quot;GET&quot;,
-  &quot;uri&quot;: &quot;/apache_pb.gif&quot;,
-  &quot;protocol&quot;: &quot;HTTP/1.0&quot;,
-  &quot;status&quot;: 200,
-  &quot;size&quot;: 2326
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">127.0.0.1 - frank [10/Oct/2010:11:55:36 -0700] &#34;GET /apache_pb.gif HTTP/1.0&#34; 200 2326
+</code></pre></div><p>В GELF-формате может выглядеть, например, как структурированный json-объект (что в свою очередь значительно облегчает хранение и обработку логов):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;client&#34;</span>: <span style="color:#e6db74">&#34;127.0.0.1&#34;</span>,
+  <span style="color:#f92672">&#34;user&#34;</span>: <span style="color:#e6db74">&#34;frank&#34;</span>,
+  <span style="color:#f92672">&#34;timestamp&#34;</span>: <span style="color:#e6db74">&#34;2010-10-10 11:55:36 -0700&#34;</span>,
+  <span style="color:#f92672">&#34;method&#34;</span>: <span style="color:#e6db74">&#34;GET&#34;</span>,
+  <span style="color:#f92672">&#34;uri&#34;</span>: <span style="color:#e6db74">&#34;/apache_pb.gif&#34;</span>,
+  <span style="color:#f92672">&#34;protocol&#34;</span>: <span style="color:#e6db74">&#34;HTTP/1.0&#34;</span>,
+  <span style="color:#f92672">&#34;status&#34;</span>: <span style="color:#ae81ff">200</span>,
+  <span style="color:#f92672">&#34;size&#34;</span>: <span style="color:#ae81ff">2326</span>
 }
-</code></pre>
-
-<p>Для использования <code>gelf</code> как драйвера по умолчанию в системе (параметр будет применен ко всем docker-контейнерам на этом хосте) необходимо в конфигурационном файле <code>/etc/docker/daemon.json</code> (в Windows это <code>C:\ProgramData\docker\config\daemon.json</code>) добавить следующие строки:</p>
-
-<pre><code class="language-json">{
-  &quot;log-driver&quot;: &quot;gelf&quot;,
-  &quot;log-opts&quot;: {
-    &quot;gelf-address&quot;: &quot;udp://1.2.3.4:12201&quot;
+</code></pre></div><p>Для использования <code>gelf</code> как драйвера по умолчанию в системе (параметр будет применен ко всем docker-контейнерам на этом хосте) необходимо в конфигурационном файле <code>/etc/docker/daemon.json</code> (в Windows это <code>C:\ProgramData\docker\config\daemon.json</code>) добавить следующие строки:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;log-driver&#34;</span>: <span style="color:#e6db74">&#34;gelf&#34;</span>,
+  <span style="color:#f92672">&#34;log-opts&#34;</span>: {
+    <span style="color:#f92672">&#34;gelf-address&#34;</span>: <span style="color:#e6db74">&#34;udp://1.2.3.4:12201&#34;</span>
   }
 }
-</code></pre>
-
-<p><strong>Примечание.</strong> Вместо 1.2.3.4 конечно же нужно вставить реальный адрес вашего сервера Graylog.</p>
-
+</code></pre></div><p><strong>Примечание.</strong> Вместо 1.2.3.4 конечно же нужно вставить реальный адрес вашего сервера Graylog.</p>
 <p>И перезапустить docker для применения изменений:</p>
-
-<pre><code class="language-bash">service docker restart
-</code></pre>
-
-<p>Применить драйвер <code>gelf</code> только для одного конкретного контейнера при его запуске можно так:</p>
-
-<pre><code class="language-bash">docker run \
-      --log-driver gelf –-log-opt gelf-address=udp://1.2.3.4:12201 \
-      alpine echo hello world
-</code></pre>
-
-<p>При выполнении данной команды произойдет следующее:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service docker restart
+</code></pre></div><p>Применить драйвер <code>gelf</code> только для одного конкретного контейнера при его запуске можно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>      --log-driver gelf –-log-opt gelf-address<span style="color:#f92672">=</span>udp://1.2.3.4:12201 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>      alpine echo hello world
+</code></pre></div><p>При выполнении данной команды произойдет следующее:</p>
 <ul>
 <li>Docker Engine скачает образ alpine из реджистри (если его нет локально);</li>
 <li>Docker Engine создаст и запустит контейнер из образа alpine;</li>
@@ -149,37 +138,28 @@
 <li>сообщение в GELF-формате будет отправлено по протоколу UDP на ip-адрес 1.2.3.4 порт 12201;</li>
 <li>скорее всего (это же UDP) сообщение будет доставлено на сервер Graylog2, где с ним можно будет работать.</li>
 </ul>
-
 <p>Если вы описываете несколько контейнеров в файле <code>docker-compose.yml</code>, то настройка драйвера логирования для определенного контейнера будет выглядеть так:</p>
-
-<pre><code class="language-yml">...
-### Sphinxsearch Container ##################################
-  sphinxsearch:
-    container_name: sphinxsearch
-    image: sphinx:latest
-    volumes:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
+<span style="color:#75715e">### Sphinxsearch Container ##################################</span>
+  <span style="color:#66d9ef">sphinxsearch</span>:
+    <span style="color:#66d9ef">container_name</span>: sphinxsearch
+    <span style="color:#66d9ef">image</span>: sphinx:latest
+    <span style="color:#66d9ef">volumes</span>:
       - ./sphinx/sphinx.conf:/etc/sphinxsearch/sphinx.conf
       - sphinx:/var/lib/sphinxsearch/data
-    logging:
-      driver: gelf
-      options:
-        gelf-address: &quot;udp://${GRAYLOG_ADDR:-graylog.lc}:12201&quot;
-        tag: &quot;sphinxsearch&quot;
+    <span style="color:#66d9ef">logging</span>:
+      <span style="color:#66d9ef">driver</span>: gelf
+      <span style="color:#66d9ef">options</span>:
+        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR:-graylog.lc}:12201&#34;</span>
+        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;sphinxsearch&#34;</span>
 ...
-</code></pre>
-
-<p>Для тех, кому <strong>важно подтверждение доставки</strong> (TCP) логов от docker-контейнеров в централизованную систему хранения у меня плохие новости:</p>
-
+</code></pre></div><p>Для тех, кому <strong>важно подтверждение доставки</strong> (TCP) логов от docker-контейнеров в централизованную систему хранения у меня плохие новости:</p>
 <blockquote>
 <p>Unfortunately, the GELF logging driver in Docker only supports UDP.</p>
 </blockquote>
-
 <p>Однако из других приложений сделать это можно легко и непринужденно. Протестировать отправку логов в Graylog2 из консоли можно так:</p>
-
-<pre><code class="language-bash">echo -e '{&quot;version&quot;: &quot;1.1&quot;,&quot;host&quot;:&quot;example.org&quot;,&quot;short_message&quot;:&quot;A short message that helps you identify what is going on&quot;,&quot;full_message&quot;:&quot;Backtrace here\n\nmore stuff&quot;,&quot;level&quot;:1,&quot;_user_id&quot;:9001,&quot;_some_info&quot;:&quot;foo&quot;,&quot;_some_env_var&quot;:&quot;bar&quot;}\0' | nc -w 1 graylog.lc 12202
-</code></pre>
-
-<p>Подробнее о всех доступных опциях драйвера логирования <code>gelf</code> можно почитать <a href="https://docs.docker.com/config/containers/logging/gelf/#gelf-options">здесь</a>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">echo -e <span style="color:#e6db74">&#39;{&#34;version&#34;: &#34;1.1&#34;,&#34;host&#34;:&#34;example.org&#34;,&#34;short_message&#34;:&#34;A short message that helps you identify what is going on&#34;,&#34;full_message&#34;:&#34;Backtrace here\n\nmore stuff&#34;,&#34;level&#34;:1,&#34;_user_id&#34;:9001,&#34;_some_info&#34;:&#34;foo&#34;,&#34;_some_env_var&#34;:&#34;bar&#34;}\0&#39;</span> | nc -w <span style="color:#ae81ff">1</span> graylog.lc <span style="color:#ae81ff">12202</span>
+</code></pre></div><p>Подробнее о всех доступных опциях драйвера логирования <code>gelf</code> можно почитать <a href="https://docs.docker.com/config/containers/logging/gelf/#gelf-options">здесь</a>.</p>
                 </section>
             </article>
 
@@ -221,23 +201,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

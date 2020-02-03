@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>После обновления не запускается Prometheus &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,77 +90,54 @@
                 </header>
                 <section id="post-body">
                     <p>Ранее мы уже рассматривали <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">процесс установки</a> принципиально нового инструмента для <strong>мониторинга и сбора метрик Prometheus</strong>, а сейчас, после обновления, возникла проблема с его запуском. Давайте разберемся!</p>
-
 <p>До обновления у нас была установлена и успешно работал <strong>Prometheus</strong> следующей версии:</p>
-
-<pre><code class="language-bash">dpkg -l | grep prometheus
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dpkg -l | grep prometheus
 ii  prometheus                            0.16.1-nightly20160216-061737    amd64        Prometheus monitoring system and time series database
-</code></pre>
-
-<p>После обновления с помощью менеджера пакетов <code>aptitude</code> версия <strong>Prometheus</strong> стала следующей:</p>
-
-<pre><code class="language-bash">dpkg -l | grep prometheus
+</code></pre></div><p>После обновления с помощью менеджера пакетов <code>aptitude</code> версия <strong>Prometheus</strong> стала следующей:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dpkg -l | grep prometheus
 ii  prometheus                         1.3.0-beta.0-nightly20161024-051826 amd64        Prometheus monitoring system and time series database
-</code></pre>
-
-<p>После обновления <strong>Prometheus</strong> наотрез отказывался запускаться:</p>
-
-<pre><code class="language-bash">systemctl status prometheus.service
+</code></pre></div><p>После обновления <strong>Prometheus</strong> наотрез отказывался запускаться:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl status prometheus.service
 ● prometheus.service - LSB: Prometheus monitoring system and time series database
-   Loaded: loaded (/usr/lib/systemd/system/prometheus.service; enabled)
-   Active: failed (Result: start-limit) since Mon 2016-10-24 11:47:54 EEST; 16s ago
-  Process: 17107 ExecStop=/etc/init.d/prometheus stop (code=exited, status=0/SUCCESS)
-  Process: 17086 ExecStart=/etc/init.d/prometheus start (code=exited, status=0/SUCCESS)
- Main PID: 17093 (code=exited, status=1/FAILURE)
+   Loaded: loaded <span style="color:#f92672">(</span>/usr/lib/systemd/system/prometheus.service; enabled<span style="color:#f92672">)</span>
+   Active: failed <span style="color:#f92672">(</span>Result: start-limit<span style="color:#f92672">)</span> since Mon 2016-10-24 11:47:54 EEST; 16s ago
+  Process: <span style="color:#ae81ff">17107</span> ExecStop<span style="color:#f92672">=</span>/etc/init.d/prometheus stop <span style="color:#f92672">(</span>code<span style="color:#f92672">=</span>exited, status<span style="color:#f92672">=</span>0/SUCCESS<span style="color:#f92672">)</span>
+  Process: <span style="color:#ae81ff">17086</span> ExecStart<span style="color:#f92672">=</span>/etc/init.d/prometheus start <span style="color:#f92672">(</span>code<span style="color:#f92672">=</span>exited, status<span style="color:#f92672">=</span>0/SUCCESS<span style="color:#f92672">)</span>
+ Main PID: <span style="color:#ae81ff">17093</span> <span style="color:#f92672">(</span>code<span style="color:#f92672">=</span>exited, status<span style="color:#f92672">=</span>1/FAILURE<span style="color:#f92672">)</span>
 
-Oct 24 11:47:54 stat.ua systemd[1]: Unit prometheus.service entered failed state.
-Oct 24 11:47:54 stat.ua systemd[1]: prometheus.service holdoff time over, scheduling restart.
-Oct 24 11:47:54 stat.ua systemd[1]: Stopping LSB: Prometheus monitoring system and time series database...
-Oct 24 11:47:54 stat.ua systemd[1]: Starting LSB: Prometheus monitoring system and time series database...
-Oct 24 11:47:54 stat.ua systemd[1]: prometheus.service start request repeated too quickly, refusing to start.
-Oct 24 11:47:54 stat.ua systemd[1]: Failed to start LSB: Prometheus monitoring system and time series database.
-Oct 24 11:47:54 stat.ua systemd[1]: Unit prometheus.service entered failed state.
-Oct 24 11:48:01 stat.ua systemd[1]: Starting LSB: Prometheus monitoring system and time series database...
-Oct 24 11:48:01 stat.ua systemd[1]: prometheus.service start request repeated too quickly, refusing to start.
-Oct 24 11:48:01 stat.ua systemd[1]: Failed to start LSB: Prometheus monitoring system and time series database.
-</code></pre>
-
-<p>В ходе расследования пытаемся запустить <strong>Prometheus</strong> руками:</p>
-
-<pre><code class="language-bash">prometheus -config.file /etc/prometheus/prometheus.yml
-</code></pre>
-
-<p>и видим следующее сообщение:</p>
-
-<pre><code class="language-bash">INFO[0000] Starting prometheus (version=1.3.0-beta.0, branch=HEAD, revision=f002fe186abd04ecd9cd8961c24bc039f134ea13)  source=main.go:75
-INFO[0000] Build context (go=go1.6.2, user=root@maya, date=20161024-05:32:39)  source=main.go:76
-INFO[0000] Loading configuration file /etc/prometheus/prometheus.yml  source=main.go:247
-ERRO[0000] Error loading config: couldn't load configuration (-config.file=/etc/prometheus/prometheus.yml): unknown fields in scrape_config: target_groups  source=main.go:149
-</code></pre>
-
-<p>Первая же ссылка в выдаче Google приводит нас <a href="https://www.robustperception.io/new-features-in-prometheus-0-20-0/">сюда</a>, где четко и ясно написано, что еще с середины июня в конфигурационном файле <strong>Prometheus</strong> параметр <code>target_groups</code> был заменен на <code>static_configs</code>!</p>
-
+Oct <span style="color:#ae81ff">24</span> 11:47:54 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Unit prometheus.service entered failed state.
+Oct <span style="color:#ae81ff">24</span> 11:47:54 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: prometheus.service holdoff time over, scheduling restart.
+Oct <span style="color:#ae81ff">24</span> 11:47:54 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Stopping LSB: Prometheus monitoring system and time series database...
+Oct <span style="color:#ae81ff">24</span> 11:47:54 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Starting LSB: Prometheus monitoring system and time series database...
+Oct <span style="color:#ae81ff">24</span> 11:47:54 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: prometheus.service start request repeated too quickly, refusing to start.
+Oct <span style="color:#ae81ff">24</span> 11:47:54 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Failed to start LSB: Prometheus monitoring system and time series database.
+Oct <span style="color:#ae81ff">24</span> 11:47:54 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Unit prometheus.service entered failed state.
+Oct <span style="color:#ae81ff">24</span> 11:48:01 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Starting LSB: Prometheus monitoring system and time series database...
+Oct <span style="color:#ae81ff">24</span> 11:48:01 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: prometheus.service start request repeated too quickly, refusing to start.
+Oct <span style="color:#ae81ff">24</span> 11:48:01 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Failed to start LSB: Prometheus monitoring system and time series database.
+</code></pre></div><p>В ходе расследования пытаемся запустить <strong>Prometheus</strong> руками:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">prometheus -config.file /etc/prometheus/prometheus.yml
+</code></pre></div><p>и видим следующее сообщение:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">INFO<span style="color:#f92672">[</span>0000<span style="color:#f92672">]</span> Starting prometheus <span style="color:#f92672">(</span>version<span style="color:#f92672">=</span>1.3.0-beta.0, branch<span style="color:#f92672">=</span>HEAD, revision<span style="color:#f92672">=</span>f002fe186abd04ecd9cd8961c24bc039f134ea13<span style="color:#f92672">)</span>  source<span style="color:#f92672">=</span>main.go:75
+INFO<span style="color:#f92672">[</span>0000<span style="color:#f92672">]</span> Build context <span style="color:#f92672">(</span>go<span style="color:#f92672">=</span>go1.6.2, user<span style="color:#f92672">=</span>root@maya, date<span style="color:#f92672">=</span>20161024-05:32:39<span style="color:#f92672">)</span>  source<span style="color:#f92672">=</span>main.go:76
+INFO<span style="color:#f92672">[</span>0000<span style="color:#f92672">]</span> Loading configuration file /etc/prometheus/prometheus.yml  source<span style="color:#f92672">=</span>main.go:247
+ERRO<span style="color:#f92672">[</span>0000<span style="color:#f92672">]</span> Error loading config: couldn<span style="color:#960050;background-color:#1e0010">&#39;</span>t load configuration <span style="color:#f92672">(</span>-config.file<span style="color:#f92672">=</span>/etc/prometheus/prometheus.yml<span style="color:#f92672">)</span>: unknown fields in scrape_config: target_groups  source<span style="color:#f92672">=</span>main.go:149
+</code></pre></div><p>Первая же ссылка в выдаче Google приводит нас <a href="https://www.robustperception.io/new-features-in-prometheus-0-20-0/">сюда</a>, где четко и ясно написано, что еще с середины июня в конфигурационном файле <strong>Prometheus</strong> параметр <code>target_groups</code> был заменен на <code>static_configs</code>!</p>
 <p>Редактируем файл <code>/etc/prometheus/prometheus.yml</code>, заменяя все вхождения <code>target_groups</code> на <code>static_configs</code>, сохраняем его и пробуем запустить <strong>Prometheus</strong> еще раз:</p>
-
-<pre><code class="language-bash">systemctl start prometheus.service
-</code></pre>
-
-<p>Убеждаемся, что теперь все запустилось:</p>
-
-<pre><code class="language-bash">systemctl status prometheus.service
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl start prometheus.service
+</code></pre></div><p>Убеждаемся, что теперь все запустилось:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl status prometheus.service
 ● prometheus.service - LSB: Prometheus monitoring system and time series database
-   Loaded: loaded (/usr/lib/systemd/system/prometheus.service; enabled)
-   Active: active (running) since Mon 2016-10-24 11:56:10 EEST; 20min ago
-  Process: 17107 ExecStop=/etc/init.d/prometheus stop (code=exited, status=0/SUCCESS)
-  Process: 27594 ExecStart=/etc/init.d/prometheus start (code=exited, status=0/SUCCESS)
- Main PID: 27600 (prometheus)
+   Loaded: loaded <span style="color:#f92672">(</span>/usr/lib/systemd/system/prometheus.service; enabled<span style="color:#f92672">)</span>
+   Active: active <span style="color:#f92672">(</span>running<span style="color:#f92672">)</span> since Mon 2016-10-24 11:56:10 EEST; 20min ago
+  Process: <span style="color:#ae81ff">17107</span> ExecStop<span style="color:#f92672">=</span>/etc/init.d/prometheus stop <span style="color:#f92672">(</span>code<span style="color:#f92672">=</span>exited, status<span style="color:#f92672">=</span>0/SUCCESS<span style="color:#f92672">)</span>
+  Process: <span style="color:#ae81ff">27594</span> ExecStart<span style="color:#f92672">=</span>/etc/init.d/prometheus start <span style="color:#f92672">(</span>code<span style="color:#f92672">=</span>exited, status<span style="color:#f92672">=</span>0/SUCCESS<span style="color:#f92672">)</span>
+ Main PID: <span style="color:#ae81ff">27600</span> <span style="color:#f92672">(</span>prometheus<span style="color:#f92672">)</span>
    CGroup: /system.slice/prometheus.service
-           └─27600 /usr/sbin/prometheus -config.file /etc/prometheus/prometheus.yml -storage.local.path /var/lib/prometheus/data -storage.local.retention=8784h -storage.loca...
+           └─27600 /usr/sbin/prometheus -config.file /etc/prometheus/prometheus.yml -storage.local.path /var/lib/prometheus/data -storage.local.retention<span style="color:#f92672">=</span>8784h -storage.loca...
 
-Oct 24 11:56:10 stat.ua systemd[1]: Started LSB: Prometheus monitoring system and time series database.
-</code></pre>
-
-<p>Вывод: не забывайте читать release notes — это может сэкономить кучу времени в будущем.</p>
+Oct <span style="color:#ae81ff">24</span> 11:56:10 stat.ua systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Started LSB: Prometheus monitoring system and time series database.
+</code></pre></div><p>Вывод: не забывайте читать release notes — это может сэкономить кучу времени в будущем.</p>
                 </section>
             </article>
 
@@ -191,23 +179,23 @@ Oct 24 11:56:10 stat.ua systemd[1]: Started LSB: Prometheus monitoring system an
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

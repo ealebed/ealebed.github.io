@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Мониторинг php-fpm с помощью New Relic Plugin Agent &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Jan 26, 2017 21:05
-                    · 580 words
+                    · 577 words
                     · 3 minute read
                       <span class="tags">
                       
@@ -81,9 +92,7 @@
                 </header>
                 <section id="post-body">
                     <p>Ранее мы уже <a href="https://ealebed.github.io/posts/2016/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BE%D0%B2-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-new-relic/">упоминали</a> о <strong>системе мониторинга New Relic</strong>, однако рассматривали пример лишь с мониторингом базовых сервисов. Давайте разберемся, как собирать и выводить метрики от <code>php-fpm</code>!</p>
-
 <p>Для мониторинга некоторых специальных сервисов можно использовать <strong>New Relic Plugin Agent</strong>. К таким сервисам относятся:</p>
-
 <ul>
 <li>Alternative PHP Cache;</li>
 <li>Apache HTTP Server;</li>
@@ -101,192 +110,167 @@
 <li>Riak;</li>
 <li>uWSGI.</li>
 </ul>
-
 <p>Как видим, в этом списке присутствует <code>php-fpm</code> — то, что нам нужно! Устанавливаем агент следующей командой:</p>
-
-<pre><code class="language-bash">pip install newrelic-plugin-agent
-</code></pre>
-
-<p>Создаем необходимые для работы агента каталоги:</p>
-
-<pre><code class="language-bash">mkdir -p /var/log/newrelic
-</code></pre>
-
-<pre><code class="language-bash">mkdir -p /var/run/newrelic
-</code></pre>
-
-<p><strong>Примечание.</strong> Пользователь, определенный в конфигурационном файле, должен иметь право записи в это каталоги.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pip install newrelic-plugin-agent
+</code></pre></div><p>Создаем необходимые для работы агента каталоги:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /var/log/newrelic
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /var/run/newrelic
+</code></pre></div><p><strong>Примечание.</strong> Пользователь, определенный в конфигурационном файле, должен иметь право записи в это каталоги.</p>
 <p>Копируем пример конфигурационного файла агента в каталог <code>/etc/newrelic/</code>:</p>
-
-<pre><code class="language-bash">cp /opt/newrelic-plugin-agent/newrelic-plugin-agent.cfg /etc/newrelic/newrelic-plugin-agent.cfg
-</code></pre>
-
-<p>И изменяем под свои нужды — вводим лицензионный ключ и определяем сервисы, которые нужно мониторить. В мое случае конфиг выглядит так:</p>
-
-<pre><code class="language-yaml">%YAML 1.2
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp /opt/newrelic-plugin-agent/newrelic-plugin-agent.cfg /etc/newrelic/newrelic-plugin-agent.cfg
+</code></pre></div><p>И изменяем под свои нужды — вводим лицензионный ключ и определяем сервисы, которые нужно мониторить. В мое случае конфиг выглядит так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">%YAML <span style="color:#ae81ff">1.2</span>
 ---
-Application:
-  license_key: ed36507db6a10fb33429637793735933e9a477aa
-  wake_interval: 60
+<span style="color:#66d9ef">Application</span>:
+  <span style="color:#66d9ef">license_key</span>: ed36507db6a10fb33429637793735933e9a477aa
+  <span style="color:#66d9ef">wake_interval</span>: <span style="color:#ae81ff">60</span>
  
-  nginx:
-    name: web1.employer.cz
-    scheme: http
-    host: 127.0.0.1
-    port: 80
-    verify_ssl_cert: true
-    path: /nginx_status
+  <span style="color:#66d9ef">nginx</span>:
+    <span style="color:#66d9ef">name</span>: web1.employer.cz
+    <span style="color:#66d9ef">scheme</span>: http
+    <span style="color:#66d9ef">host</span>: <span style="color:#ae81ff">127.0</span><span style="color:#ae81ff">.0</span><span style="color:#ae81ff">.1</span>
+    <span style="color:#66d9ef">port</span>: <span style="color:#ae81ff">80</span>
+    <span style="color:#66d9ef">verify_ssl_cert</span>: <span style="color:#66d9ef">true</span>
+    <span style="color:#66d9ef">path</span>: /nginx_status
  
-  php_fpm:
-    - name: letsclearitup
-      scheme: https
-      host: letsclearitup.com.ua
-      port: 443
-      path: /status
-      query: json
-    - name: animania
-      scheme: http
-      host: animania.dp.ua
-      port: 80
-      path: /status
-      query: json
+  <span style="color:#66d9ef">php_fpm</span>:
+    - <span style="color:#66d9ef">name</span>: letsclearitup
+      <span style="color:#66d9ef">scheme</span>: https
+      <span style="color:#66d9ef">host</span>: letsclearitup.com.ua
+      <span style="color:#66d9ef">port</span>: <span style="color:#ae81ff">443</span>
+      <span style="color:#66d9ef">path</span>: /status
+      <span style="color:#66d9ef">query</span>: json
+    - <span style="color:#66d9ef">name</span>: animania
+      <span style="color:#66d9ef">scheme</span>: http
+      <span style="color:#66d9ef">host</span>: animania.dp.ua
+      <span style="color:#66d9ef">port</span>: <span style="color:#ae81ff">80</span>
+      <span style="color:#66d9ef">path</span>: /status
+      <span style="color:#66d9ef">query</span>: json
  
-Daemon:
-  user: newrelic
-  pidfile: /var/run/newrelic/newrelic-plugin-agent.pid
+<span style="color:#66d9ef">Daemon</span>:
+  <span style="color:#66d9ef">user</span>: newrelic
+  <span style="color:#66d9ef">pidfile</span>: /var/run/newrelic/newrelic-plugin-agent.pid
  
-Logging:
-  formatters:
-    verbose:
-      format: '%(levelname) -10s %(asctime)s %(process)-6d %(processName) -15s %(threadName)-10s %(name) -45s %(funcName) -25s L%(lineno)-6d: %(message)s'
-  handlers:
-    file:
-      class : logging.handlers.RotatingFileHandler
-      formatter: verbose
-      filename: /var/log/newrelic/newrelic-plugin-agent.log
-      maxBytes: 10485760
-      backupCount: 3
-  loggers:
-    newrelic_plugin_agent:
-      level: INFO
-      propagate: True
-      handlers: [console, file]
-    requests:
-      level: ERROR
-      propagate: True
-      handlers: [console, file]
-</code></pre>
-
-<p>Далее следует запустить <strong>New Relic Plugin Agent</strong>, в инструкции предлагается делать это следующим образом:</p>
-
-<pre><code class="language-bash">newrelic-plugin-agent -c PATH-TO-CONF-FILE [-f]
-</code></pre>
-
-<p>На мой взгляд это не самый удобный способ, поэтому для управления агентом в каталоге <code>/etc/init.d/</code> создаем init-скрипт <code>newrelic_plugin_agent</code> следующего содержания:</p>
-
-<pre><code class="language-bash">#! /bin/sh
+<span style="color:#66d9ef">Logging</span>:
+  <span style="color:#66d9ef">formatters</span>:
+    <span style="color:#66d9ef">verbose</span>:
+      <span style="color:#66d9ef">format: &#39;%(levelname) -10s %(asctime)s %(process)-6d %(processName) -15s %(threadName)-10s %(name) -45s %(funcName) -25s L%(lineno)-6d</span>: %(message)s&#39;
+  <span style="color:#66d9ef">handlers</span>:
+    <span style="color:#66d9ef">file</span>:
+      <span style="color:#66d9ef">class </span>: logging.handlers.RotatingFileHandler
+      <span style="color:#66d9ef">formatter</span>: verbose
+      <span style="color:#66d9ef">filename</span>: /var/log/newrelic/newrelic-plugin-agent.log
+      <span style="color:#66d9ef">maxBytes</span>: <span style="color:#ae81ff">10485760</span>
+      <span style="color:#66d9ef">backupCount</span>: <span style="color:#ae81ff">3</span>
+  <span style="color:#66d9ef">loggers</span>:
+    <span style="color:#66d9ef">newrelic_plugin_agent</span>:
+      <span style="color:#66d9ef">level</span>: INFO
+      <span style="color:#66d9ef">propagate</span>: True
+      <span style="color:#66d9ef">handlers</span>: [console, file]
+    <span style="color:#66d9ef">requests</span>:
+      <span style="color:#66d9ef">level</span>: ERROR
+      <span style="color:#66d9ef">propagate</span>: True
+      <span style="color:#66d9ef">handlers</span>: [console, file]
+</code></pre></div><p>Далее следует запустить <strong>New Relic Plugin Agent</strong>, в инструкции предлагается делать это следующим образом:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">newrelic-plugin-agent -c PATH-TO-CONF-FILE <span style="color:#f92672">[</span>-f<span style="color:#f92672">]</span>
+</code></pre></div><p>На мой взгляд это не самый удобный способ, поэтому для управления агентом в каталоге <code>/etc/init.d/</code> создаем init-скрипт <code>newrelic_plugin_agent</code> следующего содержания:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#! /bin/sh
+</span><span style="color:#75715e"></span> 
+<span style="color:#75715e">### BEGIN INIT INFO</span>
+<span style="color:#75715e"># Provides:          newrelic_plugin_agent</span>
+<span style="color:#75715e"># Required-Start:    $network $local_fs $remote_fs</span>
+<span style="color:#75715e"># Required-Stop:     $remote_fs</span>
+<span style="color:#75715e"># Should-Start:      $named</span>
+<span style="color:#75715e"># Should-Stop:</span>
+<span style="color:#75715e"># Default-Start:     2 3 4 5</span>
+<span style="color:#75715e"># Default-Stop:      0 1 6</span>
+<span style="color:#75715e"># Short-Description: The New Relic Plugin Agent</span>
+<span style="color:#75715e"># Description:       The New Relic Plugin Agent</span>
+<span style="color:#75715e">### END INIT INFO</span>
  
-### BEGIN INIT INFO
-# Provides:          newrelic_plugin_agent
-# Required-Start:    $network $local_fs $remote_fs
-# Required-Stop:     $remote_fs
-# Should-Start:      $named
-# Should-Stop:
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: The New Relic Plugin Agent
-# Description:       The New Relic Plugin Agent
-### END INIT INFO
+NAME<span style="color:#f92672">=</span>newrelic_plugin_agent
+CONFIG<span style="color:#f92672">=</span>/etc/newrelic/newrelic-plugin-agent.cfg
+DAEMON<span style="color:#f92672">=</span>/usr/local/bin/newrelic-plugin-agent
+DAEMON_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">-c </span>$CONFIG<span style="color:#e6db74">&#34;</span>
+DESC<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;New Relic Plugin Agent&#34;</span>
  
-NAME=newrelic_plugin_agent
-CONFIG=/etc/newrelic/newrelic-plugin-agent.cfg
-DAEMON=/usr/local/bin/newrelic-plugin-agent
-DAEMON_OPTS=&quot;-c $CONFIG&quot;
-DESC=&quot;New Relic Plugin Agent&quot;
- 
-# define LSB log_* functions.
+<span style="color:#75715e"># define LSB log_* functions.</span>
 . /lib/lsb/init-functions
  
-check_daemon() {
-  if [ ! -x $DAEMON ]; then
-    log_action_msg &quot;$DAEMON not found&quot; || true
-    log_end_msg 1 || false
-    exit 1
-  fi
-}
+check_daemon<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -x $DAEMON <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+    log_action_msg <span style="color:#e6db74">&#34;</span>$DAEMON<span style="color:#e6db74"> not found</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+    log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
+    exit <span style="color:#ae81ff">1</span>
+  <span style="color:#66d9ef">fi</span>
+<span style="color:#f92672">}</span>
  
-check_config() {
-  if [ ! -e $CONFIG ]; then
-    log_action_msg &quot;Configuration file $CONFIG not found&quot; || true
-    log_end_msg 1 || false
-    exit 1
-  fi
-}
+check_config<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -e $CONFIG <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+    log_action_msg <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Configuration file </span>$CONFIG<span style="color:#e6db74"> not found</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+    log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
+    exit <span style="color:#ae81ff">1</span>
+  <span style="color:#66d9ef">fi</span>
+<span style="color:#f92672">}</span>
  
-check_pid() {
-  if [ ! -d /var/run/newrelic ]; then
-    install -m 777 -o newrelic -g newrelic -d /var/run/newrelic
-    log_action_msg &quot;PID directory was not found and created&quot; || true
-  fi;
-}
+check_pid<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -d /var/run/newrelic <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+    install -m <span style="color:#ae81ff">777</span> -o newrelic -g newrelic -d /var/run/newrelic
+    log_action_msg <span style="color:#e6db74">&#34;PID directory was not found and created&#34;</span> <span style="color:#f92672">||</span> true
+  <span style="color:#66d9ef">fi</span>;
+<span style="color:#f92672">}</span>
  
-PIDFILE=$(sed -n -e 's/^[ ]*pidfile[ ]*:[ ]*//p' -e 's/[ ]*$//' $CONFIG)
+PIDFILE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sed -n -e <span style="color:#e6db74">&#39;s/^[ ]*pidfile[ ]*:[ ]*//p&#39;</span> -e <span style="color:#e6db74">&#39;s/[ ]*$//&#39;</span> $CONFIG<span style="color:#66d9ef">)</span>
  
-export PATH=&quot;${PATH:+$PATH:}/usr/sbin:/sbin/:usr/local/sbin:/usr/local/bin&quot;
+export PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PATH:+$PATH:<span style="color:#e6db74">}</span><span style="color:#e6db74">/usr/sbin:/sbin/:usr/local/sbin:/usr/local/bin</span><span style="color:#e6db74">&#34;</span>
  
-case &quot;$1&quot; in
-  start)
-    log_daemon_msg &quot;Starting $DESC&quot; &quot;$NAME&quot; || true
+<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> in
+  start<span style="color:#f92672">)</span>
+    log_daemon_msg <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Starting </span>$DESC<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$NAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
     check_daemon
     check_config
     check_pid
  
-    if [ -s $PIDFILE ] &amp;&amp; kill -0 $(cat $PIDFILE) &gt; /dev/null 2&gt;&amp;1; then
-      log_action_msg &quot;apparently already running&quot; || true
-      log_end_msg 0 || true
-      exit 0
-    fi
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -s $PIDFILE <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> kill -0 <span style="color:#66d9ef">$(</span>cat $PIDFILE<span style="color:#66d9ef">)</span> &gt; /dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+      log_action_msg <span style="color:#e6db74">&#34;apparently already running&#34;</span> <span style="color:#f92672">||</span> true
+      log_end_msg <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> true
+      exit <span style="color:#ae81ff">0</span>
+    <span style="color:#66d9ef">fi</span>
  
-    if start-stop-daemon --oknodo --start --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS; then
-      log_end_msg 0 || true
-    else
-      log_end_msg 1 || false
-    fi
+    <span style="color:#66d9ef">if</span> start-stop-daemon --oknodo --start --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS; <span style="color:#66d9ef">then</span>
+      log_end_msg <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> true
+    <span style="color:#66d9ef">else</span>
+      log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
+    <span style="color:#66d9ef">fi</span>
   ;;
-  stop)
-    log_daemon_msg &quot;Stopping $DESC&quot; &quot;$NAME&quot; || true
+  stop<span style="color:#f92672">)</span>
+    log_daemon_msg <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Stopping </span>$DESC<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$NAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
     check_daemon
  
-    if start-stop-daemon --oknodo --stop --pidfile $PIDFILE; then
-      log_end_msg 0 || true
-    else
-      log_end_msg 1 || false
-    fi
+    <span style="color:#66d9ef">if</span> start-stop-daemon --oknodo --stop --pidfile $PIDFILE; <span style="color:#66d9ef">then</span>
+      log_end_msg <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> true
+    <span style="color:#66d9ef">else</span>
+      log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
+    <span style="color:#66d9ef">fi</span>
   ;;
-  status)
-   status_of_proc -p $PIDFILE $DAEMON $NAME &amp;&amp; exit 0 || exit $?
+  status<span style="color:#f92672">)</span>
+   status_of_proc -p $PIDFILE $DAEMON $NAME <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> exit $?
    ;;
-  restart|force-reload)
+  restart|force-reload<span style="color:#f92672">)</span>
   $0 stop
   $0 start
   ;;
-  *)
-    echo &quot;Usage: /etc/init.d/$NAME {start|stop|restart|force-reload}&quot; &gt;&amp;2
-  exit 1
+  *<span style="color:#f92672">)</span>
+    echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Usage: /etc/init.d/</span>$NAME<span style="color:#e6db74"> {start|stop|restart|force-reload}</span><span style="color:#e6db74">&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+  exit <span style="color:#ae81ff">1</span>
   ;;
-esac
+<span style="color:#66d9ef">esac</span>
  
-exit 0
-</code></pre>
-
-<p>Включаем и запускаем созданный сервис:</p>
-
-<pre><code class="language-bash">systemctl enable newrelic_plugin_agent.service
+exit <span style="color:#ae81ff">0</span>
+</code></pre></div><p>Включаем и запускаем созданный сервис:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl enable newrelic_plugin_agent.service
 systemctl start newrelic_plugin_agent.service
-</code></pre>
-
-<p>Если все настроено верно, то через некоторое время графики появятся с <strong>системе мониторинга New Relic</strong> (вкладка PLUGINS).</p>
+</code></pre></div><p>Если все настроено верно, то через некоторое время графики появятся с <strong>системе мониторинга New Relic</strong> (вкладка PLUGINS).</p>
                 </section>
             </article>
 
@@ -328,23 +312,23 @@ systemctl start newrelic_plugin_agent.service
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

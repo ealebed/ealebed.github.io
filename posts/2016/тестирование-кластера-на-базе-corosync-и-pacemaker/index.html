@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Тестирование кластера на базе Corosync и Pacemaker &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,148 +92,106 @@
                 </header>
                 <section id="post-body">
                     <p>Теперь, когда мы успешно <a href="https://ealebed.github.io/posts/2015/active-passive-cluster-%D0%B2-linux-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-pacemaker-%D0%B8-corosync/">установили</a> и <a href="https://ealebed.github.io/posts/2016/active-passive-cluster-%D0%B2-linux-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D0%BE%D0%B2-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B0/">настроили</a> Active/Passive Cluster на базе <strong>Corosync и Pacemaker</strong> давайте протестируем его работоспособность!</p>
-
 <p>Прежде всего, разберемся с миграцией ресурсов на конкретном примере. Смотрим, на какой ноде сейчас запущен ресурс <code>failover_ip</code>:</p>
-
-<pre><code class="language-bash">crm resource status failover_ip
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm resource status failover_ip
 resource failover_ip is running on: db1
-</code></pre>
-
-<p>Ресурс сейчас запущен на db1, давайте выполним миграцию ресурса <code>failover_ip</code> на ноду db2:</p>
-
-<pre><code class="language-bash">crm resource migrate failover_ip
-</code></pre>
-
-<p>Проверяем:</p>
-
-<pre><code class="language-bash">crm resource status failover_ip
+</code></pre></div><p>Ресурс сейчас запущен на db1, давайте выполним миграцию ресурса <code>failover_ip</code> на ноду db2:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm resource migrate failover_ip
+</code></pre></div><p>Проверяем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm resource status failover_ip
 resource failover_ip is running on: db2
-</code></pre>
-
-<p>Однако стоит помнить, что при «ручной» миграции ресурсов с db1 на db2, автоматически будет создан вес <code>-inf</code> на первой ноде (db1). Вес определяет приоритет запуска ресурсов кластера, соответственно с весом <code>-inf</code> ресурс никогда не будет запущен на ноде db1. Если же вы захотите еще раз выполнить <code>crm resource migrate failover_ip</code>, то ресурс просто будет остановлен.</p>
-
+</code></pre></div><p>Однако стоит помнить, что при «ручной» миграции ресурсов с db1 на db2, автоматически будет создан вес <code>-inf</code> на первой ноде (db1). Вес определяет приоритет запуска ресурсов кластера, соответственно с весом <code>-inf</code> ресурс никогда не будет запущен на ноде db1. Если же вы захотите еще раз выполнить <code>crm resource migrate failover_ip</code>, то ресурс просто будет остановлен.</p>
 <p>Проверить текущий вес ресурса можно так:</p>
-
-<pre><code class="language-bash">crm resource constraints failover_ip
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm resource constraints failover_ip
 * failover_ip
-  : Node db1                      (score=-INFINITY, id=cli-ban-failover_ip-on-db1)
+  : Node db1                      <span style="color:#f92672">(</span>score<span style="color:#f92672">=</span>-INFINITY, id<span style="color:#f92672">=</span>cli-ban-failover_ip-on-db1<span style="color:#f92672">)</span>
 loop failover_ip
-</code></pre>
+</code></pre></div><p>Чтобы вернуть настройки ресурсов кластера в первоначальный вид, необходимо выполнить одну из трех команд (на ваш выбор):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm_resource -U --resource failover_ip
+</code></pre></div><p>или:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm resource unmigrate failover_ip
+</code></pre></div><p>или:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure delete cli-ban-failover_ip-on-db1
+</code></pre></div><p>Теперь проверим зависимости ресурсов. Текущее состояние кластера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm status noheaders
+Online: <span style="color:#f92672">[</span> db1 db2 <span style="color:#f92672">]</span>
 
-<p>Чтобы вернуть настройки ресурсов кластера в первоначальный вид, необходимо выполнить одну из трех команд (на ваш выбор):</p>
-
-<pre><code class="language-bash">crm_resource -U --resource failover_ip
-</code></pre>
-
-<p>или:</p>
-
-<pre><code class="language-bash">crm resource unmigrate failover_ip
-</code></pre>
-
-<p>или:</p>
-
-<pre><code class="language-bash">crm configure delete cli-ban-failover_ip-on-db1
-</code></pre>
-
-<p>Теперь проверим зависимости ресурсов. Текущее состояние кластера:</p>
-
-<pre><code class="language-bash">crm status noheaders
-Online: [ db1 db2 ]
-
- Master/Slave Set: ms_drbd_mysql [drbd_mysql]
-     Masters: [ db1 ]
-     Slaves: [ db2 ]
- Master/Slave Set: ms_drbd_www [drbd_www]
-     Masters: [ db1 ]
-     Slaves: [ db2 ]
+ Master/Slave Set: ms_drbd_mysql <span style="color:#f92672">[</span>drbd_mysql<span style="color:#f92672">]</span>
+     Masters: <span style="color:#f92672">[</span> db1 <span style="color:#f92672">]</span>
+     Slaves: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
+ Master/Slave Set: ms_drbd_www <span style="color:#f92672">[</span>drbd_www<span style="color:#f92672">]</span>
+     Masters: <span style="color:#f92672">[</span> db1 <span style="color:#f92672">]</span>
+     Slaves: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
  Resource Group: group_mysql
-     fs_mysql	(ocf::heartbeat:Filesystem):	Started db1
-     failover_ip	(ocf::heartbeat:IPaddr2):	Started db1
-     mysql	(lsb:mysql):	Started db1
-     index-on-shm	(lsb:index-on-shm):	Started db1
-     sphinxsearch	(lsb:sphinxsearch):	Started db1
-     sphinxsearch-admin	(lsb:sphinxsearch-admin):	Started db1
-     gearman-job-server	(lsb:gearman-job-server):	Started db1
+     fs_mysql	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db1
+     failover_ip	<span style="color:#f92672">(</span>ocf::heartbeat:IPaddr2<span style="color:#f92672">)</span>:	Started db1
+     mysql	<span style="color:#f92672">(</span>lsb:mysql<span style="color:#f92672">)</span>:	Started db1
+     index-on-shm	<span style="color:#f92672">(</span>lsb:index-on-shm<span style="color:#f92672">)</span>:	Started db1
+     sphinxsearch	<span style="color:#f92672">(</span>lsb:sphinxsearch<span style="color:#f92672">)</span>:	Started db1
+     sphinxsearch-admin	<span style="color:#f92672">(</span>lsb:sphinxsearch-admin<span style="color:#f92672">)</span>:	Started db1
+     gearman-job-server	<span style="color:#f92672">(</span>lsb:gearman-job-server<span style="color:#f92672">)</span>:	Started db1
  Resource Group: group_www
-     fs_www	(ocf::heartbeat:Filesystem):	Started db1
-     nfs-kernel-server	(lsb:nfs-kernel-server):	Started db1
-     nfs-common	(lsb:nfs-common):	Started db1
- Clone Set: pingnetclone [pingnet]
-     Started: [ db1 db2 ]
-</code></pre>
+     fs_www	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db1
+     nfs-kernel-server	<span style="color:#f92672">(</span>lsb:nfs-kernel-server<span style="color:#f92672">)</span>:	Started db1
+     nfs-common	<span style="color:#f92672">(</span>lsb:nfs-common<span style="color:#f92672">)</span>:	Started db1
+ Clone Set: pingnetclone <span style="color:#f92672">[</span>pingnet<span style="color:#f92672">]</span>
+     Started: <span style="color:#f92672">[</span> db1 db2 <span style="color:#f92672">]</span>
+</code></pre></div><p>Согласно настройкам нашего кластера, если не запущен ресурс <code>failover_ip</code>, то остальные зависимые от него ресурсы также должны быть остановлены. Давайте убедимся в этом:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm resource stop failover_ip
+</code></pre></div><p>Проверяем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm status noheaders
+Online: <span style="color:#f92672">[</span> db1 db2 <span style="color:#f92672">]</span>
 
-<p>Согласно настройкам нашего кластера, если не запущен ресурс <code>failover_ip</code>, то остальные зависимые от него ресурсы также должны быть остановлены. Давайте убедимся в этом:</p>
-
-<pre><code class="language-bash">crm resource stop failover_ip
-</code></pre>
-
-<p>Проверяем:</p>
-
-<pre><code class="language-bash">crm status noheaders
-Online: [ db1 db2 ]
-
- Master/Slave Set: ms_drbd_mysql [drbd_mysql]
-     Masters: [ db1 ]
-     Slaves: [ db2 ]
- Master/Slave Set: ms_drbd_www [drbd_www]
-     Masters: [ db1 ]
-     Slaves: [ db2 ]
+ Master/Slave Set: ms_drbd_mysql <span style="color:#f92672">[</span>drbd_mysql<span style="color:#f92672">]</span>
+     Masters: <span style="color:#f92672">[</span> db1 <span style="color:#f92672">]</span>
+     Slaves: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
+ Master/Slave Set: ms_drbd_www <span style="color:#f92672">[</span>drbd_www<span style="color:#f92672">]</span>
+     Masters: <span style="color:#f92672">[</span> db1 <span style="color:#f92672">]</span>
+     Slaves: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
  Resource Group: group_mysql
-     fs_mysql	(ocf::heartbeat:Filesystem):	Started db1
-     failover_ip	(ocf::heartbeat:IPaddr2):	(target-role:Stopped) Stopped
-     mysql	(lsb:mysql):	Stopped
-     index-on-shm	(lsb:index-on-shm):	Stopped
-     sphinxsearch	(lsb:sphinxsearch):	Stopped
-     sphinxsearch-admin	(lsb:sphinxsearch-admin):	Stopped
-     gearman-job-server	(lsb:gearman-job-server):	Stopped
+     fs_mysql	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db1
+     failover_ip	<span style="color:#f92672">(</span>ocf::heartbeat:IPaddr2<span style="color:#f92672">)</span>:	<span style="color:#f92672">(</span>target-role:Stopped<span style="color:#f92672">)</span> Stopped
+     mysql	<span style="color:#f92672">(</span>lsb:mysql<span style="color:#f92672">)</span>:	Stopped
+     index-on-shm	<span style="color:#f92672">(</span>lsb:index-on-shm<span style="color:#f92672">)</span>:	Stopped
+     sphinxsearch	<span style="color:#f92672">(</span>lsb:sphinxsearch<span style="color:#f92672">)</span>:	Stopped
+     sphinxsearch-admin	<span style="color:#f92672">(</span>lsb:sphinxsearch-admin<span style="color:#f92672">)</span>:	Stopped
+     gearman-job-server	<span style="color:#f92672">(</span>lsb:gearman-job-server<span style="color:#f92672">)</span>:	Stopped
  Resource Group: group_www
-     fs_www	(ocf::heartbeat:Filesystem):	Started db1
-     nfs-kernel-server	(lsb:nfs-kernel-server):	Started db1
-     nfs-common	(lsb:nfs-common):	Started db1
- Clone Set: pingnetclone [pingnet]
-     Started: [ db1 db2 ]
-</code></pre>
-
-<p>Запускаем ресурс <code>failover_ip</code> командой:</p>
-
-<pre><code class="language-bash">crm resource start failover_ip
-</code></pre>
-
-<p>Еще может быть очень полезно выводить одну ноду из кластера, например для обновления ПО или апгрейда оборудования (для выполнения таких работ, как минимум, обязательно надо <a href="https://ealebed.github.io/posts/2016/%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BE%D0%B2-%D0%B2-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B5-%D0%BD%D0%B0-%D0%B1%D0%B0%D0%B7%D0%B5-pacemaker/">переводить кластер в режим обслуживания</a>). При выводе активной ноды (db1) из кластера, ресурсы переезжают на вторую (db2):</p>
-
-<pre><code class="language-bash">crm node standby db1
-</code></pre>
-
-<p>Проверяем:</p>
-
-<pre><code class="language-bash">crm status noheaders
+     fs_www	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db1
+     nfs-kernel-server	<span style="color:#f92672">(</span>lsb:nfs-kernel-server<span style="color:#f92672">)</span>:	Started db1
+     nfs-common	<span style="color:#f92672">(</span>lsb:nfs-common<span style="color:#f92672">)</span>:	Started db1
+ Clone Set: pingnetclone <span style="color:#f92672">[</span>pingnet<span style="color:#f92672">]</span>
+     Started: <span style="color:#f92672">[</span> db1 db2 <span style="color:#f92672">]</span>
+</code></pre></div><p>Запускаем ресурс <code>failover_ip</code> командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm resource start failover_ip
+</code></pre></div><p>Еще может быть очень полезно выводить одну ноду из кластера, например для обновления ПО или апгрейда оборудования (для выполнения таких работ, как минимум, обязательно надо <a href="https://ealebed.github.io/posts/2016/%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BE%D0%B2-%D0%B2-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B5-%D0%BD%D0%B0-%D0%B1%D0%B0%D0%B7%D0%B5-pacemaker/">переводить кластер в режим обслуживания</a>). При выводе активной ноды (db1) из кластера, ресурсы переезжают на вторую (db2):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm node standby db1
+</code></pre></div><p>Проверяем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm status noheaders
 Node db1: standby
-Online: [ db2 ]
+Online: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
 
- Master/Slave Set: ms_drbd_mysql [drbd_mysql]
-     Masters: [ db2 ]
- Master/Slave Set: ms_drbd_www [drbd_www]
-     Masters: [ db2 ]
+ Master/Slave Set: ms_drbd_mysql <span style="color:#f92672">[</span>drbd_mysql<span style="color:#f92672">]</span>
+     Masters: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
+ Master/Slave Set: ms_drbd_www <span style="color:#f92672">[</span>drbd_www<span style="color:#f92672">]</span>
+     Masters: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
  Resource Group: group_mysql
-     fs_mysql	(ocf::heartbeat:Filesystem):	Started db2
-     failover_ip	(ocf::heartbeat:IPaddr2):	Started db2
-     mysql	(lsb:mysql):	Started db2
-     index-on-shm	(lsb:index-on-shm):	Started db2
-     sphinxsearch	(lsb:sphinxsearch):	Started db2
-     sphinxsearch-admin	(lsb:sphinxsearch-admin):	Started db2
-     gearman-job-server	(lsb:gearman-job-server):	Started db2
+     fs_mysql	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db2
+     failover_ip	<span style="color:#f92672">(</span>ocf::heartbeat:IPaddr2<span style="color:#f92672">)</span>:	Started db2
+     mysql	<span style="color:#f92672">(</span>lsb:mysql<span style="color:#f92672">)</span>:	Started db2
+     index-on-shm	<span style="color:#f92672">(</span>lsb:index-on-shm<span style="color:#f92672">)</span>:	Started db2
+     sphinxsearch	<span style="color:#f92672">(</span>lsb:sphinxsearch<span style="color:#f92672">)</span>:	Started db2
+     sphinxsearch-admin	<span style="color:#f92672">(</span>lsb:sphinxsearch-admin<span style="color:#f92672">)</span>:	Started db2
+     gearman-job-server	<span style="color:#f92672">(</span>lsb:gearman-job-server<span style="color:#f92672">)</span>:	Started db2
  Resource Group: group_www
-     fs_www	(ocf::heartbeat:Filesystem):	Started db2
-     nfs-kernel-server	(lsb:nfs-kernel-server):	Started db2
-     nfs-common	(lsb:nfs-common):	Started db2
- Clone Set: pingnetclone [pingnet]
-     Started: [ db2 ]
-</code></pre>
-
-<p>Вернуть ноду обратно в кластер можно командой (при этом ресурсы останутся запущенными на ноде db2):</p>
-
-<pre><code class="language-bash">crm node online db1
-</code></pre>
+     fs_www	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db2
+     nfs-kernel-server	<span style="color:#f92672">(</span>lsb:nfs-kernel-server<span style="color:#f92672">)</span>:	Started db2
+     nfs-common	<span style="color:#f92672">(</span>lsb:nfs-common<span style="color:#f92672">)</span>:	Started db2
+ Clone Set: pingnetclone <span style="color:#f92672">[</span>pingnet<span style="color:#f92672">]</span>
+     Started: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
+</code></pre></div><p>Вернуть ноду обратно в кластер можно командой (при этом ресурсы останутся запущенными на ноде db2):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm node online db1
+</code></pre></div>
                 </section>
             </article>
 
@@ -264,23 +233,23 @@ Online: [ db2 ]
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

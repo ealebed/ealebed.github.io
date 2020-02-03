@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Active/Passive Cluster в Linux. Часть 2: установка и настройка Pacemaker и Corosync &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,37 +92,18 @@
                 </header>
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2015/active-passive-cluster-%D0%B2-linux-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-drbd/">предыдущей части</a> мы успешно настроили DRBD-ресурсы на двух нодах будущего кластера, теперь давайте разберемся с <strong>установкой и настройкой <code>Pacemaker</code> и <code>Corosync</code></strong>.</p>
-
 <p>Для начала установим необходимые пакеты:</p>
-
 <pre><code>aptitude install pacemaker
-</code></pre>
-
-<p>На обоих серверах разрешаем автозапуск <code>corosync</code> в конфигурационном файле <code>/etc/default/corosync</code>, ставим параметр:</p>
-
+</code></pre><p>На обоих серверах разрешаем автозапуск <code>corosync</code> в конфигурационном файле <code>/etc/default/corosync</code>, ставим параметр:</p>
 <pre><code>START=yes
-</code></pre>
-
-<p>Создаем ключи для <code>corosync</code> командой:</p>
-
+</code></pre><p>Создаем ключи для <code>corosync</code> командой:</p>
 <pre><code>corosync-keygen
-</code></pre>
-
-<p>Меняем права сгенерированного файла ключей:</p>
-
+</code></pre><p>Меняем права сгенерированного файла ключей:</p>
 <pre><code>chown root:root /etc/corosync/authkey
-</code></pre>
-
-<pre><code>chmod 400 /etc/corosync/authkey
-</code></pre>
-
-<p>и копируем этот файл на все узлы кластера (в нашем случае их всего два):</p>
-
+</code></pre><pre><code>chmod 400 /etc/corosync/authkey
+</code></pre><p>и копируем этот файл на все узлы кластера (в нашем случае их всего два):</p>
 <pre><code>scp /etc/corosync/authkey root@db2:/etc/corosync/authkey
-</code></pre>
-
-<p>Приводим конфигурационный файл <code>/etc/corosync/corosync.conf</code> на обоих серверах к следующему виду:</p>
-
+</code></pre><p>Приводим конфигурационный файл <code>/etc/corosync/corosync.conf</code> на обоих серверах к следующему виду:</p>
 <pre><code># Please read the openais.conf.5 manual page
  
 totem {
@@ -216,15 +208,9 @@ logging {
                 tags: enter|leave|trace1|trace2|trace3|trace4|trace6
         }
 }
-</code></pre>
-
-<p>И запускаем corosync командой:</p>
-
+</code></pre><p>И запускаем corosync командой:</p>
 <pre><code>/etc/init.d/corosync start
-</code></pre>
-
-<p>Просмотреть статус нашего кластера можно командой <code>crm_mon -1</code> или <code>crm status</code>, результат выполнения команды будет примерно таким:</p>
-
+</code></pre><p>Просмотреть статус нашего кластера можно командой <code>crm_mon -1</code> или <code>crm status</code>, результат выполнения команды будет примерно таким:</p>
 <pre><code>============
 Last updated: Thu Mar 27 17:07:47 2014
 Last change: Thu Mar 27 17:07:21 2014 via crmd on db1
@@ -236,46 +222,20 @@ Version: 1.1.7-ee0730e13d124c3d58f00016c3376a1de5323cff
 ============
 
 Online: [ db1 db2 ] 
-</code></pre>
-
-<p>Выставляем базовые настройки для кластера (учитываем, что у нас кластер состоит из двух нод):</p>
-
+</code></pre><p>Выставляем базовые настройки для кластера (учитываем, что у нас кластер состоит из двух нод):</p>
 <pre><code>crm configure property stonith-enabled=&quot;false&quot;
-</code></pre>
-
-<pre><code>crm configure property symmetric-cluster=&quot;false&quot;
-</code></pre>
-
-<pre><code>crm configure rsc_defaults resource-stickiness=&quot;110&quot;
-</code></pre>
-
-<pre><code>crm configure rsc_defaults migration-threshold=3
-</code></pre>
-
-<pre><code>crm configure property no-quorum-policy=ignore
-</code></pre>
-
-<p>Перед настройкой ресурсов кластера на обоих серверах убираем из автозагрузки скрипты, которые в дальнейшем будут контролироватся <code>corosync</code>’ом:</p>
-
+</code></pre><pre><code>crm configure property symmetric-cluster=&quot;false&quot;
+</code></pre><pre><code>crm configure rsc_defaults resource-stickiness=&quot;110&quot;
+</code></pre><pre><code>crm configure rsc_defaults migration-threshold=3
+</code></pre><pre><code>crm configure property no-quorum-policy=ignore
+</code></pre><p>Перед настройкой ресурсов кластера на обоих серверах убираем из автозагрузки скрипты, которые в дальнейшем будут контролироватся <code>corosync</code>’ом:</p>
 <pre><code>update-rc.d -f drbd remove
-</code></pre>
-
-<pre><code>update-rc.d -f mysql remove
-</code></pre>
-
-<pre><code>update-rc.d -f nfs-common remove
-</code></pre>
-
-<pre><code>update-rc.d -f nfs-kernel-server remove
-</code></pre>
-
-<pre><code>update-rc.d -f sphinxsearch remove
-</code></pre>
-
-<pre><code>update-rc.d -f gearman-job-server remove
-</code></pre>
-
-<p>На этом <strong>установка и настройка <code>Pacemaker</code> и <code>Corosync</code></strong> закончена, в <a href="https://ealebed.github.io/posts/2015/active-passive-cluster-%D0%B2-linux-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D0%BE%D0%B2-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B0/">заключительной части</a> пошаговой настройки Active/Passive Cluster в Linux мы добавим ресурсы кластера, организуем их в группы и определим порядок запуска.</p>
+</code></pre><pre><code>update-rc.d -f mysql remove
+</code></pre><pre><code>update-rc.d -f nfs-common remove
+</code></pre><pre><code>update-rc.d -f nfs-kernel-server remove
+</code></pre><pre><code>update-rc.d -f sphinxsearch remove
+</code></pre><pre><code>update-rc.d -f gearman-job-server remove
+</code></pre><p>На этом <strong>установка и настройка <code>Pacemaker</code> и <code>Corosync</code></strong> закончена, в <a href="https://ealebed.github.io/posts/2015/active-passive-cluster-%D0%B2-linux-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D0%BE%D0%B2-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B0/">заключительной части</a> пошаговой настройки Active/Passive Cluster в Linux мы добавим ресурсы кластера, организуем их в группы и определим порядок запуска.</p>
                 </section>
             </article>
 
@@ -317,23 +277,23 @@ Online: [ db1 db2 ]
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

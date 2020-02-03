@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Базовая настройка Asterisk 11 в Debian Wheezy: обслуживание внутренних звонков &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,20 +90,14 @@
                 </header>
                 <section id="post-body">
                     <p>Мы успешно <a href="https://ealebed.github.io/posts/2015/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2/">установили Asterisk PBX</a> в операционной системе Debian Wheezy и теперь приступаем к его настройке. Первое, что мы сделаем — <strong>настроим Asterisk на обслуживание внутренних звонков</strong> — давайте разберемся!</p>
-
 <p>В моем случае используются телефоны Cisco SPA 504G и Linksys SPA 942, но вы можете использовать любой другой IP-телефон или софтофон (могу порекомендовать Zoiper или X-Lite).</p>
-
 <p>Для тестирования будем использовать трехзначные номера, например 101, 102, 103 и т. д.</p>
-
 <p><strong>Примечание.</strong> Помните, что при использовании таких номеров в реальных условиях, вы не сможете позвонить c офисного телефона на номера экстренных служб — МЧС, милиции, скорой помощи и аварийной службы газа.</p>
-
 <p>Звонки будем записывать с помощью функции <code>MixMonitor()</code> и хранить на логическом разделе, который мы специально создали при <a href="https://ealebed.github.io/posts/2015/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">подготовке к установке Asterisk’а</a>. Чтобы упростить настройку пользователей, будем использовать шаблоны.</p>
-
 <p>Алгоритм <strong>настройки Asterisk 11 для обслуживания внутренних звонков</strong> следующий:</p>
-
 <ul>
-<li><p>убедимся, что в конфигурационном файле <code>/etc/asterisk/sip.conf</code> в секции <code>[general]</code> присутствуют и раскомментированы следующие строки:</p>
-
+<li>убедимся, что в конфигурационном файле <code>/etc/asterisk/sip.conf</code> в секции <code>[general]</code> присутствуют и раскомментированы следующие строки:</li>
+</ul>
 <pre><code>[general]
 context=default
 alwaysauthreject=yes
@@ -100,10 +105,9 @@ allowguest=no
 allowoverlap=no
 udpbindaddr=0.0.0.0
 language=ru
-</code></pre></li>
-
-<li><p>можно сразу настроить приоритет использования кодеков в этой же секции <code>[general]</code> (по желанию, все и так будет работать «из коробки»):</p>
-
+</code></pre><ul>
+<li>можно сразу настроить приоритет использования кодеков в этой же секции <code>[general]</code> (по желанию, все и так будет работать «из коробки»):</li>
+</ul>
 <pre><code>...
 disallow=all                   ; First disallow all codecs
 allow=alaw                     ; Allow codecs in order of preference
@@ -112,10 +116,9 @@ allow=gsm
 allow=g729
 allow=g723
 ...
-</code></pre></li>
-
-<li><p>переходим к секции <code>[authentication]</code> для настройки пользователей. Как и обещал, используем шаблон (общие параметры для всех):</p>
-
+</code></pre><ul>
+<li>переходим к секции <code>[authentication]</code> для настройки пользователей. Как и обещал, используем шаблон (общие параметры для всех):</li>
+</ul>
 <pre><code>...
 [template-office](!)                
 type=friend
@@ -126,10 +129,9 @@ context=office
 deny=0.0.0.0/0.0.0.0
 permit=192.168.1.0/23
 ...
-</code></pre></li>
-
-<li><p>теперь настраиваем нескольких пользователей. Так как у нас уже есть шаблон с общими параметрами, то остается указать только <code>username</code> и <code>secret</code> — имя пользователя и пароль, которые должны использоваться клиентом при регистрации:</p>
-
+</code></pre><ul>
+<li>теперь настраиваем нескольких пользователей. Так как у нас уже есть шаблон с общими параметрами, то остается указать только <code>username</code> и <code>secret</code> — имя пользователя и пароль, которые должны использоваться клиентом при регистрации:</li>
+</ul>
 <pre><code>;testuser_1
 [101](template-office)
 username=user101
@@ -144,31 +146,22 @@ secret=&lt;очень_сложный_пароль&gt;
 [103](template-office)
 username=user103
 secret=&lt;очень_сложный_пароль&gt;
-</code></pre></li>
-</ul>
-
-<p><strong>Примечание.</strong> Строки <code>;testuser_*</code> можно пропустить — это комментарии, здесь я обычно указываю фамилию пользователя. Однако, если у вас будет несколько сотен пользователей, то без комментариев никак не обойтись</p>
-
+</code></pre><p><strong>Примечание.</strong> Строки <code>;testuser_*</code> можно пропустить — это комментарии, здесь я обычно указываю фамилию пользователя. Однако, если у вас будет несколько сотен пользователей, то без комментариев никак не обойтись</p>
 <p>После внесения настроек сохраняем файл <code>sip.conf</code> и переходим к <strong>настройке номерного плана Asterisk</strong>. Для этого:</p>
-
 <ul>
-<li><p>открываем файл <code>/etc/asterisk/extensions.conf</code>:</p>
-
+<li>открываем файл <code>/etc/asterisk/extensions.conf</code>:</li>
+</ul>
 <pre><code>nano /etc/asterisk/extensions.conf
-</code></pre></li>
-
-<li><p>создаем контекст <code>[office]</code> с таким содержимым:</p>
-
+</code></pre><ul>
+<li>создаем контекст <code>[office]</code> с таким содержимым:</li>
+</ul>
 <pre><code>[office]
 ; внутренние 3-х значные номера, начинаются с 1
 exten =&gt; _1XX,1,Set(fname=${STRFTIME(${EPOCH},,%Y%m%d)}-${UNIQUEID})
 exten =&gt; _1XX,n,MixMonitor(/var/spool/asterisk/monitor/${fname}.wav)
 exten =&gt; _1XX,n,Set(AUDIOHOOK_INHERIT(MixMonitor)=yes)
 exten =&gt; _1XX,n,Dial(SIP/${EXTEN})
-</code></pre></li>
-</ul>
-
-<p>На этом считаю <strong>базовую настройку Asterisk’а для обслуживания внутренних звонков законченной</strong>, в следующих статьях рассмотрим <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%B3%D0%BE%D0%BB%D0%BE%D1%81%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BF%D0%BE%D1%87%D1%82%D0%B0/">настройку голосовой почты</a> и <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%B2%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B8-%D0%B8%D1%81%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%B8/">входящих/исходящих звонков</a>.</p>
+</code></pre><p>На этом считаю <strong>базовую настройку Asterisk’а для обслуживания внутренних звонков законченной</strong>, в следующих статьях рассмотрим <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%B3%D0%BE%D0%BB%D0%BE%D1%81%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BF%D0%BE%D1%87%D1%82%D0%B0/">настройку голосовой почты</a> и <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%B2%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B8-%D0%B8%D1%81%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%B8/">входящих/исходящих звонков</a>.</p>
                 </section>
             </article>
 
@@ -210,23 +203,23 @@ exten =&gt; _1XX,n,Dial(SIP/${EXTEN})
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

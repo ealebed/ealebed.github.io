@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Оптимизация и сжатие изображений из консоли &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,195 +88,105 @@
                 </header>
                 <section id="post-body">
                     <p>Скорость загрузки практически любого сайта так или иначе зависит от количества и качества используемых изображений.</p>
-
 <p><strong>Оптимизация изображений</strong> — очень важная задача. Давайте размеремся!</p>
-
 <p>В данной статье рассмотрим использование инструментов <code>optipng</code>, <code>zopflipng</code>, <code>cjpeg</code> (MozJPEG) и <code>jpegoptim</code> для оптимизации изображений и инструмента <code>cwebp</code> для создания изображений в формате WebP.</p>
-
 <p>Начнем с установки необходимых пакетов.</p>
-
 <ul>
-<li><p>Установка <code>optipng</code> выглядит так:</p>
-
-<pre><code class="language-bash">sudo apt-get update
-</code></pre>
-
-<pre><code class="language-bash">sudo apt-get install optipng
-</code></pre></li>
-
-<li><p>Установка <code>jpegoptim</code> тоже довольно проста:</p>
-
-<pre><code class="language-bash">sudo apt-get update
-</code></pre>
-
-<pre><code class="language-bash">sudo apt-get install jpegoptim
-</code></pre></li>
-
-<li><p>Для установки <code>zopflipng</code> нужно проделать чуть больше действий:</p>
-
-<pre><code class="language-bash">git clone https://github.com/google/zopfli.git
-</code></pre>
-
-<pre><code class="language-bash">cd zopfli
-</code></pre>
-
-<pre><code class="language-bash">make zopflipng
-</code></pre></li>
+<li>Установка <code>optipng</code> выглядит так:</li>
 </ul>
-
-<p>По желанию можно также скопировать исполняемый файл в каталог <code>/bin</code>:</p>
-
-<pre><code class="language-bash">sudo cp ./zopflipng /bin
-</code></pre>
-
-<ul>
-<li><p>Установка MozJPEG еще чуть сложнее, сначала устанавливаем зависимости:</p>
-
-<pre><code class="language-bash">sudo apt-get update
-</code></pre>
-
-<pre><code class="language-bash">sudo apt-get install autoconf automake libtool nasm make pkg-config git
-</code></pre></li>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get update
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get install optipng
+</code></pre></div><ul>
+<li>Установка <code>jpegoptim</code> тоже довольно проста:</li>
 </ul>
-
-<p>потом собираем из исходников и устанавливаем сам MozJPEG:</p>
-
-<pre><code class="language-bash">git clone https://github.com/mozilla/mozjpeg.git
-</code></pre>
-
-<pre><code class="language-bash">cd mozjpeg
-</code></pre>
-
-<pre><code class="language-bash">autoreconf -fiv
-</code></pre>
-
-<pre><code class="language-bash">./configure
-</code></pre>
-
-<pre><code class="language-bash">sudo make &amp;&amp; make install
-</code></pre>
-
-<ul>
-<li><p>Для установки <code>cwebp</code> ставим зависимости:</p>
-
-<pre><code class="language-bash">sudo apt-get update
-</code></pre>
-
-<pre><code class="language-bash">sudo apt-get install libjpeg-dev libpng-dev libtiff-dev libgif-dev
-</code></pre></li>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get update
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get install jpegoptim
+</code></pre></div><ul>
+<li>Для установки <code>zopflipng</code> нужно проделать чуть больше действий:</li>
 </ul>
-
-<p>скачиваем архив с исходниками:</p>
-
-<pre><code class="language-bash">wget https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-0.6.1-linux-x86-32.tar.gz
-</code></pre>
-
-<p>распаковываем его:</p>
-
-<pre><code class="language-bash">tar xvzf libwebp-0.6.1.tar.gz
-</code></pre>
-
-<p>собираем и устанавливаем <code>cwebp</code>:</p>
-
-<pre><code class="language-bash">cd libwebp-0.6.1
-</code></pre>
-
-<pre><code class="language-bash">./configure
-</code></pre>
-
-<pre><code class="language-bash">make
-</code></pre>
-
-<pre><code class="language-bash">sudo make install
-</code></pre>
-
-<p><strong>Примечание.</strong> если при создании изображений в формате WebP появится ошибка вида:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/google/zopfli.git
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd zopfli
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make zopflipng
+</code></pre></div><p>По желанию можно также скопировать исполняемый файл в каталог <code>/bin</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo cp ./zopflipng /bin
+</code></pre></div><ul>
+<li>Установка MozJPEG еще чуть сложнее, сначала устанавливаем зависимости:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get update
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get install autoconf automake libtool nasm make pkg-config git
+</code></pre></div><p>потом собираем из исходников и устанавливаем сам MozJPEG:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/mozilla/mozjpeg.git
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd mozjpeg
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">autoreconf -fiv
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./configure
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo make <span style="color:#f92672">&amp;&amp;</span> make install
+</code></pre></div><ul>
+<li>Для установки <code>cwebp</code> ставим зависимости:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get update
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get install libjpeg-dev libpng-dev libtiff-dev libgif-dev
+</code></pre></div><p>скачиваем архив с исходниками:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-0.6.1-linux-x86-32.tar.gz
+</code></pre></div><p>распаковываем его:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar xvzf libwebp-0.6.1.tar.gz
+</code></pre></div><p>собираем и устанавливаем <code>cwebp</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd libwebp-0.6.1
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./configure
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo make install
+</code></pre></div><p><strong>Примечание.</strong> если при создании изображений в формате WebP появится ошибка вида:
 <code>cwebp: error while loading shared libraries: libwebp.so.7: cannot open shared object file: No such file or directory</code>
 то следует сделать так:</p>
-
-<pre><code class="language-bash">sudo cp libwebp-0.6.1/src/.libs/* /usr/local/lib
-</code></pre>
-
-<p>Давайте посмотрим, как пользоваться данными инструментами.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo cp libwebp-0.6.1/src/.libs/* /usr/local/lib
+</code></pre></div><p>Давайте посмотрим, как пользоваться данными инструментами.</p>
 <ul>
-<li><p>Для максимальной оптимизации картинок с помощью <code>optipng</code> используем опцию <code>-o7</code>:</p>
-
-<pre><code class="language-bash">optipng -o7 path-and-directory/image.png
-</code></pre></li>
+<li>Для максимальной оптимизации картинок с помощью <code>optipng</code> используем опцию <code>-o7</code>:</li>
 </ul>
-
-<p>Найти все png-изображения в данном каталоге и его подкаталогах и выполнить их оптимизацию можно так:</p>
-
-<pre><code class="language-bash">find -name '*.png' -print0 | xargs -0 optipng -o7
-</code></pre>
-
-<ul>
-<li><p>Для оптимизации изображений с помощью инструмента <code>zopflipng</code> используем команду:</p>
-
-<pre><code class="language-bash">zopflipng -m --iterations=10 -y path-and-directory/image.png
-</code></pre></li>
-
-<li><p>Сжатие изображений инструментом MozJPEG выполняем так:</p>
-
-<pre><code class="language-bash">cjpeg -optimize -progressive -quality 80 -outfile path-and-directory/image_small.png path-and-directory/image.png
-</code></pre></li>
-
-<li><p>Очистка jpg-изображений инструментом <code>jpegoptim</code> делается так:</p>
-
-<pre><code class="language-bash">jpegoptim --strip-all path-and-directory/image.png
-</code></pre></li>
-
-<li><p>Создание изображений в формате WebP:</p>
-
-<pre><code class="language-bash">cwebp -quiet -pass 10 -alpha_method 1 -alpha_filter best -m 6 -mt -lossless path-and-directory/image.png -o path-and-directory/image.png.webp
-</code></pre></li>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">optipng -o7 path-and-directory/image.png
+</code></pre></div><p>Найти все png-изображения в данном каталоге и его подкаталогах и выполнить их оптимизацию можно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find -name <span style="color:#e6db74">&#39;*.png&#39;</span> -print0 | xargs -0 optipng -o7
+</code></pre></div><ul>
+<li>Для оптимизации изображений с помощью инструмента <code>zopflipng</code> используем команду:</li>
 </ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">zopflipng -m --iterations<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span> -y path-and-directory/image.png
+</code></pre></div><ul>
+<li>Сжатие изображений инструментом MozJPEG выполняем так:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cjpeg -optimize -progressive -quality <span style="color:#ae81ff">80</span> -outfile path-and-directory/image_small.png path-and-directory/image.png
+</code></pre></div><ul>
+<li>Очистка jpg-изображений инструментом <code>jpegoptim</code> делается так:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">jpegoptim --strip-all path-and-directory/image.png
+</code></pre></div><ul>
+<li>Создание изображений в формате WebP:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cwebp -quiet -pass <span style="color:#ae81ff">10</span> -alpha_method <span style="color:#ae81ff">1</span> -alpha_filter best -m <span style="color:#ae81ff">6</span> -mt -lossless path-and-directory/image.png -o path-and-directory/image.png.webp
+</code></pre></div><p>Для удобства создадим несколько bash-скриптов. Первый, <code>png-optimize.sh</code>, содержит такие строки:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env sh
+</span><span style="color:#75715e"></span>
+optipng -o7 <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span>
 
-<p>Для удобства создадим несколько bash-скриптов. Первый, <code>png-optimize.sh</code>, содержит такие строки:</p>
+tmpfile<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>mktemp<span style="color:#66d9ef">)</span>
+/root/zopfli/zopflipng -m —iterations<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span> -y <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>tmpfile<span style="color:#e6db74">}</span>
+mv <span style="color:#e6db74">${</span>tmpfile<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span>
+</code></pre></div><p>Второй скрипт, <code>jpg-optimize.sh</code>, выглядит так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env sh
+</span><span style="color:#75715e"></span>
+tmpfile<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>mktemp<span style="color:#66d9ef">)</span>
+/opt/mozjpeg/bin/cjpeg -optimize -progressive -quality <span style="color:#ae81ff">80</span> -outfile <span style="color:#e6db74">${</span>tmpfile<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span>
+mv <span style="color:#e6db74">${</span>tmpfile<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span>
 
-<pre><code class="language-bash">#!/usr/bin/env sh
-
-optipng -o7 ${1}
-
-tmpfile=$(mktemp)
-/root/zopfli/zopflipng -m —iterations=10 -y ${1} ${tmpfile}
-mv ${tmpfile} ${1}
-</code></pre>
-
-<p>Второй скрипт, <code>jpg-optimize.sh</code>, выглядит так:</p>
-
-<pre><code class="language-bash">#!/usr/bin/env sh
-
-tmpfile=$(mktemp)
-/opt/mozjpeg/bin/cjpeg -optimize -progressive -quality 80 -outfile ${tmpfile} ${1}
-mv ${tmpfile} ${1}
-
-jpegoptim —strip-all ${1}
-</code></pre>
-
-<p>Третий и последний скрипт <code>webp-create.sh</code> такой:</p>
-
-<pre><code class="language-bash">#!/usr/bin/env sh
-
-cwebp -quiet -pass 10 -alpha_method 1 -alpha_filter best -m 6 -mt -lossless ${1} -o ${1}.webp
-</code></pre>
-
-<p>Далее для обработки всех изображений в текущем каталоге и во всех подкаталогах можно использовать команды:</p>
-
-<pre><code class="language-bash">find . -iname *.jpg  | xargs -I % /root/jpeg-optimize.sh % 
-</code></pre>
-
-<pre><code class="language-bash">find . -iname *.png  | xargs -I % /root/png-optimize.sh % 
-</code></pre>
-
-<pre><code class="language-bash">find . -iname *.jpg  | xargs -I % /root/webp-create.sh % 
-</code></pre>
-
-<pre><code class="language-bash">find . -iname *.png  | xargs -I % /root/webp-create.sh % 
-</code></pre>
-
-<p>Стоит отметить, что в моем случае оптимизация изображений в формате <code>*.png</code> принесла неплохой результат, в то время как оптимизация jpg-картинок напротив, увеличила их размер. В каждом конкретном случае опции сжатия картинок будут разными, поэтому не стоит бездумно копировать предложенные варианты.</p>
+jpegoptim —strip-all <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span>
+</code></pre></div><p>Третий и последний скрипт <code>webp-create.sh</code> такой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env sh
+</span><span style="color:#75715e"></span>
+cwebp -quiet -pass <span style="color:#ae81ff">10</span> -alpha_method <span style="color:#ae81ff">1</span> -alpha_filter best -m <span style="color:#ae81ff">6</span> -mt -lossless <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> -o <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span>.webp
+</code></pre></div><p>Далее для обработки всех изображений в текущем каталоге и во всех подкаталогах можно использовать команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -iname *.jpg  | xargs -I % /root/jpeg-optimize.sh % 
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -iname *.png  | xargs -I % /root/png-optimize.sh % 
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -iname *.jpg  | xargs -I % /root/webp-create.sh % 
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -iname *.png  | xargs -I % /root/webp-create.sh % 
+</code></pre></div><p>Стоит отметить, что в моем случае оптимизация изображений в формате <code>*.png</code> принесла неплохой результат, в то время как оптимизация jpg-картинок напротив, увеличила их размер. В каждом конкретном случае опции сжатия картинок будут разными, поэтому не стоит бездумно копировать предложенные варианты.</p>
                 </section>
             </article>
 
@@ -307,23 +228,23 @@ cwebp -quiet -pass 10 -alpha_method 1 -alpha_filter best -m 6 -mt -lossless ${1}
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

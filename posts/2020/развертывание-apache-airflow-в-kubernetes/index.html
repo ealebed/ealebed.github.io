@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Развертывание Apache Airflow в Kubernetes кластере &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,82 +92,51 @@
                 </header>
                 <section id="post-body">
                     <p>В данной статье разберемся с особенностями установки, настройки и эксплуатации <a href="https://github.com/apache/airflow"><code>Apache Airflow</code></a> (далее <code>Airflow</code>) в кластере <code>Kubernetes</code>. Давайте разберемся!</p>
-
 <p><code>Airflow</code> - это инструмент для разработки, планирования и мониторинга batch-процессов обработки данных. Как минимум на <code>Airflow</code> стоит обратить внимание при выборе планировщика для ваших ETL/ELT-процессов.</p>
-
 <p>Существует несколько сценариев использования связки <code>Airflow</code> и <code>Kubernetes</code>:</p>
-
 <ul>
 <li>запуск самого <code>Airflow</code> в Kubernetes кластере</li>
 <li>использование <code>Airflow</code> для запуска задач (jobs) в Kubernetes кластере</li>
 <li>оба предыдущих варианта одновременно</li>
 </ul>
-
 <p>Рассмотрим эти сценарии по порядку. <code>Airflow</code> состоит из отдельных компонентов, основные из которых планировщик (scheduler), вебсервер (webserver) и воркеры (workers). В зависимости от конкретного случая, требованиям к отказоустойчивости и количества одновременно выполняющихся задач, эти компоненты можно запускать по отдельности или все вместе.</p>
-
 <p>Прежде всего, для запуска <code>Airflow</code> в <code>Kubernetes</code> кластере нам понадобится docker-образ и yaml-манифесты (или Helm чарты).</p>
-
 <p><strong>Примечание.</strong> Существует также вариант запуска с использованием <a href="https://github.com/GoogleCloudPlatform/airflow-operator">Airflow Kubernetes Operator</a> от Google, но на момент написания статьи он находится в alpha-версии и мной не тестировался.</p>
-
 <p>Зачастую для запуска <code>Airflow</code> используют docker-образ <a href="https://hub.docker.com/r/puckel/docker-airflow">puckel/docker-airflow</a>. Это надежный образ, который собирается автоматически и содержит entrypoint скрипт, позволяющий docker-контейнеру работать в роли планировщика/вебсервера/воркера и т. д. Однако, версии образа несколько отстают от релизных версий <code>Airflow</code>, поэтому есть смысл создать docker-образ для production окружения и обновлять его самостоятельно (наш вариант).</p>
-
 <p>Также можно использовать docker-образ <a href="https://hub.docker.com/r/astronomerinc/ap-airflow">astronomerinc/ap-airflow</a> от <a href="https://www.astronomer.io/">astronomer.io</a>, но так как мне не удалось найти исходный Dockerfile, то я воздержался от этого решения.</p>
-
 <p>В нашем случае Dockerfile выглядит следующим образом:</p>
-
 <script type="application/javascript" src="https://gist.github.com/ealebed/9df3f78158e14241843f740c5d4407e1.js?file=Dockerfile"></script>
 
-
 <p>Также видоизменился Entrypoint скрипт:</p>
-
 <script type="application/javascript" src="https://gist.github.com/ealebed/9df3f78158e14241843f740c5d4407e1.js?file=entrypoint.sh"></script>
 
-
 <p>Для деплоя в <code>Kubernetes</code> кластер можно воспользоваться одним из нескольких Helm чартов:</p>
-
 <ul>
 <li><a href="https://github.com/helm/charts/tree/master/stable/airflow">Official Helm chart</a></li>
 <li><a href="https://github.com/astronomer/airflow-chart">astronomer.io chart</a></li>
 <li><a href="https://github.com/godatadriven/airflow-helm">GoDataDriven chart</a></li>
 </ul>
-
 <p>или самостоятельно написанным манифестом (наш случай).</p>
-
 <p>Основным понятием в <code>Airflow</code> является Directed Acyclic Graph (далее DAG) - смысловое объединение одной нескольких задач, которые вследует выполнять в строго определенной последовательности по определенному расписанию.</p>
-
-<p>При написании DAG&rsquo;а разработчик определяет набор операторов, на которых будут построены задачи внутри DAG’а. Airflow Operator - это еще к одна важная сущность, на основании которой создаются экземпляры заданий, где описывается, что именно будет происходить во время выполнения экземпляра задания. Существует огромное множество как <a href="https://airflow.apache.org/docs/stable/_api/airflow/operators/index.html">официальных</a> так и <a href="https://airflow.apache.org/docs/stable/_api/airflow/contrib/operators/index.html">созданных сообществом</a> <code>Airflow</code> операторов, кроме того, ориентируясь на свои потребности/способности можно создавать свои операторы.</p>
-
-<p>Существует несколько способов &ldquo;доставки&rdquo; написанных DAG&rsquo;ов в инстанс Airflow, развернутый в <code>Kubernetes</code> кластере:</p>
-
+<p>При написании DAG'а разработчик определяет набор операторов, на которых будут построены задачи внутри DAG’а. Airflow Operator - это еще к одна важная сущность, на основании которой создаются экземпляры заданий, где описывается, что именно будет происходить во время выполнения экземпляра задания. Существует огромное множество как <a href="https://airflow.apache.org/docs/stable/_api/airflow/operators/index.html">официальных</a> так и <a href="https://airflow.apache.org/docs/stable/_api/airflow/contrib/operators/index.html">созданных сообществом</a> <code>Airflow</code> операторов, кроме того, ориентируясь на свои потребности/способности можно создавать свои операторы.</p>
+<p>Существует несколько способов &ldquo;доставки&rdquo; написанных DAG'ов в инстанс Airflow, развернутый в <code>Kubernetes</code> кластере:</p>
 <ul>
 <li>добавление в docker-образ при сборке</li>
 <li>использование Persistent Volume (PV)</li>
 <li>git-sync</li>
 </ul>
-
-<p>Первый вариант предполагает добавление DAG&rsquo;ов в docker-образ в момент сборки, и в большинстве случаев является неприемлимым - пересобирать образы при каждом малейшем изменения DAG&rsquo;а не самая лучшая идея.</p>
-
+<p>Первый вариант предполагает добавление DAG'ов в docker-образ в момент сборки, и в большинстве случаев является неприемлимым - пересобирать образы при каждом малейшем изменения DAG'а не самая лучшая идея.</p>
 <p>При втором варианте - DAG-файлы хранятся на некотором внешнем томе и монтируются в соответствующие поды (scheduler, webserver, worker) при запуске. Для корректной работы PV с несколькими подами, режим доступа (accessMode) тома должен быть &lsquo;ReadOnlyMany&rsquo; или, на худой конец, &lsquo;ReadWriteMany&rsquo;.</p>
-
 <p>Третий, оптимальный вариант, предполагает использование еще одного сайдкар (sidecar) контейнера git-sync а поде (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pod</code></a>) для периодической синхронизации DAG-файлов с указанного git-репозитория без рестарта самого <code>Airflow</code>.</p>
-
 <p>С учетом git-sync и RBAC, в нашем случае <code>Kubernetes</code> манифест будет выглядеть так:</p>
-
 <script type="application/javascript" src="https://gist.github.com/ealebed/9df3f78158e14241843f740c5d4407e1.js?file=manifest.yaml"></script>
 
-
 <p>Для теста создадим задачу, которая с помощью <code>KubernetesPodOperator</code> запускает в <code>Kubernetes</code> кластере под (<code>Pod</code>) и выполняет внутри него команду</p>
-
-<pre><code class="language-bash">java --version
-</code></pre>
-
-<p>Тестовый пример DAG&rsquo;а выглядит так:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">java --version
+</code></pre></div><p>Тестовый пример DAG'а выглядит так:</p>
 <script type="application/javascript" src="https://gist.github.com/ealebed/9df3f78158e14241843f740c5d4407e1.js?file=test_dag_example.py"></script>
 
-
 <p><strong>Примечание.</strong> Согласно <a href="https://cloud.google.com/composer/docs/how-to/using/using-kubernetes-pod-operator#minimal-config">документации</a>, для описания <code>KubernetesPodOperator</code> минимально необходимы только четыре поля (<code>name</code>, <code>namespace</code>, <code>image</code>, <code>task_id</code>) но, в нашем случае, при использовании <code>Airflow</code> версии 1.10.7 пришлось также в обязательном порядке добавить <code>in_cluster=True</code> и <code>do_xcom_push=False</code>.</p>
-
 <p>Весь список доступных параметров и их возможных значений находится <a href="https://airflow.apache.org/docs/stable/_api/airflow/contrib/operators/kubernetes_pod_operator/index.html">здесь</a>, а все рассмотренные в статье файлы можно найти в репозитории <a href="https://github.com/ealebed/airflow">ealebed/airflow</a>.</p>
                 </section>
             </article>
@@ -199,23 +179,23 @@
     
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/deploy-to-k8s-with-spinnaker-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0/">Deploy to k8s with Spinnaker. Часть 1: Установка<aside class="dates">Jan 24 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/deploy-to-k8s-with-spinnaker-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0/">Deploy to k8s with Spinnaker. Часть 1: Установка<aside class="dates">Jan 24 2019</aside></a>
         </li>
     
 </ul>

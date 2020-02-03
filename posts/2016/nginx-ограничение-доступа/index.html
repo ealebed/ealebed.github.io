@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Nginx — ограничение доступа &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,18 +88,13 @@
                 </header>
                 <section id="post-body">
                     <p>Ни в коем случае не стоит пренебрегать дополнительной настройкой web-сервера, направленной на защиту от злоумышленников. Давайте разберемся с директивами, призванными обеспечить безопасность проекта!</p>
-
 <p>Прежде всего стоит закрыть доступ к файлам, которые могут вызывать повышенный интерес:</p>
-
 <pre><code>...
         location ~ /.svn/ {
            deny all;
         }
 ...
-</code></pre>
-
-<p>Можно разрешить/запретить доступ к файлам лишь с определенных ip-адресов, используя директивы <code>allow</code> и <code>deny</code>:</p>
-
+</code></pre><p>Можно разрешить/запретить доступ к файлам лишь с определенных ip-адресов, используя директивы <code>allow</code> и <code>deny</code>:</p>
 <pre><code>...
   location /server-status {
       allow 104.45.18.178;
@@ -96,20 +102,14 @@
       deny all;
   }
 ...
-</code></pre>
-
-<p>Также для разграничения доступа к файлам можно использовать директивы <code>auth_basic</code> и <code>auth_basic_user_file</code> — в этом случае пользователю необходимо будет ввести логин/пароль для доступа:</p>
-
+</code></pre><p>Также для разграничения доступа к файлам можно использовать директивы <code>auth_basic</code> и <code>auth_basic_user_file</code> — в этом случае пользователю необходимо будет ввести логин/пароль для доступа:</p>
 <pre><code>...
   location /admin/ {
       auth_basic &quot;Enter password to access&quot;;
       auth_basic_user_file /etc/nginx/basic.auth;
   }
 ...
-</code></pre>
-
-<p>Прекрасным вариантом может быть комбинация двух вышеописанных способов:</p>
-
+</code></pre><p>Прекрасным вариантом может быть комбинация двух вышеописанных способов:</p>
 <pre><code>...
   location /admin/ {
       satisfy any;
@@ -121,71 +121,48 @@
       auth_basic_user_file /etc/nginx/basic.auth;
   }
 ...
-</code></pre>
-
-<p>Защититься от запросов к несуществующим файлам на Nginx можно так:</p>
-
+</code></pre><p>Защититься от запросов к несуществующим файлам на Nginx можно так:</p>
 <pre><code>...
         location ~ \.(js|css|png|jpg|gif|swf|ico|pdf|mov|fla|zip|rar)$ {
            try_files $uri =404;
         }
 ...
-</code></pre>
-
-<p>Nginx позволяет использовать еще три вида ограничения доступа:</p>
-
+</code></pre><p>Nginx позволяет использовать еще три вида ограничения доступа:</p>
 <ul>
 <li>количество соединений (например, с определенного IP-адреса);</li>
 <li>количество запросов за единицу времени;</li>
 <li>скорость передачи ответа клиенту.</li>
 </ul>
-
 <p>Вариант первый, ограничение количества соединений.
 Прежде всего, с помощью директивы <code>limit_conn_zone</code> в секции <code>http</code> следует определить ключ, имя и набор параметров зоны разделяемой памяти для хранения состояний значений ключа:</p>
-
 <pre><code>...
         limit_conn_zone $binary_remote_addr zone=conn_limit_per_ip:10m;
 ...
-</code></pre>
-
-<p>Далее, с помощью директивы <code>limit_conn</code> в контексте <code>location</code> следует указать имя зоны разделяемой памяти и максимально допустимое количество соединений для одного значения ключа:</p>
-
+</code></pre><p>Далее, с помощью директивы <code>limit_conn</code> в контексте <code>location</code> следует указать имя зоны разделяемой памяти и максимально допустимое количество соединений для одного значения ключа:</p>
 <pre><code>...
         location /download/ {
            limit_conn conn_limit_per_ip 5;
         }
 ...
-</code></pre>
-
-<p>Вариант второй, ограничение количества запросов за единицу времени.
+</code></pre><p>Вариант второй, ограничение количества запросов за единицу времени.
 С помощью директивы <code>limit_req_zone</code> в секции <code>http</code> следует определить ключ, имя и набор параметров зоны разделяемой памяти для хранения состояний значений ключа:</p>
-
 <pre><code>...
         limit_req_zone $binary_remote_addr zone=req_limit_per_ip:10m rate=5r/s;
 ...
-</code></pre>
-
-<p>После этого, используя директиву <code>limit_req</code> в контексте <code>location</code> следует указать имя зоны разделяемой памяти и максимальный размер всплеска запросов:</p>
-
+</code></pre><p>После этого, используя директиву <code>limit_req</code> в контексте <code>location</code> следует указать имя зоны разделяемой памяти и максимальный размер всплеска запросов:</p>
 <pre><code>...
         location /download/ {
            limit_req zone=req_limit_per_ip burst=10;
         }
 ...
-</code></pre>
-
-<p>Вариант третий, ограничение скорости передачи ответа клиенту.
+</code></pre><p>Вариант третий, ограничение скорости передачи ответа клиенту.
 Директивой <code>limit_rate</code> в секции <code>location</code> можно задать скорость передачи ответа клиенту (в байтах за секунду) на один запрос (это значит, что при использовании клиентом двух соединений скорость будет вдвое больше ограничения):</p>
-
 <pre><code>...
         location /download/ {
            limit_rate 50k;
         }
 ...
-</code></pre>
-
-<p>В последнем варианте также весьма полезным может оказаться использование директивы <code>limit_rate_after</code>, которая задает объем данных, после которого вступит в силу ограничение скорости передачи ответа клиенту:</p>
-
+</code></pre><p>В последнем варианте также весьма полезным может оказаться использование директивы <code>limit_rate_after</code>, которая задает объем данных, после которого вступит в силу ограничение скорости передачи ответа клиенту:</p>
 <pre><code>...
         location /download/ {
            limit_rate_after 1m;
@@ -234,23 +211,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

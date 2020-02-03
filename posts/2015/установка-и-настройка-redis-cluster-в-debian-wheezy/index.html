@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Установка и настройка Redis Cluster в Debian Wheezy &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,137 +90,97 @@
                 </header>
                 <section id="post-body">
                     <p><strong>Redis (REmote DIctionary Server)</strong> — сетевое журналируемое хранилище данных типа «ключ — значение» с открытым исходным кодом. Начиная с версии 3.0 реализована поддержка <strong>Redis Cluster</strong> и, согласно заверениям разработчиков, значительно увеличено быстродействие.</p>
-
 <p>Существует немало клиентов (<a href="http://redis.io/clients">полный список</a>), а так как наш проект написан на php, то мы будем использовать <a href="https://github.com/phpredis/phpredis"><code>phpredis</code></a>. Давайте разберемся с <strong>установкой Redis</strong> в Debian Wheezy!</p>
-
 <p>Сам Redis и PHP-клиент рекомендуют собирать из исходников, но в качестве альтернативы можно воспользоваться различными менеджерами пакетов (это более удачное решение с точки зрения сохранения конфигурации системы). Минус — в репозиториях может не оказаться нужной версии Redis.</p>
-
 <p><strong>Примечание.</strong> На момент написания статьи в репозитории wheezy доступна версия <code>redis-server 2:2.4.14-1</code>, в wheezy-backports версия redis-server <code>2:2.8.17-1~bpo70+2</code></p>
-
 <p>Особенность Redis’а заключается в том, что это — однопоточный сервер, следовательно мы можем запустить несколько процессов Redis (например, по одному на каждое ядро процессора и каждый процесс будет прослушивать свой порт).</p>
-
 <p>В данном примере рассмотрим создание кластера из 6 нод (3 мастера и 3 слейва) на одном сервере с операционной системой Debian Wheezy.</p>
-
 <p>Подготовительные шаги:</p>
-
 <ul>
-<li><p>если пакет <code>tcl</code> не установлен, устанавливаем его (тесты написаны на <code>tcl</code>):</p>
-
-<pre><code class="language-bash">aptitude install tcl
-</code></pre></li>
-
-<li><p>установим <code>ruby</code> (скрипт управления кластером написан на <code>ruby</code>):</p>
-
-<pre><code class="language-bash">aptitude install ruby
-</code></pre></li>
-
-<li><p>еще нам потребуется Redis-rb-клиент:</p>
-
-<pre><code class="language-bash">gem install redis
-</code></pre></li>
+<li>если пакет <code>tcl</code> не установлен, устанавливаем его (тесты написаны на <code>tcl</code>):</li>
 </ul>
-
-<p>Приступим к <strong>установке Redis</strong>. Так как нам нужна версия не ниже 3.0, то воспользуемся рекомендациями разработчиков и разберемся <strong>как установить Redis из исходников</strong>:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install tcl
+</code></pre></div><ul>
+<li>установим <code>ruby</code> (скрипт управления кластером написан на <code>ruby</code>):</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install ruby
+</code></pre></div><ul>
+<li>еще нам потребуется Redis-rb-клиент:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gem install redis
+</code></pre></div><p>Приступим к <strong>установке Redis</strong>. Так как нам нужна версия не ниже 3.0, то воспользуемся рекомендациями разработчиков и разберемся <strong>как установить Redis из исходников</strong>:</p>
 <ul>
-<li><p>установка Redis:</p>
-
-<pre><code class="language-bash">wget http://download.redis.io/releases/redis-3.0.3.tar.gz
+<li>установка Redis:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://download.redis.io/releases/redis-3.0.3.tar.gz
 tar xzf redis-3.0.3.tar.gz
 cd redis-3.0.3
 make
 make install
-</code></pre></li>
-
-<li><p>установка PHP-клиента:</p>
-
-<pre><code class="language-bash">git clone https://github.com/phpredis/phpredis.git
+</code></pre></div><ul>
+<li>установка PHP-клиента:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/phpredis/phpredis.git
 cd phpredis
 phpize
 ./configure
-make &amp;&amp; make install
-</code></pre></li>
-</ul>
-
-<p><strong>Примечание.</strong> После установки <code>phpredis</code> не забываем выполнить <code>/etc/init.d/apache2 restart</code></p>
-
+make <span style="color:#f92672">&amp;&amp;</span> make install
+</code></pre></div><p><strong>Примечание.</strong> После установки <code>phpredis</code> не забываем выполнить <code>/etc/init.d/apache2 restart</code></p>
 <p>Для генерации конфигурационных файлов воспользуемся скриптом <code>../redis-3.0.3/utils/install_server.sh</code> из архива с исходниками. Запускаем скрипт, вводим порт (7000-7005), на котором будет запущен Redis, остальные параметры оставляем по умолчанию.</p>
-
-<pre><code class="language-bash">./install_server.sh 
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./install_server.sh 
 Welcome to the redis service installer
 This script will help you easily set up a running redis server
 
-Please select the redis port for this instance: [6379] 7000
-Please select the redis config file name [/etc/redis/7000.conf]                         
+Please <span style="color:#66d9ef">select</span> the redis port <span style="color:#66d9ef">for</span> this instance: <span style="color:#f92672">[</span>6379<span style="color:#f92672">]</span> <span style="color:#ae81ff">7000</span>
+Please <span style="color:#66d9ef">select</span> the redis config file name <span style="color:#f92672">[</span>/etc/redis/7000.conf<span style="color:#f92672">]</span>                         
 Selected default - /etc/redis/7000.conf
-Please select the redis log file name [/var/log/redis_7000.log] 
+Please <span style="color:#66d9ef">select</span> the redis log file name <span style="color:#f92672">[</span>/var/log/redis_7000.log<span style="color:#f92672">]</span> 
 Selected default - /var/log/redis_7000.log
-Please select the data directory for this instance [/var/lib/redis/7000] 
+Please <span style="color:#66d9ef">select</span> the data directory <span style="color:#66d9ef">for</span> this instance <span style="color:#f92672">[</span>/var/lib/redis/7000<span style="color:#f92672">]</span> 
 Selected default - /var/lib/redis/7000
-Please select the redis executable path [/usr/bin/redis-server] 
+Please <span style="color:#66d9ef">select</span> the redis executable path <span style="color:#f92672">[</span>/usr/bin/redis-server<span style="color:#f92672">]</span> 
 Selected config:
-Port           : 7000
+Port           : <span style="color:#ae81ff">7000</span>
 Config file    : /etc/redis/7000.conf
 Log file       : /var/log/redis_7000.log
 Data dir       : /var/lib/redis/7000
 Executable     : /usr/bin/redis-server
 Cli Executable : /usr/bin/redis-cli
 Is this ok? Then press ENTER to go on or Ctrl-C to abort.
-</code></pre>
-
-<p><strong>Примечание.</strong> Этот скрипт не только создает конфиги, но и генерирует init-скрипты (вида <code>/etc/init.d/redis_&lt;номер_порта&gt;</code>) для запуска/остановки процессов Redis.</p>
-
+</code></pre></div><p><strong>Примечание.</strong> Этот скрипт не только создает конфиги, но и генерирует init-скрипты (вида <code>/etc/init.d/redis_&lt;номер_порта&gt;</code>) для запуска/остановки процессов Redis.</p>
 <p>Для <strong>создания Redis Cluster</strong> нам все же потребуется немного подправить сгенерированные конфиги. Для этого:</p>
-
 <ul>
-<li><p>останавливаем все запущенные процессы Redis:</p>
-
-<pre><code class="language-bash">/etc/init.d/redis_&lt;номер_порта&gt; stop
-</code></pre></li>
-
-<li><p>переходим в каталог <code>/etc/redis/</code>:</p>
-
-<pre><code class="language-bash">cd /etc/redis/
-</code></pre></li>
-
-<li><p>в сгенерированных конфигах изменяем значения параметров на следующие:</p>
-
-<pre><code class="language-text">appendonly yes
+<li>останавливаем все запущенные процессы Redis:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/redis_&lt;номер_порта&gt; stop
+</code></pre></div><ul>
+<li>переходим в каталог <code>/etc/redis/</code>:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /etc/redis/
+</code></pre></div><ul>
+<li>в сгенерированных конфигах изменяем значения параметров на следующие:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">appendonly yes
 ...
 cluster-enabled yes
 ...
 cluster-config-file nodes.conf
 ...
 cluster-node-timeout 5000
-</code></pre></li>
-</ul>
-
-<p><strong>Примечание.</strong> С помощью параметра <code>bind</code> можно указать IP-адрес, на котором Redis будет ожидать соединения. Начиная с версии 2.8 есть возможность указывать несколько IP-адресов через пробел.</p>
-
+</code></pre></div><p><strong>Примечание.</strong> С помощью параметра <code>bind</code> можно указать IP-адрес, на котором Redis будет ожидать соединения. Начиная с версии 2.8 есть возможность указывать несколько IP-адресов через пробел.</p>
 <ul>
-<li><p>запускаем процессы Redis:</p>
-
-<pre><code class="language-bash">/etc/init.d/redis_&lt;номер_порта&gt; start
-</code></pre></li>
+<li>запускаем процессы Redis:</li>
 </ul>
-
-<p>Убедиться, что все процессы Redis запущены, можно командой:</p>
-
-<pre><code class="language-bash">ps ax | grep redis
-</code></pre>
-
-<p>Приступаем к созданию кластера — воспользуемся скриптом <code>../redis-3.0.3/src/redis-trib.rb</code> из архива с исходниками.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/redis_&lt;номер_порта&gt; start
+</code></pre></div><p>Убедиться, что все процессы Redis запущены, можно командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps ax | grep redis
+</code></pre></div><p>Приступаем к созданию кластера — воспользуемся скриптом <code>../redis-3.0.3/src/redis-trib.rb</code> из архива с исходниками.</p>
 <ul>
-<li><p><strong>создание Redis Cluster</strong> из отдельных инстансов:</p>
-
-<pre><code class="language-bash">./redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
-</code></pre></li>
+<li><strong>создание Redis Cluster</strong> из отдельных инстансов:</li>
 </ul>
-
-<p>Скрипт <code>redis-trib</code> предложит конфигурацию кластера и попросит с ней согласиться (ввести yes):</p>
-
-<pre><code class="language-bash">./redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./redis-trib.rb create --replicas <span style="color:#ae81ff">1</span> 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
+</code></pre></div><p>Скрипт <code>redis-trib</code> предложит конфигурацию кластера и попросит с ней согласиться (ввести yes):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./redis-trib.rb create --replicas <span style="color:#ae81ff">1</span> 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005
 &gt;&gt;&gt; Creating cluster
 Connecting to node 127.0.0.1:7000: OK
 Connecting to node 127.0.0.1:7001: OK
@@ -217,8 +188,8 @@ Connecting to node 127.0.0.1:7002: OK
 Connecting to node 127.0.0.1:7003: OK
 Connecting to node 127.0.0.1:7004: OK
 Connecting to node 127.0.0.1:7005: OK
-&gt;&gt;&gt; Performing hash slots allocation on 6 nodes...
-Using 3 masters:
+&gt;&gt;&gt; Performing hash slots allocation on <span style="color:#ae81ff">6</span> nodes...
+Using <span style="color:#ae81ff">3</span> masters:
 127.0.0.1:7000
 127.0.0.1:7001
 127.0.0.1:7002
@@ -226,101 +197,74 @@ Adding replica 127.0.0.1:7003 to 127.0.0.1:7000
 Adding replica 127.0.0.1:7004 to 127.0.0.1:7001
 Adding replica 127.0.0.1:7005 to 127.0.0.1:7002
 M: 27474fd9d23ed041242d9fd6a4b39e261a277f85 127.0.0.1:7000
-   slots:0-5460 (5461 slots) master
+   slots:0-5460 <span style="color:#f92672">(</span><span style="color:#ae81ff">5461</span> slots<span style="color:#f92672">)</span> master
 M: 45a4d11345a2389f853d0c052b131d8973012b13 127.0.0.1:7001
-   slots:5461-10922 (5462 slots) master
+   slots:5461-10922 <span style="color:#f92672">(</span><span style="color:#ae81ff">5462</span> slots<span style="color:#f92672">)</span> master
 M: 4e658e187c05ce6fd45b307aee45a83d2515f6d5 127.0.0.1:7002
-   slots:10923-16383 (5461 slots) master
+   slots:10923-16383 <span style="color:#f92672">(</span><span style="color:#ae81ff">5461</span> slots<span style="color:#f92672">)</span> master
 S: 37a55337a516424393207f8c94bc89af63f3e3f5 127.0.0.1:7003
    replicates 27474fd9d23ed041242d9fd6a4b39e261a277f85
 S: af22eaa5f3f8fb2742d3d9dc643a31810d54ba83 127.0.0.1:7004
    replicates 45a4d11345a2389f853d0c052b131d8973012b13
 S: f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98 127.0.0.1:7005
    replicates 4e658e187c05ce6fd45b307aee45a83d2515f6d5
-Can I set the above configuration? (type 'yes' to accept):
-</code></pre>
-
-<p>После подтверждения конфигурации <strong>Redis Cluster будет настроен</strong>, ноды(инстансы) будут объединены и начнут общаться друг с другом:</p>
-
-<pre><code class="language-bash">&gt;&gt;&gt; Nodes configuration updated
+Can I set the above configuration? <span style="color:#f92672">(</span>type <span style="color:#e6db74">&#39;yes&#39;</span> to accept<span style="color:#f92672">)</span>:
+</code></pre></div><p>После подтверждения конфигурации <strong>Redis Cluster будет настроен</strong>, ноды(инстансы) будут объединены и начнут общаться друг с другом:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">&gt;&gt;&gt; Nodes configuration updated
 &gt;&gt;&gt; Assign a different config epoch to each node
 &gt;&gt;&gt; Sending CLUSTER MEET messages to join the cluster
-Waiting for the cluster to join.
-&gt;&gt;&gt; Performing Cluster Check (using node 127.0.0.1:7000)
+Waiting <span style="color:#66d9ef">for</span> the cluster to join.
+&gt;&gt;&gt; Performing Cluster Check <span style="color:#f92672">(</span>using node 127.0.0.1:7000<span style="color:#f92672">)</span>
 M: 27474fd9d23ed041242d9fd6a4b39e261a277f85 127.0.0.1:7000
-   slots:0-5460 (5461 slots) master
+   slots:0-5460 <span style="color:#f92672">(</span><span style="color:#ae81ff">5461</span> slots<span style="color:#f92672">)</span> master
 M: 45a4d11345a2389f853d0c052b131d8973012b13 127.0.0.1:7001
-   slots:5461-10922 (5462 slots) master
+   slots:5461-10922 <span style="color:#f92672">(</span><span style="color:#ae81ff">5462</span> slots<span style="color:#f92672">)</span> master
 M: 4e658e187c05ce6fd45b307aee45a83d2515f6d5 127.0.0.1:7002
-   slots:10923-16383 (5461 slots) master
+   slots:10923-16383 <span style="color:#f92672">(</span><span style="color:#ae81ff">5461</span> slots<span style="color:#f92672">)</span> master
 M: 37a55337a516424393207f8c94bc89af63f3e3f5 127.0.0.1:7003
-   slots: (0 slots) master
+   slots: <span style="color:#f92672">(</span><span style="color:#ae81ff">0</span> slots<span style="color:#f92672">)</span> master
    replicates 27474fd9d23ed041242d9fd6a4b39e261a277f85
 M: af22eaa5f3f8fb2742d3d9dc643a31810d54ba83 127.0.0.1:7004
-   slots: (0 slots) master
+   slots: <span style="color:#f92672">(</span><span style="color:#ae81ff">0</span> slots<span style="color:#f92672">)</span> master
    replicates 45a4d11345a2389f853d0c052b131d8973012b13
 M: f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98 127.0.0.1:7005
-   slots: (0 slots) master
+   slots: <span style="color:#f92672">(</span><span style="color:#ae81ff">0</span> slots<span style="color:#f92672">)</span> master
    replicates 4e658e187c05ce6fd45b307aee45a83d2515f6d5
-[OK] All nodes agree about slots configuration.
-&gt;&gt;&gt; Check for open slots...
+<span style="color:#f92672">[</span>OK<span style="color:#f92672">]</span> All nodes agree about slots configuration.
+&gt;&gt;&gt; Check <span style="color:#66d9ef">for</span> open slots...
 &gt;&gt;&gt; Check slots coverage...
-[OK] All 16384 slots covered.
-</code></pre>
-
-<p>Redis создает 16384 слота и равномерно их распределяет по нодам-мастерам. Проверить распределение можно командой:</p>
-
-<pre><code class="language-bash">redis-cli -p 7000 cluster nodes | grep master
-</code></pre>
-
-<p>Проверить работу созданного кластера можно с помощью <code>redis-cli</code>:</p>
-
-<pre><code class="language-bash">redis-cli -c -p 7000
+<span style="color:#f92672">[</span>OK<span style="color:#f92672">]</span> All <span style="color:#ae81ff">16384</span> slots covered.
+</code></pre></div><p>Redis создает 16384 слота и равномерно их распределяет по нодам-мастерам. Проверить распределение можно командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">redis-cli -p <span style="color:#ae81ff">7000</span> cluster nodes | grep master
+</code></pre></div><p>Проверить работу созданного кластера можно с помощью <code>redis-cli</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">redis-cli -c -p <span style="color:#ae81ff">7000</span>
 redis 127.0.0.1:7000&gt; set foo bar
--&gt; Redirected to slot [12182] located at 127.0.0.1:7002
+-&gt; Redirected to slot <span style="color:#f92672">[</span>12182<span style="color:#f92672">]</span> located at 127.0.0.1:7002
 OK
 redis 127.0.0.1:7002&gt; set hello world
--&gt; Redirected to slot [866] located at 127.0.0.1:7000
+-&gt; Redirected to slot <span style="color:#f92672">[</span>866<span style="color:#f92672">]</span> located at 127.0.0.1:7000
 OK
 redis 127.0.0.1:7000&gt; get foo
--&gt; Redirected to slot [12182] located at 127.0.0.1:7002
-&quot;bar&quot;
+-&gt; Redirected to slot <span style="color:#f92672">[</span>12182<span style="color:#f92672">]</span> located at 127.0.0.1:7002
+<span style="color:#e6db74">&#34;bar&#34;</span>
 redis 127.0.0.1:7000&gt; get hello
--&gt; Redirected to slot [866] located at 127.0.0.1:7000
-&quot;world&quot;
-</code></pre>
-
-<p>Для <strong>добавления новой ноды в Redis Cluster</strong> выполняем следующие шаги:</p>
-
+-&gt; Redirected to slot <span style="color:#f92672">[</span>866<span style="color:#f92672">]</span> located at 127.0.0.1:7000
+<span style="color:#e6db74">&#34;world&#34;</span>
+</code></pre></div><p>Для <strong>добавления новой ноды в Redis Cluster</strong> выполняем следующие шаги:</p>
 <ul>
 <li>генерируем конфиг с помощью скрипта <code>../redis-3.0.3/utils/install_server.sh</code> из архива с исходниками;</li>
 <li>вносим необходимые правки в сгенерированный конфиг, запускаем новый процесс Redis;</li>
-
-<li><p>используем <code>redis-trib</code> со следующими параметрами:</p>
-
-<pre><code class="language-bash">./redis-trib.rb add-node 127.0.0.1:7006 127.0.0.1:7000
-</code></pre></li>
+<li>используем <code>redis-trib</code> со следующими параметрами:</li>
 </ul>
-
-<p><strong>Примечание.</strong> Параметр 127.0.0.1:7006 — это новая созданная нода, параметр 127.0.0.1:7000 — уже созданный ранее кластер.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./redis-trib.rb add-node 127.0.0.1:7006 127.0.0.1:7000
+</code></pre></div><p><strong>Примечание.</strong> Параметр 127.0.0.1:7006 — это новая созданная нода, параметр 127.0.0.1:7000 — уже созданный ранее кластер.</p>
 <p>В примере выше новая нода будет добавлена в кластер в роли мастера. Для того, чтобы добавить в кластер ноду в роли слейва, необходимо указать дополнительный ключ <code>--slave</code>, например:</p>
-
-<pre><code class="language-bash">./redis-trib.rb add-node --slave 127.0.0.1:7006 127.0.0.1:7000
-</code></pre>
-
-<p>В этом случае новая нода будет добавлена в кластер как слейв к случайно выбранному мастеру. Добавить ноду в роли слейва к конкретному мастеру можно указав <code>--master-id</code> мастера:</p>
-
-<pre><code class="language-bash">./redis-trib.rb add-node --slave --master-id 27474fd9d23ed041242d9fd6a4b39e261a277f85 127.0.0.1:7006 127.0.0.1:7000
-</code></pre>
-
-<p>Для удаления ноды из Redis Cluster воспользуемся следующей командой:</p>
-
-<pre><code class="language-bash">./redis-trib del-node 127.0.0.1:7000 f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98
-</code></pre>
-
-<p><strong>Примечание.</strong> Параметр 127.0.0.1:7000 — созданный кластер, f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98 — id ноды для удаления</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./redis-trib.rb add-node --slave 127.0.0.1:7006 127.0.0.1:7000
+</code></pre></div><p>В этом случае новая нода будет добавлена в кластер как слейв к случайно выбранному мастеру. Добавить ноду в роли слейва к конкретному мастеру можно указав <code>--master-id</code> мастера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./redis-trib.rb add-node --slave --master-id 27474fd9d23ed041242d9fd6a4b39e261a277f85 127.0.0.1:7006 127.0.0.1:7000
+</code></pre></div><p>Для удаления ноды из Redis Cluster воспользуемся следующей командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./redis-trib del-node 127.0.0.1:7000 f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98
+</code></pre></div><p><strong>Примечание.</strong> Параметр 127.0.0.1:7000 — созданный кластер, f415cfc8b90861f5e0ccb7f2a15dccd525d1aa98 — id ноды для удаления</p>
 <p>На этом <strong>установка и настройка Redis Cluster в Debian Wheezy</strong> закончена, в следующей статье рассмотрим <a href="https://ealebed.github.io/posts/2015/redis-cluster-%D0%B2-debian-wheezy-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D1%8F-%D0%B8-%D1%80%D0%B5%D1%88%D0%B0%D1%80%D0%B4%D0%B8%D0%BD%D0%B3/">миграцию слотов между нодами и решардинг</a>.</p>
                 </section>
             </article>
@@ -363,23 +307,23 @@ redis 127.0.0.1:7000&gt; get hello
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>kipmi0: что за зверь? &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,28 +90,17 @@
                 </header>
                 <section id="post-body">
                     <p>С недавних пор на сервере с ОС Debian Wheezy процесс <code>kipmi0</code> загружает на 100% одно ядро процессора. Давайте разберемся!</p>
-
 <p>Процесс <code>kipmi0</code> может на 100% загружать одно из ядер процессора в случае если IPMI (Intelligent Platform Management Interface) устройство занято или не отвечает. Таким устройством в нашем случае может быть BMC (Baseboard Management Controller) или IMM (Integrated Management Controller).</p>
-
 <p>В на сайте поддержки IBM <a href="http://www-01.ibm.com/support/docview.wss?uid=nas7d580df3d15874988862575fa0050f604">пишут</a>, что это нормальная ситуация и увеличение утилизации процессора можно игнорировать. Также указано, что проблема может исчезнуть после перезагрузки, но не всегда есть возможность перезагрузить сервер.</p>
-
 <p>Устранить процесс «классическим» способом (<code>kill</code>, <code>pkill</code>, <code>kill -9</code>, …) не получается, но решение все же есть. Сама проблема происходит от двух модулей ядра (<code>ipmi_si</code> и <code>ipmi_msghandler</code>), которые используются пакетом <code>lm-sensors</code>.</p>
-
 <p>Проверить, загружены ли модули можно командой:</p>
-
 <pre><code>lsmod | grep ipmi
 ipmi_si                36954  0
 ipmi_msghandler        35965  1 ipmi_si
-</code></pre>
-
-<p>Далее выполняем:</p>
-
+</code></pre><p>Далее выполняем:</p>
 <pre><code>rmmod ipmi_si
 rmmod ipmi_msghandler
-</code></pre>
-
-<p>Можно также отключить загрузку модуля <code>ipmi_si</code> в конфигурационном файле <code>/etc/modules</code>, закомментировав соответствующую строку:</p>
-
+</code></pre><p>Можно также отключить загрузку модуля <code>ipmi_si</code> в конфигурационном файле <code>/etc/modules</code>, закомментировав соответствующую строку:</p>
 <pre><code># /etc/modules: kernel modules to load at boot time.
 #
 # This file contains the names of kernel modules that should be loaded
@@ -116,25 +116,13 @@ loop
 adm1021
 bonding
 drbd
-</code></pre>
-
-<p>После внесения изменений перезапускаем <code>lm-sensors</code>:</p>
-
+</code></pre><p>После внесения изменений перезапускаем <code>lm-sensors</code>:</p>
 <pre><code>/etc/init.d/lm-sensors restart
-</code></pre>
-
-<p>Существует еще один вариант решения проблемы — внимательно ознакомиться с <a href="https://www.kernel.org/doc/Documentation/IPMI.txt">документацией IPMI</a> и изменить параметр <code>kipmid_max_busy_us</code> в соответствии с вашими нуждами. В моем случае достаточно выполнить следующую команду:</p>
-
+</code></pre><p>Существует еще один вариант решения проблемы — внимательно ознакомиться с <a href="https://www.kernel.org/doc/Documentation/IPMI.txt">документацией IPMI</a> и изменить параметр <code>kipmid_max_busy_us</code> в соответствии с вашими нуждами. В моем случае достаточно выполнить следующую команду:</p>
 <pre><code>echo 100 &gt; /sys/module/ipmi_si/parameters/kipmid_max_busy_us
-</code></pre>
-
-<p>Для того, чтобы это значение не изменилось после перезагрузки сервера, в каталоге <code>/etc/modprobe.d/</code> создаем файл <code>ipmi.conf</code>:</p>
-
+</code></pre><p>Для того, чтобы это значение не изменилось после перезагрузки сервера, в каталоге <code>/etc/modprobe.d/</code> создаем файл <code>ipmi.conf</code>:</p>
 <pre><code>touch /etc/modprobe.d/ipmi.conf
-</code></pre>
-
-<p>Содержимое файла будет следующим:</p>
-
+</code></pre><p>Содержимое файла будет следующим:</p>
 <pre><code># Prevent kipmi0 from consuming 100% CPU
  
 options ipmi_si kipmid_max_busy_us=100
@@ -180,23 +168,23 @@ options ipmi_si kipmid_max_busy_us=100
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

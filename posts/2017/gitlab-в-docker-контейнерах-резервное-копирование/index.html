@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Gitlab в docker-контейнерах: резервное копирование &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,72 +92,37 @@
                 </header>
                 <section id="post-body">
                     <p>Мы уже умеем запускать <a href="https://ealebed.github.io/posts/2017/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/"><strong>Gitlab</strong> со всеми необходимыми компонентами в docker-контейнерах</a> с помощью <code>docker-compose</code> и в полной мере оценили всю гибкость использования для этой цели контейнеров от <a href="https://github.com/sameersbn/docker-gitlab">sameersbn</a>.</p>
-
 <p>Однако ранее мы не упоминали о весьма важном процессе — <strong>создании бекапов Gitlab</strong>. Давайте разберемся <strong>резервным копированием Gitlab</strong> в docker-контейнерах!</p>
-
 <p>При создании резервных копий Gitlab бекапятся все git-репозитории, загруженные файлы и база данных. SSH-ключи не бекапятся, следует помнить об этом!</p>
-
 <p>По умолчанию резервные копии сохраняются в каталоге <code>/home/git/data/backups</code> внутри контейнера. Так как в этой статье мы монтируем каталог <code>/srv/gitlab/data</code> с хост-машины в каталог <code>/home/git/data</code> внутри контейнера, то на хост-машине резервные копии можно увидеть в папке <code>/srv/gitlab/data/backups</code>.</p>
-
 <p>Создание резервной копии вручную выполняется в два этапа. Прежде всего, следует убедиться, что контейнер с именем gitlab остановлен и удален:</p>
-
-<pre><code class="language-bash">docker stop gitlab &amp;&amp; docker rm gitlab
-</code></pre>
-
-<p>задача для создания бекапа запускается следующей командой:</p>
-
-<pre><code class="language-bash">docker run --name gitlab -it --rm [OPTIONS] \
-    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:create
-</code></pre>
-
-<p>При использовании утилиты <code>docker-compose</code>, последнюю команду можно заменить на:</p>
-
-<pre><code class="language-bash">docker-compose run --rm gitlab app:rake gitlab:backup:create
-</code></pre>
-
-<p>Развертывание бекапа требует чуть больше действий, но не должно вызывать вопросов. Убеждаемся, что контейнер с именем gitlab остановлен и удален:</p>
-
-<pre><code class="language-bash">docker stop gitlab &amp;&amp; docker rm gitlab
-</code></pre>
-
-<p>Инициализируем базу данных:</p>
-
-<pre><code class="language-bash">docker run --name gitlab -it --rm [OPTIONS] \
-    sameersbn/gitlab:9.1.0-1 app:rake db:setup
-</code></pre>
-
-<p>Смотрим список доступных бекапов для восстановления:</p>
-
-<pre><code class="language-bash">docker run --name gitlab -it --rm [OPTIONS] \
-    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:restore
-</code></pre>
-
-<p>Восстанавливаемся из резервной копии (с помощью аргумента <code>BACKUP</code> указываем таймстамп интересующего нас бекапа):</p>
-
-<pre><code class="language-bash">docker run --name gitlab -it --rm [OPTIONS] \
-    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:restore BACKUP=1417624827
-</code></pre>
-
-<p>С <code>docker-compose</code>, последние две команды будут выглядеть так:</p>
-
-<pre><code class="language-bash">docker-compose run --rm gitlab app:rake gitlab:backup:restore
-</code></pre>
-
-<pre><code class="language-bash">docker-compose run --rm gitlab app:rake gitlab:backup:restore BACKUP=1417624827
-</code></pre>
-
-<p>Создание резервных копий вручную — не самый удобный и правильный способ, который может быть полезен разве что при переносе Gitlab на другой хост. В реальном мире используется автоматическое резервное копирование.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stop gitlab <span style="color:#f92672">&amp;&amp;</span> docker rm gitlab
+</code></pre></div><p>задача для создания бекапа запускается следующей командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:create
+</code></pre></div><p>При использовании утилиты <code>docker-compose</code>, последнюю команду можно заменить на:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose run --rm gitlab app:rake gitlab:backup:create
+</code></pre></div><p>Развертывание бекапа требует чуть больше действий, но не должно вызывать вопросов. Убеждаемся, что контейнер с именем gitlab остановлен и удален:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stop gitlab <span style="color:#f92672">&amp;&amp;</span> docker rm gitlab
+</code></pre></div><p>Инициализируем базу данных:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake db:setup
+</code></pre></div><p>Смотрим список доступных бекапов для восстановления:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:restore
+</code></pre></div><p>Восстанавливаемся из резервной копии (с помощью аргумента <code>BACKUP</code> указываем таймстамп интересующего нас бекапа):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:restore BACKUP<span style="color:#f92672">=</span><span style="color:#ae81ff">1417624827</span>
+</code></pre></div><p>С <code>docker-compose</code>, последние две команды будут выглядеть так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose run --rm gitlab app:rake gitlab:backup:restore
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose run --rm gitlab app:rake gitlab:backup:restore BACKUP<span style="color:#f92672">=</span><span style="color:#ae81ff">1417624827</span>
+</code></pre></div><p>Создание резервных копий вручную — не самый удобный и правильный способ, который может быть полезен разве что при переносе Gitlab на другой хост. В реальном мире используется автоматическое резервное копирование.</p>
 <p>Для минимальной конфигурации автоматического создания бекапов достаточно в конфигурационный файл <code>docker-compose.yml</code> добавить две строки:</p>
-
-<pre><code class="language-yaml">...
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
     - GITLAB_BACKUP_SCHEDULE=daily
-    - GITLAB_BACKUP_TIME=03:00
+    - GITLAB_BACKUP_TIME=<span style="color:#ae81ff">03</span>:<span style="color:#ae81ff">00</span>
 ...
-</code></pre>
-
-<p>Эти два параметра позволят создавать ежедневные резервные копии в 3 часа ночи. По умолчанию бекапы хранятся 7 дней, после чего самые старые удаляются из системы, но это можно изменить с помощью параметра <code>GITLAB_BACKUP_EXPIRY</code>.</p>
-
+</code></pre></div><p>Эти два параметра позволят создавать ежедневные резервные копии в 3 часа ночи. По умолчанию бекапы хранятся 7 дней, после чего самые старые удаляются из системы, но это можно изменить с помощью параметра <code>GITLAB_BACKUP_EXPIRY</code>.</p>
 <p>Для хранения резервных копий на AWS (Amazon Web Services) или GCS (Google Cloud Storage) нужно использовать дополнительные опции, подробнее о которых можно почитать <a href="https://github.com/sameersbn/docker-gitlab#creating-backups">здесь</a>.</p>
                 </section>
             </article>
@@ -189,23 +165,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

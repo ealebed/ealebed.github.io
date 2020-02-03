@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №38: Топ-10 опций команды docker run &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Sep 13, 2018 07:02
-                    · 368 words
+                    · 358 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -77,52 +88,55 @@
                 </header>
                 <section id="post-body">
                     <p>Консольная команда <code>docker run</code> имеет около сотни опций, в том числе <code>-d</code>, <code>-i</code>, <code>-t</code>, <code>-v</code> и <code>-w</code>. В данной статье рассмотрим десять наиболее популярных опций, с которыми наверняка придется работать. Давайте разберемся!</p>
-
 <p>Пример команды с опциями, которые будут рассмотрены в данной статье:</p>
-
-<pre><code class="language-bash">docker run \
-  --rm \
-  --detach \
-  --env KEY=VALUE \
-  --ip 10.10.9.75 \
-  --publish 3000:3000 \
-  --volume my_volume \
-  --name my_container \
-  --tty --interactive \
-  --volume /my_volume \
-  --workdir /app \
-  IMAGE bash
-</code></pre>
-
-<p>Начнем с азов. Консольная команда <code>docker run</code> создает из docker-образа контейнер (точнее создает доступный для записи слой поверх слоев, содержащихся в docker-образе) и запускает его (выполняет указанную команду). В общем виде это выглядит так:</p>
-
-<pre><code class="language-bash">docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
-</code></pre>
-
-<p>Команда <code>docker run</code> очень похожа на комбинацию команд <code>docker create ...</code> и <code>docker start ...</code>, подробнее о которых можно узнать в <a href="https://docs.docker.com/engine/reference/commandline/cli/">официальной документации</a>.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --rm <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --detach <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --env KEY<span style="color:#f92672">=</span>VALUE <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --ip 10.10.9.75 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --publish 3000:3000 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --volume my_volume <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --name my_container <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --tty --interactive <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --volume /my_volume <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --workdir /app <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  IMAGE bash
+</code></pre></div><p>Начнем с азов. Консольная команда <code>docker run</code> создает из docker-образа контейнер (точнее создает доступный для записи слой поверх слоев, содержащихся в docker-образе) и запускает его (выполняет указанную команду). В общем виде это выглядит так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> IMAGE <span style="color:#f92672">[</span>COMMAND<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>ARG...<span style="color:#f92672">]</span>
+</code></pre></div><p>Команда <code>docker run</code> очень похожа на комбинацию команд <code>docker create ...</code> и <code>docker start ...</code>, подробнее о которых можно узнать в <a href="https://docs.docker.com/engine/reference/commandline/cli/">официальной документации</a>.</p>
 <p><strong>Топ-10 опций</strong> команды <code>docker run</code> в алфавитном порядке.</p>
-
-<p>1) <code>--detach</code>, <code>-d</code> - по умолчанию, docker-контейнер запускается присоединенным (attached) к стандартным потокам ввода-вывода. Параметр <code>-d</code>, <code>--detach</code> позволяет запускать контейнер в фоне и не выводить на экран содержимое потоков ввода-вывода.</p>
-
-<p>2) <code>--entrypoint</code> - устанавливает или переопределяет используемую по умолчанию команду (и параметры) из docker-образа. Подробнее о <code>Docker ENTRYPOINT</code> можно узнать <a href="https://docs.docker.com/glossary/?term=ENTRYPOINT">здесь</a>.</p>
-
-<p>3) <code>--env</code>, <code>-e</code> - устанавливает переменные окружения в формате пар КЛЮЧ=ЗНАЧЕНИЕ. Если у вас есть список переменных окружения в файле, тогда необходимо использовать опцию <code>--env-file</code>.</p>
-
-<p>4) <code>--ip</code> - назначает docker-контейнеру IP-адрес, например, <code>--ip=10.10.9.75</code>.</p>
-
-<p>5) <code>--name</code> - назначает docker-контейнеру имя (<code>--name my-super-container</code>).</p>
-
-<p>6) <code>--publish</code>, <code>-p</code> или <code>--publish-all</code>, <code>-P</code> - сопоставляет порт(ы) docker-контейнера порту(ам) на хост системе. Стоит отметить, что <code>--publish-all</code> откроет доступ к портам, описанным в Dockerfile с помощью директивы EXPOSE.</p>
-
-<p>7) <code>--rm</code> - автоматически удалить контейнер после завершения его работы (в том числе, при завершении с ошибкой).</p>
-
-<p>8) <code>--tty</code>, <code>-t</code> - назначает псевдо-TTY, подключенный к STDIN контейнера. Зачастую используется с опцией <code>--interactive</code>, <code>-i</code> - например, если вам нужно подключиться к оболочке (bash) внутри docker-контейнера для выполнения каких-то действий.</p>
-
-<p>9) <code>--volume</code>, <code>-v</code> - монтирование тома. Подробнее о томах можно почитать <a href="https://docs.docker.com/engine/reference/commandline/run/#mount-volume--v---read-only">здесь</a>.</p>
-
-<p>10) <code>--workdir</code>, <code>-w</code> - устанавливает рабочую директорию внутри docker-контейнера. Например, если вы скопировали некие файлы в папку <code>app</code> контейнера, то вполне разумно будет установить этот каталог в качестве рабочей директории.</p>
-
+<ol>
+<li>
+<p><code>--detach</code>, <code>-d</code> - по умолчанию, docker-контейнер запускается присоединенным (attached) к стандартным потокам ввода-вывода. Параметр <code>-d</code>, <code>--detach</code> позволяет запускать контейнер в фоне и не выводить на экран содержимое потоков ввода-вывода.</p>
+</li>
+<li>
+<p><code>--entrypoint</code> - устанавливает или переопределяет используемую по умолчанию команду (и параметры) из docker-образа. Подробнее о <code>Docker ENTRYPOINT</code> можно узнать <a href="https://docs.docker.com/glossary/?term=ENTRYPOINT">здесь</a>.</p>
+</li>
+<li>
+<p><code>--env</code>, <code>-e</code> - устанавливает переменные окружения в формате пар КЛЮЧ=ЗНАЧЕНИЕ. Если у вас есть список переменных окружения в файле, тогда необходимо использовать опцию <code>--env-file</code>.</p>
+</li>
+<li>
+<p><code>--ip</code> - назначает docker-контейнеру IP-адрес, например, <code>--ip=10.10.9.75</code>.</p>
+</li>
+<li>
+<p><code>--name</code> - назначает docker-контейнеру имя (<code>--name my-super-container</code>).</p>
+</li>
+<li>
+<p><code>--publish</code>, <code>-p</code> или <code>--publish-all</code>, <code>-P</code> - сопоставляет порт(ы) docker-контейнера порту(ам) на хост системе. Стоит отметить, что <code>--publish-all</code> откроет доступ к портам, описанным в Dockerfile с помощью директивы EXPOSE.</p>
+</li>
+<li>
+<p><code>--rm</code> - автоматически удалить контейнер после завершения его работы (в том числе, при завершении с ошибкой).</p>
+</li>
+<li>
+<p><code>--tty</code>, <code>-t</code> - назначает псевдо-TTY, подключенный к STDIN контейнера. Зачастую используется с опцией <code>--interactive</code>, <code>-i</code> - например, если вам нужно подключиться к оболочке (bash) внутри docker-контейнера для выполнения каких-то действий.</p>
+</li>
+<li>
+<p><code>--volume</code>, <code>-v</code> - монтирование тома. Подробнее о томах можно почитать <a href="https://docs.docker.com/engine/reference/commandline/run/#mount-volume--v---read-only">здесь</a>.</p>
+</li>
+<li>
+<p><code>--workdir</code>, <code>-w</code> - устанавливает рабочую директорию внутри docker-контейнера. Например, если вы скопировали некие файлы в папку <code>app</code> контейнера, то вполне разумно будет установить этот каталог в качестве рабочей директории.</p>
+</li>
+</ol>
 <p>Больше полезных опций команды <code>docker run</code> можно найти в <a href="https://docs.docker.com/engine/reference/commandline/run/">официальной документации</a>.</p>
                 </section>
             </article>
@@ -165,23 +179,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

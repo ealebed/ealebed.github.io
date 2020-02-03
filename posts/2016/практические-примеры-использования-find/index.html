@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Практические примеры использования find &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,156 +88,67 @@
                 </header>
                 <section id="post-body">
                     <p>Утилита <code>find</code> — мощный инструмент для поиска файлов в UNIX-подобных ОС. Давайте рассмотрим конкретные <strong>примеры использования <code>find</code></strong>, которые будут полезны админам с любым опытом!</p>
-
 <p>Начнем с самых простых примеров. Регистрозависимый поиск по имени файла:</p>
-
-<pre><code class="language-bash">find -name &quot;Test_file.txt&quot;
-</code></pre>
-
-<p>Регистронезависимый поиск по имени файла:</p>
-
-<pre><code class="language-bash">find -iname &quot;Test_file.txt&quot;
-</code></pre>
-
-<p>По умолчанию, <code>find</code> выполняет поиск в текущем каталоге и во всех вложенных каталогах. Ограничить «глубину» вложенных директорий можно так:</p>
-
-<pre><code class="language-bash">find / -maxdepth 2 -name passwd
-</code></pre>
-
-<p>или так:</p>
-
-<pre><code class="language-bash">find / -mindepth 2 -maxdepth 4 -name passwd
-</code></pre>
-
-<p>Получить md5sum найденных файлов можно с помощью такой конструкции:</p>
-
-<pre><code class="language-bash">find -iname &quot;Test_file.txt&quot; -exec md5sum {} \;
-</code></pre>
-
-<p>Инверсия поиска по имени файла выглядит так:</p>
-
-<pre><code class="language-bash">find -not -iname &quot;Test_file.txt&quot;
-</code></pre>
-
-<p>Вывод всех файлов, в которых в правах доступа установлен бит чтения для группы:</p>
-
-<pre><code class="language-bash">find . -perm -g=r -type f -exec ls -l {} \;
-</code></pre>
-
-<p>Вывод файлов, в которых в правах доступа установлен ТОЛЬКО бит чтения для группы:</p>
-
-<pre><code class="language-bash">find . -perm g=r -type f -exec ls -l {} \;
-</code></pre>
-
-<p>Тот же пример, но для использования восьмеричной системы счисления:</p>
-
-<pre><code class="language-bash">find . -perm 040 -type f -exec ls -l {} \;
-</code></pre>
-
-<p>Найти файлы и изменить права доступа с 777 на 644:</p>
-
-<pre><code class="language-bash">find / -type f -perm 0777 -print -exec chmod 644 {} \;
-</code></pre>
-
-<p>Найти каталоги и изменить права доступа с 777 на 755:</p>
-
-<pre><code class="language-bash">find / -type d -perm 777 -print -exec chmod 755 {} \;
-</code></pre>
-
-<p>Найти файлы, принадлежащие определенному пользователю:</p>
-
-<pre><code class="language-bash">find / -user admin
-</code></pre>
-
-<p>Найти файлы, принадлежащие определенной группе:</p>
-
-<pre><code class="language-bash">find / -group dev
-</code></pre>
-
-<p>Поиск всех пустых файлов:</p>
-
-<pre><code class="language-bash">find ~ -empty
-</code></pre>
-
-<p>Поиск всех пустых файлов, кроме скрытых (с точкой в начале имени):</p>
-
-<pre><code class="language-bash">find ~ -empty -not -name &quot;.*&quot;
-</code></pre>
-
-<p>Вывод пяти найденных файлов наибольшего размера:</p>
-
-<pre><code class="language-bash">find . -type f -exec ls -s {} \; | sort -n -r | head -5
-</code></pre>
-
-<p>Вывод пяти найденных файлов наименьшего размера (без пустых файлов):</p>
-
-<pre><code class="language-bash">find . -not -empty -type f -exec ls -s {} \; | sort -n  | head -5
-</code></pre>
-
-<p>Поиск по типам файлов. Найти файлы-сокеты:</p>
-
-<pre><code class="language-bash">find . -type s
-</code></pre>
-
-<p>Найти каталоги:</p>
-
-<pre><code class="language-bash">find . -type d
-</code></pre>
-
-<p>Найти обычные файлы:</p>
-
-<pre><code class="language-bash">find . -type f
-</code></pre>
-
-<p>Найти и вывести файлы, которые были созданы ПОСЛЕ указанного:</p>
-
-<pre><code class="language-bash">find -newer &quot;Test_file.txt&quot;
-</code></pre>
-
-<p>Найти файлы больше указанного размера:</p>
-
-<pre><code class="language-bash">find ~ -size +500M
-</code></pre>
-
-<p>Найти файлы меньше указанного размера:</p>
-
-<pre><code class="language-bash">find ~ -size -500M
-</code></pre>
-
-<p>Найти файлы точно соответствующие указанному размеру:</p>
-
-<pre><code class="language-bash">find ~ -size 500M
-</code></pre>
-
-<p>Найти и удалить <code>zip</code>-архивы, занимающие больше 100М:</p>
-
-<pre><code class="language-bash">find / -type f -name *.zip -size +100M -exec rm -i {} \;
-</code></pre>
-
-<p>Найти и удалить <code>zip</code>-архивы старше 7 дней:</p>
-
-<pre><code class="language-bash">find / -type f -name *.zip -mtime +6 -delete
-</code></pre>
-
-<p>Найти файлы, содержимое которых было изменено в течении последнего часа:</p>
-
-<pre><code class="language-bash">find . -mmin -60
-</code></pre>
-
-<p>Найти файлы, содержимое которых было изменено за последние сутки:</p>
-
-<pre><code class="language-bash">find . -mtime -1
-</code></pre>
-
-<p>Найти и заменить пробелы подчеркиваниями в именах файлов:</p>
-
-<pre><code class="language-bash">find . -type f -iname &quot;*.mp3&quot; -exec rename &quot;s/ /_/g&quot; {} \;
-</code></pre>
-
-<p>Найти недавно измененные файлы, отсортированные в обратном порядке (файл, измененный последним, будет первым):</p>
-
-<pre><code class="language-bash">find / -type f -printf '%TY-%Tm-%Td %TT %p\n' | sort -r
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find -name <span style="color:#e6db74">&#34;Test_file.txt&#34;</span>
+</code></pre></div><p>Регистронезависимый поиск по имени файла:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find -iname <span style="color:#e6db74">&#34;Test_file.txt&#34;</span>
+</code></pre></div><p>По умолчанию, <code>find</code> выполняет поиск в текущем каталоге и во всех вложенных каталогах. Ограничить «глубину» вложенных директорий можно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find / -maxdepth <span style="color:#ae81ff">2</span> -name passwd
+</code></pre></div><p>или так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find / -mindepth <span style="color:#ae81ff">2</span> -maxdepth <span style="color:#ae81ff">4</span> -name passwd
+</code></pre></div><p>Получить md5sum найденных файлов можно с помощью такой конструкции:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find -iname <span style="color:#e6db74">&#34;Test_file.txt&#34;</span> -exec md5sum <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span>
+</code></pre></div><p>Инверсия поиска по имени файла выглядит так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find -not -iname <span style="color:#e6db74">&#34;Test_file.txt&#34;</span>
+</code></pre></div><p>Вывод всех файлов, в которых в правах доступа установлен бит чтения для группы:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -perm -g<span style="color:#f92672">=</span>r -type f -exec ls -l <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span>
+</code></pre></div><p>Вывод файлов, в которых в правах доступа установлен ТОЛЬКО бит чтения для группы:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -perm g<span style="color:#f92672">=</span>r -type f -exec ls -l <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span>
+</code></pre></div><p>Тот же пример, но для использования восьмеричной системы счисления:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -perm <span style="color:#ae81ff">040</span> -type f -exec ls -l <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span>
+</code></pre></div><p>Найти файлы и изменить права доступа с 777 на 644:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find / -type f -perm <span style="color:#ae81ff">0777</span> -print -exec chmod <span style="color:#ae81ff">644</span> <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span>
+</code></pre></div><p>Найти каталоги и изменить права доступа с 777 на 755:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find / -type d -perm <span style="color:#ae81ff">777</span> -print -exec chmod <span style="color:#ae81ff">755</span> <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span>
+</code></pre></div><p>Найти файлы, принадлежащие определенному пользователю:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find / -user admin
+</code></pre></div><p>Найти файлы, принадлежащие определенной группе:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find / -group dev
+</code></pre></div><p>Поиск всех пустых файлов:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find ~ -empty
+</code></pre></div><p>Поиск всех пустых файлов, кроме скрытых (с точкой в начале имени):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find ~ -empty -not -name <span style="color:#e6db74">&#34;.*&#34;</span>
+</code></pre></div><p>Вывод пяти найденных файлов наибольшего размера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -type f -exec ls -s <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span> | sort -n -r | head -5
+</code></pre></div><p>Вывод пяти найденных файлов наименьшего размера (без пустых файлов):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -not -empty -type f -exec ls -s <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span> | sort -n  | head -5
+</code></pre></div><p>Поиск по типам файлов. Найти файлы-сокеты:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -type s
+</code></pre></div><p>Найти каталоги:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -type d
+</code></pre></div><p>Найти обычные файлы:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -type f
+</code></pre></div><p>Найти и вывести файлы, которые были созданы ПОСЛЕ указанного:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find -newer <span style="color:#e6db74">&#34;Test_file.txt&#34;</span>
+</code></pre></div><p>Найти файлы больше указанного размера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find ~ -size +500M
+</code></pre></div><p>Найти файлы меньше указанного размера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find ~ -size -500M
+</code></pre></div><p>Найти файлы точно соответствующие указанному размеру:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find ~ -size 500M
+</code></pre></div><p>Найти и удалить <code>zip</code>-архивы, занимающие больше 100М:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find / -type f -name *.zip -size +100M -exec rm -i <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span>
+</code></pre></div><p>Найти и удалить <code>zip</code>-архивы старше 7 дней:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find / -type f -name *.zip -mtime +6 -delete
+</code></pre></div><p>Найти файлы, содержимое которых было изменено в течении последнего часа:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -mmin -60
+</code></pre></div><p>Найти файлы, содержимое которых было изменено за последние сутки:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -mtime -1
+</code></pre></div><p>Найти и заменить пробелы подчеркиваниями в именах файлов:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . -type f -iname <span style="color:#e6db74">&#34;*.mp3&#34;</span> -exec rename <span style="color:#e6db74">&#34;s/ /_/g&#34;</span> <span style="color:#f92672">{</span><span style="color:#f92672">}</span> <span style="color:#ae81ff">\;</span>
+</code></pre></div><p>Найти недавно измененные файлы, отсортированные в обратном порядке (файл, измененный последним, будет первым):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find / -type f -printf <span style="color:#e6db74">&#39;%TY-%Tm-%Td %TT %p\n&#39;</span> | sort -r
+</code></pre></div>
                 </section>
             </article>
 
@@ -268,23 +190,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

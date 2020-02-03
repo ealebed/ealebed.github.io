@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Установка и настройка DNS &#43; DHCP с динамическим обновлением зон в Ubuntu 16.04 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,23 +90,14 @@
                 </header>
                 <section id="post-body">
                     <p>Даже в небольших организациях для упрощения администрирования локальной сети необходимы один или несколько <strong>DNS</strong> (Domain Name System — система доменных имён) и <strong>DHCP</strong> (Dynamic Host Configuration Protocol — протокол динамической настройки узла) серверов.</p>
-
 <p>Давайте рассмотрим процесс <strong>установки DNS и DHCP серверов</strong>, а также разберемся с настройкой динамического обновления DNS-зон в операционной системе Ubuntu 16.04!</p>
-
 <p>Установка DNS-сервера выполняется командой:</p>
-
-<pre><code class="language-bash">sudo apt install bind9
-</code></pre>
-
-<p>DHCP-сервер устанавливаем следующим образом:</p>
-
-<pre><code class="language-bash">sudo apt install isc-dhcp-server
-</code></pre>
-
-<p>Редактируем конфигурационный файл <code>/etc/bind/named.conf.options</code> и приводим его к следующему виду:</p>
-
-<pre><code class="language-text">options {
-    directory &quot;/var/cache/bind&quot;;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt install bind9
+</code></pre></div><p>DHCP-сервер устанавливаем следующим образом:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt install isc-dhcp-server
+</code></pre></div><p>Редактируем конфигурационный файл <code>/etc/bind/named.conf.options</code> и приводим его к следующему виду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">options {
+    directory &#34;/var/cache/bind&#34;;
     listen-on {
         192.168.0.0/22;
         127.0.0.1;
@@ -111,28 +113,18 @@
     auth-nxdomain no;    # conform to RFC1035
     listen-on-v6 { any; };
 };
-</code></pre>
-
-<p>Здесь важными являются директивы <code>forwarders</code> (вышестоящие DNS-сервера, на которые будет переадресован запрос при отсутствии информации о хосте на локальном сервере) и <code>listen-on</code> (с каких сетей или IP адресов локальный DNS-сервер будет обслуживать запросы).</p>
-
+</code></pre></div><p>Здесь важными являются директивы <code>forwarders</code> (вышестоящие DNS-сервера, на которые будет переадресован запрос при отсутствии информации о хосте на локальном сервере) и <code>listen-on</code> (с каких сетей или IP адресов локальный DNS-сервер будет обслуживать запросы).</p>
 <p>Далее создадим файлы зон (прямого и обратного просмотра) и добавить их в конфигурацию DNS-сервера. По умолчанию предлагается создавать файлы зон в каталоге <code>/etc/bind/zones/</code>, но в будущем это вызовет проблемы с их динамическим обновлением, поэтому мы будем создавать файлы зон в папке <code>/var/lib/bind/</code>.</p>
-
 <p>Исходные данные для создания зон:</p>
-
 <ul>
 <li>имя домена — <code>lc</code>;</li>
 <li>имя DNS-сервера — <code>ns.lc</code>;</li>
 <li>ip-адрес DNS-сервера — <code>192.168.0.218</code>.</li>
 </ul>
-
 <p>Создаем файл зоны прямого просмотра:</p>
-
-<pre><code class="language-bash">touch /var/lib/bind/db.lc
-</code></pre>
-
-<p>Содержимое файла следующее:</p>
-
-<pre><code class="language-text">$TTL 604800     ; 1 week
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch /var/lib/bind/db.lc
+</code></pre></div><p>Содержимое файла следующее:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$TTL 604800     ; 1 week
 @          IN            SOA      ns.lc. root.ns.lc. (
                                 201703271  ; serial
                                 604800     ; refresh (1 week)
@@ -153,16 +145,10 @@ router 				IN    A    192.168.0.1
 zabbix				IN    A    192.168.0.3
 grafana				IN    A    192.168.0.3
 e-lebed				IN    A    192.168.0.80
-</code></pre>
-
-<p>Создаем файл зоны обратного просмотра:</p>
-
-<pre><code class="language-bash">touch /var/lib/bind/db.192.168.0
-</code></pre>
-
-<p>Содержимое файла выглядит следующим образом:</p>
-
-<pre><code class="language-text">$TTL 604800     ; 1 week
+</code></pre></div><p>Создаем файл зоны обратного просмотра:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch /var/lib/bind/db.192.168.0
+</code></pre></div><p>Содержимое файла выглядит следующим образом:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$TTL 604800     ; 1 week
 @  IN  SOA    ns.lc. root.ns.lc. (
                                 201703271 ; serial
                                 604800    ; refresh (1 week)
@@ -184,57 +170,40 @@ e-lebed				IN    A    192.168.0.80
 3		IN    PTR    zabbix.lc.
 3		IN    PTR    grafana.lc.
 1		IN    PTR    router.lc.
-</code></pre>
-
-<p>Добавляем ссылки на только что созданные зоны в конфигурационный файл <code>/etc/bind/named.conf.local</code>:</p>
-
-<pre><code class="language-text">...
-zone &quot;lc&quot; {
+</code></pre></div><p>Добавляем ссылки на только что созданные зоны в конфигурационный файл <code>/etc/bind/named.conf.local</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
+zone &#34;lc&#34; {
     type master;
-    file &quot;/var/lib/bind/db.lc&quot;;
+    file &#34;/var/lib/bind/db.lc&#34;;
     allow-update { key rndc-key; };
 };
  
-zone &quot;0.168.192.in-addr.arpa&quot; {
+zone &#34;0.168.192.in-addr.arpa&#34; {
     type master;
-    file &quot;/var/lib/bind/db.192.168.0&quot;;
+    file &#34;/var/lib/bind/db.192.168.0&#34;;
     allow-update { key rndc-key; };
 };
 ...
-</code></pre>
-
-<p>Здесь именно благодаря строке <code>allow-update { key rndc-key; };</code> будет возможно динамическое обновление зон.</p>
-
+</code></pre></div><p>Здесь именно благодаря строке <code>allow-update { key rndc-key; };</code> будет возможно динамическое обновление зон.</p>
 <p>Можно просмотреть содержимое файла <code>rndc-key</code>:</p>
-
-<pre><code class="language-bash">cat rndc.key 
-key &quot;rndc-key&quot; {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat rndc.key 
+key <span style="color:#e6db74">&#34;rndc-key&#34;</span> <span style="color:#f92672">{</span>
     algorithm hmac-md5;
-    secret &quot;/NjKY+BwOtgxBbpsmAp0Cg==&quot;;
-};
-</code></pre>
-
-<p>Теперь проверим правильность синтаксиса конфигурационных файлов DNS-сервера:</p>
-
-<pre><code class="language-bash">named-checkconf
-</code></pre>
-
-<p>Если все выполнено правильно, то вывод этой команды должен быть пуст.</p>
-
+    secret <span style="color:#e6db74">&#34;/NjKY+BwOtgxBbpsmAp0Cg==&#34;</span>;
+<span style="color:#f92672">}</span>;
+</code></pre></div><p>Теперь проверим правильность синтаксиса конфигурационных файлов DNS-сервера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">named-checkconf
+</code></pre></div><p>Если все выполнено правильно, то вывод этой команды должен быть пуст.</p>
 <p>Перезапускаем DNS-сервер командой:</p>
-
-<pre><code class="language-bash">/etc/init.d/bind9 restart
-</code></pre>
-
-<p>Далее приступаем к настройке DHCP-сервера, приводим конфигурационный файл <code>/etc/dhcp/dhcpd.conf</code> к следующему виду:</p>
-
-<pre><code class="language-text">ddns-updates on;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/bind9 restart
+</code></pre></div><p>Далее приступаем к настройке DHCP-сервера, приводим конфигурационный файл <code>/etc/dhcp/dhcpd.conf</code> к следующему виду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">ddns-updates on;
 ddns-update-style interim;
 update-static-leases on;
  
 key rndc-key {
         algorithm hmac-md5;
-        secret &quot;/NjKY+BwOtgxBbpsmAp0Cg==&quot;;
+        secret &#34;/NjKY+BwOtgxBbpsmAp0Cg==&#34;;
 }
  
 zone lc. {
@@ -253,7 +222,7 @@ log-facility local7;
 subnet 192.168.0.0 netmask 255.255.252.0 {
     range 192.168.0.100 192.168.0.199;
     option domain-name-servers 192.168.0.218;
-    option domain-name &quot;lc&quot;;
+    option domain-name &#34;lc&#34;;
     option routers 192.168.0.1;
     option broadcast-address 192.168.3.255;
     default-lease-time 604800;
@@ -264,32 +233,20 @@ host e-lebed {
     hardware ethernet 90:2b:34:ac:3a:d2;
     fixed-address 192.168.0.80;
 }
-</code></pre>
-
-<p>Для применения изменений перезапускаем службу DHCP:</p>
-
-<pre><code class="language-bash">/etc/init.d/isc-dhcp-server restart
-</code></pre>
-
-<p>или</p>
-
-<pre><code class="language-bash">service isc-dhcp-server restart
-</code></pre>
-
-<p>Теперь, при появлении нового компьютера в локальной сети, DHCP-сервер выдаст ему свободный ip-адрес из определенного диапазона и обновит DNS-зоны (при этом в каталоге с зонами также будут созданы два файла с расширением <code>.jnl</code>).</p>
-
+</code></pre></div><p>Для применения изменений перезапускаем службу DHCP:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/isc-dhcp-server restart
+</code></pre></div><p>или</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service isc-dhcp-server restart
+</code></pre></div><p>Теперь, при появлении нового компьютера в локальной сети, DHCP-сервер выдаст ему свободный ip-адрес из определенного диапазона и обновит DNS-зоны (при этом в каталоге с зонами также будут созданы два файла с расширением <code>.jnl</code>).</p>
 <p>Если бы мы создавали файлы зон в каталоге по умолчанию (<code>/etc/bind/zones/</code>), то столкнулись бы со следующими ошибками в логах:</p>
-
-<pre><code class="language-text">...
-Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: signer &quot;rndc-key&quot; approved
-Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone 'lc/IN': adding an RR at 'Olesya.lc' A 192.168.0.142
-Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone 'lc/IN': adding an RR at 'Olesya.lc' TXT &quot;31863aeb2d49662304b5e70f4d291ca2c4&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
+Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: signer &#34;rndc-key&#34; approved
+Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone &#39;lc/IN&#39;: adding an RR at &#39;Olesya.lc&#39; A 192.168.0.142
+Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone &#39;lc/IN&#39;: adding an RR at &#39;Olesya.lc&#39; TXT &#34;31863aeb2d49662304b5e70f4d291ca2c4&#34;
 Mar 28 05:45:07 labs named[16662]: /etc/bind/zones/db.lc.jnl: create: permission denied
-Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone 'lc/IN': error: journal open failed: unexpected error
+Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone &#39;lc/IN&#39;: error: journal open failed: unexpected error
 ...
-</code></pre>
-
-<p>На этом все, <strong>установка и настройка DNS и DHCP серверов с динамическим обновлением зон</strong> в Ubuntu 16.04 закончена.</p>
+</code></pre></div><p>На этом все, <strong>установка и настройка DNS и DHCP серверов с динамическим обновлением зон</strong> в Ubuntu 16.04 закончена.</p>
                 </section>
             </article>
 
@@ -331,23 +288,23 @@ Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: upda
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

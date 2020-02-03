@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Failover заданий в Gearman &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,17 +88,13 @@
                 </header>
                 <section id="post-body">
                     <p>Менеджер очередей <strong>Gearman</strong> по умолчанию хранит список заданий в оперативной памяти — при перезагрузке или сбое питания сервера они будут утеряны. Давайте разберемся как избежать этого!</p>
-
 <p>Для предотвращения потерь заданий при сбоях <strong>Gearman</strong> может использовать постоянное хранилище, например базу данных MySQL (PostgreSQL или SQLite). Схема работы с постоянным хранилищем довольно проста:</p>
-
 <ul>
 <li>при создании задания <strong>Gearman</strong> сохранит его с уникальным идентификатором в хранилище;</li>
 <li>после того, как задание будет выполнено worker’ом, <strong>Gearman</strong> удалит его из хранилища (используя идентификатор);</li>
 <li>после загрузки сервера <strong>Gearman</strong> загружает в очередь задания из хранилища, если таковые имеются.</li>
 </ul>
-
 <p>Для использования базы данных MySQL в качестве постоянного хранилища для заданий <strong>Gearman</strong> необходимо создать отдельную базу данных (или использовать существующую — по вашему желанию) и таблицу следующей структуры:</p>
-
 <pre><code>CREATE TABLE `queue` (
   `unique_key` varchar(64) DEFAULT NULL,
   `function_name` varchar(255) DEFAULT NULL,
@@ -96,22 +103,13 @@
   `when_to_run` bigint(20) DEFAULT NULL,
   UNIQUE KEY `unique_key` (`unique_key`,`function_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
-</code></pre>
-
-<p>За правильное определение «уникальности» задания в таблице <code>queue</code> отвечают <code>unique_key</code> (уникальный идентификатор задания) и <code>function_name</code> (название очереди заданий). После создания таблицы необходимо перезапустить сервер <strong>Gearman</strong>, добавив такие параметры:</p>
-
+</code></pre><p>За правильное определение «уникальности» задания в таблице <code>queue</code> отвечают <code>unique_key</code> (уникальный идентификатор задания) и <code>function_name</code> (название очереди заданий). После создания таблицы необходимо перезапустить сервер <strong>Gearman</strong>, добавив такие параметры:</p>
 <pre><code>gearmand --queue-type=MySQL --mysql-host=localhost --mysql-port=3306 \
          --mysql-user=gearman --mysql-password=&lt;сложный_пароль&gt; \
          --mysql-db=gearman --mysql-table=queue
-</code></pre>
-
-<p>Записи в таблице <code>queue</code> смотрим следующим запросом:</p>
-
+</code></pre><p>Записи в таблице <code>queue</code> смотрим следующим запросом:</p>
 <pre><code>SELECT * FROM queue LIMIT 5;
-</code></pre>
-
-<p>И будут выглядеть примерно так:</p>
-
+</code></pre><p>И будут выглядеть примерно так:</p>
 <pre><code>+--------------------------------------+---------------------+----------+----------+-------------+
 | unique_key                           | function_name       | priority | data     | when_to_run |
 +--------------------------------------+---------------------+----------+----------+-------------+
@@ -122,10 +120,7 @@
 | 0hq6yocr-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&quot;test&quot;] |           0 |
 +--------------------------------------+---------------+----------+----------------+-------------+
 5 rows in set (0.00 sec)
-</code></pre>
-
-<p>При правильной настройке менеджера очередей <strong>Gearman</strong> количество записей в таблице должно стремиться к нулю — worker’ы должны максимально быстро обрабатывать задания из очереди.</p>
-
+</code></pre><p>При правильной настройке менеджера очередей <strong>Gearman</strong> количество записей в таблице должно стремиться к нулю — worker’ы должны максимально быстро обрабатывать задания из очереди.</p>
 <p>Вот таким простым способом можно организовать <strong>failover заданий в сервере очередей Gearman</strong>.</p>
                 </section>
             </article>
@@ -168,23 +163,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Мониторинг Nginx в реальном времени &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,83 +90,57 @@
                 </header>
                 <section id="post-body">
                     <p>Для сбора и отображения метрик веб-сервера Nginx часто используются Munin, Zabbix, Nagios и другие системы мониторинга.</p>
-
 <p>Большинство из них приходится «допиливать» под свои нужды, так как «из коробки» доступно довольно мало информации. Давайте разберемся с утилитой <code>Ngxtop</code> для <strong>мониторинга Nginx в реальном времени</strong>!</p>
-
 <p>Утилита <code>Ngxtop</code> парсит <code>access</code>-логи веб-сервера Nginx и выводит их в консоль в удобном (<code>top-like</code>) виде. Установка выполняется следующим образом:</p>
-
-<pre><code class="language-bash">pip install ngxtop
-</code></pre>
-
-<p>Синтаксис использования утилиты:</p>
-
-<pre><code class="language-bash">ngxtop [options]
-ngxtop [options] (print|top|avg|sum) 
-</code></pre>
-
-<p>Список всех доступных опций можно посмотреть командой:</p>
-
-<pre><code class="language-bash">ngxtop --help
-</code></pre>
-
-<p>По умолчанию, <code>Ngxtop</code> самостоятельно определяет местоположение <code>access</code>-лога Nginx из конфигурационного файла <code>/etc/nginx/nginx.conf</code>. Если таких логов несколько, необходимо будет выбрать с каким именно логом работать:</p>
-
-<pre><code class="language-bash">ngxtop
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pip install ngxtop
+</code></pre></div><p>Синтаксис использования утилиты:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span>
+ngxtop <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span> <span style="color:#f92672">(</span>print|top|avg|sum<span style="color:#f92672">)</span> 
+</code></pre></div><p>Список всех доступных опций можно посмотреть командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop --help
+</code></pre></div><p>По умолчанию, <code>Ngxtop</code> самостоятельно определяет местоположение <code>access</code>-лога Nginx из конфигурационного файла <code>/etc/nginx/nginx.conf</code>. Если таких логов несколько, необходимо будет выбрать с каким именно логом работать:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop
 Multiple access logs detected in configuration:
 1. /var/log/nginx/access502.log
 2. /var/log/nginx/access.api.log
 3. /var/log/nginx/access.img.log
 4. /var/log/nginx/access.log
 5. /var/log/nginx/access404.log
-</code></pre>
-
-<p>Чтобы посмотреть запросы со статусом 404 можно воспользоваться командой:</p>
-
-<pre><code class="language-bash">ngxtop -i 'status == 404' print request status
-</code></pre>
-
-<p>результат выполнения в моем случае выглядит так:</p>
-
-<pre><code class="language-bash">running for 130 seconds, 150 records processed: 1.15 req/sec
+</code></pre></div><p>Чтобы посмотреть запросы со статусом 404 можно воспользоваться командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop -i <span style="color:#e6db74">&#39;status == 404&#39;</span> print request status
+</code></pre></div><p>результат выполнения в моем случае выглядит так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">running <span style="color:#66d9ef">for</span> <span style="color:#ae81ff">130</span> seconds, <span style="color:#ae81ff">150</span> records processed: 1.15 req/sec
 
 request, status:
 |request                                              |   status |
 |-----------------------------------------------------+----------|
-| GET /browserconfig.xml HTTP/1.1                     |  404     |
-| GET /employer/my/archive/2107569/98483600/ HTTP/1.1 |  404     |
-| GET /employer/my/archive/2107569/98483867/ HTTP/1.1 |  404     |
-| GET /jobs/1045534/ HTTP/1.1                         |  404     |
-| GET /jobs/1230564/ HTTP/1.1                         |  404     |
-| GET /jobs/1254320/ HTTP/1.1                         |  404     |
-| GET /jobs/1304769/ HTTP/1.1                         |  404     |
-| GET /jobs/1326496/ HTTP/1.1                         |  404     |
-</code></pre>
-
-<p>Посмотреть IP-адреса, с которых приходит больше всего запросов можно командой:</p>
-
-<pre><code class="language-bash">ngxtop top remote_addr
-</code></pre>
-
-<p>результат выполнения:</p>
-
-<pre><code class="language-bash">running for 8 seconds, 1759 records processed: 217.15 req/sec
+| GET /browserconfig.xml HTTP/1.1                     |  <span style="color:#ae81ff">404</span>     |
+| GET /employer/my/archive/2107569/98483600/ HTTP/1.1 |  <span style="color:#ae81ff">404</span>     |
+| GET /employer/my/archive/2107569/98483867/ HTTP/1.1 |  <span style="color:#ae81ff">404</span>     |
+| GET /jobs/1045534/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+| GET /jobs/1230564/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+| GET /jobs/1254320/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+| GET /jobs/1304769/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+| GET /jobs/1326496/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+</code></pre></div><p>Посмотреть IP-адреса, с которых приходит больше всего запросов можно командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop top remote_addr
+</code></pre></div><p>результат выполнения:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">running <span style="color:#66d9ef">for</span> <span style="color:#ae81ff">8</span> seconds, <span style="color:#ae81ff">1759</span> records processed: 217.15 req/sec
 
 top remote_addr
 | remote_addr     |   count |
 |-----------------+---------|
-| 92.60.184.91    |      45 |
-| 66.249.78.10    |      42 |
-| 77.120.121.122  |      42 |
-| 66.249.89.63    |      28 |
-| 91.206.201.152  |      19 |
-| 37.229.17.176   |      17 |
-| 77.87.193.40    |      17 |
-| 157.55.39.7     |      16 |
-| 188.115.135.245 |      16 |
-| 89.184.80.168   |      16 |
-</code></pre>
-
-<p>Однако не следует забывать, что в каждом конкретном случае нужно применять соответствующий инструмент. <code>Ngxtop</code> может быть очень полезен для сравнительно небольших сайтов, но использование данной утилиты на высоконагруженных проектах (с десятками тысяч запросов в секунду) может быть неразумно.</p>
+| 92.60.184.91    |      <span style="color:#ae81ff">45</span> |
+| 66.249.78.10    |      <span style="color:#ae81ff">42</span> |
+| 77.120.121.122  |      <span style="color:#ae81ff">42</span> |
+| 66.249.89.63    |      <span style="color:#ae81ff">28</span> |
+| 91.206.201.152  |      <span style="color:#ae81ff">19</span> |
+| 37.229.17.176   |      <span style="color:#ae81ff">17</span> |
+| 77.87.193.40    |      <span style="color:#ae81ff">17</span> |
+| 157.55.39.7     |      <span style="color:#ae81ff">16</span> |
+| 188.115.135.245 |      <span style="color:#ae81ff">16</span> |
+| 89.184.80.168   |      <span style="color:#ae81ff">16</span> |
+</code></pre></div><p>Однако не следует забывать, что в каждом конкретном случае нужно применять соответствующий инструмент. <code>Ngxtop</code> может быть очень полезен для сравнительно небольших сайтов, но использование данной утилиты на высоконагруженных проектах (с десятками тысяч запросов в секунду) может быть неразумно.</p>
                 </section>
             </article>
 
@@ -197,23 +182,23 @@ top remote_addr
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

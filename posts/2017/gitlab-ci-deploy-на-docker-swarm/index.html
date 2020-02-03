@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>GitLab CI: deploy на docker swarm &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -83,74 +94,62 @@
                 </header>
                 <section id="post-body">
                     <p>В цикле о <strong>настройке GitLab continuous integration</strong> мы подробно рассматривали <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D1%8D%D1%82%D0%B0%D0%BF-deploy-%D0%B2-.gitlab-ci.yml/">этап деплоя docker-образов</a> на ревью окружение; чуть позже скрипт деплоя был изменен для достижения <a href="https://ealebed.github.io/posts/gitlab-ci-zero-downtime-docker-deployment/">zero downtime</a> (избавления от простоя).</p>
-
 <p>В данной статье пойдет речь о деплое сервисов в docker swarm — давайте разберемся!</p>
-
 <p>Рассматривать вопрос настройки docker swarm кластера мы не будем — это задача тривиальная и подобных примеров полным-полно на просторах интернета. Обязательно стоит ознакомиться с двумя статьями — <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-env-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5/">Docker Swarm: stack deploy и env-переменные</a> и <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-%D0%B8%D0%BC%D0%B5%D0%BD%D0%BE%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D0%B5-%D1%82%D0%BE%D0%BC%D0%B0/">Docker Swarm: stack deploy и именованные тома (named volumes)</a>, так будет гораздо понятнее что мы делаем и почему именно так.</p>
-
 <p>Как я уже упоминал в предыдущей статье, деплой docker-образов на ревью (или релиз) окружения выполняются задачей из конфигурационного файла <code>.gitlab-ci.yml</code>, которая выглядит так:</p>
-
-<pre><code class="language-yaml">...
-deploy-to-review:
-  stage: deploy
-  before_script:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+<span style="color:#66d9ef">deploy-to-review</span>:
+  <span style="color:#66d9ef">stage</span>: deploy
+  <span style="color:#66d9ef">before_script</span>:
     - eval $(ssh-agent -s)
-    - ssh-add &lt;(echo &quot;${SSH_PRIVATE_KEY}&quot;)
-    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $1}')
-    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $2}')
-  script:
+    - ssh-add &lt;(echo <span style="color:#e6db74">&#34;${SSH_PRIVATE_KEY}&#34;</span>)
+    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $1}&#39;</span>)
+    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $2}&#39;</span>)
+  <span style="color:#66d9ef">script</span>:
     - scp ./docker/${STAGING_ENV_FILE} ./docker/${STAGING_DC_STACK_FILE} provisioner@staging.lc:~/docker
-    - ssh provisioner@staging.lc VER=${CI_PIPELINE_ID} DC_FILE=${STAGING_DC_STACK_FILE} ENV_FILE=${STAGING_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} 'bash -s' &lt; ./docker/stack_deploy.sh
-  environment:
-    name: review/develop
-    url: https://www.develop-labs.cf
-  only:
+    - ssh provisioner@staging.lc VER=${CI_PIPELINE_ID} DC_FILE=${STAGING_DC_STACK_FILE} ENV_FILE=${STAGING_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} <span style="color:#e6db74">&#39;bash -s&#39;</span> &lt; ./docker/stack_deploy.sh
+  <span style="color:#66d9ef">environment</span>:
+    <span style="color:#66d9ef">name</span>: review/develop
+    <span style="color:#66d9ef">url</span>: https://www.develop-labs.cf
+  <span style="color:#66d9ef">only</span>:
     - develop
-  tags:
+  <span style="color:#66d9ef">tags</span>:
     - deploy
 ...
-</code></pre>
-
-<p>Перед выполнением основных команд (секция <code>before_script</code>) с помощью команды ssh-add добавляется приватная часть ssh-ключа пользователя, под которым осуществляется подключение на удаленный сервер (provisioner) и формируются значения переменных <code>${BRANCH_NAME}</code> и <code>${TAG}</code>.</p>
-
+</code></pre></div><p>Перед выполнением основных команд (секция <code>before_script</code>) с помощью команды ssh-add добавляется приватная часть ssh-ключа пользователя, под которым осуществляется подключение на удаленный сервер (provisioner) и формируются значения переменных <code>${BRANCH_NAME}</code> и <code>${TAG}</code>.</p>
 <p>Основные команды, описанные в секции <code>script</code> с помощью утилиты <code>scp</code> копируют на сервер staging.lc (в каталог <code>~/docker</code>) файл с переменными окружения и <code>docker-compose-stack-staging.yml</code> (описание стека docker-контейнеров), после чего передают значения нескольких переменных и выполняют на удаленном сервере скрипт <code>stack_deploy.sh</code>.</p>
-
 <p>Содержимое скрипта <code>stack_deploy.sh</code>, который и выполняет основные действия деплоя в docker swarm:</p>
-
-<pre><code class="language-bash">#!/bin/bash
-DIRECTORY=~/docker
-REGISTRY=registry.gitlab.lc:5000
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/bash
+</span><span style="color:#75715e"></span>DIRECTORY<span style="color:#f92672">=</span>~/docker
+REGISTRY<span style="color:#f92672">=</span>registry.gitlab.lc:5000
 cd $DIRECTORY;
  
-SERVICES=$(docker service ls --filter name=ed_applications --quiet | wc -l)
+SERVICES<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>docker service ls --filter name<span style="color:#f92672">=</span>ed_applications --quiet | wc -l<span style="color:#66d9ef">)</span>
  
 docker system prune -f;
 docker volume create --name code-$VER
  
-if [[ &quot;$SERVICES&quot; -gt 0 ]]; then
-    # Update
-    docker service update \
-        --detach=false \
-        --mount-add type=volume,source=code-$VER,target=/var/www/${BRANCH_NAME} \
-        --constraint-add node.role==manager \
-        --with-registry-auth \
-        --image $REGISTRY/develop/ed/${BRANCH_NAME}.sources:${TAG} \
-        ed_applications
-else
-    # Create
-    docker service create \
-        --name=ed_applications \
-        --mount type=volume,source=code-$VER,target=/var/www/${BRANCH_NAME} \
-        --constraint node.role==manager \
-        --with-registry-auth \
-        $REGISTRY/develop/ed/${BRANCH_NAME}.sources:${TAG}
-fi
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span><span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$SERVICES<span style="color:#e6db74">&#34;</span> -gt <span style="color:#ae81ff">0</span> <span style="color:#f92672">]</span><span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+    <span style="color:#75715e"># Update</span>
+    docker service update <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        --detach<span style="color:#f92672">=</span>false <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        --mount-add type<span style="color:#f92672">=</span>volume,source<span style="color:#f92672">=</span>code-$VER,target<span style="color:#f92672">=</span>/var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        --constraint-add node.role<span style="color:#f92672">=</span><span style="color:#f92672">=</span>manager <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        --with-registry-auth <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        --image $REGISTRY/develop/ed/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>.sources:<span style="color:#e6db74">${</span>TAG<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        ed_applications
+<span style="color:#66d9ef">else</span>
+    <span style="color:#75715e"># Create</span>
+    docker service create <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        --name<span style="color:#f92672">=</span>ed_applications <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        --mount type<span style="color:#f92672">=</span>volume,source<span style="color:#f92672">=</span>code-$VER,target<span style="color:#f92672">=</span>/var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        --constraint node.role<span style="color:#f92672">=</span><span style="color:#f92672">=</span>manager <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        --with-registry-auth <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        $REGISTRY/develop/ed/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>.sources:<span style="color:#e6db74">${</span>TAG<span style="color:#e6db74">}</span>
+<span style="color:#66d9ef">fi</span>
  
-env $(cat $ENV_FILE | grep ^[A-Z] | xargs) docker stack deploy --with-registry-auth --compose-file $DC_FILE ed;
-</code></pre>
-
-<p>Как видим, здесь выполняется несколько простых действий:</p>
-
+env <span style="color:#66d9ef">$(</span>cat $ENV_FILE | grep ^<span style="color:#f92672">[</span>A-Z<span style="color:#f92672">]</span> | xargs<span style="color:#66d9ef">)</span> docker stack deploy --with-registry-auth --compose-file $DC_FILE ed;
+</code></pre></div><p>Как видим, здесь выполняется несколько простых действий:</p>
 <ul>
 <li>проверяем, запущен ли сервис с именем <code>ed_applications</code> (data-only контейнер с кодом);</li>
 <li>выполняем очистку системы от неиспользуемых docker-контейнеров/образов/томов и т.д.;</li>
@@ -158,183 +157,179 @@ env $(cat $ENV_FILE | grep ^[A-Z] | xargs) docker stack deploy --with-registry-a
 <li>создаем (если его нет) или обновляем (если есть) сервис <code>ed_applications</code> с использованием «свежего» контейнера с кодом (имя/тег также получаем из CI — это дает возможность использовать один и тот же скрипт на разных окружениях);</li>
 <li>применяем переменные окружения из файла (имя файла получаем из CI) и обновляем стек сервисов, описанных в файле имя которого получаем также из CI (в данном случае <code>docker-compose-stack-staging.yml</code>).</li>
 </ul>
-
 <p>Конфигурационный файл <code>docker-compose-stack-staging.yml</code> выглядит так:</p>
-
-<pre><code class="language-yaml">version: '3.1'
-services:
-### PHP-FPM ############################################################################################################
-  php-fpm:
-    image: registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:staging
-    volumes:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#39;3.1&#39;</span>
+<span style="color:#66d9ef">services</span>:
+<span style="color:#75715e">### PHP-FPM ############################################################################################################</span>
+  <span style="color:#66d9ef">php-fpm</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/php-fpm-ed-sq:staging
+    <span style="color:#66d9ef">volumes</span>:
       - developcode:/var/www/develop
       - static:/var/www/static
-    deploy:
-      replicas: 4
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-    logging:
-      driver: gelf
-      options:
-        gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-        tag: &quot;php-fpm&quot;
-### Nginx ##############################################################################################################
-  nginx:
-    image: registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:staging
-    volumes:
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">4</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 10s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+    <span style="color:#66d9ef">logging</span>:
+      <span style="color:#66d9ef">driver</span>: gelf
+      <span style="color:#66d9ef">options</span>:
+        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;php-fpm&#34;</span>
+<span style="color:#75715e">### Nginx ##############################################################################################################</span>
+  <span style="color:#66d9ef">nginx</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/nginx-ed-sq:staging
+    <span style="color:#66d9ef">volumes</span>:
       - developcode:/var/www/develop
       - static:/var/www/static
-    ports:
-      - &quot;80:80&quot;
-      - &quot;443:443&quot;
-    deploy:
-      replicas: 4
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-### SDCV ##############################################################################################################
-  sdcv:
-    image: registry.gitlab.lc:5000/develop/ed/sdcv-ed-sq:latest
-    ports:
-      - &quot;9095:9095&quot;
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 1s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-    logging:
-      driver: gelf
-      options:
-        gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-        tag: &quot;sdcv&quot;
-### Redis ##############################################################################################################
-  redis:
-    image: registry.gitlab.lc:5000/develop/ed/redis-ed-sq:latest
-    volumes:
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;80:80&#34;</span>
+      - <span style="color:#e6db74">&#34;443:443&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">4</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 10s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+<span style="color:#75715e">### SDCV ##############################################################################################################</span>
+  <span style="color:#66d9ef">sdcv</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/sdcv-ed-sq:latest
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;9095:9095&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">1</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 1s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+    <span style="color:#66d9ef">logging</span>:
+      <span style="color:#66d9ef">driver</span>: gelf
+      <span style="color:#66d9ef">options</span>:
+        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;sdcv&#34;</span>
+<span style="color:#75715e">### Redis ##############################################################################################################</span>
+  <span style="color:#66d9ef">redis</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/redis-ed-sq:latest
+    <span style="color:#66d9ef">volumes</span>:
       - redis:/data
-    ports:
-      - &quot;6379:6379&quot;
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 1s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-    logging:
-      driver: gelf
-      options:
-        gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-        tag: &quot;redis&quot;
-### Memcached ##########################################################################################################
-  memcached:
-    image: registry.gitlab.lc:5000/develop/ed/memcached-ed-sq:latest
-    volumes:
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;6379:6379&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">1</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 1s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+    <span style="color:#66d9ef">logging</span>:
+      <span style="color:#66d9ef">driver</span>: gelf
+      <span style="color:#66d9ef">options</span>:
+        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;redis&#34;</span>
+<span style="color:#75715e">### Memcached ##########################################################################################################</span>
+  <span style="color:#66d9ef">memcached</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/memcached-ed-sq:latest
+    <span style="color:#66d9ef">volumes</span>:
       - memcached:/var/lib/memcached
-    ports:
-      - &quot;11211:11211&quot;
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 1s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-    logging:
-      driver: gelf
-      options:
-        gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-        tag: &quot;memcached&quot;
-### Websocket ##########################################################################################################
-  websocket:
-    image: registry.gitlab.lc:5000/develop/ed/websocket-ed-sq:latest
-    env_file: .env.staging.lc
-    ports:
-      - &quot;8092:8092&quot;
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 1s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-    logging:
-      driver: gelf
-      options:
-        gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-        tag: &quot;websocket&quot;
-### Monitoring: node-exporter ##########################################################################################
-  nodeexporter:
-    image: prom/node-exporter:v0.14.0
-    volumes:
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;11211:11211&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">1</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 1s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+    <span style="color:#66d9ef">logging</span>:
+      <span style="color:#66d9ef">driver</span>: gelf
+      <span style="color:#66d9ef">options</span>:
+        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;memcached&#34;</span>
+<span style="color:#75715e">### Websocket ##########################################################################################################</span>
+  <span style="color:#66d9ef">websocket</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/websocket-ed-sq:latest
+    <span style="color:#66d9ef">env_file</span>: .env.staging.lc
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;8092:8092&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">1</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 1s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+    <span style="color:#66d9ef">logging</span>:
+      <span style="color:#66d9ef">driver</span>: gelf
+      <span style="color:#66d9ef">options</span>:
+        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;websocket&#34;</span>
+<span style="color:#75715e">### Monitoring: node-exporter ##########################################################################################</span>
+  <span style="color:#66d9ef">nodeexporter</span>:
+    <span style="color:#66d9ef">image</span>: prom/node-exporter:v0<span style="color:#ae81ff">.14</span><span style="color:#ae81ff">.0</span>
+    <span style="color:#66d9ef">volumes</span>:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
-    command:
-      - '-collector.procfs=/host/proc'
-      - '-collector.sysfs=/host/sys'
-      - '-collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
-    ports:
-      - &quot;9100:9100&quot;
-    deploy:
-      mode: global
-      restart_policy:
-        condition: on-failure
-    labels:
-      org.label-schema.group: &quot;monitoring&quot;
-### Monitoring: cAdvisor ###############################################################################################
-  cadvisor:
-    image: google/cadvisor:v0.26.1
-    volumes:
+    <span style="color:#66d9ef">command</span>:
+      - <span style="color:#e6db74">&#39;-collector.procfs=/host/proc&#39;</span>
+      - <span style="color:#e6db74">&#39;-collector.sysfs=/host/sys&#39;</span>
+      - <span style="color:#e6db74">&#39;-collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)&#39;</span>
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;9100:9100&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">mode</span>: global
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+    <span style="color:#66d9ef">labels</span>:
+      <span style="color:#66d9ef">org.label-schema.group</span>: <span style="color:#e6db74">&#34;monitoring&#34;</span>
+<span style="color:#75715e">### Monitoring: cAdvisor ###############################################################################################</span>
+  <span style="color:#66d9ef">cadvisor</span>:
+    <span style="color:#66d9ef">image</span>: google/cadvisor:v0<span style="color:#ae81ff">.26</span><span style="color:#ae81ff">.1</span>
+    <span style="color:#66d9ef">volumes</span>:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
-    ports:
-      - &quot;9200:8080&quot;
-    deploy:
-      mode: global
-      restart_policy:
-        condition: on-failure
-    labels:
-      org.label-schema.group: &quot;monitoring&quot;
-### Volumes Setup ######################################################################################################
-volumes:
-  developcode:
-    external:
-      name: code-${VER}
-  memcached:
-    driver: &quot;local&quot;
-  redis:
-    driver: &quot;local&quot;
-  static:
-    driver: &quot;local&quot;
-    driver_opts:
-      type: nfs
-      o: addr=192.168.0.218,rw
-      device: &quot;:/srv/static&quot;
-</code></pre>
-
-<p>О переходе на <code>docker-compose.yml</code> третьей версии мы уже упоминали в <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-env-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5/">этой статье</a>, стоит отметить только что в стек сервисов добавились два контейнера для мониторинга (<code>node-exporter</code> и <code>cadvisor</code>), которые запускаются в режиме <code>mode: global</code> (по одному экземпляру на каждой ноде кластера), собирают метрики и отправляют их в <a href="https://ealebed.github.io/posts/2017/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-docker-c-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-prometheus/">Prometheus</a>.</p>
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;9200:8080&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">mode</span>: global
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+    <span style="color:#66d9ef">labels</span>:
+      <span style="color:#66d9ef">org.label-schema.group</span>: <span style="color:#e6db74">&#34;monitoring&#34;</span>
+<span style="color:#75715e">### Volumes Setup ######################################################################################################</span>
+<span style="color:#66d9ef">volumes</span>:
+  <span style="color:#66d9ef">developcode</span>:
+    <span style="color:#66d9ef">external</span>:
+      <span style="color:#66d9ef">name</span>: code-${VER}
+  <span style="color:#66d9ef">memcached</span>:
+    <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+  <span style="color:#66d9ef">redis</span>:
+    <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+  <span style="color:#66d9ef">static</span>:
+    <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+    <span style="color:#66d9ef">driver_opts</span>:
+      <span style="color:#66d9ef">type</span>: nfs
+      <span style="color:#66d9ef">o</span>: addr=<span style="color:#ae81ff">192.168</span><span style="color:#ae81ff">.0</span><span style="color:#ae81ff">.218</span>,rw
+      <span style="color:#66d9ef">device</span>: <span style="color:#e6db74">&#34;:/srv/static&#34;</span>
+</code></pre></div><p>О переходе на <code>docker-compose.yml</code> третьей версии мы уже упоминали в <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-env-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5/">этой статье</a>, стоит отметить только что в стек сервисов добавились два контейнера для мониторинга (<code>node-exporter</code> и <code>cadvisor</code>), которые запускаются в режиме <code>mode: global</code> (по одному экземпляру на каждой ноде кластера), собирают метрики и отправляют их в <a href="https://ealebed.github.io/posts/2017/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-docker-c-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-prometheus/">Prometheus</a>.</p>
                 </section>
             </article>
 
@@ -376,23 +371,23 @@ volumes:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

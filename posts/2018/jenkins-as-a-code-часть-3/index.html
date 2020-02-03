@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Jenkins as a code. Часть 3 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,200 +92,167 @@
                 </header>
                 <section id="post-body">
                     <p>В данной статье цикла &ldquo;Jenkins as a code&rdquo; рассмотрим самый интересный (и полезный) пример - автоматическое создание задач (job) при запуске сервиса. Давайте разберемся!</p>
-
 <p>Создавать задания (jobs) в Jenkins можно несколькими способами - традиционно (через webUI), через REST API или &ldquo;подкладывая&rdquo; файлы <code>.xml.import</code> в <code>${JENKINS_HOME}</code>.</p>
-
 <p>Но традиционный способ настройки занимает слишком много времени, использование API невероятно неудобно (см. пример ниже), а создание файлов с расширением <code>.xml.import</code> для каждой задачи и рестарт сервиса Jenkins после их добавления даже звучит несерьезно.</p>
-
 <p>Чем плох REST API:</p>
-
 <ul>
-<li><p>сначала необходимо получить описание уже существующей задачи в формате <code>.xml</code>. Например, это можно сделать используя API:</p>
-
-<pre><code class="language-bash">curl -X GET -u username:API_TOKEN 'http://JENKINS_HOST/job/MY_JOB_NAME/config.xml' -o config.xml
-</code></pre></li>
+<li>сначала необходимо получить описание уже существующей задачи в формате <code>.xml</code>. Например, это можно сделать используя API:</li>
 </ul>
-
-<p>или</p>
-
-<pre><code class="language-bash">curl -u username:password &quot;http://JENKINS_HOST/job/MY_JOB_NAME/config.xml&quot; &gt; config.xml
-</code></pre>
-
-<ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -X GET -u username:API_TOKEN <span style="color:#e6db74">&#39;http://JENKINS_HOST/job/MY_JOB_NAME/config.xml&#39;</span> -o config.xml
+</code></pre></div><p>или</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -u username:password <span style="color:#e6db74">&#34;http://JENKINS_HOST/job/MY_JOB_NAME/config.xml&#34;</span> &gt; config.xml
+</code></pre></div><ul>
 <li>потом полученный <code>xml</code>-файл нужно отредактировать под свои нужды;</li>
-
-<li><p>после редактирования можно создать новую задачу &ldquo;запостив&rdquo; этот файл через API, например:</p>
-
-<pre><code class="language-bash">curl -u username:password -s -XPOST 'http://JENKINS_HOST/createItem?name=newJobName' --data-binary config.xml -H &quot;Content-Type:text/xml&quot;
-</code></pre></li>
+<li>после редактирования можно создать новую задачу &ldquo;запостив&rdquo; этот файл через API, например:</li>
 </ul>
-
-<p>Ах да, если вдруг столкнетесь с ошибкой:</p>
-
-<pre><code class="language-bash">Error 403 No valid crumb was included in the request
-</code></pre>
-
-<p>то придется сделать на одно действие больше:</p>
-
-<pre><code class="language-bash">CRUMB=$(curl -s 'http://JENKINS_HOST/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,&quot;:&quot;,//crumb)' -u username:password)//crumb)' -u us
-</code></pre>
-
-<pre><code class="language-bash">curl -u username:password -s -XPOST 'http://JENKINS_HOST/createItem?name=newJobName' --data-binary config.xml -H &quot;$CRUMB&quot; -H &quot;Content-Type:text/xml&quot;
-</code></pre>
-
-<p>Вообщем, так себе вариант, особенно если у вас 150-200 заданий&hellip;</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -u username:password -s -XPOST <span style="color:#e6db74">&#39;http://JENKINS_HOST/createItem?name=newJobName&#39;</span> --data-binary config.xml -H <span style="color:#e6db74">&#34;Content-Type:text/xml&#34;</span>
+</code></pre></div><p>Ах да, если вдруг столкнетесь с ошибкой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Error <span style="color:#ae81ff">403</span> No valid crumb was included in the request
+</code></pre></div><p>то придется сделать на одно действие больше:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CRUMB<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -s <span style="color:#e6db74">&#39;http://JENKINS_HOST/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,&#34;:&#34;,//crumb)&#39;</span> -u username:password<span style="color:#66d9ef">)</span>//crumb<span style="color:#f92672">)</span><span style="color:#960050;background-color:#1e0010">&#39;</span> -u us
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -u username:password -s -XPOST <span style="color:#e6db74">&#39;http://JENKINS_HOST/createItem?name=newJobName&#39;</span> --data-binary config.xml -H <span style="color:#e6db74">&#34;</span>$CRUMB<span style="color:#e6db74">&#34;</span> -H <span style="color:#e6db74">&#34;Content-Type:text/xml&#34;</span>
+</code></pre></div><p>Вообщем, так себе вариант, особенно если у вас 150-200 заданий&hellip;</p>
 <p>Вспоминаем о возможностях настройки экземпляра Jenkins еще в момент старта с помощью хуков, которые мы рассматривали в <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">первой </a> и <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2/">второй</a> статьях данного цикла. Идея - хранить в отдельном файле определенного формата (<code>.json</code> или <code>.xml</code>) минимально необходимый набор параметров (ссылка на git-репозиторий, название ветки, путь к <code>Jenkinsfile</code> и т. д.) для создания задачи. При запуске Jenkins groovy-скрипт берет из данного файла параметры и создает задачи, в качестве дополнительного бонуса - сразу распределяет эти задачи по представлениям (views).</p>
-
 <p>Создаем файл <code>job_list.yaml</code> с набором параметров для задач, в моем случае выглядящий так:</p>
-
-<pre><code class="language-yaml">dev:
-  1st-project:
-    jobDisabled:          false
-    enableGithubPolling:  false
-    daysBuildsKeep:       '1'
-    numberBuildsKeep:     '5'
-    githubRepoUrl:        'https://github.com/ealebed/hn1/'
-    githubRepo:           'https://github.com/ealebed/hn1.git'
-    githubBranch:         '*/master, */test'
-    credentialId:         ''
-    jenkinsfilePath:      'Jenkinsfile'
-  2nd-project:
-    jobDisabled:          false
-    enableGithubPolling:  true
-    daysBuildsKeep:       '2'
-    numberBuildsKeep:     '10'
-    githubRepoUrl:        'https://github.com/ealebed/hn1/'
-    githubRepo:           'https://github.com/ealebed/hn1.git'
-    githubBranch:         '*/master'
-    credentialId:         ''
-    jenkinsfilePath:      'Jenkinsfile'
-stage:
-  3rd-project:
-    jobDisabled:          false
-    enableGithubPolling:  true
-    daysBuildsKeep:       '3'
-    numberBuildsKeep:     '15'
-    githubRepoUrl:        'https://github.com/ealebed/hn1/'
-    githubRepo:           'https://github.com/ealebed/hn1.git'
-    githubBranch:         '*/master'
-    credentialId:         ''
-    jenkinsfilePath:      'dir/Jenkinsfile'
-test:
-  4th-project:
-    jobDisabled:          true
-    enableGithubPolling:  true
-    daysBuildsKeep:       '4'
-    numberBuildsKeep:     '20'
-    githubRepoUrl:        'https://github.com/ealebed/hn1/'
-    githubRepo:           'https://github.com/ealebed/hn1.git'
-    githubBranch:         '*/master'
-    credentialId:         ''
-    jenkinsfilePath:      'Jenkinsfile'
-</code></pre>
-
-<p><strong>Примечание.</strong> Если планируется переезд со старого экземпляра Jenkins на новый, то можно легко написать скрипт, который возьмет нужные параметры на старом сервере и сформирует <code>yaml</code>-файл в нужном формате.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">dev</span>:
+  <span style="color:#66d9ef">1st-project</span>:
+    <span style="color:#66d9ef">jobDisabled</span>:          <span style="color:#66d9ef">false</span>
+    <span style="color:#66d9ef">enableGithubPolling</span>:  <span style="color:#66d9ef">false</span>
+    <span style="color:#66d9ef">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;1&#39;</span>
+    <span style="color:#66d9ef">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;5&#39;</span>
+    <span style="color:#66d9ef">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
+    <span style="color:#66d9ef">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
+    <span style="color:#66d9ef">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master, */test&#39;</span>
+    <span style="color:#66d9ef">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
+    <span style="color:#66d9ef">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;Jenkinsfile&#39;</span>
+  <span style="color:#66d9ef">2nd-project</span>:
+    <span style="color:#66d9ef">jobDisabled</span>:          <span style="color:#66d9ef">false</span>
+    <span style="color:#66d9ef">enableGithubPolling</span>:  <span style="color:#66d9ef">true</span>
+    <span style="color:#66d9ef">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;2&#39;</span>
+    <span style="color:#66d9ef">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;10&#39;</span>
+    <span style="color:#66d9ef">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
+    <span style="color:#66d9ef">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
+    <span style="color:#66d9ef">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master&#39;</span>
+    <span style="color:#66d9ef">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
+    <span style="color:#66d9ef">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;Jenkinsfile&#39;</span>
+<span style="color:#66d9ef">stage</span>:
+  <span style="color:#66d9ef">3rd-project</span>:
+    <span style="color:#66d9ef">jobDisabled</span>:          <span style="color:#66d9ef">false</span>
+    <span style="color:#66d9ef">enableGithubPolling</span>:  <span style="color:#66d9ef">true</span>
+    <span style="color:#66d9ef">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;3&#39;</span>
+    <span style="color:#66d9ef">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;15&#39;</span>
+    <span style="color:#66d9ef">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
+    <span style="color:#66d9ef">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
+    <span style="color:#66d9ef">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master&#39;</span>
+    <span style="color:#66d9ef">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
+    <span style="color:#66d9ef">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;dir/Jenkinsfile&#39;</span>
+<span style="color:#66d9ef">test</span>:
+  <span style="color:#66d9ef">4th-project</span>:
+    <span style="color:#66d9ef">jobDisabled</span>:          <span style="color:#66d9ef">true</span>
+    <span style="color:#66d9ef">enableGithubPolling</span>:  <span style="color:#66d9ef">true</span>
+    <span style="color:#66d9ef">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;4&#39;</span>
+    <span style="color:#66d9ef">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;20&#39;</span>
+    <span style="color:#66d9ef">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
+    <span style="color:#66d9ef">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
+    <span style="color:#66d9ef">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master&#39;</span>
+    <span style="color:#66d9ef">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
+    <span style="color:#66d9ef">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;Jenkinsfile&#39;</span>
+</code></pre></div><p><strong>Примечание.</strong> Если планируется переезд со старого экземпляра Jenkins на новый, то можно легко написать скрипт, который возьмет нужные параметры на старом сервере и сформирует <code>yaml</code>-файл в нужном формате.</p>
 <p>Скрипт, который должен &ldquo;разобрать&rdquo; данный файл и создать задачи у меня называется <code>05-create-jobs.groovy</code> и выглядит следующим образом:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Grab</span><span style="color:#f92672">(</span>group<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">&#39;</span>org<span style="color:#f92672">.</span><span style="color:#a6e22e">yaml</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> module<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">&#39;</span>snakeyaml<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> version<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">&#39;</span>1<span style="color:#f92672">.</span><span style="color:#a6e22e">18</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span>
+<span style="color:#f92672">import</span> jenkins.model.*
+<span style="color:#f92672">import</span> hudson.model.*
+<span style="color:#f92672">import</span> hudson.tasks.LogRotator
+<span style="color:#f92672">import</span> hudson.plugins.git.*
+<span style="color:#f92672">import</span> org.jenkinsci.plugins.workflow.job.WorkflowJob
+<span style="color:#f92672">import</span> org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition
+<span style="color:#f92672">import</span> com.coravy.hudson.plugins.github.*
+<span style="color:#f92672">import</span> com.cloudbees.jenkins.GitHubPushTrigger
+<span style="color:#f92672">import</span> org.yaml.snakeyaml.Yaml
 
-<pre><code class="language-java">@Grab(group='org.yaml', module='snakeyaml', version='1.18')
-import jenkins.model.*
-import hudson.model.*
-import hudson.tasks.LogRotator
-import hudson.plugins.git.*
-import org.jenkinsci.plugins.workflow.job.WorkflowJob
-import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition
-import com.coravy.hudson.plugins.github.*
-import com.cloudbees.jenkins.GitHubPushTrigger
-import org.yaml.snakeyaml.Yaml
+Jenkins jenkins <span style="color:#f92672">=</span> Jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
 
-Jenkins jenkins = Jenkins.getInstance()
+def pluginParameter <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;workflow-aggregator github-pullrequest&#34;</span>
+def plugins         <span style="color:#f92672">=</span> pluginParameter<span style="color:#f92672">.</span><span style="color:#a6e22e">split</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+def pm              <span style="color:#f92672">=</span> jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">getPluginManager</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+def installed       <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>
 
-def pluginParameter = &quot;workflow-aggregator github-pullrequest&quot;
-def plugins         = pluginParameter.split()
-def pm              = jenkins.getPluginManager()
-def installed       = false
+plugins<span style="color:#f92672">.</span><span style="color:#a6e22e">each</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>pm<span style="color:#f92672">.</span><span style="color:#a6e22e">getPlugin</span><span style="color:#f92672">(</span>it<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Plugin ${it} not installed, skip creating jobs!&#34;</span><span style="color:#f92672">)</span>
+    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+        installed <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
 
-plugins.each {
-    if (!pm.getPlugin(it)) {
-        println(&quot;Plugin ${it} not installed, skip creating jobs!&quot;)
-    } else {
-        installed = true
-    }
-}
+<span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>installed<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    def listExistingJob     <span style="color:#f92672">=</span> jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">items</span><span style="color:#f92672">.</span><span style="color:#a6e22e">collect</span> <span style="color:#f92672">{</span> it<span style="color:#f92672">.</span><span style="color:#a6e22e">name</span> <span style="color:#f92672">}</span>
+    def listExistingViews   <span style="color:#f92672">=</span> jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">views</span><span style="color:#f92672">.</span><span style="color:#a6e22e">collect</span> <span style="color:#f92672">{</span> it<span style="color:#f92672">.</span><span style="color:#a6e22e">name</span> <span style="color:#f92672">}</span>
+    def jobParameters       <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Yaml<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">load</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> FileReader<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">/</span>temp<span style="color:#f92672">/</span>job_list<span style="color:#f92672">.</span><span style="color:#a6e22e">yaml</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
 
-if(installed) {
-    def listExistingJob     = jenkins.items.collect { it.name }
-    def listExistingViews   = jenkins.views.collect { it.name }
-    def jobParameters       = new Yaml().load(new FileReader('/temp/job_list.yaml'))
+    <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>view in jobParameters<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>jobParameters<span style="color:#f92672">.</span><span style="color:#a6e22e">any</span> <span style="color:#f92672">{</span> listExistingViews<span style="color:#f92672">.</span><span style="color:#a6e22e">contains</span><span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span> <span style="color:#f92672">}</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- View ${view.key} already exist, skip&#34;</span><span style="color:#f92672">)</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- Create new view ${view.key}&#34;</span><span style="color:#f92672">)</span>
+            jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">addView</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ListView<span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>item in view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">any</span> <span style="color:#f92672">{</span> listExistingJob<span style="color:#f92672">.</span><span style="color:#a6e22e">contains</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span> <span style="color:#f92672">}</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- Job ${item.key} already exist, skip&#34;</span><span style="color:#f92672">)</span>
+                <span style="color:#66d9ef">continue</span>
+            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+                println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- Create new job ${item.key}&#34;</span><span style="color:#f92672">)</span>
 
-    for (view in jobParameters) {
-        if (jobParameters.any { listExistingViews.contains(view.key) }) {
-            println(&quot;--- View ${view.key} already exist, skip&quot;)
-        } else {
-            println(&quot;--- Create new view ${view.key}&quot;)
-            jenkins.addView(new ListView(view.key))
-        }
-        for (item in view.value) {
-            if (view.value.any { listExistingJob.contains(item.key) }) {
-                println(&quot;--- Job ${item.key} already exist, skip&quot;)
-                continue
-            } else {
-                println(&quot;--- Create new job ${item.key}&quot;)
+                def jobName             <span style="color:#f92672">=</span> item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span>
+                def jobDisabled         <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;jobDisabled&#34;</span><span style="color:#f92672">)</span>
+                def enableGithubPolling <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;enableGithubPolling&#34;</span><span style="color:#f92672">)</span>
+                def daysBuildsKeep      <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;daysBuildsKeep&#34;</span><span style="color:#f92672">)</span>
+                def numberBuildsKeep    <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;numberBuildsKeep&#34;</span><span style="color:#f92672">)</span>
+                def githubRepoUrl       <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;githubRepoUrl&#34;</span><span style="color:#f92672">)</span>
+                def githubRepo          <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;githubRepo&#34;</span><span style="color:#f92672">)</span>
+                def githubBranch        <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;githubBranch&#34;</span><span style="color:#f92672">)</span>
+                def credentialId        <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;credentialId&#34;</span><span style="color:#f92672">)</span>
+                def jenkinsfilePath     <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;jenkinsfilePath&#34;</span><span style="color:#f92672">)</span>
 
-                def jobName             = item.key
-                def jobDisabled         = view.value.get(item.key).getAt(&quot;jobDisabled&quot;)
-                def enableGithubPolling = view.value.get(item.key).getAt(&quot;enableGithubPolling&quot;)
-                def daysBuildsKeep      = view.value.get(item.key).getAt(&quot;daysBuildsKeep&quot;)
-                def numberBuildsKeep    = view.value.get(item.key).getAt(&quot;numberBuildsKeep&quot;)
-                def githubRepoUrl       = view.value.get(item.key).getAt(&quot;githubRepoUrl&quot;)
-                def githubRepo          = view.value.get(item.key).getAt(&quot;githubRepo&quot;)
-                def githubBranch        = view.value.get(item.key).getAt(&quot;githubBranch&quot;)
-                def credentialId        = view.value.get(item.key).getAt(&quot;credentialId&quot;)
-                def jenkinsfilePath     = view.value.get(item.key).getAt(&quot;jenkinsfilePath&quot;)
+                def githubBranchList <span style="color:#f92672">=</span> githubBranch<span style="color:#f92672">.</span><span style="color:#a6e22e">split</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span>
+                def branchConfig <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ArrayList<span style="color:#f92672">&lt;</span>BranchSpec<span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+                <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>branch in githubBranchList<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span> branch <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">)</span>
+                    <span style="color:#f92672">{</span>
+                        branchConfig<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> BranchSpec<span style="color:#f92672">(</span>branch<span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+                    <span style="color:#f92672">}</span>
+                    <span style="color:#66d9ef">else</span>
+                    <span style="color:#f92672">{</span>
+                        branchConfig<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> BranchSpec<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;*/master&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+                    <span style="color:#f92672">}</span>
+                <span style="color:#f92672">}</span>
+                def userConfig          <span style="color:#f92672">=</span> <span style="color:#f92672">[</span><span style="color:#66d9ef">new</span> UserRemoteConfig<span style="color:#f92672">(</span>githubRepo<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> credentialId<span style="color:#f92672">)</span><span style="color:#f92672">]</span>
+                def scm                 <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> GitSCM<span style="color:#f92672">(</span>userConfig<span style="color:#f92672">,</span> branchConfig<span style="color:#f92672">,</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">,</span> <span style="color:#f92672">[</span><span style="color:#f92672">]</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+                def flowDefinition      <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> CpsScmFlowDefinition<span style="color:#f92672">(</span>scm<span style="color:#f92672">,</span> jenkinsfilePath<span style="color:#f92672">)</span>
 
-                def githubBranchList = githubBranch.split(', ')
-                def branchConfig = new ArrayList&lt;BranchSpec&gt;()
-                for (branch in githubBranchList) {
-                    if( branch != null )
-                    {
-                        branchConfig.add(new BranchSpec(branch))
-                    }
-                    else
-                    {
-                        branchConfig.add(new BranchSpec(&quot;*/master&quot;))
-                    }
-                }
-                def userConfig          = [new UserRemoteConfig(githubRepo, null, null, credentialId)]
-                def scm                 = new GitSCM(userConfig, branchConfig, false, [], null, null, null)
-                def flowDefinition      = new CpsScmFlowDefinition(scm, jenkinsfilePath)
+                flowDefinition<span style="color:#f92672">.</span><span style="color:#a6e22e">setLightweight</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">)</span>
 
-                flowDefinition.setLightweight(true)
+                def job <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> WorkflowJob<span style="color:#f92672">(</span>jenkins<span style="color:#f92672">,</span> jobName<span style="color:#f92672">)</span>
+                job<span style="color:#f92672">.</span><span style="color:#a6e22e">definition</span> <span style="color:#f92672">=</span> flowDefinition
+                job<span style="color:#f92672">.</span><span style="color:#a6e22e">setConcurrentBuild</span><span style="color:#f92672">(</span><span style="color:#66d9ef">false</span><span style="color:#f92672">)</span>
+                job<span style="color:#f92672">.</span><span style="color:#a6e22e">setDisabled</span><span style="color:#f92672">(</span>jobDisabled<span style="color:#f92672">)</span>
+                job<span style="color:#f92672">.</span><span style="color:#a6e22e">addProperty</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> BuildDiscarderProperty<span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> LogRotator<span style="color:#f92672">(</span>daysBuildsKeep<span style="color:#f92672">,</span> numberBuildsKeep<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+                job<span style="color:#f92672">.</span><span style="color:#a6e22e">addProperty</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> GithubProjectProperty<span style="color:#f92672">(</span>githubRepoUrl<span style="color:#f92672">)</span><span style="color:#f92672">)</span>
 
-                def job = new WorkflowJob(jenkins, jobName)
-                job.definition = flowDefinition
-                job.setConcurrentBuild(false)
-                job.setDisabled(jobDisabled)
-                job.addProperty(new BuildDiscarderProperty(new LogRotator(daysBuildsKeep, numberBuildsKeep, null, null)))
-                job.addProperty(new GithubProjectProperty(githubRepoUrl))
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">true</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> enableGithubPolling<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    job<span style="color:#f92672">.</span><span style="color:#a6e22e">addTrigger</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> GitHubPushTrigger<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+                <span style="color:#f92672">}</span>
 
-                if (true == enableGithubPolling) {
-                    job.addTrigger(new GitHubPushTrigger())
-                }
-
-                jenkins.save()
-                jenkins.reload()
-                hudson.model.Hudson.instance.getView(view.key).doAddJobToView(jobName)
-            }
-        }
-    }
-}
-</code></pre>
-
-<p>Сначала мы проверяем, установлены ли необходимые плагины (без них создать представление / задачу не получится). Далее получаем список уже существующих представлений и задач (может так случиться, что сервер с Jenkins будет перезагружен) - нам совершенно нет нужды пересоздавать задачи при каждом старте Jenkins. Только если нужного нам представления (view) нет - оно будет создано, после чего создаются добавляются в представление связанные с ним задачи.</p>
-
+                jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">save</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+                jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">reload</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+                hudson<span style="color:#f92672">.</span><span style="color:#a6e22e">model</span><span style="color:#f92672">.</span><span style="color:#a6e22e">Hudson</span><span style="color:#f92672">.</span><span style="color:#a6e22e">instance</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getView</span><span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">doAddJobToView</span><span style="color:#f92672">(</span>jobName<span style="color:#f92672">)</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>Сначала мы проверяем, установлены ли необходимые плагины (без них создать представление / задачу не получится). Далее получаем список уже существующих представлений и задач (может так случиться, что сервер с Jenkins будет перезагружен) - нам совершенно нет нужды пересоздавать задачи при каждом старте Jenkins. Только если нужного нам представления (view) нет - оно будет создано, после чего создаются добавляются в представление связанные с ним задачи.</p>
 <p>Остается только позаботиться о том, чтобы файл с параметрами задач появился в <code>/temp/job_list.yaml</code> (или другом удобном для вас месте), а скрипт <code>05-create-jobs.groovy</code> - в каталоге <code>${JENKINS_HOME}/init.groovy.d/</code>.</p>
-
 <p>В заключительной статье цикла рассмотрим еще один важный вопрос <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/"><strong>разграничения прав доступа пользователей</strong></a>.</p>
                 </section>
             </article>
@@ -317,23 +295,23 @@ if(installed) {
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

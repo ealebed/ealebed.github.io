@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Postfixadmin — пересылка писем с существующего ящика &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,9 +90,7 @@
                 </header>
                 <section id="post-body">
                     <p>Для управления почтовыми ящиками часто используется <strong>postfixadmin</strong> — вещь однозначно удобная, но не без недостатков: например, нельзя настроить <strong>пересылку писем с существующего почтового ящика</strong> на другой. Давайте разберемся с этим досадным ограничением!</p>
-
 <p>В связке с <strong>postfixadmin</strong> используется база данных MySQL, подключаемся к ней из консоли либо любым другим удобным способом. Смотрим какие базы данных есть на сервере:</p>
-
 <pre><code>SHOW DATABASES;
 +--------------------+
 | Database           |
@@ -94,19 +103,13 @@
 | test               |
 +--------------------+
 6 rows in set (0.00 sec)
-</code></pre>
-
-<p>В данном случае работать нужно с базой <code>mail</code>. Выбираем ее:</p>
-
+</code></pre><p>В данном случае работать нужно с базой <code>mail</code>. Выбираем ее:</p>
 <pre><code>USE mail;
 Reading table information for completion of table and column names
 You can turn off this feature to get a quicker startup with -A
  
 Database changed
-</code></pre>
-
-<p>Смотрим какие таблицы есть в базе данных:</p>
-
+</code></pre><p>Смотрим какие таблицы есть в базе данных:</p>
 <pre><code>SHOW TABLES;
 +-----------------------+
 | Tables_in_mail        |
@@ -126,10 +129,7 @@ Database changed
 | vacation_notification |
 +-----------------------+
 13 rows in set (0.00 sec)
-</code></pre>
-
-<p>В таблице <code>alias</code> выбираем интересующий нас ящик:</p>
-
+</code></pre><p>В таблице <code>alias</code> выбираем интересующий нас ящик:</p>
 <pre><code>SELECT * FROM `alias` WHERE `address`='admin@example.com';
 +-------------------+---------------------+-------------+---------------------+---------------------+--------+
 | address           | goto                | domain      | created             | modified            | active |
@@ -137,15 +137,9 @@ Database changed
 | admin@example.com | admin@example.com   | example.com | 2013-06-20 17:05:12 | 2013-06-20 17:05:12 |      1 |
 +-------------------+---------------------+-------------+---------------------+---------------------+--------+
 1 row in set (0.00 sec)
-</code></pre>
-
-<p>В поле <code>goto</code> необходимо добавить почтовые ящики, на которые будет пересылаться почта (можно добавить несколько адресов, через запятую):</p>
-
+</code></pre><p>В поле <code>goto</code> необходимо добавить почтовые ящики, на которые будет пересылаться почта (можно добавить несколько адресов, через запятую):</p>
 <pre><code>UPDATE `alias` SET `goto`='me@example.com,sysadmin@example.com,admin@example.com' WHERE `address`='admin@example.com';
-</code></pre>
-
-<p><strong>Примечание.</strong> Не забудьте добавить текущий ящик, указанный в поле <code>goto</code> — иначе на него почта доставляться не будет.</p>
-
+</code></pre><p><strong>Примечание.</strong> Не забудьте добавить текущий ящик, указанный в поле <code>goto</code> — иначе на него почта доставляться не будет.</p>
 <p>На этом все, <strong>пересылка писем с существующего ящика в postfixadmin</strong> настроена!</p>
                 </section>
             </article>
@@ -188,23 +182,23 @@ Database changed
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

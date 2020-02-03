@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Добавление кастомных заголовков для исходящих писем в exim &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,9 +88,7 @@
                 </header>
                 <section id="post-body">
                     <p>Иногда в целях отладки или облегчения поиска в логах почтового сервера exim требуется добавить кастомный заголовок (custom header). Давайте разберемся, как это сделать для всех почтовых сообщений, отправляемых с сервера!</p>
-
 <p>Как оказалось, добавить кастомный заголовок для исходящих писем довольно легко. Считаем, что конфигурация почтового сервера находится в одном файле (<code>/etc/exim/exim.conf</code>). Версия <code>exim</code>:</p>
-
 <pre><code>exim --version
 Exim version 4.84_2 #1 built 09-Oct-2016 12:33:06
 Copyright (c) University of Cambridge, 1995 - 2014
@@ -93,10 +102,7 @@ Transports: appendfile/maildir/mailstore/mbx autoreply lmtp pipe smtp
 Fixed never_users: 0
 Size of off_t: 8
 Configuration file is /etc/exim/exim.conf
-</code></pre>
-
-<p>Добавлять кастомный заголовок будем с помощью <code>acl</code>. Для начала в секции <code>MAIN CONFIGURATION SETTINGS</code> находим следующие строки:</p>
-
+</code></pre><p>Добавлять кастомный заголовок будем с помощью <code>acl</code>. Для начала в секции <code>MAIN CONFIGURATION SETTINGS</code> находим следующие строки:</p>
 <pre><code>...
 acl_smtp_rcpt = acl_check_rcpt
 acl_smtp_data = acl_check_data
@@ -104,22 +110,13 @@ acl_smtp_mime = acl_check_mime
 
 # You should not change those settings until you understand how ACLs work.
 ...
-</code></pre>
-
-<p>и добавляем к ним еще одну:</p>
-
+</code></pre><p>и добавляем к ним еще одну:</p>
 <pre><code>...
 acl_not_smtp = acl_check_data
-</code></pre>
-
-<p>Здесь <code>acl_not_smtp</code> — ACL для не-SMTP сообщений (генерируемых локально с точки зрения <code>exim</code>), подробнее <a href="http://www.lissyara.su/doc/exim/4.62/access_control_lists/">здесь</a>.</p>
-
+</code></pre><p>Здесь <code>acl_not_smtp</code> — ACL для не-SMTP сообщений (генерируемых локально с точки зрения <code>exim</code>), подробнее <a href="http://www.lissyara.su/doc/exim/4.62/access_control_lists/">здесь</a>.</p>
 <p>Далее уже в секции <code>ACL CONFIGURATION</code> находим блок <code>acl_check_data</code> и в самом его конце (перед <code>accept</code>) добавляем такую строку:</p>
-
 <pre><code>    warn    logwrite   = DEBUG MESSAGE Subject: $h_subject: Custom-User-Email: $h_Custom-User-Email: Campaign-Id: $h_Campaign-Id:
-</code></pre>
-
-<p>Этим самым для всех исходящих писем будет срабатывать предупреждение (<code>warn</code>), которому мы применяем модификатор <code>logwrite</code> (писать в лог), а далее уточняем, что именно писать в лог: фразу <code>DEBUG MESSAGE</code> и три дополнительных заголовка, необходимых мне для отладки (<code>$h_subject</code>, <code>$h_Custom-User-Email</code> и <code>$h_Campaign-Id</code>).</p>
+</code></pre><p>Этим самым для всех исходящих писем будет срабатывать предупреждение (<code>warn</code>), которому мы применяем модификатор <code>logwrite</code> (писать в лог), а далее уточняем, что именно писать в лог: фразу <code>DEBUG MESSAGE</code> и три дополнительных заголовка, необходимых мне для отладки (<code>$h_subject</code>, <code>$h_Custom-User-Email</code> и <code>$h_Campaign-Id</code>).</p>
                 </section>
             </article>
 
@@ -161,23 +158,23 @@ acl_not_smtp = acl_check_data
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

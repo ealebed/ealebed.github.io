@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>GitLab: перенос данных с omnibus-установки в docker-установку &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,100 +90,49 @@
                 </header>
                 <section id="post-body">
                     <p><strong>GitLab</strong> — одна из самых популярных систем контроля версий и управления Git-репозиториями с открытым исходным кодом и очень широкой функциональностью. Процесс установки GitLab (будь-то omnibus, docker или <a href="https://bitnami.com/stack/gitlab">готовая виртуальная машина</a>) хорошо задокументирован, поэтому рассматривать мы его не будем.</p>
-
 <p>В данной статье подробно разберем <strong>пример переезда GitLab</strong> с omnibus-установки в docker-установку с сохранением всех данных — репозиториев, мерджей, комментариев, артефактов и билдов (если такие есть). Давайте разберемся!</p>
-
 <p>Итак, имеем неактуальную omnibus-установку GitLab из пакета <code>gitlab-ce_8.10.10-ce.0_amd64.deb</code>. Хотим получить актуальную версию (8.17.2), установленную в docker-контейнере, для простоты обновления в будущем.</p>
-
 <p>Сначала делаем резервную копию omnibus-установки GitLab:</p>
-
 <pre><code>sudo gitlab-rake gitlab:backup:create
-</code></pre>
-
-<p>По умолчанию резервная копия будет создана в каталоге <code>/var/opt/gitlab/backups</code>.</p>
-
+</code></pre><p>По умолчанию резервная копия будет создана в каталоге <code>/var/opt/gitlab/backups</code>.</p>
 <p>Из docker-образа устанавливаем GitLab той же версии, что и в omnibus-установке:</p>
-
 <pre><code>sudo docker run -d -h gitlab.example.com --name gitlab --restart always \
   -p 10080:80 -p 10022:22 \
   -v /data/gitlab/config:/etc/gitlab \
   -v /data/gitlab/logs:/var/log/gitlab \
   -v /data/gitlab/data:/var/opt/gitlab \
   gitlab/gitlab-ce:8.10.10-ce.0
-</code></pre>
-
-<p>После запуска контейнера в хост-системе будет автоматически создан каталог <code>/data/gitlab/data</code>. Переходим в него, создаем папку <code>backups</code> и копируем туда только что созданную резервную копию:</p>
-
+</code></pre><p>После запуска контейнера в хост-системе будет автоматически создан каталог <code>/data/gitlab/data</code>. Переходим в него, создаем папку <code>backups</code> и копируем туда только что созданную резервную копию:</p>
 <pre><code>cd /data/gitlab/data &amp;&amp; mkdir backups
-</code></pre>
-
-<pre><code>cp /var/opt/gitlab/backups/1924945297_gitlab_backup.tar /data/gitlab/data/backups
-</code></pre>
-
-<p>Опционально: изменим права доступа и владельца файла с бекапом внутри контейнера, на случай если он скопировался неправильно:</p>
-
+</code></pre><pre><code>cp /var/opt/gitlab/backups/1924945297_gitlab_backup.tar /data/gitlab/data/backups
+</code></pre><p>Опционально: изменим права доступа и владельца файла с бекапом внутри контейнера, на случай если он скопировался неправильно:</p>
 <pre><code>sudo docker exec -it gitlab bash
-</code></pre>
-
-<pre><code>chmod 600 /var/opt/gitlab/backups/1924945297_gitlab_backup.tar
-</code></pre>
-
-<pre><code>chown git:git /var/opt/gitlab/backups/1924945297_gitlab_backup.tar
-</code></pre>
-
-<p>Находясь в контейнере запускаем процедуру восстановление данных из бекапа:</p>
-
+</code></pre><pre><code>chmod 600 /var/opt/gitlab/backups/1924945297_gitlab_backup.tar
+</code></pre><pre><code>chown git:git /var/opt/gitlab/backups/1924945297_gitlab_backup.tar
+</code></pre><p>Находясь в контейнере запускаем процедуру восстановление данных из бекапа:</p>
 <pre><code>gitlab-ctl stop unicorn
-</code></pre>
-
-<pre><code>gitlab-ctl stop sidekiq
-</code></pre>
-
-<pre><code>gitlab-rake gitlab:backup:restore BACKUP=1924945297
-</code></pre>
-
-<pre><code>gitlab-ctl start
-</code></pre>
-
-<pre><code>gitlab-rake gitlab:check SANITIZE=true
-</code></pre>
-
-<p>После восстановления проверим возможность логина в браузере, если все работает, то идем дальше.</p>
-
+</code></pre><pre><code>gitlab-ctl stop sidekiq
+</code></pre><pre><code>gitlab-rake gitlab:backup:restore BACKUP=1924945297
+</code></pre><pre><code>gitlab-ctl start
+</code></pre><pre><code>gitlab-rake gitlab:check SANITIZE=true
+</code></pre><p>После восстановления проверим возможность логина в браузере, если все работает, то идем дальше.</p>
 <p>Останавливаем и удаляем docker-контейнер с GitLab:</p>
-
 <pre><code>sudo docker stop gitlab &amp;&amp; sudo docker rm gitlab
-</code></pre>
-
-<p>Запускаем docker-контейнер с актуальной версией GitLab и подсовываем ему нужные данные:</p>
-
+</code></pre><p>Запускаем docker-контейнер с актуальной версией GitLab и подсовываем ему нужные данные:</p>
 <pre><code>sudo docker run -d -h gitlab.example.com --name gitlab --restart always \
   -p 10080:80 -p 10022:22 \
   -v /data/gitlab/config:/etc/gitlab \
   -v /data/gitlab/logs:/var/log/gitlab \
   -v /data/gitlab/data:/var/opt/gitlab \
   gitlab/gitlab-ce:8.17.2-ce.0
-</code></pre>
-
-<p>При первом запуске все необходимые процедуры обновления запустятся самостоятельно (занимают буквально пару минут). После этого можно удалять старую omnibus-установку:</p>
-
+</code></pre><p>При первом запуске все необходимые процедуры обновления запустятся самостоятельно (занимают буквально пару минут). После этого можно удалять старую omnibus-установку:</p>
 <pre><code>sudo dpkg -r gitlab
-</code></pre>
-
-<p>или:</p>
-
+</code></pre><p>или:</p>
 <pre><code>sudo aptitude purge gitlab-ce
-</code></pre>
-
-<p>И не забыть потом удалить данные из старых рабочих каталогов Gitlab:</p>
-
+</code></pre><p>И не забыть потом удалить данные из старых рабочих каталогов Gitlab:</p>
 <pre><code>sudo rm -rf /var/opt/gitlab/
-</code></pre>
-
-<pre><code>sudo rm -rf /opt/gitlab
-</code></pre>
-
-<p>В дальнейшем вся процедура обновления Gitlab сводится к обновлению docker-контейнера.</p>
+</code></pre><pre><code>sudo rm -rf /opt/gitlab
+</code></pre><p>В дальнейшем вся процедура обновления Gitlab сводится к обновлению docker-контейнера.</p>
                 </section>
             </article>
 
@@ -214,23 +174,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

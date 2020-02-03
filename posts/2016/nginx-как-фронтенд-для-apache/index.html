@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Nginx как фронтенд для Apache &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,16 +90,10 @@
                 </header>
                 <section id="post-body">
                     <p>Apache и Nginx — наиболее распространенные web-серверы с открытым исходным кодом. Они могут прекрасно справляться с различными рабочими нагрузками, но также имеют и свои недостатки (например, Apache требует много памяти сервера, а Nginx зависит от модулей для динамического контента). Давайте разберемся, как взять лучшее от каждого из этих web-серверов!</p>
-
 <p>Зачастую для получения максимального эффекта <strong>Nginx используют как фронтенд</strong> (для статического контента), а <strong>Apache — как бекенд</strong> (для динамического контента). Считаем, что необходимые пакеты уже установлены в системе.</p>
-
 <p>Для настройки Nginx в роли фронтенда создадим конфигурационный файл:</p>
-
 <pre><code>nano /etc/nginx/sites-available/example
-</code></pre>
-
-<p>Пример содержимого конфигурационного файла:</p>
-
+</code></pre><p>Пример содержимого конфигурационного файла:</p>
 <pre><code>server {
   listen   80;
  
@@ -133,42 +138,20 @@
     deny all;
   }
 }
-</code></pre>
-
-<p>Активируем созданный виртуальный хост:</p>
-
+</code></pre><p>Активируем созданный виртуальный хост:</p>
 <pre><code>ln -s /etc/nginx/sites-available/example /etc/nginx/sites-enabled/example
-</code></pre>
-
-<p>И удалим присутствующий по умолччанию виртуальный хост:</p>
-
+</code></pre><p>И удалим присутствующий по умолччанию виртуальный хост:</p>
 <pre><code>rm /etc/nginx/sites-enabled/default
-</code></pre>
-
-<p>Проверить конфигурацию Nginx можно командой:</p>
-
+</code></pre><p>Проверить конфигурацию Nginx можно командой:</p>
 <pre><code>nginx -t
-</code></pre>
-
-<p>Перечитать конфиг можно так:</p>
-
+</code></pre><p>Перечитать конфиг можно так:</p>
 <pre><code>nginx -s reload
-</code></pre>
-
-<p>Переходим к настройке web-сервера Apache. Открываем конфигурационный файл <code>/etc/apache2/ports.conf</code>, и изменяем порт, на котором будет запущен Apache:</p>
-
+</code></pre><p>Переходим к настройке web-сервера Apache. Открываем конфигурационный файл <code>/etc/apache2/ports.conf</code>, и изменяем порт, на котором будет запущен Apache:</p>
 <pre><code>Listen 127.0.0.1:8080
-</code></pre>
-
-<p><strong>Примечание.</strong> Параметр <code>NameVirtualHost</code> начиная с версии 2.3.11 больше не используется.</p>
-
+</code></pre><p><strong>Примечание.</strong> Параметр <code>NameVirtualHost</code> начиная с версии 2.3.11 больше не используется.</p>
 <p>Копируем пример настроек виртуального хоста из настроек по умолчанию:</p>
-
 <pre><code>cp /etc/apache2/sites-available/default /etc/apache2/sites-available/example
-</code></pre>
-
-<p>Редактируем конфигурационный файл <code>/etc/apache2/sites-available/example</code>, в моем случае он выглядит следующим образом:</p>
-
+</code></pre><p>Редактируем конфигурационный файл <code>/etc/apache2/sites-available/example</code>, в моем случае он выглядит следующим образом:</p>
 <pre><code>...
 &lt;VirtualHost *&gt;
     ServerName example.com
@@ -179,34 +162,20 @@
     AddDefaultCharset utf-8
 &lt;/VirtualHost&gt;
 ...
-</code></pre>
-
-<p>Активируем виртуальный хост:</p>
-
+</code></pre><p>Активируем виртуальный хост:</p>
 <pre><code>a2ensite example
-</code></pre>
-
-<p>Перезапустить web-сервер Apache можно командой:</p>
-
+</code></pre><p>Перезапустить web-сервер Apache можно командой:</p>
 <pre><code>service apache2 restart
-</code></pre>
-
-<p>Убедиться, что web-серверы запущены на указанных портах можно командой:</p>
-
+</code></pre><p>Убедиться, что web-серверы запущены на указанных портах можно командой:</p>
 <pre><code>netstat -plunt
-</code></pre>
-
-<p>Результатом будет примерно следующее:</p>
-
+</code></pre><p>Результатом будет примерно следующее:</p>
 <pre><code>Active Internet connections (only servers)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
 tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      539/rpcbind
 tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      22092/apache2
 tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      733/nginx -g daemon
 ...
-</code></pre>
-
-<p>Также для проверки работоспособности настроенной связки можно создать файл <code>info.php</code>, котором использовать функцию <code>phpinfo()</code> — теперь при открытии в браузере страницы example.com/info.php будет выведена информация о текущей конфигурации PHP.</p>
+</code></pre><p>Также для проверки работоспособности настроенной связки можно создать файл <code>info.php</code>, котором использовать функцию <code>phpinfo()</code> — теперь при открытии в браузере страницы example.com/info.php будет выведена информация о текущей конфигурации PHP.</p>
                 </section>
             </article>
 
@@ -248,23 +217,23 @@ tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

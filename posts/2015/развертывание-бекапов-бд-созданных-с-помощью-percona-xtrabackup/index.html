@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Развертывание бекапов БД созданных с помощью Percona XtraBackup &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,103 +92,77 @@
                 </header>
                 <section id="post-body">
                     <p>При резервном копировании важно не только уметь создавать резервные копии (об этом я писал <a href="https://ealebed.github.io/posts/2015/%D1%80%D0%B5%D0%B7%D0%B5%D1%80%D0%B2%D0%BD%D0%BE%D0%B5-%D0%BA%D0%BE%D0%BF%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B1%D0%B0%D0%B7%D1%8B-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-percona-xtrabackup/">ранее</a>, и даже выложил <a href="https://ealebed.github.io/posts/2015/c%D0%BA%D1%80%D0%B8%D0%BF%D1%82-%D0%B4%D0%BB%D1%8F-%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D1%8F-%D0%B1%D0%B5%D0%BA%D0%B0%D0%BF%D0%BE%D0%B2-%D0%B1%D0%B4-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-percona-xtrabackup/">готовый скрипт</a> для создания резервных копий), но и знать как быстро восстанавливаться из бекапов.</p>
-
 <p>Давайте разберемся с этим вопросом!</p>
-
 <p>Итак, алгоритм <strong>развертывания полного бекапа баз данных</strong>:</p>
-
 <ul>
-<li><p>останавливаем MySQL-сервер:</p>
-
-<pre><code class="language-bash">/etc/init.d/mysql stop
-</code></pre></li>
-
-<li><p>переходим в <code>/var/lib/mysql</code> и удаляем все содержимое:</p>
-
-<pre><code class="language-bash">cd /var/lib/mysql
-rm -rf *
-</code></pre></li>
-
-<li><p>распаковываем резервную копию:</p>
-
-<pre><code class="language-bash">tar -ixvf имя_архива.tar.gz -C /var/lib/mysql
-</code></pre></li>
-
-<li><p>находясь в каталоге <code>/var/lib/mysql</code> накатываем бинарные логи:</p>
-
-<pre><code class="language-bash">innobackupex --apply-log --ibbackup=xtrabackup ./
-</code></pre></li>
-
-<li><p>выставляем права на каталог <code>/var/lib/mysql</code>:</p>
-
-<pre><code class="language-bash">chown -R mysql:mysql /var/lib/mysql/
-</code></pre></li>
-
-<li><p>запускаем MySQL-сервер:</p>
-
-<pre><code class="language-bash">/etc/init.d/mysql start
-</code></pre></li>
+<li>останавливаем MySQL-сервер:</li>
 </ul>
-
-<p>Алгоритм <strong>развертывания полного и инкрементального бекапа баз данных</strong>:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/mysql stop
+</code></pre></div><ul>
+<li>переходим в <code>/var/lib/mysql</code> и удаляем все содержимое:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /var/lib/mysql
+rm -rf *
+</code></pre></div><ul>
+<li>распаковываем резервную копию:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar -ixvf имя_архива.tar.gz -C /var/lib/mysql
+</code></pre></div><ul>
+<li>находясь в каталоге <code>/var/lib/mysql</code> накатываем бинарные логи:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">innobackupex --apply-log --ibbackup<span style="color:#f92672">=</span>xtrabackup ./
+</code></pre></div><ul>
+<li>выставляем права на каталог <code>/var/lib/mysql</code>:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chown -R mysql:mysql /var/lib/mysql/
+</code></pre></div><ul>
+<li>запускаем MySQL-сервер:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/mysql start
+</code></pre></div><p>Алгоритм <strong>развертывания полного и инкрементального бекапа баз данных</strong>:</p>
 <ul>
-<li><p>останавливаем MySQL-сервер:</p>
-
-<pre><code class="language-bash">/etc/init.d/mysql stop
-</code></pre></li>
-
-<li><p>переходим в <code>/var/lib/mysql</code> и удаляем все содержимое:</p>
-
-<pre><code class="language-bash">cd /var/lib/mysql
-rm -rf *
-</code></pre></li>
-
-<li><p>распаковываем резервную копию:</p>
-
-<pre><code class="language-bash">tar -ixvf имя_архива.tar.gz -C /var/lib/mysql
-</code></pre></li>
-
-<li><p>находясь в каталоге <code>/var/lib/mysql</code> накатываем бинарные логи:</p>
-
-<pre><code class="language-bash">innobackupex --apply-log --redo-only --ibbackup=xtrabackup ./
-</code></pre></li>
-
-<li><p>перекладываем инкрементальную резервную копию <code>имя_архива.xbstream</code> в <code>/mnt/temp</code></p></li>
+<li>останавливаем MySQL-сервер:</li>
 </ul>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/mysql stop
+</code></pre></div><ul>
+<li>переходим в <code>/var/lib/mysql</code> и удаляем все содержимое:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /var/lib/mysql
+rm -rf *
+</code></pre></div><ul>
+<li>распаковываем резервную копию:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar -ixvf имя_архива.tar.gz -C /var/lib/mysql
+</code></pre></div><ul>
+<li>находясь в каталоге <code>/var/lib/mysql</code> накатываем бинарные логи:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">innobackupex --apply-log --redo-only --ibbackup<span style="color:#f92672">=</span>xtrabackup ./
+</code></pre></div><ul>
+<li>перекладываем инкрементальную резервную копию <code>имя_архива.xbstream</code> в <code>/mnt/temp</code></li>
+</ul>
 <p><strong>Примечание.</strong> Считаем, что создан раздел необходимого размера и примонтирован в <code>/mnt/temp</code>. Если у нас несколько инкрементальных архивов, то они должны находиться в разных каталогах — <code>/mnt/temp_1</code>, <code>/mnt/temp_2</code> и т. д.</p>
-
 <ul>
-<li><p>находясь в каталоге <code>/mnt/temp</code> распаковываем резервную копию:</p>
-
-<pre><code class="language-bash">xbstream -x &lt; имя_архива.xbstream
-</code></pre></li>
-
-<li><p>находясь в каталоге <code>/var/lib/mysql</code> выполняем:</p>
-
-<pre><code class="language-bash">innobackupex --apply-log --ibbackup=xtrabackup ./ --incremental-dir=/mnt/temp/
-</code></pre></li>
+<li>находясь в каталоге <code>/mnt/temp</code> распаковываем резервную копию:</li>
 </ul>
-
-<p><strong>Примечание.</strong> Если у нас несколько инкрементальных бекапов, то их нужно готовить в хронологической последовательности (!). Для всех, кроме последнего инкрементального бекапа нужно добавлять ключ <code>--redo-only</code></p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">xbstream -x &lt; имя_архива.xbstream
+</code></pre></div><ul>
+<li>находясь в каталоге <code>/var/lib/mysql</code> выполняем:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">innobackupex --apply-log --ibbackup<span style="color:#f92672">=</span>xtrabackup ./ --incremental-dir<span style="color:#f92672">=</span>/mnt/temp/
+</code></pre></div><p><strong>Примечание.</strong> Если у нас несколько инкрементальных бекапов, то их нужно готовить в хронологической последовательности (!). Для всех, кроме последнего инкрементального бекапа нужно добавлять ключ <code>--redo-only</code></p>
 <ul>
-<li><p>находясь в каталоге <code>/var/lib/mysql</code> выполняем:</p>
-
-<pre><code class="language-bash">innobackupex --apply-log --ibbackup=xtrabackup ./
-</code></pre></li>
-
-<li><p>выставляем права на каталог <code>/var/lib/mysql</code>:</p>
-
-<pre><code class="language-bash">chown -R mysql:mysql /var/lib/mysql/
-</code></pre></li>
-
-<li><p>запускаем MySQL-сервер:</p>
-
-<pre><code class="language-bash">/etc/init.d/mysql start
-</code></pre></li>
+<li>находясь в каталоге <code>/var/lib/mysql</code> выполняем:</li>
 </ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">innobackupex --apply-log --ibbackup<span style="color:#f92672">=</span>xtrabackup ./
+</code></pre></div><ul>
+<li>выставляем права на каталог <code>/var/lib/mysql</code>:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chown -R mysql:mysql /var/lib/mysql/
+</code></pre></div><ul>
+<li>запускаем MySQL-сервер:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/mysql start
+</code></pre></div>
                 </section>
             </article>
 
@@ -219,23 +204,23 @@ rm -rf *
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

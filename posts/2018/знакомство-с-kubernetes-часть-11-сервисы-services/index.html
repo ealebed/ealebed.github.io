@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Знакомство с Kubernetes. Часть 11: Сервисы (services) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,101 +88,76 @@
                 </header>
                 <section id="post-body">
                     <p>Поды в кластере <code>Kubernetes</code> смертны - они создаются (рождаются), но когда под по какой-либо причине умирает, то он не воскресает. И хотя каждый под при создании получает свой собственный IP-адрес, этот адрес нельзя назвать постоянным и стабильным вследствие &ldquo;смертности&rdquo; подов. Давайте разберемся!</p>
-
 <p>К примеру, <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>ReplicaSet</code></a> может динамически изменять количество подов в кластере (путем масштабирования), при этом новые поды могут быть запущены на других узлах (нодах) кластера - в этом случае IP-адрес пода наверняка изменится.</p>
-
 <p>Это порождает проблему: если некий набор подов (назовем их backends) предоставляют функционал другому набору подов (назовем их frontends) внутри кластера <code>Kubernetes</code>, то как frontend-поды узнают адреса backend-подов и взаимодействуют с ними?</p>
-
 <p>Сервис в <code>Kubernetes</code> - это абстракция, определяющая логический набор подов и политику доступа к ним (иногда такой набор подов еще называют микросервисом). Как правило, этот набор подов определяется на основе <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D0%BC%D0%B5%D1%82%D0%BA%D0%B8-%D0%B8-%D1%81%D0%B5%D0%BB%D0%B5%D0%BA%D1%82%D0%BE%D1%80%D1%8B/">меток</a> (присваиваются в момент создания подов) и селекторов.</p>
-
 <p>Например, backend - это 3 реплики подов, занимающихся обработкой изображений. Все три пода абсолютно идентичны с функциональной точки зрения (так как это реплики), поэтому frontend не должен беспокоиться на какой именно backend-под попадет запрос - это работа сервиса.</p>
-
 <p>Простейший пример сервиса может выглядеть так:</p>
-
-<pre><code class="language-yaml">kind: Service
-apiVersion: v1
-metadata:
-  name: my-service
-spec:
-  selector:
-    app: MyApp
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 9376
-</code></pre>
-
-<p>Согласно данной спецификации, будет создан объект &ldquo;сервис&rdquo; (<code>service</code>) с именем <code>my-service</code>, перенаправляющий запросы на порт 9376 <strong>каждого</strong> пода, у которого присутствует метка <code>app=MyApp</code>. Этому сервису также будет назначен отдельный IP-адрес.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">kind</span>: Service
+<span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: my-service
+<span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">selector</span>:
+    <span style="color:#66d9ef">app</span>: MyApp
+  <span style="color:#66d9ef">ports</span>:
+  - <span style="color:#66d9ef">protocol</span>: TCP
+    <span style="color:#66d9ef">port</span>: <span style="color:#ae81ff">80</span>
+    <span style="color:#66d9ef">targetPort</span>: <span style="color:#ae81ff">9376</span>
+</code></pre></div><p>Согласно данной спецификации, будет создан объект &ldquo;сервис&rdquo; (<code>service</code>) с именем <code>my-service</code>, перенаправляющий запросы на порт 9376 <strong>каждого</strong> пода, у которого присутствует метка <code>app=MyApp</code>. Этому сервису также будет назначен отдельный IP-адрес.</p>
 <p>Согласно указанному селектору, в кластере непрерывно будут проверяться поды на наличие метки <code>app=MyApp</code>, а результат такой проверки будет публиковаться (с помощью <code>POST</code>) в объект <code>Endpoints</code> с таким же именем - <code>my-service</code>.</p>
-
 <p>Стоит отметить, что сервис может сопоставлять входящий порт (<code>port:</code>) с любым портом назначения (<code>targetPort:</code>). Если параметр <code>targetPort</code> не указан, то по умолчанию будет использоваться тот же порт, что и в параметре <code>port</code>. Еще одна интересная особенность - <code>targetPort</code> может содержать строку с <strong>именем</strong> порта в подах (а сам номер порта, присвоенный этому имени, может быть разным для каждого пода).</p>
-
 <p>Сервисы чаще всего используются для доступа к подам в кластере <code>Kubernetes</code>, но их также можно использовать и для доступа к другим типам бэкендов, например:</p>
-
 <ul>
 <li>внешний кластер баз данных в production-окружении, локальная БД для тестового окружения;</li>
 <li>совершенно иной сервис в другом неймспейсе или кластере;</li>
 <li>часть бекендов, запущенных вне кластера <code>Kubernetes</code> (например, если вы только переносите свою инфраструктуру).</li>
 </ul>
-
 <p>В любом из предложенных вариантов следует создать сервис без селекторов, например:</p>
-
-<pre><code class="language-yaml">kind: Service
-apiVersion: v1
-metadata:
-  name: my-service
-spec:
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 9376
-</code></pre>
-
-<p>и, так как селекторов нет, соотвествующий объект <code>Endpoints</code> не создастся автоматически. Его необходимо создать вручную, тем самым указав связь между сервисом и конечной точкой (бекендом), например так:</p>
-
-<pre><code class="language-yaml">kind: Endpoints
-apiVersion: v1
-metadata:
-  name: my-service
-subsets:
-  - addresses:
-      - ip: 1.2.3.4
-    ports:
-      - port: 9376
-</code></pre>
-
-<p><strong>Примечание.</strong> IP-адрес в данном случае не может находиться в диапазонах 127.0.0.0/8, 169.254.0.0/16 и 224.0.0.0/24.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">kind</span>: Service
+<span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: my-service
+<span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">ports</span>:
+  - <span style="color:#66d9ef">protocol</span>: TCP
+    <span style="color:#66d9ef">port</span>: <span style="color:#ae81ff">80</span>
+    <span style="color:#66d9ef">targetPort</span>: <span style="color:#ae81ff">9376</span>
+</code></pre></div><p>и, так как селекторов нет, соотвествующий объект <code>Endpoints</code> не создастся автоматически. Его необходимо создать вручную, тем самым указав связь между сервисом и конечной точкой (бекендом), например так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">kind</span>: Endpoints
+<span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: my-service
+<span style="color:#66d9ef">subsets</span>:
+  - <span style="color:#66d9ef">addresses</span>:
+      - <span style="color:#66d9ef">ip</span>: <span style="color:#ae81ff">1.2</span><span style="color:#ae81ff">.3</span><span style="color:#ae81ff">.4</span>
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#66d9ef">port</span>: <span style="color:#ae81ff">9376</span>
+</code></pre></div><p><strong>Примечание.</strong> IP-адрес в данном случае не может находиться в диапазонах 127.0.0.0/8, 169.254.0.0/16 и 224.0.0.0/24.</p>
 <p>Для многих сервисов обычным делом является использование (открытие) нескольких портов. В таком случае, все что необходимо - присвоить имена всем портам, например:</p>
-
-<pre><code class="language-yaml">kind: Service
-apiVersion: v1
-metadata:
-  name: my-service
-spec:
-  selector:
-    app: MyApp
-  ports:
-  - name: http
-    protocol: TCP
-    port: 80
-    targetPort: 9376
-  - name: https
-    protocol: TCP
-    port: 443
-    targetPort: 9377
-</code></pre>
-
-<p>В <code>Kubernetes</code> существует несколько вариантов предоставления доступа к сервисам, которые называются типы (<code>ServiceTypes</code>):</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">kind</span>: Service
+<span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: my-service
+<span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">selector</span>:
+    <span style="color:#66d9ef">app</span>: MyApp
+  <span style="color:#66d9ef">ports</span>:
+  - <span style="color:#66d9ef">name</span>: http
+    <span style="color:#66d9ef">protocol</span>: TCP
+    <span style="color:#66d9ef">port</span>: <span style="color:#ae81ff">80</span>
+    <span style="color:#66d9ef">targetPort</span>: <span style="color:#ae81ff">9376</span>
+  - <span style="color:#66d9ef">name</span>: https
+    <span style="color:#66d9ef">protocol</span>: TCP
+    <span style="color:#66d9ef">port</span>: <span style="color:#ae81ff">443</span>
+    <span style="color:#66d9ef">targetPort</span>: <span style="color:#ae81ff">9377</span>
+</code></pre></div><p>В <code>Kubernetes</code> существует несколько вариантов предоставления доступа к сервисам, которые называются типы (<code>ServiceTypes</code>):</p>
 <ul>
 <li><code>ClusterIP</code>: предоставляет доступ к сервису на внутреннем IP-адресе кластера (сервис доступен только внутри кластера). Тип <code>ClusterIP</code> используется по умолчанию;</li>
 <li><code>NodePort</code>: предоставляет доступ к сервису на IP-адресе каждого узла (ноды) кластера, на статическом порту (из диапазона 30000-32767). Автоматически создастся и сервис типа <code>ClusterIP</code>, на который будут маршрутизироваться запросы с <code>NodePort</code>. Взаимодействовать с сервисом можно также из-за пределов кластера, используя в качестве адреса <code>&lt;NodeIP&gt;:&lt;NodePort&gt;</code>;</li>
 <li><code>LoadBalancer</code>: предоставляет доступ к сервису используя балансировщик (load balancer) облачного провайдера. При этом автоматически создаются сервисы типа <code>NodePort</code> и <code>ClusterIP</code>, на которые будут маршрутизироваться запросы с балансировщика;</li>
 <li><code>ExternalName</code>: особый случай - сопоставляет имя сервиса с содержимым поля <code>externalName</code> (например, foo.bar.example.com), возвращая CNAME запись. Никакого проксирования не происходит.</li>
 </ul>
-
 <p>Больше информации о сервисах можно найти в <a href="https://kubernetes.io/docs/concepts/services-networking/service/">официальной документации</a> или в статье <a href="https://medium.com/google-cloud/understanding-kubernetes-networking-services-f0cb48e4cc82">Understanding kubernetes networking: services</a>, а мы в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-12-%D0%B0%D0%BD%D0%BD%D0%BE%D1%82%D0%B0%D1%86%D0%B8%D0%B8/">следующей статье</a> поговорим об аннотациях.</p>
                 </section>
             </article>
@@ -214,23 +200,23 @@ spec:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

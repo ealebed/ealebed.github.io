@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №29: Создание read-only контейнеров &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,42 +88,27 @@
                 </header>
                 <section id="post-body">
                     <p>Возможно, вам захочется запускать docker-контейнеры в режиме только для чтения (read-only) - например, для повышения безопасности или из-за специфических требований вашего приложения. Давайте разберемся!</p>
-
 <p>У меня ни разу не возникало нужды запускать docker-контейнеры в режиме read-only, но интересно знать о подобном функционале. Сделать это очень легко, убедимся в этом с помощью простого теста:</p>
-
-<pre><code class="language-bash">docker run --rm --read-only alpine:3.7 touch hello.txt
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm --read-only alpine:3.7 touch hello.txt
 &gt; touch: hello.txt: Read-only file system
-</code></pre>
-
-<p>Как и ожидалось, на экране появилось сообщение о невозможности создать файл <code>hello.txt</code>. Если выполнить предложенную команду без параметра <code>--read-only</code>, то файл будет успешно создан.</p>
-
+</code></pre></div><p>Как и ожидалось, на экране появилось сообщение о невозможности создать файл <code>hello.txt</code>. Если выполнить предложенную команду без параметра <code>--read-only</code>, то файл будет успешно создан.</p>
 <p>Стоит отметить, что не все docker-образы поддерживают использование ключа <code>--read-only</code> при старте контейнера - некоторые из них созданы так, что в обязательном порядке требуют возможности записывать служебные файлы в определенные каталоги (иначе контейнер просто не запустится).</p>
-
 <p>Например, флаг <code>--read-only</code> отлично сработает при запуске docker-контейнера с Redis:</p>
-
-<pre><code class="language-bash">docker run --rm -it --read-only redis:alpine
-1:C 31 May 11:16:40.533 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
-1:C 31 May 11:16:40.533 # Redis version=4.0.9, bits=64, commit=00000000, modified=0, pid=1, just started
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm -it --read-only redis:alpine
+1:C <span style="color:#ae81ff">31</span> May 11:16:40.533 <span style="color:#75715e"># oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo</span>
+1:C <span style="color:#ae81ff">31</span> May 11:16:40.533 <span style="color:#75715e"># Redis version=4.0.9, bits=64, commit=00000000, modified=0, pid=1, just started</span>
 ...
-1:M 31 May 11:16:40.534 * Ready to accept connections
-</code></pre>
-
-<p>но не с Postgres:</p>
-
-<pre><code class="language-bash">docker run -it --read-only postgres:10.3-alpine
+1:M <span style="color:#ae81ff">31</span> May 11:16:40.534 * Ready to accept connections
+</code></pre></div><p>но не с Postgres:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -it --read-only postgres:10.3-alpine
 chown: /var/run/postgresql: Read-only file system
 chown: /var/run/postgresql: Read-only file system
-</code></pre>
-
-<p>Побороть данную проблему можно монтированием тома с хост-системы внутрь docker-контейнера (разрешая таким образом запись) или с помощью еще одного параметра <code>--tmpfs</code>. Например, если вы точно знаете, что приложение, упакованное в docker-контейнер, должно писать в каталоги <code>/var</code> и <code>/tmp</code> (как в случае с postgres), используйте следующую команду:</p>
-
-<pre><code class="language-bash">docker run -it --read-only --tmpfs /var --tmpfs /tmp postgres:10.3-alpine
-The files belonging to this database system will be owned by user &quot;postgres&quot;.
+</code></pre></div><p>Побороть данную проблему можно монтированием тома с хост-системы внутрь docker-контейнера (разрешая таким образом запись) или с помощью еще одного параметра <code>--tmpfs</code>. Например, если вы точно знаете, что приложение, упакованное в docker-контейнер, должно писать в каталоги <code>/var</code> и <code>/tmp</code> (как в случае с postgres), используйте следующую команду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -it --read-only --tmpfs /var --tmpfs /tmp postgres:10.3-alpine
+The files belonging to this database system will be owned by user <span style="color:#e6db74">&#34;postgres&#34;</span>.
 ...
-2018-05-31 11:30:11.256 UTC [1] LOG:  database system is ready to accept connections
-</code></pre>
-
-<p>Ключ <code>--tmpfs</code> при запуске docker-контейнера можно использовать несколько раз (сколько вам потребуется директорий для записи). Еще одно преимущество данного ключа в том, что вам не придется монтировать каталог с хост-системы.</p>
+2018-05-31 11:30:11.256 UTC <span style="color:#f92672">[</span>1<span style="color:#f92672">]</span> LOG:  database system is ready to accept connections
+</code></pre></div><p>Ключ <code>--tmpfs</code> при запуске docker-контейнера можно использовать несколько раз (сколько вам потребуется директорий для записи). Еще одно преимущество данного ключа в том, что вам не придется монтировать каталог с хост-системы.</p>
                 </section>
             </article>
 
@@ -154,23 +150,23 @@ The files belonging to this database system will be owned by user &quot;postgres
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

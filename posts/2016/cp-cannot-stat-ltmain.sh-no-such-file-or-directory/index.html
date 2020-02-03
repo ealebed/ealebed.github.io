@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>cp: cannot stat &#39;ltmain.sh&#39;: No such file or directory &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,70 +90,39 @@
                 </header>
                 <section id="post-body">
                     <p>После обновления дистрибутива с Debian Wheezy до Debian Jessie при установке php-расширения <code>twig</code> столкнулся с проблемой <code>cp: cannot stat 'ltmain.sh': No such file or directory</code>. Давайте разберемся!</p>
-
 <p>Действия выполнялись на:</p>
-
 <pre><code>lsb_release -a
 No LSB modules are available.
 Distributor ID:	Debian
 Description:	Debian GNU/Linux 8.6 (jessie)
 Release:	8.6
 Codename:	jessie
-</code></pre>
-
-<p>Установка необходимого php-расширения (шаблонизатора) <code>twig</code>:</p>
-
+</code></pre><p>Установка необходимого php-расширения (шаблонизатора) <code>twig</code>:</p>
 <pre><code>git clone git://github.com/fabpot/Twig.git
-</code></pre>
-
-<pre><code>cd Twig/ext/twig/
-</code></pre>
-
-<pre><code>phpize
+</code></pre><pre><code>cd Twig/ext/twig/
+</code></pre><pre><code>phpize
 Configuring for:
 PHP Api Version:         20131106
 Zend Module Api No:      20131226
 Zend Extension Api No:   220131226
 cp: cannot stat 'ltmain.sh': No such file or directory
-</code></pre>
-
-<p>Как оказалось — это баг. Дело в том, что в каталоге <code>/usr/lib/php5/build/</code> находится <code>ltmain.sh</code> в виде ссылки на <code>../../../../share/libtool/confg/ltmain.sh</code>. Но, как оказалось, в действительности такого файла не существует, и при выполнении <code>phpize</code> получаем ошибку.</p>
-
+</code></pre><p>Как оказалось — это баг. Дело в том, что в каталоге <code>/usr/lib/php5/build/</code> находится <code>ltmain.sh</code> в виде ссылки на <code>../../../../share/libtool/confg/ltmain.sh</code>. Но, как оказалось, в действительности такого файла не существует, и при выполнении <code>phpize</code> получаем ошибку.</p>
 <p>Для исправления этой досадной ситуации необходимо исправить ссылку, делаем это так:</p>
-
 <pre><code>cd /usr/lib/php5/build/
-</code></pre>
-
-<pre><code>sudo rm ltmain.sh
-</code></pre>
-
-<pre><code>ln -s ../../../share/libtool/build-aux/ltmain.sh
-</code></pre>
-
-<p>или то же самое, но одной строкой:</p>
-
+</code></pre><pre><code>sudo rm ltmain.sh
+</code></pre><pre><code>ln -s ../../../share/libtool/build-aux/ltmain.sh
+</code></pre><p>или то же самое, но одной строкой:</p>
 <pre><code>sudo rm /usr/lib/php5/build/ltmain.sh &amp;&amp; sudo ln -s /usr/share/libtool/build-aux/ltmain.sh /usr/lib/php5/build/ltmain.sh
-</code></pre>
-
-<p>Пытаемся еще раз установить расширение:</p>
-
+</code></pre><p>Пытаемся еще раз установить расширение:</p>
 <pre><code>cd ~/Twig/ext/twig/
-</code></pre>
-
-<pre><code>phpize
+</code></pre><pre><code>phpize
 Configuring for:
 PHP Api Version:         20131106
 Zend Module Api No:      20131226
 Zend Extension Api No:   220131226
-</code></pre>
-
-<pre><code>./configure
-</code></pre>
-
-<pre><code>make &amp;&amp; make install
-</code></pre>
-
-<p>На этот раз все сработало без ошибок!</p>
+</code></pre><pre><code>./configure
+</code></pre><pre><code>make &amp;&amp; make install
+</code></pre><p>На этот раз все сработало без ошибок!</p>
                 </section>
             </article>
 
@@ -184,23 +164,23 @@ Zend Extension Api No:   220131226
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

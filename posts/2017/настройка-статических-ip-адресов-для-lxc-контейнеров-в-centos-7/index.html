@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Настройка статических ip-адресов для LXC-контейнеров в CentOS 7 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,21 +88,14 @@
                 </header>
                 <section id="post-body">
                     <p>Работа с Linux Containers и установленным внутри них софтом значительно упрощается, если использовать статику в настройках сети.</p>
-
 <p>Существует несколько вариантов настройки статических ip-адресов для LXC-контейнеров — давайте разберемся!</p>
-
 <p>Предложенные варианты тестировались в ОС CentOS 7, но должны успешно работать и в других дистрибутивах Linux.
 Считаем, что все предварительные действия по <a href="https://ealebed.github.io/posts/2017/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%81%D0%B5%D1%82%D0%B8-%D0%B4%D0%BB%D1%8F-lxc-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%BE%D0%B2-%D0%B2-debian-8-centos-7-%D0%B8-fedora-21/">настройке сети для LXC-контейнеров в Debian Jessie, CentOS 7 и Fedora 21</a> уже выполнены.</p>
-
 <p>Вариант 1. При выключенном LXC-контейнере редактируем конфигурационный файл <code>/var/lib/lxc/{имя_контейнера}/config</code>, добавляя в него следующие строки:</p>
-
 <pre><code>...
 lxc.network.ipv4 = 10.0.3.31/24
 lxc.network.ipv4.gateway = auto
-</code></pre>
-
-<p>В конфигурационном файле <code>/var/lib/lxc/{имя_контейнера}/rootfs/etc/sysconfig/network-scripts/ifcfg-eth0</code> параметр <code>BOOTPROTO</code> изменяем на <code>none</code>, должно получиться примерно следующее:</p>
-
+</code></pre><p>В конфигурационном файле <code>/var/lib/lxc/{имя_контейнера}/rootfs/etc/sysconfig/network-scripts/ifcfg-eth0</code> параметр <code>BOOTPROTO</code> изменяем на <code>none</code>, должно получиться примерно следующее:</p>
 <pre><code>DEVICE=eth0
 BOOTPROTO=none
 ONBOOT=yes
@@ -100,30 +104,16 @@ NM_CONTROLLED=no
 TYPE=Ethernet
 MTU=
 DHCP_HOSTNAME=`hostname`
-</code></pre>
-
-<p>На хост-компьютере перезапускаем сервисы, обеспечивающие корректную работу сети для LXC-контейнеров:</p>
-
-<pre><code class="language-bash">systemctl restart lxc-net.service 
-</code></pre>
-
-<pre><code class="language-bash">systemctl restart lxc-dhcp.service 
-</code></pre>
-
-<pre><code class="language-bash">systemctl restart iptables
-</code></pre>
-
-<p>Далее можно запускать контейнер командой <code>lxc-start -n {имя_контейнера} -d</code>.</p>
-
+</code></pre><p>На хост-компьютере перезапускаем сервисы, обеспечивающие корректную работу сети для LXC-контейнеров:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl restart lxc-net.service 
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl restart lxc-dhcp.service 
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl restart iptables
+</code></pre></div><p>Далее можно запускать контейнер командой <code>lxc-start -n {имя_контейнера} -d</code>.</p>
 <p>Вариант 2. На хост-компьютере открываем на редактирование конфигурационный файл <code>/etc/lxc/dnsmasq.conf</code> и добавляем в него необходимые строки (по одной для каждого LXC-контейнера, который вы хотите запустить) в следующем формате:</p>
-
 <pre><code>dhcp-host={имя_контейнера_1},10.0.3.21
 dhcp-host={имя_контейнера_2},10.0.3.22
 dhcp-host={имя_контейнера_3},10.0.3.31
-</code></pre>
-
-<p>Убедимся, что в настройках юнита <code>lxc-dhcp.service</code> присутствует (а если нет, то добавим) следующая строка <code>--conf-file=/etc/lxc/dnsmasq.conf \</code>:</p>
-
+</code></pre><p>Убедимся, что в настройках юнита <code>lxc-dhcp.service</code> присутствует (а если нет, то добавим) следующая строка <code>--conf-file=/etc/lxc/dnsmasq.conf \</code>:</p>
 <pre><code>cat /etc/systemd/system/lxc-dhcp.service
 [Unit]
 Requires=lxc-net.service
@@ -144,25 +134,13 @@ ExecStart=/sbin/dnsmasq \
  
 [Install]
 WantedBy=default.target
-</code></pre>
-
-<p>Если в настройки юнита вносились изменения, то необходимо применить их командой:</p>
-
-<pre><code class="language-bash">systemctl daemon-reload
-</code></pre>
-
-<p>Далее перезапускаем сервисы отвечающие за корректную работу сети LXC-контейнеров:</p>
-
-<pre><code class="language-bash">systemctl restart lxc-net.service
-</code></pre>
-
-<pre><code class="language-bash">systemctl restart lxc-dhcp.service
-</code></pre>
-
-<pre><code class="language-bash">systemctl restart iptables
-</code></pre>
-
-<p>и запускаем контейнеры!</p>
+</code></pre><p>Если в настройки юнита вносились изменения, то необходимо применить их командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl daemon-reload
+</code></pre></div><p>Далее перезапускаем сервисы отвечающие за корректную работу сети LXC-контейнеров:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl restart lxc-net.service
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl restart lxc-dhcp.service
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl restart iptables
+</code></pre></div><p>и запускаем контейнеры!</p>
                 </section>
             </article>
 
@@ -204,23 +182,23 @@ WantedBy=default.target
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

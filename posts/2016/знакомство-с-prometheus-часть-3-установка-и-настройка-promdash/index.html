@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Знакомство с Prometheus. Часть 3: установка и настройка PromDash &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,94 +90,57 @@
                 </header>
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">первой части</a> нашего знакомства с Prometheus мы успешно установили и настроили систему мониторинга.</p>
-
 <p>Во <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%81%D0%B1%D0%BE%D1%80-%D0%BC%D0%B5%D1%82%D1%80%D0%B8%D0%BA-%D0%BE%D1%82-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0/">второй части</a> научились собирать метрики от MySQL-сервера и строить по ним графики, теперь настало время организовать отдельные графики в дашборд. Давайте разберемся!</p>
-
 <p>Как уже упоминалось ранее, для построения дашбордов в <strong>системе мониторинга Prometheus</strong> используется инструмент <a href="https://github.com/prometheus/promdash">PromDash</a>. <strong>Установка и настройка PromDash</strong> начинается с установки необходимых компонентов (Git, Ruby, MySQL, Bundler) и их зависимостей:</p>
-
-<pre><code class="language-bash">sudo aptitude install git ruby-full mysql-server libmysqlclient-dev
-</code></pre>
-
-<p>далее:</p>
-
-<pre><code class="language-bash">gem install bundler
-</code></pre>
-
-<p>загружаем исходники:</p>
-
-<pre><code class="language-bash">git clone https://github.com/prometheus/promdash.git
-</code></pre>
-
-<p>переходим в каталог с исходниками:</p>
-
-<pre><code class="language-bahs">cd promdash
-</code></pre>
-
-<p>и выполняем:</p>
-
-<pre><code class="language-bash">bundle install --without sqlite3 postgresql
-</code></pre>
-
-<p>После успешного завершения скопируем настройки базы данных из файла-примера:</p>
-
-<pre><code class="language-bash">cp config/database.yml.example config/database.yml
-</code></pre>
-
-<p>Приведем конфигурационный файл <code>database.yml</code> к следующему виду:</p>
-
-<pre><code class="language-yaml">production:
-  adapter: mysql2
-  database: promdash_test
-  host: localhost
-  username: root
-  pool: 5
-  timeout: 5000
-</code></pre>
-
-<p><strong>Примечание.</strong> Это тестовый пример настройки, ни к коем случае не используйте эти параметры на вашем production-сервере.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo aptitude install git ruby-full mysql-server libmysqlclient-dev
+</code></pre></div><p>далее:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gem install bundler
+</code></pre></div><p>загружаем исходники:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/prometheus/promdash.git
+</code></pre></div><p>переходим в каталог с исходниками:</p>
+<pre><code class="language-bahs" data-lang="bahs">cd promdash
+</code></pre><p>и выполняем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">bundle install --without sqlite3 postgresql
+</code></pre></div><p>После успешного завершения скопируем настройки базы данных из файла-примера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp config/database.yml.example config/database.yml
+</code></pre></div><p>Приведем конфигурационный файл <code>database.yml</code> к следующему виду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">production</span>:
+  <span style="color:#66d9ef">adapter</span>: mysql2
+  <span style="color:#66d9ef">database</span>: promdash_test
+  <span style="color:#66d9ef">host</span>: localhost
+  <span style="color:#66d9ef">username</span>: root
+  <span style="color:#66d9ef">pool</span>: <span style="color:#ae81ff">5</span>
+  <span style="color:#66d9ef">timeout</span>: <span style="color:#ae81ff">5000</span>
+</code></pre></div><p><strong>Примечание.</strong> Это тестовый пример настройки, ни к коем случае не используйте эти параметры на вашем production-сервере.</p>
 <p>Выполняем первичную настройку (инициализацию) базы данных:</p>
-
-<pre><code class="language-bash">RAILS_ENV=production bundle exec rake db:setup
-/var/lib/gems/2.1.0/gems/bundler-1.11.2/lib/bundler/shared_helpers.rb:78: warning: Insecure world writable dir /usr/local/sbin in PATH, mode 042777
-/var/lib/gems/2.1.0/gems/bundler-1.11.2/lib/bundler/shared_helpers.rb:78: warning: Insecure world writable dir /usr/local/sbin in PATH, mode 042777
-(in /opt/promdash)
--- create_table(&quot;dashboards&quot;, {:force=&gt;true})
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">RAILS_ENV<span style="color:#f92672">=</span>production bundle exec rake db:setup
+/var/lib/gems/2.1.0/gems/bundler-1.11.2/lib/bundler/shared_helpers.rb:78: warning: Insecure world writable dir /usr/local/sbin in PATH, mode <span style="color:#ae81ff">042777</span>
+/var/lib/gems/2.1.0/gems/bundler-1.11.2/lib/bundler/shared_helpers.rb:78: warning: Insecure world writable dir /usr/local/sbin in PATH, mode <span style="color:#ae81ff">042777</span>
+<span style="color:#f92672">(</span>in /opt/promdash<span style="color:#f92672">)</span>
+-- create_table<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;dashboards&#34;</span>, <span style="color:#f92672">{</span>:force<span style="color:#f92672">=</span>&gt;true<span style="color:#f92672">}</span><span style="color:#f92672">)</span>
    -&gt; 0.0174s
--- add_index(&quot;dashboards&quot;, [&quot;directory_id&quot;], {:name=&gt;&quot;index_dashboards_on_directory_id&quot;})
+-- add_index<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;dashboards&#34;</span>, <span style="color:#f92672">[</span><span style="color:#e6db74">&#34;directory_id&#34;</span><span style="color:#f92672">]</span>, <span style="color:#f92672">{</span>:name<span style="color:#f92672">=</span>&gt;<span style="color:#e6db74">&#34;index_dashboards_on_directory_id&#34;</span><span style="color:#f92672">}</span><span style="color:#f92672">)</span>
    -&gt; 0.0349s
--- add_index(&quot;dashboards&quot;, [&quot;slug&quot;], {:name=&gt;&quot;index_dashboards_on_slug&quot;, :unique=&gt;true})
+-- add_index<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;dashboards&#34;</span>, <span style="color:#f92672">[</span><span style="color:#e6db74">&#34;slug&#34;</span><span style="color:#f92672">]</span>, <span style="color:#f92672">{</span>:name<span style="color:#f92672">=</span>&gt;<span style="color:#e6db74">&#34;index_dashboards_on_slug&#34;</span>, :unique<span style="color:#f92672">=</span>&gt;true<span style="color:#f92672">}</span><span style="color:#f92672">)</span>
    -&gt; 0.0103s
--- create_table(&quot;directories&quot;, {:force=&gt;true})
+-- create_table<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;directories&#34;</span>, <span style="color:#f92672">{</span>:force<span style="color:#f92672">=</span>&gt;true<span style="color:#f92672">}</span><span style="color:#f92672">)</span>
    -&gt; 0.0095s
--- create_table(&quot;servers&quot;, {:force=&gt;true})
+-- create_table<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;servers&#34;</span>, <span style="color:#f92672">{</span>:force<span style="color:#f92672">=</span>&gt;true<span style="color:#f92672">}</span><span style="color:#f92672">)</span>
    -&gt; 0.0083s
--- create_table(&quot;shortened_urls&quot;, {:force=&gt;true})
+-- create_table<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;shortened_urls&#34;</span>, <span style="color:#f92672">{</span>:force<span style="color:#f92672">=</span>&gt;true<span style="color:#f92672">}</span><span style="color:#f92672">)</span>
    -&gt; 0.0085s
--- add_index(&quot;shortened_urls&quot;, [&quot;checksum&quot;], {:name=&gt;&quot;index_shortened_urls_on_checksum&quot;, :unique=&gt;true})
+-- add_index<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;shortened_urls&#34;</span>, <span style="color:#f92672">[</span><span style="color:#e6db74">&#34;checksum&#34;</span><span style="color:#f92672">]</span>, <span style="color:#f92672">{</span>:name<span style="color:#f92672">=</span>&gt;<span style="color:#e6db74">&#34;index_shortened_urls_on_checksum&#34;</span>, :unique<span style="color:#f92672">=</span>&gt;true<span style="color:#f92672">}</span><span style="color:#f92672">)</span>
    -&gt; 0.0102s
--- initialize_schema_migrations_table()
+-- initialize_schema_migrations_table<span style="color:#f92672">(</span><span style="color:#f92672">)</span>
    -&gt; 0.0547s
-</code></pre>
-
-<p>Следуя инструкции создаем Ruby-окружение:</p>
-
-<pre><code class="language-bash">make build
-</code></pre>
-
-<p>и запускаем сервер в режиме демона на 8000 порту:</p>
-
-<pre><code class="language-bash">bin/env bin/bundle exec bin/thin -p 8000 start -d
-</code></pre>
-
-<p>В браузере открываем адрес http://[IP-адрес сервера]:8000 и указываем параметры подключения к серверу Prometheus. Для этого переходим на вкладку Servers, жмем New Server, в открывшейся форме вводим имя сервера (на ваше усмотрение), URL — http://[IP-адрес сервера]:9090 и выбираем тип сервера Prometheus.</p>
-
+</code></pre></div><p>Следуя инструкции создаем Ruby-окружение:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make build
+</code></pre></div><p>и запускаем сервер в режиме демона на 8000 порту:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">bin/env bin/bundle exec bin/thin -p <span style="color:#ae81ff">8000</span> start -d
+</code></pre></div><p>В браузере открываем адрес http://[IP-адрес сервера]:8000 и указываем параметры подключения к серверу Prometheus. Для этого переходим на вкладку Servers, жмем New Server, в открывшейся форме вводим имя сервера (на ваше усмотрение), URL — http://[IP-адрес сервера]:9090 и выбираем тип сервера Prometheus.</p>
 <p>После добавления сервера возвращаемся на вкладку Dashboards и создаем директорию для дашбордов нажатием на New Directory (имя директории на ваше усмотрение). Дальше приступаем к созданию дашборда — жмем New Dashboard.</p>
-
 <p>Давайте отобразим на графике 5 самых больших таблиц определенной базы (эту метрику мы уже использовали в <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%81%D0%B1%D0%BE%D1%80-%D0%BC%D0%B5%D1%82%D1%80%D0%B8%D0%BA-%D0%BE%D1%82-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0/">предыдущей части</a> знакомства с Prometheus) — в поле Enter Expression введем <code>topk(5, sum(mysql_info_schema_table_size{schema='&lt;ИМЯ_БД&gt;'}) by (table))</code> и нажмем первую слева иконку в заголовку графика (Refresh).</p>
-
 <p>Дашборд с одним графиком имеет мало смысла, добавить еще графики нажатием на кнопку Add Graph внизу. После внесения изменений не забываем нажимать кнопку Save Changes.</p>
-
 <p>На этом все, <strong>установка и настройка PromDash</strong> завершена, но остается самое сложное — из множества доступных выбрать действительно важные и необходимые метрики и создать нужные вам дашборды.</p>
                 </section>
             </article>
@@ -209,23 +183,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

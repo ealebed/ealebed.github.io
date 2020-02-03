@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Использование make для управления docker-контейнерами &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,153 +92,124 @@
                 </header>
                 <section id="post-body">
                     <p><strong>Make</strong> — утилита предназначенная для автоматизации преобразования файлов из одной формы в другую, говорит нам <a href="https://ru.wikipedia.org/wiki/Make">Википедия</a>. Ключевое слово здесь — автоматизация.</p>
-
 <p>Как видно из заголовка, речь пойдет об использовании утилиты <strong>Make</strong> не по назначению — давайте разберемся, как ускорить и упростить работу с docker-контейнерами в консоли Linux!</p>
-
 <p>Утилита <strong>Make</strong> входит в состав пакета <code>build-essential</code> и в Debian-based дистрибутивах устанавливается командой:</p>
-
-<pre><code class="language-bash">sudo apt-get install build-essential
-</code></pre>
-
-<p>Теперь, если в командной строке ввести <code>make</code>, то утилита попытается найти файл с именем Makefile (по умолчанию) в текущем каталоге и выполнить инструкции из него. Если в текущем каталоге есть несколько файлов с инструкциями, то можно указать нужный с помощью параметра <code>-f</code>:</p>
-
-<pre><code class="language-bash">make -f MyMakefile
-</code></pre>
-
-<p>В самом простом Makefile должны быть такие составляющие:</p>
-
-<pre><code class="language-bash">цель: 
-[tab] команда
-</code></pre>
-
-<p><strong>Примечание.</strong> Строка с командой обязательно должна начинаться с табуляции.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get install build-essential
+</code></pre></div><p>Теперь, если в командной строке ввести <code>make</code>, то утилита попытается найти файл с именем Makefile (по умолчанию) в текущем каталоге и выполнить инструкции из него. Если в текущем каталоге есть несколько файлов с инструкциями, то можно указать нужный с помощью параметра <code>-f</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make -f MyMakefile
+</code></pre></div><p>В самом простом Makefile должны быть такие составляющие:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">цель: 
+<span style="color:#f92672">[</span>tab<span style="color:#f92672">]</span> команда
+</code></pre></div><p><strong>Примечание.</strong> Строка с командой обязательно должна начинаться с табуляции.</p>
 <p>Makefile чуть посложнее может включать в себя зависимости, например:</p>
-
-<pre><code class="language-bash">цель: цель1 цель2
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">цель: цель1 цель2
 
 цель1: 
-[tab] команда
+<span style="color:#f92672">[</span>tab<span style="color:#f92672">]</span> команда
 
 цель2: 
-[tab] команда
-</code></pre>
-
-<p>В Makefile также можно использовать комментарии и переменные:</p>
-
-<pre><code class="language-bash"># Это комментарий
-VAR=123
+<span style="color:#f92672">[</span>tab<span style="color:#f92672">]</span> команда
+</code></pre></div><p>В Makefile также можно использовать комментарии и переменные:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># Это комментарий</span>
+VAR<span style="color:#f92672">=</span><span style="color:#ae81ff">123</span>
 
 цель: цель1 цель2
 
 цель1: 
-[tab] команда
+<span style="color:#f92672">[</span>tab<span style="color:#f92672">]</span> команда
 
 цель2: 
-[tab] echo $(VAR)
-</code></pre>
-
-<p>По умолчанию <strong>Make</strong> станет выполнять самую первую инструкцию из списка, если цель выполнения не была явно указана при вызове:</p>
-
-<pre><code class="language-bash">make &lt;цель&gt;
-</code></pre>
-
-<p>Однако с помощью параметра <code>.DEFAULT_GOAL</code> в Makefile можно задать цель, которая будет выполняться по умолчанию (мы этим обязательно воспользуемся).</p>
-
+<span style="color:#f92672">[</span>tab<span style="color:#f92672">]</span> echo <span style="color:#66d9ef">$(</span>VAR<span style="color:#66d9ef">)</span>
+</code></pre></div><p>По умолчанию <strong>Make</strong> станет выполнять самую первую инструкцию из списка, если цель выполнения не была явно указана при вызове:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make &lt;цель&gt;
+</code></pre></div><p>Однако с помощью параметра <code>.DEFAULT_GOAL</code> в Makefile можно задать цель, которая будет выполняться по умолчанию (мы этим обязательно воспользуемся).</p>
 <p>В нашем случае утилита <strong>Make</strong> используется для упрощения работы с docker-образами и контейнерами, а Makefile выглядит так:</p>
-
-<pre><code class="language-bash">.DEFAULT_GOAL := help
-# Локальный docker-registry для образов
-REGISTRY = registry.git.labs.lc:5000/e.lebed/test
-# Выводит описание целей - все, что написано после двойного диеза (##) через пробел
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">.DEFAULT_GOAL :<span style="color:#f92672">=</span> help
+<span style="color:#75715e"># Локальный docker-registry для образов</span>
+REGISTRY <span style="color:#f92672">=</span> registry.git.labs.lc:5000/e.lebed/test
+<span style="color:#75715e"># Выводит описание целей - все, что написано после двойного диеза (##) через пробел</span>
 help:
-  @grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = &quot;:.*?## &quot;}; {printf &quot;\033[36m%-16s\033[0m %s\n&quot;, $$1, $$2}'
+  @grep -E <span style="color:#e6db74">&#39;^[a-zA-Z_-]+:.*?## .*$$&#39;</span> <span style="color:#66d9ef">$(</span>MAKEFILE_LIST<span style="color:#66d9ef">)</span> | sort | awk <span style="color:#e6db74">&#39;BEGIN {FS = &#34;:.*?## &#34;}; {printf &#34;\033[36m%-16s\033[0m %s\n&#34;, $$1, $$2}&#39;</span>
  
-##################################################
-# Создание (build) сжатых (squashed) docker-образов и пуш (push) в docker-registry для использования других окружениях
-# Для сжатия (squash) на хост машине должен быть установлен флаг &quot;experimental&quot;
-# Для пуша нужно залогиниться в docker-registry
-##################################################
+<span style="color:#75715e">##################################################</span>
+<span style="color:#75715e"># Создание (build) сжатых (squashed) docker-образов и пуш (push) в docker-registry для использования других окружениях</span>
+<span style="color:#75715e"># Для сжатия (squash) на хост машине должен быть установлен флаг &#34;experimental&#34;</span>
+<span style="color:#75715e"># Для пуша нужно залогиниться в docker-registry</span>
+<span style="color:#75715e">##################################################</span>
 dc-bsp-all : dc-bsp-redis dc-bsp-workspace dc-bsp-php-fpm dc-bsp-node-npm dc-bsp-memcached dc-bsp-nginx dc-push-images
  
-dc-bsp-nginx: ## Создание сжатого docker-образа для контейнера nginx
-  docker build -f nginx/Dockerfile --squash -t $(REGISTRY):nginx-ed-sq nginx
+dc-bsp-nginx: <span style="color:#75715e">## Создание сжатого docker-образа для контейнера nginx</span>
+  docker build -f nginx/Dockerfile --squash -t <span style="color:#66d9ef">$(</span>REGISTRY<span style="color:#66d9ef">)</span>:nginx-ed-sq nginx
  
-dc-bsp-memcached: ## Создание сжатого docker-образа для контейнера memcached
-  docker build -f memcached/Dockerfile --squash -t $(REGISTRY):memcached-ed-sq memcached
+dc-bsp-memcached: <span style="color:#75715e">## Создание сжатого docker-образа для контейнера memcached</span>
+  docker build -f memcached/Dockerfile --squash -t <span style="color:#66d9ef">$(</span>REGISTRY<span style="color:#66d9ef">)</span>:memcached-ed-sq memcached
  
-dc-bsp-node-npm: ## Создание сжатого docker-образа для контейнера node-npm
-  docker build -f node-npm/Dockerfile --squash -t $(REGISTRY):node-npm-ed-sq node-npm
+dc-bsp-node-npm: <span style="color:#75715e">## Создание сжатого docker-образа для контейнера node-npm</span>
+  docker build -f node-npm/Dockerfile --squash -t <span style="color:#66d9ef">$(</span>REGISTRY<span style="color:#66d9ef">)</span>:node-npm-ed-sq node-npm
  
-dc-bsp-php-fpm: ## Создание сжатого docker-образа для контейнера php-fpm
-  docker build -f php-fpm/Dockerfile --squash -t $(REGISTRY):php-fpm-ed-sq php-fpm
+dc-bsp-php-fpm: <span style="color:#75715e">## Создание сжатого docker-образа для контейнера php-fpm</span>
+  docker build -f php-fpm/Dockerfile --squash -t <span style="color:#66d9ef">$(</span>REGISTRY<span style="color:#66d9ef">)</span>:php-fpm-ed-sq php-fpm
  
-dc-bsp-redis: ## Создание сжатого docker-образа для контейнера redis
-  docker build -f redis/Dockerfile --squash -t $(REGISTRY):redis-ed-sq redis
+dc-bsp-redis: <span style="color:#75715e">## Создание сжатого docker-образа для контейнера redis</span>
+  docker build -f redis/Dockerfile --squash -t <span style="color:#66d9ef">$(</span>REGISTRY<span style="color:#66d9ef">)</span>:redis-ed-sq redis
  
-dc-bsp-workspace: ## Создание сжатого docker-образа для контейнера workspace
-  docker build -f workspace/Dockerfile --squash -t $(REGISTRY):workspace-ed-sq workspace
+dc-bsp-workspace: <span style="color:#75715e">## Создание сжатого docker-образа для контейнера workspace</span>
+  docker build -f workspace/Dockerfile --squash -t <span style="color:#66d9ef">$(</span>REGISTRY<span style="color:#66d9ef">)</span>:workspace-ed-sq workspace
  
-dc-push-images: ## Пуш созданных docker-образов в docker-registry
-  docker push $(REGISTRY)
+dc-push-images: <span style="color:#75715e">## Пуш созданных docker-образов в docker-registry</span>
+  docker push <span style="color:#66d9ef">$(</span>REGISTRY<span style="color:#66d9ef">)</span>
  
-####################################################################################################
-# Управление контейнерами с помощью docker-compose (dc)
-####################################################################################################
-dc-build: ## Сборка docker-образов согласно инструкциям из docker-compose.yml
+<span style="color:#75715e">####################################################################################################</span>
+<span style="color:#75715e"># Управление контейнерами с помощью docker-compose (dc)</span>
+<span style="color:#75715e">####################################################################################################</span>
+dc-build: <span style="color:#75715e">## Сборка docker-образов согласно инструкциям из docker-compose.yml</span>
   docker-compose build
  
-dc-up: ## Создание и запуск docker-контейнеров, описанных в docker-compose.yml
+dc-up: <span style="color:#75715e">## Создание и запуск docker-контейнеров, описанных в docker-compose.yml</span>
   docker-compose up -d
  
-dc-down: ## Остановка и УДАЛЕНИЕ docker-контейнеров, описанных в docker-compose.yml
+dc-down: <span style="color:#75715e">## Остановка и УДАЛЕНИЕ docker-контейнеров, описанных в docker-compose.yml</span>
   docker-compose down
  
-dc-stop: ## Остановка docker-контейнеров, описанных в docker-compose.yml
+dc-stop: <span style="color:#75715e">## Остановка docker-контейнеров, описанных в docker-compose.yml</span>
   docker-compose stop
  
-dc-start: ## Запуск docker-контейнеров, описанных в docker-compose.yml
+dc-start: <span style="color:#75715e">## Запуск docker-контейнеров, описанных в docker-compose.yml</span>
   docker-compose start
  
-####################################################################################################
-# Подключение к консоли контейнеров (контейнеры должны быть запущены)
-####################################################################################################
-console-workspace: ## Подключение к консоли контейнера workspace (пользователь www-data)
+<span style="color:#75715e">####################################################################################################</span>
+<span style="color:#75715e"># Подключение к консоли контейнеров (контейнеры должны быть запущены)</span>
+<span style="color:#75715e">####################################################################################################</span>
+console-workspace: <span style="color:#75715e">## Подключение к консоли контейнера workspace (пользователь www-data)</span>
   docker-compose exec --user www-data workspace bash
  
-console-nginx: ## Подключение к консоли контейнера nginx (пользователь root)
+console-nginx: <span style="color:#75715e">## Подключение к консоли контейнера nginx (пользователь root)</span>
   docker-compose exec nginx bash
  
-console-php-fpm: ## Подключение к консоли контейнера php-fmp (пользователь root)
+console-php-fpm: <span style="color:#75715e">## Подключение к консоли контейнера php-fmp (пользователь root)</span>
   docker-compose exec php-fpm bash
  
-console-node: ## Подключение к консоли контейнера node (пользователь www-data)
+console-node: <span style="color:#75715e">## Подключение к консоли контейнера node (пользователь www-data)</span>
   docker-compose run --user www-data --rm node bash
-</code></pre>
-
-<p>С таким Makefile для того чтобы собрать docker-образ для контейнера с Nginx, достаточно выполнить в консоли:</p>
-
-<pre><code class="language-bash">make dc-bsp-nginx
-</code></pre>
-
-<p>Еще один хороший пример Makefile, который в связке с докером и сборочными контейнерами используется для сборки релизов (взято <a href="https://habrahabr.ru/post/263083/">тут</a>):</p>
-
-<pre><code class="language-bash">IMAGE = leanlabs/client
-TAG   = 1.1.9
+</code></pre></div><p>С таким Makefile для того чтобы собрать docker-образ для контейнера с Nginx, достаточно выполнить в консоли:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make dc-bsp-nginx
+</code></pre></div><p>Еще один хороший пример Makefile, который в связке с докером и сборочными контейнерами используется для сборки релизов (взято <a href="https://habrahabr.ru/post/263083/">тут</a>):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">IMAGE <span style="color:#f92672">=</span> leanlabs/client
+TAG   <span style="color:#f92672">=</span> 1.1.9
  
 build:
-  @docker run --rm -v $(CURDIR):/data -v $$HOME/node_cache:/cache leanlabs/npm-builder npm install
-  @docker run --rm -v $(CURDIR):/data -v $$HOME/node_cache:/cache leanlabs/npm-builder bower install --allow-root
-  @docker run --rm -v $(CURDIR):/data -v $$HOME/node_cache:/cache leanlabs/npm-builder grunt build
+  @docker run --rm -v <span style="color:#66d9ef">$(</span>CURDIR<span style="color:#66d9ef">)</span>:/data -v $$HOME/node_cache:/cache leanlabs/npm-builder npm install
+  @docker run --rm -v <span style="color:#66d9ef">$(</span>CURDIR<span style="color:#66d9ef">)</span>:/data -v $$HOME/node_cache:/cache leanlabs/npm-builder bower install --allow-root
+  @docker run --rm -v <span style="color:#66d9ef">$(</span>CURDIR<span style="color:#66d9ef">)</span>:/data -v $$HOME/node_cache:/cache leanlabs/npm-builder grunt build
  
 release:
-  @docker build -t $(IMAGE) .
-  @docker tag $(IMAGE):latest $(IMAGE):$(TAG)
-  @docker push $(IMAGE):latest
-  @docker push $(IMAGE):$(TAG)
+  @docker build -t <span style="color:#66d9ef">$(</span>IMAGE<span style="color:#66d9ef">)</span> .
+  @docker tag <span style="color:#66d9ef">$(</span>IMAGE<span style="color:#66d9ef">)</span>:latest <span style="color:#66d9ef">$(</span>IMAGE<span style="color:#66d9ef">)</span>:<span style="color:#66d9ef">$(</span>TAG<span style="color:#66d9ef">)</span>
+  @docker push <span style="color:#66d9ef">$(</span>IMAGE<span style="color:#66d9ef">)</span>:latest
+  @docker push <span style="color:#66d9ef">$(</span>IMAGE<span style="color:#66d9ef">)</span>:<span style="color:#66d9ef">$(</span>TAG<span style="color:#66d9ef">)</span>
  
 .PHONY: build release
-</code></pre>
+</code></pre></div>
                 </section>
             </article>
 
@@ -269,23 +251,23 @@ release:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

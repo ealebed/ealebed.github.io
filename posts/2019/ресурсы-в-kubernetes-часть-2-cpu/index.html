@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Ресурсы в Kubernetes. Часть 2: Процессор (CPU) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,51 +90,32 @@
                 </header>
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">первой части</a> мы рассмотрели два типа требований (<code>requests</code> и <code>limits</code>) к ресурсам с точки зрения <code>Kubernetes</code> и разобрались с указанием этих параметров применительно к памяти. В данной статье рассмотрим нюансы настройки параметров <code>requests</code> и <code>limits</code> в контексте работы процессора (CPU). Давайте разберемся!</p>
-
 <p>Итак, что имеется в виду под <code>CPU</code> когда мы говорим о <code>Kubernetes</code>? Один <code>CPU</code> это эквивалент &ldquo;одного процессорного ядра&rdquo;, предоставляемого операционной системой рабочего узла, вне зависимости от того, какое это ядро - физическое (physical core), поток физического ядра (hyper-thread), виртуальное ядро (например, EC2 vCPU, которое по сути, тоже является потоком физичекого ядра).</p>
-
 <p>В отличие от ограничений (<code>limits</code>) по памяти, лимиты по <code>CPU</code> с точки зрения <code>Kubernetes</code> являются &ldquo;сжимаемыми&rdquo;, следовательно может работать так называемый CPU Throttling - снижение частоты процессора, и, как следствие, производительности. Когда вы устанавливаете значение <code>limits</code> для CPU:</p>
-
-<pre><code class="language-yaml">...
-    resources:
-      limits:
-        cpu: &quot;1&quot;
-        memory: 2Gi
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+    <span style="color:#66d9ef">resources</span>:
+      <span style="color:#66d9ef">limits</span>:
+        <span style="color:#66d9ef">cpu</span>: <span style="color:#e6db74">&#34;1&#34;</span>
+        <span style="color:#66d9ef">memory</span>: 2Gi
 ...
-</code></pre>
-
-<p>вы на самом деле указываете время использования процессора (CPU time) на всех доступных процессорных ядрах рабочего узла (ноды), а не &ldquo;привязываете&rdquo; свой контейнер к конкретному ядру (или группе ядер). Это значит, что даже если вы указываете в <code>.limits.cpu</code> число меньшее общего количества ядер ноды, то контейнер все равно будет &ldquo;видеть&rdquo; и использовать все ядра, ограничиваясь только временем их использования.</p>
-
+</code></pre></div><p>вы на самом деле указываете время использования процессора (CPU time) на всех доступных процессорных ядрах рабочего узла (ноды), а не &ldquo;привязываете&rdquo; свой контейнер к конкретному ядру (или группе ядер). Это значит, что даже если вы указываете в <code>.limits.cpu</code> число меньшее общего количества ядер ноды, то контейнер все равно будет &ldquo;видеть&rdquo; и использовать все ядра, ограничиваясь только временем их использования.</p>
 <p>К примеру, если контейнеру, который запускается на рабочем узле с общим количеством ядер 8, в значении CPU <code>limits</code> установить 4, то контейнер будет использовать эквивалент 4-х ядер, распределенных по всем 8 CPU ноды. В данном примере максимально допустимое использование процессора (CPU usage) на рабочем узле будет равняться 50%.</p>
-
-<p>Как это выглядит с точки зрения Docker? <code>Kubernetes</code> управляет ограничениями CPU передавая параметры <code>cpu-period</code> и <code>cpu-quota</code>. Параметр <code>cpu-period</code> определяет период времени, в течении которого отслеживается использование процессора (CPU utilisation) контейнером и он всегда равен <a href="https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/kuberuntime/helpers_linux.go#L28">100000µs (100ms)</a>. Параметр <code>cpu-quota</code> - это общее количество процессорного времени, которое контейнер может использовать в каждом <code>cpu-period</code>&lsquo;е. Эти два параметра влияют на работу CFS (абсолютно честного планировщика ядра, <a href="https://en.wikipedia.org/wiki/Completely_Fair_Scheduler">Completely Fair Scheduler</a>). Конкретный пример соответствия значений CPU <code>limits</code> значениям <code>cpu-quota</code> в конфигурации Docker:</p>
-
-<pre><code class="language-text">limits 1:	cpu-quota=100000
+<p>Как это выглядит с точки зрения Docker? <code>Kubernetes</code> управляет ограничениями CPU передавая параметры <code>cpu-period</code> и <code>cpu-quota</code>. Параметр <code>cpu-period</code> определяет период времени, в течении которого отслеживается использование процессора (CPU utilisation) контейнером и он всегда равен <a href="https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/kuberuntime/helpers_linux.go#L28">100000µs (100ms)</a>. Параметр <code>cpu-quota</code> - это общее количество процессорного времени, которое контейнер может использовать в каждом <code>cpu-period</code>'е. Эти два параметра влияют на работу CFS (абсолютно честного планировщика ядра, <a href="https://en.wikipedia.org/wiki/Completely_Fair_Scheduler">Completely Fair Scheduler</a>). Конкретный пример соответствия значений CPU <code>limits</code> значениям <code>cpu-quota</code> в конфигурации Docker:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">limits 1:	cpu-quota=100000
 limits 4:	cpu-quota=400000
 limits 0.5:	cpu-quota=50000
-</code></pre>
-
-<p>Здесь <code>limits 1</code> означает, что каждые 100ms контейнером могут использоваться 100% эквивалента 1 процессорного ядра рабочего узла, <code>limits 4</code> указывает, что контейнер может использовать 400% эквивалента 1 ядра (ну или 100% процессорных 4-х ядер) и т.д. Не забываем, что это использование &ldquo;размазывается&rdquo; на все доступные ядра рабочей ноды, без привязки к конкретным ядрам. Благодаря работе &ldquo;абсюлютно честного планировщика&rdquo; (CFS), любому контейнеру, превышающему свою квоту в данный период (имеется в виду <code>cpu-period</code> рассмотренный выше), будет запрещено использовать процессор до наступления следующего периода.</p>
-
+</code></pre></div><p>Здесь <code>limits 1</code> означает, что каждые 100ms контейнером могут использоваться 100% эквивалента 1 процессорного ядра рабочего узла, <code>limits 4</code> указывает, что контейнер может использовать 400% эквивалента 1 ядра (ну или 100% процессорных 4-х ядер) и т.д. Не забываем, что это использование &ldquo;размазывается&rdquo; на все доступные ядра рабочей ноды, без привязки к конкретным ядрам. Благодаря работе &ldquo;абсюлютно честного планировщика&rdquo; (CFS), любому контейнеру, превышающему свою квоту в данный период (имеется в виду <code>cpu-period</code> рассмотренный выше), будет запрещено использовать процессор до наступления следующего периода.</p>
 <p>Напомню, что вы можете указать сколько процессорных ядер (CPU) необходимо для работы вашему контейнеру с помощью параметра <code>requests</code> - это значение (<strong>важно!</strong>) учитывается планировщиком <code>Kubernetes</code> при размещении контейнера на рабочих узлах кластера (общее значение параметров CPU <code>requests</code> всех контейнеров на конкретном рабочем узле не может быть больше, чем общее количество процессорных ядер данной ноды).</p>
-
-<p>Таким образом, при использовании <code>requests</code>, вам гарантирован эквивалент количества указанных CPU, но что произойдет, если рабочий узел кластера будет находиться под чрезмерной нагрузкой (использование процессора на 100% или внезапные скачки <a href="https://ru.wikipedia.org/wiki/Load_Average">LA</a>)? В этом случае приоритет использования процессорного времени будет вычисляться исходя из значения, указанного в CPU <code>requests</code> и умноженного на 1024 - результат будет передан Docker&rsquo;у как параметр <code>cpu-shares</code>. Это так называемый &ldquo;вес&rdquo; - если все контейнеры данного рабочего узла имеют одинаковый вес, то они будут иметь одинаковый приоритет при планировании и использовании процессорного времени при чрезмерной нагрузке; если у контейнеров рабочего узла вес разный, то контейнер с большим весом будет иметь высший приоритет и получит больше процессорного времени при чрезмерной нагрузке процессора на рабочей ноде.</p>
-
+<p>Таким образом, при использовании <code>requests</code>, вам гарантирован эквивалент количества указанных CPU, но что произойдет, если рабочий узел кластера будет находиться под чрезмерной нагрузкой (использование процессора на 100% или внезапные скачки <a href="https://ru.wikipedia.org/wiki/Load_Average">LA</a>)? В этом случае приоритет использования процессорного времени будет вычисляться исходя из значения, указанного в CPU <code>requests</code> и умноженного на 1024 - результат будет передан Docker'у как параметр <code>cpu-shares</code>. Это так называемый &ldquo;вес&rdquo; - если все контейнеры данного рабочего узла имеют одинаковый вес, то они будут иметь одинаковый приоритет при планировании и использовании процессорного времени при чрезмерной нагрузке; если у контейнеров рабочего узла вес разный, то контейнер с большим весом будет иметь высший приоритет и получит больше процессорного времени при чрезмерной нагрузке процессора на рабочей ноде.</p>
 <p>В <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">предыдущей статье</a> мы уже упоминали о QoS (классах качества сервиса) - они справедливы и в контексте CPU. Используя класс <code>Burstable</code> вы можете получить дополнительные периоды времени использования CPU (при условии, что эти же ресурсы не требуются другим контейнерам). Потенциально, это позволяет более эффективно использовать ресурсы кластера, правда, за счет большей непредсказуемости - повышенное использование CPU одним контейнером на рабочем узле повлияет на &ldquo;соседей&rdquo;, работающих на той же ноде кластера.</p>
-
 <p>Опять же, если вы новичок в <code>Kubernetes</code>, лучше всего обеспечить класс сервиса <code>Guaranteed QoS</code>, устанавливая значения <code>requests</code> и <code>limits</code> одинаковыми. Когда вы соберете больше данных (метрик) и лучше разберетесь с использованием процессорных ресурсов контейнерами, есть смысл начать использовать класс сервиса <code>Burstable QoS</code> для обдуманной оптимизации расходов на инфраструктуру.</p>
-
 <p>Сколько CPU стоит выделить контейнеру при написании манифеста? К сожалению, не существует универсального ответа на этот вопрос - все зависит от характеристик вашего приложения, требуемой производительности, места размещения контейнера, стоимости и т. д. Но если вы достаточно хорошо знаете, как работает ваше приложение &ldquo;под капотом&rdquo; и при наличии приличных инструментов для сбора и анализа метрик (например, <a href="https://ealebed.github.io/tags/prometheus/">Prometheus</a>) можно подобрать оптимальную конфигурацию. В крайнем случае, можно даже получить кое-какие цифры для анализа выполнив внутри контейнера команду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /sys/fs/cgroup/cpu,cpuacct/cpu.stat
 
-<pre><code class="language-bash">cat /sys/fs/cgroup/cpu,cpuacct/cpu.stat
-
-nr_periods 345489
-nr_throttled 502
-throttled_time 109456473902
-</code></pre>
-
-<p>Так можно получить общее количество периодов запуска, количество раз, когда производительность процессора для данного контейнера была принудительно снижена (CPU Throttled) и общее время троттлинга в наносекундах.</p>
-
+nr_periods <span style="color:#ae81ff">345489</span>
+nr_throttled <span style="color:#ae81ff">502</span>
+throttled_time <span style="color:#ae81ff">109456473902</span>
+</code></pre></div><p>Так можно получить общее количество периодов запуска, количество раз, когда производительность процессора для данного контейнера была принудительно снижена (CPU Throttled) и общее время троттлинга в наносекундах.</p>
 <p>Надеюсь, теперь вы знаете больше о требованиях к ресурсам, классах сервисов и определениях памяти (<code>memory</code>) и процессора (<code>CPU</code>) в контексте работы с Docker и <code>Kubernetes</code>.</p>
                 </section>
             </article>
@@ -166,23 +158,23 @@ throttled_time 109456473902
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/deploy-to-k8s-with-spinnaker-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0/">Deploy to k8s with Spinnaker. Часть 1: Установка<aside class="dates">Jan 24 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/deploy-to-k8s-with-spinnaker-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0/">Deploy to k8s with Spinnaker. Часть 1: Установка<aside class="dates">Jan 24 2019</aside></a>
         </li>
     
 </ul>

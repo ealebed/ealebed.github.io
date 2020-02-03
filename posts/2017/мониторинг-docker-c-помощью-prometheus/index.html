@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Мониторинг docker c помощью Prometheus &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,60 +92,38 @@
                 </header>
                 <section id="post-body">
                     <p>Мониторинг docker-контейнеров не менее важен, чем мониторинг физических серверов, виртуальных машин или отдельных сервисов и устройств. Но помимо настройки самого мониторинга, необходимо правильно выбрать систему, с помощью которой вы будете хранить данные, визуализировать метрики и отправлять оповещения.</p>
-
 <p>В данной статье рассмотрим пример быстрой настройки мониторинга docker-хостов и запущенных на них docker-контейнеров с помощью уже известной нам <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/"><strong>системы мониторинга Prometheus</strong></a> — давайте разберемся!</p>
-
 <p>Считаем, что у вас уже установлен <strong>Prometheus</strong> со всеми необходимыми компонентами (<a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/"><code>node_exporter</code></a>, alertmanager и <a href="https://ealebed.github.io/posts/2016/grafana-%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE-%D1%83%D0%B4%D0%BE%D0%B1%D0%BD%D1%8B%D0%B9-%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4/">Grafana</a>).</p>
-
 <p><strong>Примечание.</strong> К слову, все эти компоненты можно устанавливать в docker-контейнерах и объединять весь стек с помощью <code>docker-compose</code>.</p>
-
 <p>Если с мониторингом docker-хоста все просто и понятно — как и на любом другом физическом сервере метрики собирает <code>node_exporter</code> и передает их в <strong>Prometheus</strong>, то для мониторинга docker-контейнеров придется воспользоваться инструментом <a href="https://github.com/google/cadvisor">cAdvisor</a> (Container Advisor) от google.</p>
-
 <p>Для запуска cAdvisor воспользуемся файлом <code>docker-compose.yml</code> следующего содержания:</p>
-
-<pre><code class="language-yaml">version: '2'
-services:
-    cadvisor-exporter:
-        container_name: &quot;cadvisor-exporter&quot;
-        image: google/cadvisor
-        ports:
-          - &quot;9200:8080&quot;
-        volumes:
-          - &quot;/:/rootfs:ro&quot;
-          - &quot;/var/run:/var/run:rw&quot;
-          - &quot;/sys:/sys:ro&quot;
-          - &quot;/var/lib/docker/:/var/lib/docker:ro&quot;
-        restart: unless-stopped
-</code></pre>
-
-<p>Запускаем контейнер с помощью команды:</p>
-
-<pre><code class="language-bash">docker-compose up -d
-</code></pre>
-
-<p>Далее в уже хорошо известный нам конфигурационный файл <code>prometheus.yml</code> (в debian-based дистрибутивах находится в каталоге <code>/etc/prometheus</code>) нужно добавить следующие строки:</p>
-
-<pre><code class="language-yaml">- job_name: 'cadvisor-exporter'
-  scrape_interval: 1s
-  target_groups:
-      - targets: ['cadvisor-exporter:9200']
-</code></pre>
-
-<p>и перезапустить <strong>Prometheus</strong> для применения изменений.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+<span style="color:#66d9ef">services</span>:
+    <span style="color:#66d9ef">cadvisor-exporter</span>:
+        <span style="color:#66d9ef">container_name</span>: <span style="color:#e6db74">&#34;cadvisor-exporter&#34;</span>
+        <span style="color:#66d9ef">image</span>: google/cadvisor
+        <span style="color:#66d9ef">ports</span>:
+          - <span style="color:#e6db74">&#34;9200:8080&#34;</span>
+        <span style="color:#66d9ef">volumes</span>:
+          - <span style="color:#e6db74">&#34;/:/rootfs:ro&#34;</span>
+          - <span style="color:#e6db74">&#34;/var/run:/var/run:rw&#34;</span>
+          - <span style="color:#e6db74">&#34;/sys:/sys:ro&#34;</span>
+          - <span style="color:#e6db74">&#34;/var/lib/docker/:/var/lib/docker:ro&#34;</span>
+        <span style="color:#66d9ef">restart</span>: unless-stopped
+</code></pre></div><p>Запускаем контейнер с помощью команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
+</code></pre></div><p>Далее в уже хорошо известный нам конфигурационный файл <code>prometheus.yml</code> (в debian-based дистрибутивах находится в каталоге <code>/etc/prometheus</code>) нужно добавить следующие строки:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">- <span style="color:#66d9ef">job_name</span>: <span style="color:#e6db74">&#39;cadvisor-exporter&#39;</span>
+  <span style="color:#66d9ef">scrape_interval</span>: 1s
+  <span style="color:#66d9ef">target_groups</span>:
+      - <span style="color:#66d9ef">targets</span>: [<span style="color:#e6db74">&#39;cadvisor-exporter:9200&#39;</span>]
+</code></pre></div><p>и перезапустить <strong>Prometheus</strong> для применения изменений.</p>
 <p>Следующим шагом нужно импортировать (или создать самостоятельно) в Grafana дашборд для отображения собираемых метрик по docker-контейнерам — взять готовые можно <a href="https://grafana.com/dashboards?dataSource=prometheus&amp;search=docker">здесь</a>. В некоторых случаях потребуется внести небольшие правки в зависимости от используемого вами <a href="https://docs.docker.com/engine/userguide/storagedriver/selectadriver/">docker storage driver</a> — в готовых дашбордах используется <code>aufs</code>, если же у вас <code>overlay/overlay2</code>, то некоторые графики будут пустыми.</p>
-
 <p>Например, в моем случае используется <code>overlay</code>, поэтому правильная метрика для отображения используемого места на системном диске будет выглядеть так:</p>
-
 <pre><code>sum((node_filesystem_size{fstype=&quot;overlay&quot;} - node_filesystem_free{fstype=&quot;overlay&quot;})) / sum(node_filesystem_size{fstype=&quot;overlay&quot;})  * 100
-</code></pre>
-
-<p>Далее следует настроить уведомления, по умолчанию данные настройки находятся в <code>/etc/prometheus/alert.rules</code>, но для удобства их можно разделить на несколько файлов в зависимости от типа оповещения.</p>
-
+</code></pre><p>Далее следует настроить уведомления, по умолчанию данные настройки находятся в <code>/etc/prometheus/alert.rules</code>, но для удобства их можно разделить на несколько файлов в зависимости от типа оповещения.</p>
 <p>Например, для оповещения о проблемах с контейнерами, можем использовать файл <code>containers.rules</code>, а для оповещений о проблемах с docker-хостом — файл <code>docker.rules</code>.</p>
-
 <p>Содержимое файла правил <code>containers.rules</code> следующее:</p>
-
 <pre><code># Контейнер не запущен более 30 секунд
 ALERT test_container_down
   IF absent(container_memory_usage_bytes{name=&quot;test_container&quot;})
@@ -162,10 +151,7 @@ ALERT test_container_high_memory
       summary = &quot;test_container high memory usage&quot;,
       description = &quot;test_container memory consumption is at {{ humanize $value}}.&quot;,
   }
-</code></pre>
-
-<p>В конфигурационном файле <code>docker.rules</code> следующие строки:</p>
-
+</code></pre><p>В конфигурационном файле <code>docker.rules</code> следующие строки:</p>
 <pre><code># LA выше определенного лимита (1.5) более 30 секунд
 ALERT high_cpu_load
   IF node_load1 &gt; 1.5
@@ -193,24 +179,18 @@ ALERT hight_storage_load
       summary = &quot;Server storage is almost full&quot;,
       description = &quot;Docker host storage usage is {{ humanize $value}}%.&quot;,
   }
-</code></pre>
-
-<p>Alertmanager также умеет оправлять оповещения о проблемах с помощью e-mail, Pushover, Slack, HipChat. Пример интеграции alertmanager&rsquo;а и slack подробно расписан <a href="https://www.robustperception.io/using-slack-with-the-alertmanager/">здесь</a>, поэтому воспользуемся данным примером.</p>
-
+</code></pre><p>Alertmanager также умеет оправлять оповещения о проблемах с помощью e-mail, Pushover, Slack, HipChat. Пример интеграции alertmanager'а и slack подробно расписан <a href="https://www.robustperception.io/using-slack-with-the-alertmanager/">здесь</a>, поэтому воспользуемся данным примером.</p>
 <p>Конфигурационный файл с настройками отправки уведомлений выглядит так:</p>
-
-<pre><code class="language-yaml">route:
-    receiver: 'slack'
-receivers:
-    - name: 'slack'
-      slack_configs:
-          - send_resolved: true
-            username: 'Prometheus'
-            channel: '#random'
-            api_url: 'https://hooks.slack.com/services/&lt;your&gt;/&lt;stuff&gt;/&lt;here&gt;'
-</code></pre>
-
-<p>На этом все, а для быстрой настройки всего стека мониторинга «с нуля» могу порекомендовать <a href="https://github.com/stefanprodan/dockprom">готовый проект</a> от Stefan Prodan.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">route</span>:
+    <span style="color:#66d9ef">receiver</span>: <span style="color:#e6db74">&#39;slack&#39;</span>
+<span style="color:#66d9ef">receivers</span>:
+    - <span style="color:#66d9ef">name</span>: <span style="color:#e6db74">&#39;slack&#39;</span>
+      <span style="color:#66d9ef">slack_configs</span>:
+          - <span style="color:#66d9ef">send_resolved</span>: <span style="color:#66d9ef">true</span>
+            <span style="color:#66d9ef">username</span>: <span style="color:#e6db74">&#39;Prometheus&#39;</span>
+            <span style="color:#66d9ef">channel</span>: <span style="color:#e6db74">&#39;#random&#39;</span>
+            <span style="color:#66d9ef">api_url</span>: <span style="color:#e6db74">&#39;https://hooks.slack.com/services/&lt;your&gt;/&lt;stuff&gt;/&lt;here&gt;&#39;</span>
+</code></pre></div><p>На этом все, а для быстрой настройки всего стека мониторинга «с нуля» могу порекомендовать <a href="https://github.com/stefanprodan/dockprom">готовый проект</a> от Stefan Prodan.</p>
                 </section>
             </article>
 
@@ -252,23 +232,23 @@ receivers:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

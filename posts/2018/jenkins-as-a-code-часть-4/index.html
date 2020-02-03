@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Jenkins as a code. Часть 4 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,149 +92,139 @@
                 </header>
                 <section id="post-body">
                     <p>Возникла необходимость разграничения прав доступа пользователей на Jenkins-сервере - давайте разберемся, как можно это сделать без использования webUI!</p>
-
 <p>В моем случае нужно разделить пользователей на две группы - администраторов (с полным уровнем доступа) и обычных пользователей (есть доступ только на просмотр списка заданий, запуск и отмену запущенных задач). Для решения этой задачи отлично подходит плагин <a href="https://plugins.jenkins.io/role-strategy">Role-based Authorization Strategy</a>. Главной особенностью является наличие в данном плагине двух предустановленных групп пользователей:</p>
-
 <ul>
 <li><strong>Anonymous</strong> — незалогиненные пользователи;</li>
 <li><strong>authenticated</strong> — залогиненные пользователи.</li>
 </ul>
-
 <p>Использование группы <strong>authenticated</strong> даст возможность не перечислять всех пользователей нашего jenkins-сервера в явном виде.</p>
-
 <p>Устанавливать данный плагин мы будем при старте jenkins-сервера с помощью инит-скрипта, как описано в этой <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">статье</a>. Для этого в скрипте <code>00-install-plugins.groovy</code> список устанавливаемых плагинов приводим к следующему виду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
+Set<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">&gt;</span> plugins_to_install <span style="color:#f92672">=</span> <span style="color:#f92672">[</span>
+    <span style="color:#e6db74">&#34;github-pullrequest&#34;</span><span style="color:#f92672">,</span>
+    <span style="color:#e6db74">&#34;google-login&#34;</span><span style="color:#f92672">,</span>
+    <span style="color:#e6db74">&#34;workflow-aggregator&#34;</span><span style="color:#f92672">,</span>
+    <span style="color:#e6db74">&#34;htmlpublisher&#34;</span><span style="color:#f92672">,</span>
+    <span style="color:#e6db74">&#34;locale&#34;</span><span style="color:#f92672">,</span>
+    <span style="color:#e6db74">&#34;role-strategy&#34;</span>
+<span style="color:#f92672">]</span>
+<span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
+</code></pre></div><p>Теперь создадим еще один groovy-скрипт (назовем его <code>06-role-based-auth.groovy</code>) со следующим содержанием:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">import</span> hudson.*
+<span style="color:#f92672">import</span> hudson.model.*
+<span style="color:#f92672">import</span> hudson.security.*
+<span style="color:#f92672">import</span> jenkins.*
+<span style="color:#f92672">import</span> jenkins.model.*
+<span style="color:#f92672">import</span> java.util.*
+<span style="color:#f92672">import</span> com.michelin.cio.hudson.plugins.rolestrategy.*
+<span style="color:#f92672">import</span> java.lang.reflect.*
 
-<pre><code class="language-java">...
-Set&lt;String&gt; plugins_to_install = [
-    &quot;github-pullrequest&quot;,
-    &quot;google-login&quot;,
-    &quot;workflow-aggregator&quot;,
-    &quot;htmlpublisher&quot;,
-    &quot;locale&quot;,
-    &quot;role-strategy&quot;
-]
-...
-</code></pre>
+<span style="color:#75715e">// Roles
+</span><span style="color:#75715e"></span>def globalRoleRead <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;builder&#34;</span>
+def globalRoleAdmin <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;admin&#34;</span>
 
-<p>Теперь создадим еще один groovy-скрипт (назовем его <code>06-role-based-auth.groovy</code>) со следующим содержанием:</p>
+<span style="color:#75715e">// Users and Groups
+</span><span style="color:#75715e"></span>def access <span style="color:#f92672">=</span> <span style="color:#f92672">[</span>
+    admins<span style="color:#f92672">:</span> <span style="color:#f92672">[</span>
+            <span style="color:#e6db74">&#34;admin@example.com&#34;</span><span style="color:#f92672">,</span>
+            <span style="color:#e6db74">&#34;devops@example.com&#34;</span><span style="color:#f92672">,</span>
+            <span style="color:#e6db74">&#34;ealebed@example.com&#34;</span>
+    <span style="color:#f92672">]</span><span style="color:#f92672">,</span>
+    builders<span style="color:#f92672">:</span> <span style="color:#f92672">[</span><span style="color:#e6db74">&#34;authenticated&#34;</span><span style="color:#f92672">]</span><span style="color:#f92672">,</span>
+<span style="color:#f92672">]</span>
 
-<pre><code class="language-java">import hudson.*
-import hudson.model.*
-import hudson.security.*
-import jenkins.*
-import jenkins.model.*
-import java.util.*
-import com.michelin.cio.hudson.plugins.rolestrategy.*
-import java.lang.reflect.*
+def instance <span style="color:#f92672">=</span> Jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+def currentAuthenticationStrategy <span style="color:#f92672">=</span> Hudson<span style="color:#f92672">.</span><span style="color:#a6e22e">instance</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAuthorizationStrategy</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
 
-// Roles
-def globalRoleRead = &quot;builder&quot;
-def globalRoleAdmin = &quot;admin&quot;
-
-// Users and Groups
-def access = [
-    admins: [
-            &quot;admin@example.com&quot;,
-            &quot;devops@example.com&quot;,
-            &quot;ealebed@example.com&quot;
-    ],
-    builders: [&quot;authenticated&quot;],
-]
-
-def instance = Jenkins.getInstance()
-def currentAuthenticationStrategy = Hudson.instance.getAuthorizationStrategy()
-
-Thread.start {
+Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">start</span> <span style="color:#f92672">{</span>
     sleep 15000
-    if (currentAuthenticationStrategy instanceof RoleBasedAuthorizationStrategy) {
-        println &quot;Role based authorisation already enabled.&quot;
-        println &quot;Exiting script...&quot;
-        return
-    } else {
-        println &quot;Enabling role based authorisation strategy...&quot;
-    }
+    <span style="color:#a6e22e">if</span> <span style="color:#f92672">(</span>currentAuthenticationStrategy <span style="color:#66d9ef">instanceof</span> RoleBasedAuthorizationStrategy<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        println <span style="color:#e6db74">&#34;Role based authorisation already enabled.&#34;</span>
+        println <span style="color:#e6db74">&#34;Exiting script...&#34;</span>
+        <span style="color:#66d9ef">return</span>
+    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+        println <span style="color:#e6db74">&#34;Enabling role based authorisation strategy...&#34;</span>
+    <span style="color:#f92672">}</span>
 
-    // Set new authentication strategy
-    RoleBasedAuthorizationStrategy roleBasedAuthenticationStrategy = new RoleBasedAuthorizationStrategy()
-    instance.setAuthorizationStrategy(roleBasedAuthenticationStrategy)
+    <span style="color:#75715e">// Set new authentication strategy
+</span><span style="color:#75715e"></span>    RoleBasedAuthorizationStrategy roleBasedAuthenticationStrategy <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> RoleBasedAuthorizationStrategy<span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+    instance<span style="color:#f92672">.</span><span style="color:#a6e22e">setAuthorizationStrategy</span><span style="color:#f92672">(</span>roleBasedAuthenticationStrategy<span style="color:#f92672">)</span>
 
-    Constructor[] constrs = Role.class.getConstructors()
-    for (Constructor&lt;?&gt; c : constrs) {
-        c.setAccessible(true)
-    }
+    Constructor<span style="color:#f92672">[</span><span style="color:#f92672">]</span> constrs <span style="color:#f92672">=</span> Role<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getConstructors</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Constructor<span style="color:#f92672">&lt;</span><span style="color:#f92672">?</span><span style="color:#f92672">&gt;</span> c <span style="color:#f92672">:</span> constrs<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        c<span style="color:#f92672">.</span><span style="color:#a6e22e">setAccessible</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">)</span>
+    <span style="color:#f92672">}</span>
 
-    // Make the method assignRole accessible
-    Method assignRoleMethod = RoleBasedAuthorizationStrategy.class.getDeclaredMethod(&quot;assignRole&quot;, String.class, Role.class, String.class)
-    assignRoleMethod.setAccessible(true)
+    <span style="color:#75715e">// Make the method assignRole accessible
+</span><span style="color:#75715e"></span>    Method assignRoleMethod <span style="color:#f92672">=</span> RoleBasedAuthorizationStrategy<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getDeclaredMethod</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;assignRole&#34;</span><span style="color:#f92672">,</span> String<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">,</span> Role<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">,</span> String<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">)</span>
+    assignRoleMethod<span style="color:#f92672">.</span><span style="color:#a6e22e">setAccessible</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">)</span>
 
-    // Create admin set of permissions
-    Set&lt;Permission&gt; adminPermissions = new HashSet&lt;Permission&gt;()
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Hudson.Administer&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Hudson.Read&quot;))
-    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.View&quot;))
-    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.ManageDomains&quot;))
-    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.Create&quot;))
-    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.Update&quot;))
-    adminPermissions.add(Permission.fromId(&quot;com.cloudbees.plugins.credentials.CredentialsProvider.Delete&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.View.Read&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.View.Create&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.View.Configure&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.View.Delete&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Read&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Discover&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Workspace&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Create&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Move&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Configure&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Build&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Cancel&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Item.Delete&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Create&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Connect&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Configure&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Build&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Provision&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Disconnect&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Computer.Delete&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Run.Update&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Run.Replay&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.model.Run.Delete&quot;))
-    adminPermissions.add(Permission.fromId(&quot;hudson.scm.SCM.Tag&quot;))
+    <span style="color:#75715e">// Create admin set of permissions
+</span><span style="color:#75715e"></span>    Set<span style="color:#f92672">&lt;</span>Permission<span style="color:#f92672">&gt;</span> adminPermissions <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> HashSet<span style="color:#f92672">&lt;</span>Permission<span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Hudson.Administer&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Hudson.Read&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.cloudbees.plugins.credentials.CredentialsProvider.View&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.cloudbees.plugins.credentials.CredentialsProvider.ManageDomains&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.cloudbees.plugins.credentials.CredentialsProvider.Create&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.cloudbees.plugins.credentials.CredentialsProvider.Update&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.cloudbees.plugins.credentials.CredentialsProvider.Delete&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.View.Read&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.View.Create&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.View.Configure&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.View.Delete&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Read&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Discover&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Workspace&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Create&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Move&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Configure&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Build&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Cancel&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Delete&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Computer.Create&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Computer.Connect&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Computer.Configure&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Computer.Build&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Computer.Provision&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Computer.Disconnect&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Computer.Delete&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Run.Update&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Run.Replay&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Run.Delete&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    adminPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.scm.SCM.Tag&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
 
-    // Create permissions for authenticated users
-    Set&lt;Permission&gt; authenticatedPermissions = new HashSet&lt;Permission&gt;()
-    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.Hudson.Read&quot;))
-    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.View.Read&quot;))
-    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.Item.Read&quot;))
-    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.Item.Build&quot;))
-    authenticatedPermissions.add(Permission.fromId(&quot;hudson.model.Item.Cancel&quot;))
+    <span style="color:#75715e">// Create permissions for authenticated users
+</span><span style="color:#75715e"></span>    Set<span style="color:#f92672">&lt;</span>Permission<span style="color:#f92672">&gt;</span> authenticatedPermissions <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> HashSet<span style="color:#f92672">&lt;</span>Permission<span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+    authenticatedPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Hudson.Read&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    authenticatedPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.View.Read&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    authenticatedPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Read&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    authenticatedPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Build&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    authenticatedPermissions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>Permission<span style="color:#f92672">.</span><span style="color:#a6e22e">fromId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hudson.model.Item.Cancel&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
 
-    // Create the admin role
-    Role adminRole = new Role(globalRoleAdmin, adminPermissions)
-    roleBasedAuthenticationStrategy.addRole(RoleBasedAuthorizationStrategy.GLOBAL, adminRole)
+    <span style="color:#75715e">// Create the admin role
+</span><span style="color:#75715e"></span>    Role adminRole <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Role<span style="color:#f92672">(</span>globalRoleAdmin<span style="color:#f92672">,</span> adminPermissions<span style="color:#f92672">)</span>
+    roleBasedAuthenticationStrategy<span style="color:#f92672">.</span><span style="color:#a6e22e">addRole</span><span style="color:#f92672">(</span>RoleBasedAuthorizationStrategy<span style="color:#f92672">.</span><span style="color:#a6e22e">GLOBAL</span><span style="color:#f92672">,</span> adminRole<span style="color:#f92672">)</span>
 
-    // Create the builder role
-    Role builderRole = new Role(globalRoleRead, authenticatedPermissions)
-    roleBasedAuthenticationStrategy.addRole(RoleBasedAuthorizationStrategy.GLOBAL, builderRole)
+    <span style="color:#75715e">// Create the builder role
+</span><span style="color:#75715e"></span>    Role builderRole <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Role<span style="color:#f92672">(</span>globalRoleRead<span style="color:#f92672">,</span> authenticatedPermissions<span style="color:#f92672">)</span>
+    roleBasedAuthenticationStrategy<span style="color:#f92672">.</span><span style="color:#a6e22e">addRole</span><span style="color:#f92672">(</span>RoleBasedAuthorizationStrategy<span style="color:#f92672">.</span><span style="color:#a6e22e">GLOBAL</span><span style="color:#f92672">,</span> builderRole<span style="color:#f92672">)</span>
 
-    // Assign the admin role
-    access.admins.each { l -&gt;
-        println(&quot;Granting admin permissions to ${l}&quot;)
-        roleBasedAuthenticationStrategy.assignRole(RoleBasedAuthorizationStrategy.GLOBAL, adminRole, l)
-    }
+    <span style="color:#75715e">// Assign the admin role
+</span><span style="color:#75715e"></span>    access<span style="color:#f92672">.</span><span style="color:#a6e22e">admins</span><span style="color:#f92672">.</span><span style="color:#a6e22e">each</span> <span style="color:#f92672">{</span> l <span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>
+        println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Granting admin permissions to ${l}&#34;</span><span style="color:#f92672">)</span>
+        roleBasedAuthenticationStrategy<span style="color:#f92672">.</span><span style="color:#a6e22e">assignRole</span><span style="color:#f92672">(</span>RoleBasedAuthorizationStrategy<span style="color:#f92672">.</span><span style="color:#a6e22e">GLOBAL</span><span style="color:#f92672">,</span> adminRole<span style="color:#f92672">,</span> l<span style="color:#f92672">)</span>
+    <span style="color:#f92672">}</span>
 
-    access.builders.each { l -&gt;
-        println(&quot;Granting builder permissions to ${l}&quot;)
-        roleBasedAuthenticationStrategy.assignRole(RoleBasedAuthorizationStrategy.GLOBAL, builderRole, l)
-    }
+    access<span style="color:#f92672">.</span><span style="color:#a6e22e">builders</span><span style="color:#f92672">.</span><span style="color:#a6e22e">each</span> <span style="color:#f92672">{</span> l <span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>
+        println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Granting builder permissions to ${l}&#34;</span><span style="color:#f92672">)</span>
+        roleBasedAuthenticationStrategy<span style="color:#f92672">.</span><span style="color:#a6e22e">assignRole</span><span style="color:#f92672">(</span>RoleBasedAuthorizationStrategy<span style="color:#f92672">.</span><span style="color:#a6e22e">GLOBAL</span><span style="color:#f92672">,</span> builderRole<span style="color:#f92672">,</span> l<span style="color:#f92672">)</span>
+    <span style="color:#f92672">}</span>
 
-    // Save the state
-    println &quot;Saving changes.&quot;
-    instance.save()
-}
-</code></pre>
-
-<p>С помощью данного скрипта создаются две роли - <code>builder</code> и <code>admin</code>, которым устанавливаются разные наборы прав доступа. Далее всем пользователям, перечисленным в <code>access.admins</code>, назначается роль <code>admin</code>, а группе <code>authenticated</code> (находится в <code>access.builders</code>) назначается роль <code>builder</code>.</p>
+    <span style="color:#75715e">// Save the state
+</span><span style="color:#75715e"></span>    println <span style="color:#e6db74">&#34;Saving changes.&#34;</span>
+    instance<span style="color:#f92672">.</span><span style="color:#a6e22e">save</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>С помощью данного скрипта создаются две роли - <code>builder</code> и <code>admin</code>, которым устанавливаются разные наборы прав доступа. Далее всем пользователям, перечисленным в <code>access.admins</code>, назначается роль <code>admin</code>, а группе <code>authenticated</code> (находится в <code>access.builders</code>) назначается роль <code>builder</code>.</p>
                 </section>
             </article>
 
@@ -265,23 +266,23 @@ Thread.start {
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

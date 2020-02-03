@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Как изменить значение Open File Limit — 3 варианта &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,131 +88,77 @@
                 </header>
                 <section id="post-body">
                     <p>Операционная система при открытии файла создает временный номер (неотрицательное целое число), называемый файловым дескриптором. Данный дескриптор (handle) можно использовать для работы с файлом.</p>
-
 <p>Специальная область памяти зарезервирована под файловые дескрипторы, и именно от ее размера зависит, сколько файлов может быть открыто одновременно. Давайте разберемся, какими способами можно <strong>изменить значение Open File Limit в ОС Linux</strong>!</p>
-
 <p>Операционной системе требуются ресурсы (прежде всего память) для управления каждым открытым файлом. Чтобы не возникла ситуация, когда один процесс завладел всеми доступными ресурсами операционной системы были введены лимиты. В ОС Linux существует два вида лимитов:</p>
-
 <ul>
 <li><code>soft limit</code> — значение может изменяться во время выполнения процесса;</li>
 <li><code>hard limit</code> — максимальное значение, которое не может быть превышено установкой значения <code>soft limit</code>.</li>
 </ul>
-
 <p>Максимальное значение открытых файловых дескрипторов (файлы, которые пользователь открыл с момента логина) в системе можно просмотреть так:</p>
-
-<pre><code class="language-bash">cat /proc/sys/fs/file-max
-798066
-</code></pre>
-
-<p>Иногда по некоторым причинам требуется <strong>увеличить число доступных файловых дескрипторов</strong> для всей системы или для конкретного процесса.
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/sys/fs/file-max
+<span style="color:#ae81ff">798066</span>
+</code></pre></div><p>Иногда по некоторым причинам требуется <strong>увеличить число доступных файловых дескрипторов</strong> для всей системы или для конкретного процесса.
 Сделать это можно следующими способами:</p>
-
 <p><strong>Вариант 1</strong>, используя <code>ulimit</code>.</p>
-
 <p>Синтаксис команды следующий:</p>
-
-<pre><code class="language-bash">ulimit [options [limit]]
-</code></pre>
-
-<p>Опции могут быть следующими:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit <span style="color:#f92672">[</span>options <span style="color:#f92672">[</span>limit<span style="color:#f92672">]</span><span style="color:#f92672">]</span>
+</code></pre></div><p>Опции могут быть следующими:</p>
 <ul>
 <li><code>-a</code> — вывод текущих значений;</li>
 <li><code>-f</code> — лимит размера файлов которые, могут быть созданы командной оболочкой;</li>
 <li><code>-n</code> — лимит количества открытых файловых дескрипторов;</li>
 <li><code>-H</code> и <code>-S</code> — Hard и Soft лимиты соответственно.</li>
 </ul>
-
 <p>Смотрим текущий лимит на файловые дескрипторы:</p>
-
-<pre><code class="language-bash">ulimit -a | grep open
-Maximum number of open file descriptors                          (-n) 1024
-</code></pre>
-
-<p>Смотрим значение жесткого (Hard) лимита:</p>
-
-<pre><code class="language-bash">ulimit -Hn
-1048576
-</code></pre>
-
-<p>Смотрим значение мягкого (Soft) лимита:</p>
-
-<pre><code class="language-bash">ulimit -Sn
-1024
-</code></pre>
-
-<p>Меняем значение Hard / Soft лимитов на 3000:</p>
-
-<pre><code class="language-bash">ulimit -n 3000
-</code></pre>
-
-<p>Проверяем:</p>
-
-<pre><code class="language-bash">ulimit -Sn
-3000
-</code></pre>
-
-<pre><code class="language-bash">ulimit -Hn
-3000
-</code></pre>
-
-<p>Новые лимиты будут дествительны до перезагрузки компьютера.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -a | grep open
+Maximum number of open file descriptors                          <span style="color:#f92672">(</span>-n<span style="color:#f92672">)</span> <span style="color:#ae81ff">1024</span>
+</code></pre></div><p>Смотрим значение жесткого (Hard) лимита:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -Hn
+<span style="color:#ae81ff">1048576</span>
+</code></pre></div><p>Смотрим значение мягкого (Soft) лимита:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -Sn
+<span style="color:#ae81ff">1024</span>
+</code></pre></div><p>Меняем значение Hard / Soft лимитов на 3000:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -n <span style="color:#ae81ff">3000</span>
+</code></pre></div><p>Проверяем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -Sn
+<span style="color:#ae81ff">3000</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -Hn
+<span style="color:#ae81ff">3000</span>
+</code></pre></div><p>Новые лимиты будут дествительны до перезагрузки компьютера.</p>
 <p><strong>Вариант 2</strong>, с помощью <code>Pluggable Authentication Modules</code> (PAM).</p>
-
 <p>Настройка PAM модулей в большинстве Linux дистрибутивов осуществляется в файле <code>/etc/security/limits.conf</code>. В файле присутствуют 4 поля:</p>
-
 <ul>
 <li><code>domain</code> — описывает сущность, к которой будут применены лимиты. Это может быть имя пользователя, имя группы или <code>*</code> — все, кроме пользователя root;</li>
 <li><code>type</code> — в данном полу указывают тип лимита, может быть <code>hard</code>, <code>soft</code> или <code>-</code> что означает оба;</li>
 <li><code>item</code> — определяет тип элемента для установки лимита, например <code>nofile</code> (the number of open data files), <code>fsize</code> (the size of files created by the user), <code>core</code> (the size of core files) и т.д.;</li>
 <li><code>value</code> — значение которое будет установлено.</li>
 </ul>
-
 <p>Для установки максимального количества открытых файлов для всех пользователей в файл <code>/etc/security/limits.conf</code> добавляем следующие строки:</p>
-
-<pre><code class="language-text">...
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
 * hard nofile 20000
 * soft nofile 15000
 ...
-</code></pre>
-
-<p>после чего перелогиниться в системе (или перезагрузиться).</p>
-
+</code></pre></div><p>после чего перелогиниться в системе (или перезагрузиться).</p>
 <p><strong>Вариант 3</strong>, изменение общесистемных (system wide) лимитов.</p>
-
 <p>В Linux-дистрибутивах существует значение <code>file-max</code> — максимальное количество файловых дескрипторов (значение подразумевает, что операционную систему используют несколько пользователей). Этот параметр можно изменить отредактировав конфигурационный файл <code>/etc/sysctl.conf</code> или напрямую изменив <code>fs.file-max</code> из командной строки.</p>
-
 <p>Текущее значение открытых файлов:</p>
-
-<pre><code class="language-bash">cat /proc/sys/fs/file-max
-798066
-</code></pre>
-
-<p>Меняем значение из командной строки:</p>
-
-<pre><code class="language-bash">sysctl -w fs.file-max=250000
-fs.file-max = 250000
-</code></pre>
-
-<p>Проверяем:</p>
-
-<pre><code class="language-bash">cat /proc/sys/fs/file-max
-250000
-</code></pre>
-
-<p>Данные значения будут действительны до следующей перезагрузки компьютера. Чтобы изменения остались, нужно внести их в файл <code>/etc/sysctl.conf</code>:</p>
-
-<pre><code class="language-text">...
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/sys/fs/file-max
+<span style="color:#ae81ff">798066</span>
+</code></pre></div><p>Меняем значение из командной строки:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -w fs.file-max<span style="color:#f92672">=</span><span style="color:#ae81ff">250000</span>
+fs.file-max <span style="color:#f92672">=</span> <span style="color:#ae81ff">250000</span>
+</code></pre></div><p>Проверяем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/sys/fs/file-max
+<span style="color:#ae81ff">250000</span>
+</code></pre></div><p>Данные значения будут действительны до следующей перезагрузки компьютера. Чтобы изменения остались, нужно внести их в файл <code>/etc/sysctl.conf</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
 fs.file-max=250000
 ...
-</code></pre>
-
-<p>после чего выполнить команду:</p>
-
-<pre><code class="language-bash">sysctl -p
-fs.file-max = 250000
-</code></pre>
+</code></pre></div><p>после чего выполнить команду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -p
+fs.file-max <span style="color:#f92672">=</span> <span style="color:#ae81ff">250000</span>
+</code></pre></div>
                 </section>
             </article>
 
@@ -243,23 +200,23 @@ fs.file-max = 250000
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

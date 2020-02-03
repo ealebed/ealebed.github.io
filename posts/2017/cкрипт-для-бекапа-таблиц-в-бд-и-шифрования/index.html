@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Скрипт для бекапа таблиц в БД &#43; шифрования &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,53 +90,50 @@
                 </header>
                 <section id="post-body">
                     <p>Мы уже рассматривали примеры <a href="https://ealebed.github.io/posts/2015/%D1%80%D0%B5%D0%B7%D0%B5%D1%80%D0%B2%D0%BD%D0%BE%D0%B5-%D0%BA%D0%BE%D0%BF%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B1%D0%B0%D0%B7%D1%8B-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-percona-xtrabackup/">создания резервных копий</a> баз данных и <a href="https://ealebed.github.io/posts/2015/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B1%D0%B5%D0%BA%D0%B0%D0%BF%D0%BE%D0%B2-%D0%B1%D0%B4-%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-percona-xtrabackup/">восстановления</a> из них, были даже полностью <a href="https://ealebed.github.io/posts/2015/c%D0%BA%D1%80%D0%B8%D0%BF%D1%82-%D0%B4%D0%BB%D1%8F-%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D1%8F-%D0%B1%D0%B5%D0%BA%D0%B0%D0%BF%D0%BE%D0%B2-%D0%B1%D0%B4-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-percona-xtrabackup/">готовые к употреблению скрипты</a>.</p>
-
 <p>Но как поступить, если нужна резервная копия не всей БД, а лишь одной таблицы? Давайте разберемся!</p>
-
 <p>Скрипт выполняет резервное копирование БД (кроме test | information_schema | performance_schema) и отдельных таблиц в этих БД с помощью утилиты <code>mysqldump</code>. Дамп таблиц сжимается сначала в <code>.gz</code>, потом в <code>.bz2</code> (при этом архив <code>.gz</code> удаляется). Созданный архив <code>.bz2</code> <a href="https://ealebed.github.io/posts/2017/openssl-%D0%BF%D1%80%D0%BE%D1%81%D1%82%D0%BE%D0%B5-%D1%88%D0%B8%D1%84%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2-%D1%81-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5%D0%BC-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F/">шифруется с помощью <code>openssl</code></a> с последующим удалением незашифрованного архива.
 Хранится 5 резервных копий, более старые — удаляются.</p>
-
-<pre><code class="language-bash">#!/bin/bash
- 
-date=`date +%Y-%m-%d`
-MYSQL=/usr/bin/mysql
-DUMP=/usr/bin/mysqldump
-DUMPOPTIONS=&quot;-ceqQ --single-transaction --add-drop-table --allow-keywords --events&quot;
-ACCOUNT=&quot;--defaults-file=/root/.my.cnf&quot; # данные для подключения к MySQL
-PASS=`cat /root/bin/.pass` # пароль для шифрования архива
-BKPDIR=&quot;/var/backup/sync/mysql/&quot;
-DBASES_DIR=&quot;$BKPDIR/$date/db&quot;
-TABLES_DIR=&quot;$BKPDIR/$date/tables&quot;
-DATABASES=`$MYSQL $ACCOUNT -Bse 'show databases'|grep -vP 'information_schema|performance_schema'`
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/bash
+</span><span style="color:#75715e"></span> 
+date<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>date +%Y-%m-%d<span style="color:#e6db74">`</span>
+MYSQL<span style="color:#f92672">=</span>/usr/bin/mysql
+DUMP<span style="color:#f92672">=</span>/usr/bin/mysqldump
+DUMPOPTIONS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-ceqQ --single-transaction --add-drop-table --allow-keywords --events&#34;</span>
+ACCOUNT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--defaults-file=/root/.my.cnf&#34;</span> <span style="color:#75715e"># данные для подключения к MySQL</span>
+PASS<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>cat /root/bin/.pass<span style="color:#e6db74">`</span> <span style="color:#75715e"># пароль для шифрования архива</span>
+BKPDIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/backup/sync/mysql/&#34;</span>
+DBASES_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$BKPDIR<span style="color:#e6db74">/</span>$date<span style="color:#e6db74">/db</span><span style="color:#e6db74">&#34;</span>
+TABLES_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$BKPDIR<span style="color:#e6db74">/</span>$date<span style="color:#e6db74">/tables</span><span style="color:#e6db74">&#34;</span>
+DATABASES<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>$MYSQL $ACCOUNT -Bse <span style="color:#e6db74">&#39;show databases&#39;</span>|grep -vP <span style="color:#e6db74">&#39;information_schema|performance_schema&#39;</span><span style="color:#e6db74">`</span>
 mkdir -p $DBASES_DIR
-for i in $DATABASES; do
-    if [ &quot;$i&quot; = &quot;test&quot; ];
-    then
-        continue
-    fi
+<span style="color:#66d9ef">for</span> i in $DATABASES; <span style="color:#66d9ef">do</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$i<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;test&#34;</span> <span style="color:#f92672">]</span>;
+    <span style="color:#66d9ef">then</span>
+        <span style="color:#66d9ef">continue</span>
+    <span style="color:#66d9ef">fi</span>
     echo $DATABASES:;
-    [ ! -d $TABLES_DIR/$i ] &amp;&amp; mkdir -p $TABLES_DIR/$i
-    schem=&quot;\`$i\`&quot;
-    TABLES=`$MYSQL $ACCOUNT -Bse &quot;show tables from $schem&quot;`
-    for j in $TABLES;do
+    <span style="color:#f92672">[</span> ! -d $TABLES_DIR/$i <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> mkdir -p $TABLES_DIR/$i
+    schem<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">\`</span>$i<span style="color:#e6db74">\`</span><span style="color:#e6db74">&#34;</span>
+    TABLES<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>$MYSQL $ACCOUNT -Bse <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">show tables from </span>$schem<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">`</span>
+    <span style="color:#66d9ef">for</span> j in $TABLES;<span style="color:#66d9ef">do</span>
         echo $i ___ $j ;
         $DUMP $ACCOUNT $DUMPOPTIONS $i $j | gzip -1 &gt; $TABLES_DIR/$i/$j.sql.gz
-        zcat $TABLES_DIR/$i/$j.sql.gz | bzip2 -c | tee -a $DBASES_DIR/$i.sql.bz2 &gt; $TABLES_DIR/$i/$j.sql.bz2 &amp;&amp; rm -f $TABLES_DIR/$i/$j.sql.gz
+        zcat $TABLES_DIR/$i/$j.sql.gz | bzip2 -c | tee -a $DBASES_DIR/$i.sql.bz2 &gt; $TABLES_DIR/$i/$j.sql.bz2 <span style="color:#f92672">&amp;&amp;</span> rm -f $TABLES_DIR/$i/$j.sql.gz
         openssl enc -aes-256-cbc -salt -pass pass:$PASS -in $TABLES_DIR/$i/$j.sql.bz2 -out $TABLES_DIR/$i/$j.sql.bz2.enc
         rm -f $TABLES_DIR/$i/$j.sql.bz2
-    done
-done
+    <span style="color:#66d9ef">done</span>
+<span style="color:#66d9ef">done</span>
   
-arh=5
-for cusr in `ls $BKPDIR --full-time -t | awk '{print $9}'`;
-    do
-    if ((&quot;$arh&quot; &lt; 1))
-    then
-        `rm -fr $BKPDIR/$cusr`
-    fi
-    let &quot;arh -= 1&quot;
-done
-</code></pre>
+arh<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>
+<span style="color:#66d9ef">for</span> cusr in <span style="color:#e6db74">`</span>ls $BKPDIR --full-time -t | awk <span style="color:#e6db74">&#39;{print $9}&#39;</span><span style="color:#e6db74">`</span>;
+    <span style="color:#66d9ef">do</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;</span>$arh<span style="color:#e6db74">&#34;</span> &lt; 1<span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">then</span>
+        <span style="color:#e6db74">`</span>rm -fr $BKPDIR/$cusr<span style="color:#e6db74">`</span>
+    <span style="color:#66d9ef">fi</span>
+    let <span style="color:#e6db74">&#34;arh -= 1&#34;</span>
+<span style="color:#66d9ef">done</span>
+</code></pre></div>
                 </section>
             </article>
 
@@ -167,23 +175,23 @@ done
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

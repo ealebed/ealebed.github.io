@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №31: Использование build и image в одном сервисе в docker-compose &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,21 +88,15 @@
                 </header>
                 <section id="post-body">
                     <p>Всем известно, что при запуске сервиса, описанного в <code>docker-compose.yaml</code>, можно скачать готовый образ из docker-registry (указав <code>image:</code>) или собрать образ из существующего <code>Dockerfile</code> (указав <code>build:</code>). Но что случится, если указать обе инструкции?</p>
-
 <p>Если в вашем конфигурационном файле <code>docker-compose.yaml</code> в описании сервиса указана инструкция <code>build: &quot;.&quot;</code>, то при вызове команды <code>docker-compose build</code> или <code>docker-compose up</code> будет собран docker-образ согласно инструкциям в <code>Dockerfile</code>, расположенном в том же каталоге.</p>
-
 <p>Если же в описании сервиса будет написано например <code>image: &quot;postgres:10.3-alpine&quot;</code>, то соответствующий образ будет скачан из Docker Hub при вызове команды <code>docker-compose up</code> или <code>docker-compose pull</code>.</p>
-
 <p>Но что произойдет, если в вашем <code>docker-compose.yaml</code> написано примерно следующее:</p>
-
-<pre><code class="language-yaml">...
-db:
-  build: &quot;.&quot;
-  image: &quot;ealebed/myimage:1.0&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+<span style="color:#66d9ef">db</span>:
+  <span style="color:#66d9ef">build</span>: <span style="color:#e6db74">&#34;.&#34;</span>
+  <span style="color:#66d9ef">image</span>: <span style="color:#e6db74">&#34;ealebed/myimage:1.0&#34;</span>
 ...
-</code></pre>
-
-<p>Это неочевидно, но в данном случае docker-образ будет собран как описано в <code>Dockerfile</code>, находящимся в том же каталоге, но вместо <code>COMPOSE_PROJECT_NAME</code> (или имени каталога, в котором находится <code>docker-compose.yaml</code>) + имени сервиса собранному образу будет присвоено имя, указанное в свойстве <code>image:</code>. В примере выше - образ будет собран и протэгирован как <code>ealebed/myimage:1.0</code> - это позволит быстро запушить данный образ на Docker Hub или в любой другой docker реджистри.</p>
+</code></pre></div><p>Это неочевидно, но в данном случае docker-образ будет собран как описано в <code>Dockerfile</code>, находящимся в том же каталоге, но вместо <code>COMPOSE_PROJECT_NAME</code> (или имени каталога, в котором находится <code>docker-compose.yaml</code>) + имени сервиса собранному образу будет присвоено имя, указанное в свойстве <code>image:</code>. В примере выше - образ будет собран и протэгирован как <code>ealebed/myimage:1.0</code> - это позволит быстро запушить данный образ на Docker Hub или в любой другой docker реджистри.</p>
                 </section>
             </article>
 
@@ -133,23 +138,23 @@ db:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

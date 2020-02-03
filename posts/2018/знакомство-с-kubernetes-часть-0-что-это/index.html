@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Знакомство с Kubernetes. Часть 0: Что это? &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,19 +88,12 @@
                 </header>
                 <section id="post-body">
                     <p><code>Kubernetes</code> - это проект с открытым исходным кодом для управления &ldquo;флотом&rdquo; контейнеров на нескольких хостах, объединенных в кластер. Данный инструмент призван обеспечить основные механизмы развертывания, обслуживания и масштабирования приложений, упакованных в контейнеры.</p>
-
 <p>Разработка <code>Kubernetes</code> была начата в Google, которая уже более десяти лет использует похожий инструмент (закрытый и недоступный для сообщества) для оркестрации контейнеров - <code>Borg</code>. В данный момент <code>Kubernetes</code> передан под управление Cloud Native Computing Foundation (CNCF) и теперь поддерживается многими компаниями, в том числе Microsoft, RedHat, IBM и Docker.</p>
-
 <p>Если вы используете контейнеры (docker/rkt - здесь под контейнером мы понимаем упакованное приложение со всеми необходимыми для работы зависимостями), то рано или поздно возникает вопрос с развертыванием, обновлением, масштабированием контейнеров, балансировкой траффика между ними, обнаружением сервисов и т. д. Именно эти (и некоторые другие) проблемы и призван решить <code>Kubernetes</code>.</p>
-
 <p>Взаимодействуя с API можно описать желаемое состояние вашего приложения (например, количество реплик или размещение на определенном хосте) и <code>Kubernetes</code> сделает все необходимое для обеспечения соответствия текущей инфраструктуры желаемой - будет запускать поды (группы из одного или нескольких контейнеров), реплицировать их, &ldquo;поднимать&rdquo;, если некоторые поды &ldquo;упадут&rdquo; и т.д..</p>
-
 <p><code>Kubernetes</code> довольно гибкий, кластер можно поднять практически в любом месте. Например, <code>Kubernetes</code> присутствует в <a href="https://docs.docker.com/docker-for-mac/#kubernetes">Docker for Mac</a>, его легко установить и запустить на компьютере под управлением <a href="https://blog.docker.com/2018/01/docker-windows-desktop-now-kubernetes/">Windows</a> и тем более Linux. Естественно, <code>Kubernetes</code> работает на Google Compute Engine (GKE) и с некоторыми особенностями на виртуалках других облачных провайдеров (AWS, Azure).</p>
-
 <p>Кластер <code>Kubernetes</code> состоит из одной или нескольких нод (напомню, нода может быть физической или виртуальной машиной). Если в кластере есть несколько нод, то они объединены в кластерную сеть. Вне зависимости от количества нод, все кластеры <code>Kubernetes</code> имеют одни и те же компоненты (components).</p>
-
 <p>Компонентами кластера могут быть:</p>
-
 <ul>
 <li><strong>kube-apiserver</strong> — ключевой компонент системы. Он предоставляет JSON REST API, использующий HTTP в качестве транспорта и используется для организации внешнего и внутреннего доступа к функциям <code>Kubernetes</code>;</li>
 <li><strong>etcd</strong> — легкий распределённый движок хранилища ключ-значение (используется для хранения конфигурационных данных приложений в кластере);</li>
@@ -99,7 +103,6 @@
 <li><strong>kubelet</strong> — отвечает за статус подов на ноде (запуск, останов и управление контейнерами);</li>
 <li><strong>kube-proxy</strong> — компонент, ответственный за маршрутизацию входящего трафика на конкретные контейнеры, работающие в пределах пода.</li>
 </ul>
-
 <p>Наилучший способ познакомиться с работой в кластере под управлением <code>Kubernetes</code> - установить его. Самый простой способ - &ldquo;поиграть&rdquo; с кубернетесом на сайте <a href="http://labs.play-with-k8s.com/">Play with Kubernetes</a>.
 Второй по сложности вариант - <a href="https://ealebed.github.io/posts/2018/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-minikube/">установить Minikube</a> - утилиту командной строки для настройки и запуска однонодового кластера <code>Kubernetes</code> в виртуальной машине на локальном компьютере.
 Также, если есть в наличии один (или несколько) компьютеров (или виртуальных машин) и желание &ldquo;покопаться&rdquo; поглубже, можно настроить свой кластер самостоятельно (чем мы и займемся в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0/">следующей статье</a>).</p>
@@ -144,23 +147,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

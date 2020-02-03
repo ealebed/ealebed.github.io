@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker: не игногируйте .dockerignore! &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,13 +88,9 @@
                 </header>
                 <section id="post-body">
                     <p>Мы уже знаем, как самостоятельно собирать docker-образы из Dockerfil’ов и даже использовали некоторые советы по <a href="https://ealebed.github.io/posts/2017/dockerfile-add-%D0%B8%D0%BB%D0%B8-copy/">оптимизации</a> сборки и <a href="https://ealebed.github.io/posts/2017/%D0%BE%D0%BF%D1%82%D0%B8%D0%BC%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-docker-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%BE%D0%B2/">сжатию образов</a> для уменьшения из размера.</p>
-
 <p>Давайте разберемся как можно ускорить процесс сборки образа (<code>docker build</code>) используя возможности <code>.dockerignore</code>!</p>
-
 <p>Как известно, команда <code>docker build</code> используется для сборки образа. При этом, демон докера (он же докер сервер) должен получить доступ к файлам, из которых вы хотите собрать docker-образ — эти файлы называются <code>build context</code>. Каждый раз, когда вы собираете docker-образ, докер клиент создает новый <code>build context</code> — выбирает файлы, упаковывает их в архив и отправляет докер серверу — иногда это может существенно замедлить процесс сборки.</p>
-
 <p>Здесь нам на помощь приходит файл <code>.dockerignore</code> в нем следует перечислить те файлы и каталоги, которые докер клиент НЕ должен включать в <code>build context</code>. Рассмотрим простой пример на реальных данных — на одном из этапов CI (release) собирается docker-образ с исходниками проекта, подробности выглядят примерно так:</p>
-
 <pre><code>Running with gitlab-ci-multi-runner 9.4.1 (d24b11c)
   on docker-build-runner (9e68759f)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed/tmaier-dc-ssh:latest ...
@@ -191,24 +198,15 @@ a80d3c8f9104: Layer already exists
 d8efc7f9a927: Pushed
 latest: digest: sha256:4335cb03335cabbc20daa926db504bfba4427b6143af75a9a2a59a021cf8c3d2 size: 951
 Job succeeded
-</code></pre>
-
-<p>Выполнение данной задачи занимает аж 2 минуты 47 секунд! Обратите внимание на размер <code>build context</code>:</p>
-
+</code></pre><p>Выполнение данной задачи занимает аж 2 минуты 47 секунд! Обратите внимание на размер <code>build context</code>:</p>
 <pre><code>...
 Sending build context to Docker daemon 1.218 GB
 ...
-</code></pre>
-
-<p>Добавим рядом с нашим Dockerfil’ом новый файл <code>.dockerignore</code> следующего содержания:</p>
-
+</code></pre><p>Добавим рядом с нашим Dockerfil’ом новый файл <code>.dockerignore</code> следующего содержания:</p>
 <pre><code>.git/
 node_modules/  
 docker/
-</code></pre>
-
-<p>После добавления файла в репозиторий запустится процесс CI и на этот раз этап сборки образа (release) будет выглядеть так:</p>
-
+</code></pre><p>После добавления файла в репозиторий запустится процесс CI и на этот раз этап сборки образа (release) будет выглядеть так:</p>
 <pre><code>Running with gitlab-ci-multi-runner 9.4.1 (d24b11c)
   on docker-build-runner (9e68759f)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed/tmaier-dc-ssh:latest ...
@@ -316,16 +314,11 @@ c0de73ac9968: Layer already exists
 f0a24a86880d: Pushed
 latest: digest: sha256:f8f17362721885672fd0fc903505d2c2e71ac44a382533e1ab26684091447f63 size: 951
 Job succeeded
-</code></pre>
-
-<p>Как видим, у нас изменился размер build context:</p>
-
+</code></pre><p>Как видим, у нас изменился размер build context:</p>
 <pre><code>...
 Sending build context to Docker daemon 375.3 MB
 ...
-</code></pre>
-
-<p>но самое главное, что docker-образ теперь собирается за 1 минуту 24 секунды — достойная оптимизация!</p>
+</code></pre><p>но самое главное, что docker-образ теперь собирается за 1 минуту 24 секунды — достойная оптимизация!</p>
                 </section>
             </article>
 
@@ -367,23 +360,23 @@ Sending build context to Docker daemon 375.3 MB
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

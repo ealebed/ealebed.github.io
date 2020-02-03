@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Объединение сетевых карт в Linux &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,27 +88,17 @@
                 </header>
                 <section id="post-body">
                     <p><strong>Объединение сетевых карт в Linux</strong> (bonding) используется для агрегирования нескольких физических сетевых интерфейсов в один логический.</p>
-
 <p>Чаще всего сетевые интерфейсы работают в режиме горячего резерва или балансировки нагрузки — все зависит от выбранной политики. Давайте разберемся с объединением сетевых карт в ОС Debian Wheezy!</p>
-
 <p>В нашем примере используется одноранговая сеть (peer-to-peer) между двумя серверами, по которой синхронизируются drbd-разделы. Необходимо использовать <strong>объединение сетевых карт</strong> в режиме <code>balance-rr</code> (round-robin) на случай выхода из строя одного из сетевых интерфейсов.</p>
-
 <p>Настройки будут проводиться на серверах:</p>
-
-<pre><code class="language-bash">lsb_release -a
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
 Distributor ID:	Debian
-Description:	Debian GNU/Linux 7.8 (wheezy)
+Description:	Debian GNU/Linux 7.8 <span style="color:#f92672">(</span>wheezy<span style="color:#f92672">)</span>
 Release:	7.8
 Codename:	wheezy
-</code></pre>
-
-<p>Устанавливаем необходимый пакет <code>ifenslave</code> на оба сервера:</p>
-
-<pre><code class="language-bash">aptitude install ifenslave-2.6
-</code></pre>
-
-<p>Правим <code>/etc/network/interfaces</code> на первом сервере, добавляем следующие строки:</p>
-
+</code></pre></div><p>Устанавливаем необходимый пакет <code>ifenslave</code> на оба сервера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install ifenslave-2.6
+</code></pre></div><p>Правим <code>/etc/network/interfaces</code> на первом сервере, добавляем следующие строки:</p>
 <pre><code>auto bond0
 iface bond0 inet static
         address 172.16.0.1
@@ -108,10 +109,7 @@ iface bond0 inet static
         bond_downdelay 200
         bond_updelay 200
         slaves eth2 eth3
-</code></pre>
-
-<p>На втором сервере в <code>/etc/network/interfaces</code> добавляем:</p>
-
+</code></pre><p>На втором сервере в <code>/etc/network/interfaces</code> добавляем:</p>
 <pre><code>auto bond0
 iface bond0 inet static
         address 172.16.0.2
@@ -122,10 +120,7 @@ iface bond0 inet static
         bond_downdelay 200
         bond_updelay 200
         slaves eth2 eth3
-</code></pre>
-
-<p>Подробнее об используемых параметрах:</p>
-
+</code></pre><p>Подробнее об используемых параметрах:</p>
 <ul>
 <li><code>bond_mode balance-rr</code> — режим <code>round-robin</code>, применяется для отказоустойчивости и балансировки нагрузки;</li>
 <li><code>bond_miimon 100</code> — периодичность MII мониторинга (миллисекунды);</li>
@@ -133,25 +128,14 @@ iface bond0 inet static
 <li><code>bond_updelay 200</code> — время задержки перед включением интерфейса при восстановлении соединения (миллисекунды);</li>
 <li><code>slaves eth2 eth3</code> — при такой конфигурации описывать интерфейсы <code>eth2</code> и <code>eth3</code> в <code>/etc/network/interfaces</code> не нужно.</li>
 </ul>
-
 <p>Далее на обоих серверах выполняем:</p>
-
-<pre><code class="language-bash">modprobe bonding
-</code></pre>
-
-<pre><code class="language-bash">echo 'bonding' &gt;&gt; /etc/modules
-</code></pre>
-
-<p><strong>Примечание.</strong> Проверить, загружен модуль или нет можно с помощью команды <code>lsmod | grep bonding</code>.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">modprobe bonding
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">echo <span style="color:#e6db74">&#39;bonding&#39;</span> &gt;&gt; /etc/modules
+</code></pre></div><p><strong>Примечание.</strong> Проверить, загружен модуль или нет можно с помощью команды <code>lsmod | grep bonding</code>.</p>
 <p>Опять же, на обоих серверах:</p>
-
-<pre><code class="language-bash">ifdown eth2 eth3 &amp;&amp; ifup bond0
-</code></pre>
-
-<p>После проделанных действий проверим, что новые сетевые интерфейсы действительно добавились. Первый сервер:</p>
-
-<pre><code class="language-bash">ifconfig
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ifdown eth2 eth3 <span style="color:#f92672">&amp;&amp;</span> ifup bond0
+</code></pre></div><p>После проделанных действий проверим, что новые сетевые интерфейсы действительно добавились. Первый сервер:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ifconfig
 bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:4f:6a
           inet addr:172.16.0.1  Bcast:172.16.0.255  Mask:255.255.255.0
           inet6 addr: fe80::6a05:caff:fe20:4f6a/64 Scope:Link
@@ -159,13 +143,10 @@ bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:4f:6a
           RX packets:5091884726 errors:0 dropped:0 overruns:0 frame:0
           TX packets:16029676320 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:0
-          RX bytes:424211603599 (395.0 GiB)  TX bytes:22123967678480 (20.1 TiB)
+          RX bytes:424211603599 <span style="color:#f92672">(</span>395.0 GiB<span style="color:#f92672">)</span>  TX bytes:22123967678480 <span style="color:#f92672">(</span>20.1 TiB<span style="color:#f92672">)</span>
 ...
-</code></pre>
-
-<p>Второй сервер:</p>
-
-<pre><code class="language-bash">ifconfig
+</code></pre></div><p>Второй сервер:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ifconfig
 bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:51:ec
           inet addr:172.16.0.2  Bcast:172.16.0.255  Mask:255.255.255.0
           inet6 addr: fe80::6a05:caff:fe20:51ec/64 Scope:Link
@@ -173,12 +154,9 @@ bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:51:ec
           RX packets:16029826998 errors:0 dropped:0 overruns:0 frame:0
           TX packets:5091930656 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:0
-          RX bytes:22124111859139 (20.1 TiB)  TX bytes:424213993831 (395.0 GiB)
+          RX bytes:22124111859139 <span style="color:#f92672">(</span>20.1 TiB<span style="color:#f92672">)</span>  TX bytes:424213993831 <span style="color:#f92672">(</span>395.0 GiB<span style="color:#f92672">)</span>
 ...
-</code></pre>
-
-<p>При <strong>объединении сетевых карт в Linux</strong> можно использовать следующие режимы (<code>mode</code>) поведения сетевых интерфейсов:</p>
-
+</code></pre></div><p>При <strong>объединении сетевых карт в Linux</strong> можно использовать следующие режимы (<code>mode</code>) поведения сетевых интерфейсов:</p>
 <ul>
 <li><code>balance-rr</code>, или <code>mode=0</code> — режим round-robin, последовательная отправка пакетов с первого по последний доступный интерфейс. Такая политика применяется для балансировки нагрузки и отказоустойчивости;</li>
 <li><code>active-backup</code>, или <code>mode=1</code> — режим активный-резервный, работает только один сетевой интерфейс. Второй интерфейс становится активным, когда «падает» текущий активный интерфейс. Такая политика применяется для обеспечения отказоустойчивости;</li>
@@ -229,23 +207,23 @@ bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:51:ec
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

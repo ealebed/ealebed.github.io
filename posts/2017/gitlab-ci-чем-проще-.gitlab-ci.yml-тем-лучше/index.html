@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>GitLab CI: Чем проще .gitlab-ci.yml, тем лучше &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,49 +90,46 @@
                 </header>
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-10-%D1%8D%D1%82%D0%B0%D0%BF-cleanup-%D0%B2-.gitlab-ci.yml/">статье</a>, завершающей <strong>цикл о настройке Gitlab CI</strong> (continuous integration) была приведена в качестве примера финальная, полностью рабочая версия конфигурационного файла <code>.gitlab-ci.yml</code>.</p>
-
 <p>С момента ее публикации прошло чуть более четырех месяцев, теперь настройки CI в репозитории проекта немного изменились — давайте разберемся!</p>
-
 <p>Целиком наш конфигурационный файл <code>.gitlab-ci.yml</code> выглядит так:</p>
-
-<pre><code class="language-yaml">image: registry.gitlab.lc:5000/develop/ed/tmaier-dc-ssh:latest
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/tmaier-dc-ssh:latest
  
-services:
-  - registry.gitlab.lc:5000/develop/ed/my-docker-dind:latest
+<span style="color:#66d9ef">services</span>:
+  - registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/my-docker-dind:latest
  
-variables:
-  DOCKER_DRIVER: overlay2
-  NODEIMAGE: registry.gitlab.lc:5000/develop/ed/node-npm-ed-sq:latest
-  NODEHOTIMAGE: registry.gitlab.lc:5000/develop/ed/node-hot-ed-sq:latest
-  WORKSPACEIMAGE: registry.gitlab.lc:5000/develop/ed/workspace-ed-sq:latest
-  DIR_IGNORED: node_modules,bin,data/logs,data/mail,data/migrations,vendor,build,tests,public,docker
-  STAGING_DC_STACK_FILE: docker-compose-stack-staging.yml
-  STAGING_ENV_FILE: .env.staging.lc
-  RELEASE_DC_STACK_FILE: docker-compose-stack-release.yml
-  RELEASE_ENV_FILE: .env.release
+<span style="color:#66d9ef">variables</span>:
+  <span style="color:#66d9ef">DOCKER_DRIVER</span>: overlay2
+  <span style="color:#66d9ef">NODEIMAGE</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/node-npm-ed-sq:latest
+  <span style="color:#66d9ef">NODEHOTIMAGE</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/node-hot-ed-sq:latest
+  <span style="color:#66d9ef">WORKSPACEIMAGE</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/workspace-ed-sq:latest
+  <span style="color:#66d9ef">DIR_IGNORED</span>: node_modules,bin,data/logs,data/mail,data/migrations,vendor,build,tests,public,docker
+  <span style="color:#66d9ef">STAGING_DC_STACK_FILE</span>: docker-compose-stack-staging.yml
+  <span style="color:#66d9ef">STAGING_ENV_FILE</span>: .env.staging.lc
+  <span style="color:#66d9ef">RELEASE_DC_STACK_FILE</span>: docker-compose-stack-release.yml
+  <span style="color:#66d9ef">RELEASE_ENV_FILE</span>: .env.release
  
-stages:
+<span style="color:#66d9ef">stages</span>:
   - build
   - test
   - release
   - deploy
  
-compile:
-  stage: build
-  before_script:
+<span style="color:#66d9ef">compile</span>:
+  <span style="color:#66d9ef">stage</span>: build
+  <span style="color:#66d9ef">before_script</span>:
     - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
-  script:
+  <span style="color:#66d9ef">script</span>:
     - cp -u .env.develop .env
-    - docker run -v $(pwd):/var/www/example --rm --user www-data ${WORKSPACEIMAGE} sh -c &quot;composer install --no-dev &amp;&amp; ./zf routes compile &amp;&amp; ./zf cache clean-modified-content &amp;&amp; ./zf user-default-avatar&quot;
-    - docker run -v $(pwd):/var/www/example --rm ${NODEIMAGE} sh -c &quot;npm install --production --quiet &amp;&amp; grunt install-build --no-dev&quot;
-    - docker run -v $(pwd):/var/www/example --rm ${NODEHOTIMAGE} sh -c &quot;npm run aglio-build&quot;
-  cache:
-    key: ${CI_COMMIT_REF_NAME}
-    paths:
+    - docker run -v $(pwd):/var/www/example --rm --user www-data ${WORKSPACEIMAGE} sh -c <span style="color:#e6db74">&#34;composer install --no-dev &amp;&amp; ./zf routes compile &amp;&amp; ./zf cache clean-modified-content &amp;&amp; ./zf user-default-avatar&#34;</span>
+    - docker run -v $(pwd):/var/www/example --rm ${NODEIMAGE} sh -c <span style="color:#e6db74">&#34;npm install --production --quiet &amp;&amp; grunt install-build --no-dev&#34;</span>
+    - docker run -v $(pwd):/var/www/example --rm ${NODEHOTIMAGE} sh -c <span style="color:#e6db74">&#34;npm run aglio-build&#34;</span>
+  <span style="color:#66d9ef">cache</span>:
+    <span style="color:#66d9ef">key</span>: ${CI_COMMIT_REF_NAME}
+    <span style="color:#66d9ef">paths</span>:
       - node_modules/
       - vendor/
-  artifacts:
-    paths:
+  <span style="color:#66d9ef">artifacts</span>:
+    <span style="color:#66d9ef">paths</span>:
     - build/api.html
     - vendor/
     - public/dsd/js/utils/routes.js
@@ -138,111 +146,108 @@ compile:
     - public/dsl/css/
     - public/dsl/js/bundles/
     - public/vendor/
-    when: on_success
-    expire_in: 1h
-  only:
+    <span style="color:#66d9ef">when</span>: on_success
+    <span style="color:#66d9ef">expire_in</span>: 1h
+  <span style="color:#66d9ef">only</span>:
     - develop
-    - /^release\/.*$/
-#    - master
+    - /^release\/.<span style="color:#75715e">*$/</span>
+<span style="color:#75715e">#    - master</span>
  
-testing:
-  stage: test
-  dependencies:
+<span style="color:#66d9ef">testing</span>:
+  <span style="color:#66d9ef">stage</span>: test
+  <span style="color:#66d9ef">dependencies</span>:
   - compile
-  script:
+  <span style="color:#66d9ef">script</span>:
     - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phpmetrics --exclude=${DIR_IGNORED} --report-html=./build/phpmetrics/ .
-#    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phpmd . html codesize --reportfile ./build/phpmd.html --exclude ${DIR_IGNORED}
-#    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phploc --exclude=${DIR_IGNORED} --log-xml=./build/phploc.xml .
-#    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phpcpd --exclude=${DIR_IGNORED} --log-pmd=./build/phpcpd.xml .
-  artifacts:
-    paths:
-#    - build/phpcpd.xml
-#    - build/phploc.xml
-#    - build/phpmd.html
+<span style="color:#75715e">#    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phpmd . html codesize --reportfile ./build/phpmd.html --exclude ${DIR_IGNORED}</span>
+<span style="color:#75715e">#    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phploc --exclude=${DIR_IGNORED} --log-xml=./build/phploc.xml .</span>
+<span style="color:#75715e">#    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phpcpd --exclude=${DIR_IGNORED} --log-pmd=./build/phpcpd.xml .</span>
+  <span style="color:#66d9ef">artifacts</span>:
+    <span style="color:#66d9ef">paths</span>:
+<span style="color:#75715e">#    - build/phpcpd.xml</span>
+<span style="color:#75715e">#    - build/phploc.xml</span>
+<span style="color:#75715e">#    - build/phpmd.html</span>
     - build/phpmetrics/
-    when: on_success
-    expire_in: 1h
-  only:
+    <span style="color:#66d9ef">when</span>: on_success
+    <span style="color:#66d9ef">expire_in</span>: 1h
+  <span style="color:#66d9ef">only</span>:
     - develop-disabled
-#    - /^release\/.*$/
-#    - master
+<span style="color:#75715e">#    - /^release\/.*$/</span>
+<span style="color:#75715e">#    - master</span>
  
-release-image:
-  stage: release
-  dependencies:
+<span style="color:#66d9ef">release-image</span>:
+  <span style="color:#66d9ef">stage</span>: release
+  <span style="color:#66d9ef">dependencies</span>:
   - compile
   - testing
-  before_script:
+  <span style="color:#66d9ef">before_script</span>:
     - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
-    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $1}')
-    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $2}')
+    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $1}&#39;</span>)
+    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $2}&#39;</span>)
     - CONTAINER_RELEASE_IMAGE=${CI_REGISTRY}/develop/ed/${BRANCH_NAME}.sources:${TAG:-latest}
-  script:
+  <span style="color:#66d9ef">script</span>:
     - docker build --squash -t ${CONTAINER_RELEASE_IMAGE} -f Dockerfile . --build-arg BRANCH_NAME=${BRANCH_NAME}
     - docker push ${CONTAINER_RELEASE_IMAGE}
-  only:
+  <span style="color:#66d9ef">only</span>:
     - develop
-    - /^release\/.*$/
-#    - master
+    - /^release\/.<span style="color:#75715e">*$/</span>
+<span style="color:#75715e">#    - master</span>
  
-deploy-to-review:
-  stage: deploy
-  before_script:
+<span style="color:#66d9ef">deploy-to-review</span>:
+  <span style="color:#66d9ef">stage</span>: deploy
+  <span style="color:#66d9ef">before_script</span>:
     - eval $(ssh-agent -s)
-    - ssh-add &lt;(echo &quot;${SSH_PRIVATE_KEY}&quot;)
-    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $1}')
-    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $2}')
-  script:
+    - ssh-add &lt;(echo <span style="color:#e6db74">&#34;${SSH_PRIVATE_KEY}&#34;</span>)
+    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $1}&#39;</span>)
+    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $2}&#39;</span>)
+  <span style="color:#66d9ef">script</span>:
     - scp ./docker/${STAGING_ENV_FILE} ./docker/${STAGING_DC_STACK_FILE} provisioner@staging.lc:~/docker
-    - ssh provisioner@staging.lc VER=${CI_PIPELINE_ID} DC_FILE=${STAGING_DC_STACK_FILE} ENV_FILE=${STAGING_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} 'bash -s' &lt; ./docker/stack_deploy.sh
-  environment:
-    name: review/develop
-    url: https://www.develop-labs.cf
-  only:
+    - ssh provisioner@staging.lc VER=${CI_PIPELINE_ID} DC_FILE=${STAGING_DC_STACK_FILE} ENV_FILE=${STAGING_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} <span style="color:#e6db74">&#39;bash -s&#39;</span> &lt; ./docker/stack_deploy.sh
+  <span style="color:#66d9ef">environment</span>:
+    <span style="color:#66d9ef">name</span>: review/develop
+    <span style="color:#66d9ef">url</span>: https://www.develop-labs.cf
+  <span style="color:#66d9ef">only</span>:
     - develop
-  tags:
+  <span style="color:#66d9ef">tags</span>:
     - deploy
  
-deploy-to-release:
-  stage: deploy
-  before_script:
+<span style="color:#66d9ef">deploy-to-release</span>:
+  <span style="color:#66d9ef">stage</span>: deploy
+  <span style="color:#66d9ef">before_script</span>:
     - eval $(ssh-agent -s)
-    - ssh-add &lt;(echo &quot;${SSH_PRIVATE_KEY}&quot;)
-    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $1}')
-    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $2}')
-  script:
+    - ssh-add &lt;(echo <span style="color:#e6db74">&#34;${SSH_PRIVATE_KEY}&#34;</span>)
+    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $1}&#39;</span>)
+    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $2}&#39;</span>)
+  <span style="color:#66d9ef">script</span>:
     - scp ./docker/${RELEASE_ENV_FILE} ./docker/${RELEASE_DC_STACK_FILE} provisioner@release.lc:~/docker
-    - ssh provisioner@release.lc VER=${CI_PIPELINE_ID} DC_FILE=${RELEASE_DC_STACK_FILE} ENV_FILE=${RELEASE_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} 'bash -s' &lt; ./docker/stack_deploy.sh
-  environment:
-    name: review/release
-    url: https://release.eddev.cf/
-  only:
-    - /^release\/.*$/
-  when: manual
-  tags:
+    - ssh provisioner@release.lc VER=${CI_PIPELINE_ID} DC_FILE=${RELEASE_DC_STACK_FILE} ENV_FILE=${RELEASE_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} <span style="color:#e6db74">&#39;bash -s&#39;</span> &lt; ./docker/stack_deploy.sh
+  <span style="color:#66d9ef">environment</span>:
+    <span style="color:#66d9ef">name</span>: review/release
+    <span style="color:#66d9ef">url</span>: https://release.eddev.cf/
+  <span style="color:#66d9ef">only</span>:
+    - /^release\/.<span style="color:#75715e">*$/</span>
+  <span style="color:#66d9ef">when</span>: manual
+  <span style="color:#66d9ef">tags</span>:
     - deploy
  
-deploy-to-prod:
-  stage: deploy
-  before_script:
+<span style="color:#66d9ef">deploy-to-prod</span>:
+  <span style="color:#66d9ef">stage</span>: deploy
+  <span style="color:#66d9ef">before_script</span>:
     - mkdir -p ~/.ssh
-    - echo &quot;${SSH_PRIVATE_KEY}&quot; | tr -d '\r' &gt; ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -p 5022 -H 'example.com' &gt;&gt; ~/.ssh/known_hosts
-  script:
+    - echo <span style="color:#e6db74">&#34;${SSH_PRIVATE_KEY}&#34;</span> | tr -d <span style="color:#e6db74">&#39;\r&#39;</span> &gt; ~/.ssh/id_rsa
+    - chmod <span style="color:#ae81ff">600</span> ~/.ssh/id_rsa
+    - ssh-keyscan -p <span style="color:#ae81ff">5022</span> -H <span style="color:#e6db74">&#39;example.com&#39;</span> &gt;&gt; ~/.ssh/known_hosts
+  <span style="color:#66d9ef">script</span>:
     - git push ssh://git@example.com:/home/git/repo/ed.git HEAD:master
-  environment:
-    name: production
-    url: https://www.example.com/
-  only:
+  <span style="color:#66d9ef">environment</span>:
+    <span style="color:#66d9ef">name</span>: production
+    <span style="color:#66d9ef">url</span>: https://www.example.com/
+  <span style="color:#66d9ef">only</span>:
     - master
-  when: manual
-  tags:
+  <span style="color:#66d9ef">when</span>: manual
+  <span style="color:#66d9ef">tags</span>:
     - deploy
-</code></pre>
-
-<p>Итак, что же изменилось за 4 месяца:</p>
-
+</code></pre></div><p>Итак, что же изменилось за 4 месяца:</p>
 <ul>
 <li>на ревью-окружении (задача <code>deploy-to-review</code>) docker теперь работает в режиме swarm, в связи с чем полностью изменился скрипт деплоя (об этом <a href="https://ealebed.github.io/posts/2017/gitlab-ci-deploy-%D0%BD%D0%B0-docker-swarm/">отдельная статья</a>);</li>
 <li>было развернуто release-окружение (отдельный сервер также с docker в режиме swarm), в связи с чем появилась задача <code>deploy-to-release</code> выполняющаяся в ручном режиме;</li>
@@ -252,26 +257,14 @@ deploy-to-prod:
 <li>добавлены новые переменные в секцию <code>variables</code> (и удалены больше неиспользуемые). Имена переменных «говорящие», в комментариях не нуждаются;</li>
 <li>так как собираются docker-образы для разных веток, формируем их имена/теги «на лету».</li>
 </ul>
-
 <p>Чуть подробнее стоит остановиться разве что на формировании имен/тегов docker-образов. В репозитории постоянно существует ветка develop (множество коммитов/мерж реквестов ежедневно, после каждого запускается CI и образ с изменениями выкатывается на ревью); релизные ветки создаются примерно раз в 2 недели и выглядят как release/2.35.</p>
-
 <p>Для сборки образов с разными именами получаем имя ветки (все, что до первого символа «/», например develop или release):</p>
-
-<pre><code class="language-bash">BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $1}')
-</code></pre>
-
-<p>Тегом будет все, что встретится после символа «/» (например, 2.35 или пустая строка):</p>
-
-<pre><code class="language-bash">TAG=$(echo $CI_COMMIT_REF_NAME | awk -F &quot;/&quot; '{print $2}')
-</code></pre>
-
-<p>Имя docker-образа формируется так:</p>
-
-<pre><code class="language-bash">CONTAINER_RELEASE_IMAGE=${CI_REGISTRY}/develop/ed/${BRANCH_NAME}.sources:${TAG:-latest}
-</code></pre>
-
-<p>Следует обратить внимание на конструкцию <code>${TAG:-latest}</code>, которая значит «использовать значение переменной <code>TAG</code>, но если такого значения нет (пусто), то использовать <code>latest</code>». Именно благодаря такому &ldquo;костылю&rdquo; решению можно получить правильные имена docker-образов.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">BRANCH_NAME<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $1}&#39;</span><span style="color:#66d9ef">)</span>
+</code></pre></div><p>Тегом будет все, что встретится после символа «/» (например, 2.35 или пустая строка):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">TAG<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $2}&#39;</span><span style="color:#66d9ef">)</span>
+</code></pre></div><p>Имя docker-образа формируется так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CONTAINER_RELEASE_IMAGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CI_REGISTRY<span style="color:#e6db74">}</span>/develop/ed/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>.sources:<span style="color:#e6db74">${</span>TAG<span style="color:#66d9ef">:-</span>latest<span style="color:#e6db74">}</span>
+</code></pre></div><p>Следует обратить внимание на конструкцию <code>${TAG:-latest}</code>, которая значит «использовать значение переменной <code>TAG</code>, но если такого значения нет (пусто), то использовать <code>latest</code>». Именно благодаря такому &ldquo;костылю&rdquo; решению можно получить правильные имена docker-образов.</p>
 <p>Как всегда, буду рад любым дополнениям/замечаниям и постараюсь ответить на ваши вопросы. В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-deploy-%D0%BD%D0%B0-docker-swarm/">следующей статье</a> рассмотрим как изменился скрипт деплоя с переходом на docker в режиме swarm.</p>
                 </section>
             </article>
@@ -314,23 +307,23 @@ deploy-to-prod:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Установка DNS-сервера в docker-контейнере &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,57 +90,31 @@
                 </header>
                 <section id="post-body">
                     <p>Ранее мы уже рассматривали процесс <a href="https://ealebed.github.io/posts/2017/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-dns-dhcp-%D1%81-%D0%B4%D0%B8%D0%BD%D0%B0%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%BC-%D0%BE%D0%B1%D0%BD%D0%BE%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5%D0%BC-%D0%B7%D0%BE%D0%BD-%D0%B2-ubuntu-16.04/">настройки DNS-сервера с динамическим обновлением зон</a> в операционной системе Ubuntu 16.04, однако этот вариант не самый оптимальный с точки зрения использования времени.</p>
-
 <p>Давайте разберемся с очень простым и быстрым способом базовой <strong>установки DNS-сервера (bind9 + webmin) с помощью docker-контейнера</strong>!</p>
-
 <p>Считаем, что <a href="https://ealebed.github.io/posts/2017/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-docker-%D0%B2-ubuntu-16.04/"><code>docker</code> уже установлен</a> и корректно работает. Предлагаемый образ доступен на <a href="https://hub.docker.com/r/sameersbn/bind/">Docker Hub</a> и скачать его можно с помощью команды:</p>
-
-<pre><code class="language-bash">docker pull sameersbn/bind:9.9.5-20170129
-</code></pre>
-
-<p>Альтернативный вариант — самостоятельная сборка образа из Dockerfile, присутствующего на <a href="https://github.com/sameersbn/docker-bind/blob/master/Dockerfile">github</a>:</p>
-
-<pre><code class="language-bash">docker build -t sameersbn/bind github.com/sameersbn/docker-bind
-</code></pre>
-
-<p>Для запуска контейнера используется команда:</p>
-
-<pre><code class="language-bash">docker run --name bind -d --restart=always \
-       --publish 53:53/tcp --publish 53:53/udp --publish 10000:10000/tcp \
-       --volume /srv/docker/bind:/data \
-       sameersbn/bind:9.9.5-20170129
-</code></pre>
-
-<p>При запуске контейнера также стартует сервис Webmin, который будет доступен в браузере по адресу <a href="http://localhost:10000">http://localhost:10000</a>. Для авторизации по умолчанию используется логин <code>root</code> и пароль <code>password</code>. Есть возможность самостоятельно задать пароль при старте контейнера, добавив параметр <code>--env ROOT_PASSWORD=secretpassword</code>.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker pull sameersbn/bind:9.9.5-20170129
+</code></pre></div><p>Альтернативный вариант — самостоятельная сборка образа из Dockerfile, присутствующего на <a href="https://github.com/sameersbn/docker-bind/blob/master/Dockerfile">github</a>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t sameersbn/bind github.com/sameersbn/docker-bind
+</code></pre></div><p>Для запуска контейнера используется команда:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name bind -d --restart<span style="color:#f92672">=</span>always <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>       --publish 53:53/tcp --publish 53:53/udp --publish 10000:10000/tcp <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>       --volume /srv/docker/bind:/data <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>       sameersbn/bind:9.9.5-20170129
+</code></pre></div><p>При запуске контейнера также стартует сервис Webmin, который будет доступен в браузере по адресу http://localhost:10000. Для авторизации по умолчанию используется логин <code>root</code> и пароль <code>password</code>. Есть возможность самостоятельно задать пароль при старте контейнера, добавив параметр <code>--env ROOT_PASSWORD=secretpassword</code>.</p>
 <p>Если же сервис Webmin не нужен, его также можно отключить при старте контейнера с помощью параметра <code>--env WEBMIN_ENABLED=false</code>.</p>
-
 <p>Конфигурационные файлы DNS-сервера на хост-машине будут расположены в каталоге <code>/srv/docker/bind</code>. Пользователям SELinux необходимо также выполнить команду:</p>
-
-<pre><code class="language-bash">mkdir -p /srv/docker/bind
-</code></pre>
-
-<p>и</p>
-
-<pre><code class="language-bash">chcon -Rt svirt_sandbox_file_t /srv/docker/bind
-</code></pre>
-
-<p>Для обновления контейнера с DNS-сервером необходимо скачать новый образ:</p>
-
-<pre><code class="language-bash">docker pull sameersbn/bind:9.9.5-20170129
-</code></pre>
-
-<p>Остановить работающий docker-контейнер и удалить его:</p>
-
-<pre><code class="language-bash">docker rm -f bind
-</code></pre>
-
-<p>Запустить новый контейнер из свежего образа с нужными опциями:</p>
-
-<pre><code class="language-bash">docker run --name bind -d \
-	[OPTIONS] \
-	sameersbn/bind:9.9.5-20170129
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /srv/docker/bind
+</code></pre></div><p>и</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chcon -Rt svirt_sandbox_file_t /srv/docker/bind
+</code></pre></div><p>Для обновления контейнера с DNS-сервером необходимо скачать новый образ:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker pull sameersbn/bind:9.9.5-20170129
+</code></pre></div><p>Остановить работающий docker-контейнер и удалить его:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker rm -f bind
+</code></pre></div><p>Запустить новый контейнер из свежего образа с нужными опциями:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name bind -d <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	sameersbn/bind:9.9.5-20170129
+</code></pre></div>
                 </section>
             </article>
 
@@ -171,23 +156,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

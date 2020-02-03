@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №33: Разница между форматами CMD &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Aug 9, 2018 07:09
-                    · 237 words
+                    · 235 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -77,46 +88,28 @@
                 </header>
                 <section id="post-body">
                     <p>Инструкция <code>CMD</code> может быть определена в двух форматах, которые называются <code>exec</code> и <code>shell</code>. Оба выполняют практически идентичные вещи, но все же между ними есть существенно различие. Давайте разберемся!</p>
-
 <p>Заданная в <code>exec</code>-формате команда будет запущена &ldquo;как есть&rdquo;, вместе со всеми переданными ей аргументами. Пример команды в <code>exec</code>-формате:</p>
-
-<pre><code class="language-Dockerfile">CMD [&quot;gunicorn&quot;, &quot;-c&quot;, &quot;python:config.gunicorn&quot;, &quot;hello.app:create_app()&quot;]
-</code></pre>
-
-<p>Заданная в <code>shell</code>-формате команда запускается через shell-оболочку контейнера и позволяет использовать функционал самого shell (например, конвейер или <code>&amp;&amp;</code>). Пример такой команды:</p>
-
-<pre><code class="language-Dockerfile">CMD gunicorn -c &quot;python:config.gunicorn&quot; &quot;hello.app:create_app()&quot;
-</code></pre>
-
-<p>В теории, использование команд в <code>shell</code>-формате выглядит предпочтительнее, но могут возникнуть проблемы с корректной обработкой сигналов в docker-контейнере. Немного поясню: если вы запускаете команду в <code>exec</code>-формате, то выполнив внутри запущенного контейнера команду <code>ps</code> вы увидите:</p>
-
-<pre><code class="language-bash">PID   USER     TIME   COMMAND
-  1   root     0:00   {gunicorn} /usr/local/bin/python /usr/local/bin/gunicorn
- 15   root     0:02   {gunicorn} /usr/local/bin/python /usr/local/bin/gunicorn
-188   root     0:00   ps
-</code></pre>
-
-<p>Если же вы запускаете команду в <code>shell</code>-формате, то картина будет выглядеть иначе:</p>
-
-<pre><code class="language-bash">PID   USER     TIME   COMMAND
-  1   root     0:00   /bin/sh -c gunicorn -c python:config.gunicorn hello.app:create_app()
-  6   root     0:00   {gunicorn} /usr/local/bin/python /usr/local/bin/gunicorn
- 16   root     0:00   {gunicorn} /usr/local/bin/python /usr/local/bin/gunicorn
- 29   root     0:00   ps
-</code></pre>
-
-<p>Разработчики docker советуют использовать именно <code>exec</code>-формат для запуска команд, везде, где это возможно. Если же вам крайне необходимо выполнять какие-либо shell-сценарии при старте docker-контейнера, используйте для этих целей <code>ENTRYPOINT</code>.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;gunicorn&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;python:config.gunicorn&#34;</span>, <span style="color:#e6db74">&#34;hello.app:create_app()&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>Заданная в <code>shell</code>-формате команда запускается через shell-оболочку контейнера и позволяет использовать функционал самого shell (например, конвейер или <code>&amp;&amp;</code>). Пример такой команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">CMD</span> gunicorn -c <span style="color:#e6db74">&#34;python:config.gunicorn&#34;</span> <span style="color:#e6db74">&#34;hello.app:create_app()&#34;</span><span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>В теории, использование команд в <code>shell</code>-формате выглядит предпочтительнее, но могут возникнуть проблемы с корректной обработкой сигналов в docker-контейнере. Немного поясню: если вы запускаете команду в <code>exec</code>-формате, то выполнив внутри запущенного контейнера команду <code>ps</code> вы увидите:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">PID   USER     TIME   COMMAND
+  <span style="color:#ae81ff">1</span>   root     0:00   <span style="color:#f92672">{</span>gunicorn<span style="color:#f92672">}</span> /usr/local/bin/python /usr/local/bin/gunicorn
+ <span style="color:#ae81ff">15</span>   root     0:02   <span style="color:#f92672">{</span>gunicorn<span style="color:#f92672">}</span> /usr/local/bin/python /usr/local/bin/gunicorn
+<span style="color:#ae81ff">188</span>   root     0:00   ps
+</code></pre></div><p>Если же вы запускаете команду в <code>shell</code>-формате, то картина будет выглядеть иначе:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">PID   USER     TIME   COMMAND
+  <span style="color:#ae81ff">1</span>   root     0:00   /bin/sh -c gunicorn -c python:config.gunicorn hello.app:create_app<span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+  <span style="color:#ae81ff">6</span>   root     0:00   <span style="color:#f92672">{</span>gunicorn<span style="color:#f92672">}</span> /usr/local/bin/python /usr/local/bin/gunicorn
+ <span style="color:#ae81ff">16</span>   root     0:00   <span style="color:#f92672">{</span>gunicorn<span style="color:#f92672">}</span> /usr/local/bin/python /usr/local/bin/gunicorn
+ <span style="color:#ae81ff">29</span>   root     0:00   ps
+</code></pre></div><p>Разработчики docker советуют использовать именно <code>exec</code>-формат для запуска команд, везде, где это возможно. Если же вам крайне необходимо выполнять какие-либо shell-сценарии при старте docker-контейнера, используйте для этих целей <code>ENTRYPOINT</code>.</p>
 <p>Что касается docker-compose, то есть возможность конвертации команд из <code>shell</code>-формата в <code>exec</code>-формат, и выглядеть это может так:</p>
-
-<pre><code class="language-yaml">    command: &gt;
-      gunicorn -c &quot;python:config.gunicorn&quot; &quot;hello.app:create_app()&quot;
-</code></pre>
-
-<p>Или можно сразу задать команду в <code>exec</code>-формате:</p>
-
-<pre><code class="language-yaml">    command: [&quot;gunicorn&quot;, &quot;-c&quot;, &quot;python:config.gunicorn&quot;, &quot;hello.app:create_app()&quot;]
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">    <span style="color:#66d9ef">command</span>: <span style="color:#e6db74">&gt;
+</span><span style="color:#e6db74">     </span><span style="color:#e6db74"> </span><span style="color:#e6db74">gunicorn -c &#34;python:config.gunicorn&#34; &#34;hello.app:create_app()&#34;</span>
+</code></pre></div><p>Или можно сразу задать команду в <code>exec</code>-формате:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">    <span style="color:#66d9ef">command</span>: [<span style="color:#e6db74">&#34;gunicorn&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;python:config.gunicorn&#34;</span>, <span style="color:#e6db74">&#34;hello.app:create_app()&#34;</span>]
+</code></pre></div>
                 </section>
             </article>
 
@@ -158,23 +151,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

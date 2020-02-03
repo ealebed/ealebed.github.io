@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Ansible: ввод sudo-пароля при выполнении playbook &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,23 +88,14 @@
                 </header>
                 <section id="post-body">
                     <p>Большинство действий в наборах инструкций <strong>системы управления конфигурациями Ansible</strong> следует выполнять с привилегиями суперпользователя. Давайте разберемся с вариантами ввода <code>sudo</code>-пароля при выполнении playbook’ов!</p>
-
 <p>Самый простой способ — отключить необходимость ввода пароля при использовании <code>sudo</code>. Делается это в конфигурационном файле <code>/etc/sudoers</code>, где нужно добавить (или раскомментировать) строку:</p>
-
 <pre><code>...
 %sudo ALL=(ALL:ALL) NOPASSWD: ALL
 ...
-</code></pre>
-
-<p>Второй вариант — использовать дополнительные параметры при запуске набора инструкций. Чтобы <strong>Ansible</strong> в нужный момент попросил ввести <code>sudo</code>-пароль, в старых версиях (&lt; 1.9) следует использовать параметр <code>-—ask-sudo-pass</code> (или <code>-K</code>), а в версии <strong>Ansible</strong> старше 1.9 параметр <code>--ask-become-pass</code>, например:</p>
-
+</code></pre><p>Второй вариант — использовать дополнительные параметры при запуске набора инструкций. Чтобы <strong>Ansible</strong> в нужный момент попросил ввести <code>sudo</code>-пароль, в старых версиях (&lt; 1.9) следует использовать параметр <code>-—ask-sudo-pass</code> (или <code>-K</code>), а в версии <strong>Ansible</strong> старше 1.9 параметр <code>--ask-become-pass</code>, например:</p>
 <pre><code>ansible-playbook playbooks/useradd.yml --ask-become-pass
-</code></pre>
-
-<p>Бывают случаи, когда не подходит ни один из предложенных вариантов — отключать ввод пароля при использовании <code>sudo</code> небезопасно, а вводить пароль на каждое действие при выполнении набора инструкций неудобно (к тому же, можно ошибиться при ручном вводе).</p>
-
+</code></pre><p>Бывают случаи, когда не подходит ни один из предложенных вариантов — отключать ввод пароля при использовании <code>sudo</code> небезопасно, а вводить пароль на каждое действие при выполнении набора инструкций неудобно (к тому же, можно ошибиться при ручном вводе).</p>
 <p>Я использовал третий вариант — добавил буквально пару строк в инвентарном файле, теперь он выглядит следующим образом:</p>
-
 <pre><code>[all:vars]
 ansible_sudo_pass=VeryStrongPassword
  
@@ -116,38 +118,22 @@ stat
 mars
 venus
 earth
-</code></pre>
-
-<p>Следует отметить, что переменную <code>ansible_sudo_pass</code> можно переопределять в нескольких местах:</p>
-
+</code></pre><p>Следует отметить, что переменную <code>ansible_sudo_pass</code> можно переопределять в нескольких местах:</p>
 <ul>
 <li>для каждого отдельного хоста в инвентарном файле <code>inventory/inventoryname/hosts</code>;</li>
 <li>для группы хостов в инвентарном файле <code>inventory/inventoryname/groups</code> (как раз наш случай);</li>
 <li>для группы хостов в файле групповых переменных <code>group_vars/groupname/ansible.yml</code>;</li>
 <li>для группы хостов в файле групповых переменных в зашифрованном виде <code>ansible-vault create group_vars/groupname/ansible.yml</code>.</li>
 </ul>
-
 <p>Если хочется еще больше «безопасности» и зашифрованный пароль, то следует использовать <a href="https://docs.ansible.com/playbooks_vault.html"><code>ansible-vault</code></a>.</p>
-
 <p>Сначала создадим файл, в котором будет храниться пароль для получения привилегий суперпользователя:</p>
-
 <pre><code>ansible-vault create secret
-</code></pre>
-
-<p>В созданный файл <code>secret</code> следует добавить строку вида:</p>
-
+</code></pre><p>В созданный файл <code>secret</code> следует добавить строку вида:</p>
 <pre><code>ansible_sudo_pass: VeryStrongPassword
-</code></pre>
-
-<p>И, так как мы все равно не хотим вводить пароль при запуске плейбука (даже пароль <code>ansible-vault</code>), то создадим файл <code>vault.txt</code> (не забываем выставить корректные права доступа):</p>
-
+</code></pre><p>И, так как мы все равно не хотим вводить пароль при запуске плейбука (даже пароль <code>ansible-vault</code>), то создадим файл <code>vault.txt</code> (не забываем выставить корректные права доступа):</p>
 <pre><code>touch vault.txt
-</code></pre>
-
-<p>В котором в текстовом виде запишем свой пароль от <code>ansible-vault</code>.</p>
-
+</code></pre><p>В котором в текстовом виде запишем свой пароль от <code>ansible-vault</code>.</p>
 <p>Далее приводим playbook к примерно такому виду:</p>
-
 <pre><code>---
 - hosts: all
   become: yes
@@ -161,10 +147,7 @@ earth
  
   - name: Add SSH keys to remote hosts
     authorized_key: user=admin key=&quot;{{ lookup('file', &quot;~/Downloads/key.pub&quot;) }}&quot;
-</code></pre>
-
-<p>Теперь можно запускать выполнение набора инструкций командой:</p>
-
+</code></pre><p>Теперь можно запускать выполнение набора инструкций командой:</p>
 <pre><code>ansible-playbook playbooks/useradd.yml --vault-password-file=vault.txt
 </code></pre>
                 </section>
@@ -208,23 +191,23 @@ earth
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

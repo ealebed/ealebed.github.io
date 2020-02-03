@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>GitLab CI: Часть 2, специальные образы &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     May 11, 2017 16:23
-                    · 416 words
+                    · 403 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -79,74 +90,46 @@
                 </header>
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA-%D1%80%D0%B0%D0%BD%D0%BD%D0%B5%D1%80%D0%BE%D0%B2/">первой статье</a> цикла о <strong>настройке GitLab Continuous Integration (GitLab CI)</strong> мы упоминали о неких специфических docker-образах, которые будут использоваться в нашем конкретном примере при сборке проекта.</p>
-
 <p>Давайте разберемся, зачем они нам нужны, что это за образы и изучим инструкции в их Dockerfil’ах!</p>
-
 <p>В официальной документации по настройке <strong>GitLab CI</strong> есть такая строка:</p>
-
 <p><em>GitLab CI allows you to use Docker Engine to build and test docker-based projects</em></p>
-
 <p>Так как действительно удобно упаковывать приложение для тестирования или деплоя в docker-контейнер, мы просто обязаны использовать эту возможность! Собственно, именно поэтому при регистрации раннера в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA-%D1%80%D0%B0%D0%BD%D0%BD%D0%B5%D1%80%D0%BE%D0%B2/">предыдущей статье</a> мы указали тип docker (<code>--executor docker</code>) и запускаем раннер в привилегированном режиме (<code>--docker-privileged</code>).</p>
-
 <p>Далее нам необходимо в конфигурационном файле <code>.gitlab-ci.yml</code> (рассматривать который мы будем в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-.gitlab-ci.yml/">следующей статье</a>) указать docker-образ, в котором будут происходить все шаги нашего CI и подключить еще один служебный образ (service).</p>
-
 <p>Со служебным образом должно быть все просто: в официальной документации рекомендуют использовать образ <code>docker:dind</code>, где dind расшифровывается как docker-in-docker. Все бы хорошо, но конкретно в нашем случае используются самоподписанные SSL-сертификаты (о том как их сгенерировать читайте <a href="https://ealebed.github.io/posts/2017/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">здесь</a>), поэтому нам нужно «встроить» в образ <code>docker:dind</code> свой корневой самоподписанный сертификат.</p>
-
 <p>Для корректной работы с локальным Docker Registry при использовании самоподписанных SSL-сертификатов необходимо добавить корневой сертификат в каталог <code>/etc/docker/certs.d/registry.gitlab.lc:5000</code> на всех хостах (в т. ч. docker-контейнерах), которые будут взаимодействовать с Registry. Если каталога <code>/etc/docker/</code> нет, тогда можно добавить корневой сертификат в каталог <code>/usr/local/share/ca-certificates/</code> (для Ubuntu) и выполнить команду:</p>
-
-<pre><code class="language-bash">update-ca-certificates -f
-</code></pre>
-
-<p>Наш корневой SSL-сертификат называется <code>ca.crt</code> и находится в каталоге с Dockerfile, в котором описаны инструкции для сборки служебного образа (на замену образу <code>docker:dind</code>). Содержимое Dockerfile следующее:</p>
-
-<pre><code class="language-Dockerfile">FROM docker:dind
- 
-RUN mkdir -p /etc/docker/certs.d/registry.gitlab.lc\:5000
-COPY .ca.crt /etc/docker/certs.d/registry.gitlab.lc\:5000/ca.crt
-COPY .ca.crt /usr/local/share/ca-certificates/ca.crt
-RUN update-ca-certificates -f
- 
-VOLUME /var/lib/docker
-EXPOSE 2375
- 
-ENTRYPOINT [&quot;dockerd-entrypoint.sh&quot;]
-CMD []
-</code></pre>
-
-<p>Для сборки образа, находясь в каталоге с Dockerfile, запускаем команду:</p>
-
-<pre><code class="language-bash">docker build -t registry.gitlab.lc:5000/develop/ed:my-docker-dind .
-</code></pre>
-
-<p>Второй необходимый нам образ должен включать в себя <code>docker-compose</code> (очень удобно управлять всеми контейнерами, описав их конфигурацию в одном файле) и ssh-клиент (пригодится в будущем для деплоя образа). Инструкции в Dockerfile выглядят так:</p>
-
-<pre><code class="language-Dockerfile">FROM docker:1.13
- 
-RUN apk add --no-cache py-pip bash openssh-client
-RUN pip install docker-compose
-RUN if [ ! -d /root/.ssh ]; then mkdir -p /root/.ssh; fi \
- &amp;&amp; echo -e &quot;Host *\n StrictHostKeyChecking no\n UserKnownHostsFile=/dev/null\n&quot; &gt;/root/.ssh/config
-</code></pre>
-
-<p>Собираем образ командой:</p>
-
-<pre><code class="language-bash">docker build -t registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh .
-</code></pre>
-
-<p>Пушим только что собранные образы в локальный Docker Registry:</p>
-
-<pre><code class="language-bash">docker push registry.git.labs.lc:5000/develop/ed
-</code></pre>
-
-<p>В дальнейшем в конфигурационном файле <code>.gitlab-ci.yml</code> для использования данных образов необходимо добавить следующие строки:</p>
-
-<pre><code class="language-yaml">image: registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh
-services:
-  - registry.gitlab.lc:5000/develop/ed:my-docker-dind
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">update-ca-certificates -f
+</code></pre></div><p>Наш корневой SSL-сертификат называется <code>ca.crt</code> и находится в каталоге с Dockerfile, в котором описаны инструкции для сборки служебного образа (на замену образу <code>docker:dind</code>). Содержимое Dockerfile следующее:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> docker:dind</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> mkdir -p /etc/docker/certs.d/registry.gitlab.lc<span style="color:#ae81ff">\:</span><span style="color:#ae81ff">5000</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> .ca.crt /etc/docker/certs.d/registry.gitlab.lc<span style="color:#ae81ff">\:</span>5000/ca.crt<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> .ca.crt /usr/local/share/ca-certificates/ca.crt<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> update-ca-certificates -f<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span><span style="color:#e6db74"> /var/lib/docker</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 2375</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENTRYPOINT</span> [<span style="color:#e6db74">&#34;dockerd-entrypoint.sh&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> []<span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>Для сборки образа, находясь в каталоге с Dockerfile, запускаем команду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t registry.gitlab.lc:5000/develop/ed:my-docker-dind .
+</code></pre></div><p>Второй необходимый нам образ должен включать в себя <code>docker-compose</code> (очень удобно управлять всеми контейнерами, описав их конфигурацию в одном файле) и ssh-клиент (пригодится в будущем для деплоя образа). Инструкции в Dockerfile выглядят так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> docker:1.13</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apk add --no-cache py-pip bash openssh-client<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> pip install docker-compose<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -d /root/.ssh <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> mkdir -p /root/.ssh; <span style="color:#66d9ef">fi</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span> <span style="color:#f92672">&amp;&amp;</span> echo -e <span style="color:#e6db74">&#34;Host *\n StrictHostKeyChecking no\n UserKnownHostsFile=/dev/null\n&#34;</span> &gt;/root/.ssh/config<span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>Собираем образ командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh .
+</code></pre></div><p>Пушим только что собранные образы в локальный Docker Registry:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker push registry.git.labs.lc:5000/develop/ed
+</code></pre></div><p>В дальнейшем в конфигурационном файле <code>.gitlab-ci.yml</code> для использования данных образов необходимо добавить следующие строки:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed:tmaier-dc-ssh
+<span style="color:#66d9ef">services</span>:
+  - registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed:my-docker-dind
 ...
-</code></pre>
-
-<p>но подробнее об этом мы поговорим в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-.gitlab-ci.yml/">следующей статье</a>.</p>
+</code></pre></div><p>но подробнее об этом мы поговорим в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-.gitlab-ci.yml/">следующей статье</a>.</p>
                 </section>
             </article>
 
@@ -188,23 +171,23 @@ services:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Как обновить просроченные ключи (KEYEXPIRED) в Debian/Ubuntu с помощью apt &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,19 +88,17 @@
                 </header>
                 <section id="post-body">
                     <p>Обновление программного обеспечения и управление пакетами в Debian-based операционных системах обычно не вызывает вопросов, однако вы можете столкнуться с сообщением <code>KEYEXPIRED</code>. Давайте разберемся, как обновить просроченные ключи!</p>
-
 <p>Симптомы примерно следующие:</p>
-
-<pre><code class="language-bash">apt-get update
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get update
 Hit http://packages.dotdeb.org jessie InRelease
 Ign http://ftp.debian.org jessie InRelease
 Hit http://security.debian.org jessie/updates InRelease
 Ign http://nginx.org jessie InRelease
-Get:1 http://nginx.org jessie Release.gpg [287 B]
+Get:1 http://nginx.org jessie Release.gpg <span style="color:#f92672">[</span><span style="color:#ae81ff">287</span> B<span style="color:#f92672">]</span>
 Hit http://ftp.debian.org jessie Release.gpg
-Get:2 http://nginx.org jessie Release [2,331 B]
+Get:2 http://nginx.org jessie Release <span style="color:#f92672">[</span>2,331 B<span style="color:#f92672">]</span>
 Hit http://ftp.debian.org jessie Release
-Get:3 http://packages.dotdeb.org jessie/all amd64 Packages [86.5 kB]
+Get:3 http://packages.dotdeb.org jessie/all amd64 Packages <span style="color:#f92672">[</span>86.5 kB<span style="color:#f92672">]</span>
 Err http://nginx.org jessie Release
 
 Hit http://security.debian.org jessie/updates/main amd64 Packages
@@ -98,46 +107,34 @@ Ign http://packages.dotdeb.org jessie/all Translation-en_US
 Ign http://packages.dotdeb.org jessie/all Translation-en
 Hit http://ftp.debian.org jessie/main amd64 Packages
 Hit http://ftp.debian.org jessie/main Translation-en
-Fetched 89.1 kB in 1s (67.2 kB/s)
+Fetched 89.1 kB in 1s <span style="color:#f92672">(</span>67.2 kB/s<span style="color:#f92672">)</span>
 Reading package lists... Done
-W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: http://nginx.org jessie Release: The following signatures were invalid: KEYEXPIRED 1471427554
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: http://nginx.org jessie Release: The following signatures were invalid: KEYEXPIRED <span style="color:#ae81ff">1471427554</span>
 
 W: Failed to fetch http://nginx.org/packages/mainline/debian/dists/jessie/Release
 
 W: Some index files failed to download. They have been ignored, or old ones used instead.
-</code></pre>
-
-<p>Как видим, устарел ключ для репозитория <code>nginx</code> — нужно его обновить. Проверить все имеющиеся ключи в системе можно командой:</p>
-
-<pre><code class="language-bash">apt-key list
+</code></pre></div><p>Как видим, устарел ключ для репозитория <code>nginx</code> — нужно его обновить. Проверить все имеющиеся ключи в системе можно командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-key list
 ...
 
-pub   2048R/7BD9BF62 2011-08-19 [expired: 2016-08-17]
+pub   2048R/7BD9BF62 2011-08-19 <span style="color:#f92672">[</span>expired: 2016-08-17<span style="color:#f92672">]</span>
 uid                  nginx signing key &lt; signing-key@nginx.com &gt;
 
 ...
-</code></pre>
-
-<p>Вывести только просроченные ключи:</p>
-
-<pre><code class="language-bash">apt-key list | grep expired:
-pub   2048R/7BD9BF62 2011-08-19 [expired: 2016-08-17]
-</code></pre>
-
-<p>Теперь обновим ключ, полученный на предыдущем этапе:</p>
-
-<pre><code class="language-bash">apt-key adv --recv-keys --keyserver keys.gnupg.net 7BD9BF62
+</code></pre></div><p>Вывести только просроченные ключи:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-key list | grep expired:
+pub   2048R/7BD9BF62 2011-08-19 <span style="color:#f92672">[</span>expired: 2016-08-17<span style="color:#f92672">]</span>
+</code></pre></div><p>Теперь обновим ключ, полученный на предыдущем этапе:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-key adv --recv-keys --keyserver keys.gnupg.net 7BD9BF62
 Executing: gpg --ignore-time-conflict --no-options --no-default-keyring --homedir /tmp/tmp.Y4AY2GAbZO --no-auto-check-trustdb --trust-model always --keyring /etc/apt/trusted.gpg --primary-keyring /etc/apt/trusted.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-jessie-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-jessie-security-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-jessie-stable.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-squeeze-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-squeeze-stable.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-wheezy-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-wheezy-stable.gpg --recv-keys --keyserver keys.gnupg.net 7BD9BF62
 gpg: requesting key 7BD9BF62 from hkp server keys.gnupg.net
-gpg: key 7BD9BF62: &quot;nginx signing key &lt; signing-key@nginx.com &gt;&quot; 6 new signatures
-gpg: Total number processed: 1
-gpg:         new signatures: 6
-</code></pre>
-
-<p>Теперь можно вернуться к обновлению пакетов в системе — ошибка должна исчезнуть:</p>
-
-<pre><code class="language-bash">apt-get update &amp;&amp; apt-get upgrade
-</code></pre>
+gpg: key 7BD9BF62: <span style="color:#e6db74">&#34;nginx signing key &lt; signing-key@nginx.com &gt;&#34;</span> <span style="color:#ae81ff">6</span> new signatures
+gpg: Total number processed: <span style="color:#ae81ff">1</span>
+gpg:         new signatures: <span style="color:#ae81ff">6</span>
+</code></pre></div><p>Теперь можно вернуться к обновлению пакетов в системе — ошибка должна исчезнуть:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get update <span style="color:#f92672">&amp;&amp;</span> apt-get upgrade
+</code></pre></div>
                 </section>
             </article>
 
@@ -179,23 +176,23 @@ gpg:         new signatures: 6
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

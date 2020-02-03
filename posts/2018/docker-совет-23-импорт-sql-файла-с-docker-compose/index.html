@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №23: Импорт SQL-файла с docker-compose &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,35 +92,18 @@
                 </header>
                 <section id="post-body">
                     <p>При работе с базами данных (например, PostgreSQL, MariaDB или MySQL) в docker-контейнере, вам наверняка понадобится импортировать данные из SQL-файла. Давайте разберемся!</p>
-
 <p>В данной статье рассмотрим пример с PostgreSQL и утилитой <code>psql</code>, но для баз данных MariaDB / MySQL и утилиты <code>mysql</code> все будет работать аналогично. Кроме того, для упрощения, в командах я не использую имена пользователей / пароли (в реальной ситуации вам придется их добавить самостоятельно).</p>
-
 <p>Итак, импорт данных из файла в общем случае (когда не используются docker-контейнеры) будет выглядеть так:</p>
-
-<pre><code class="language-bash">psql exampledb &lt; exampledump.sql
-</code></pre>
-
-<p>Все просто - следует указать утилите <code>psql</code> в какую базу данных необходимо импортировать данные и перенаправить содержимое файла с дампом через STDIN.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">psql exampledb &lt; exampledump.sql
+</code></pre></div><p>Все просто - следует указать утилите <code>psql</code> в какую базу данных необходимо импортировать данные и перенаправить содержимое файла с дампом через STDIN.</p>
 <p>Если вы запускаете docker-контейнер с PostgreSQL с помощью утилиты <code>docker-compose</code>, то кажется &ldquo;очевидным&rdquo; попробовать импортировать данные из SQL-файла командой:</p>
-
-<pre><code class="language-bash">docker-compose exec postgres psql exampledb &lt; exampledump.sql
-</code></pre>
-
-<p>Теоретически, это должно было сработать, но (по крайней мере в <code>docker-compose</code> версии 1.20) вместо импорта данных получаем ошибку:</p>
-
-<pre><code class="language-bash">ValueError: file descriptor cannot be a negative integer (-1)
-</code></pre>
-
-<p>Можно к команде <code>exec</code> добавить ключ <code>-T</code> (для отключения TTY) - в таком случае ошибки не будет, но, увы, данные тоже импортированы не будут.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose exec postgres psql exampledb &lt; exampledump.sql
+</code></pre></div><p>Теоретически, это должно было сработать, но (по крайней мере в <code>docker-compose</code> версии 1.20) вместо импорта данных получаем ошибку:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ValueError: file descriptor cannot be a negative integer <span style="color:#f92672">(</span>-1<span style="color:#f92672">)</span>
+</code></pre></div><p>Можно к команде <code>exec</code> добавить ключ <code>-T</code> (для отключения TTY) - в таком случае ошибки не будет, но, увы, данные тоже импортированы не будут.</p>
 <p>Возможно, в следующих версиях <code>docker-compose</code> данную &ldquo;особенность&rdquo; устранят, но на сегодняшний день для импорта SQL-файла в базу данных внутри docker-контейнера можно воспользоваться такой командой:</p>
-
-<pre><code class="language-bash">docker exec -i $(docker-compose ps -q postgres) psql exampledb &lt; exampledump.sql
-</code></pre>
-
-<p>Команду можно упростить, заменив <code>$(docker-compose ps -q postgres)</code> на имя docker-контейнера (если вы его знаете или явно задаете в файле <code>docker-compose.yml</code>).</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -i <span style="color:#66d9ef">$(</span>docker-compose ps -q postgres<span style="color:#66d9ef">)</span> psql exampledb &lt; exampledump.sql
+</code></pre></div><p>Команду можно упростить, заменив <code>$(docker-compose ps -q postgres)</code> на имя docker-контейнера (если вы его знаете или явно задаете в файле <code>docker-compose.yml</code>).</p>
 <p>На этом все, теперь вы знаете, как импортировать данные из SQL-файла в базу данных внутри docker-контейнера!</p>
                 </section>
             </article>
@@ -152,23 +146,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Настройка связки Apache &#43; Fail2ban в Debian &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,19 +90,11 @@
                 </header>
                 <section id="post-body">
                     <p><strong>Fail2ban</strong> — сервис, отслеживающий log–файлы запущенных программ, и на основании указанных условий блокирующий нарушителей по IP-адресу. Давайте разберемся с защитой от атак на популярный web-сервер Apache!</p>
-
 <p>Считаем, что в вашей системе уже установлен и нормально функционирует Apache. Установка <code>fail2ban</code> не должна вызывать трудностей:</p>
-
-<pre><code class="language-bash">apt-get update &amp;&amp; apt-get install fail2ban
-</code></pre>
-
-<p>Настройки защиты конкретных сервисов по умолчанию находятся в конфигурационном файле <code>/etc/fail2ban/jail.conf</code>. Чтобы не потерять внесенные изменения при обновлениях, копируем эти настройки в новый файл, с которым и будем работать:</p>
-
-<pre><code class="language-bash">cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-</code></pre>
-
-<p>Далее необходимо отредактировать параметры по умолчанию (общие для всех цепочек), которые находятся в секции <code>[DEFAULT]</code>:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get update <span style="color:#f92672">&amp;&amp;</span> apt-get install fail2ban
+</code></pre></div><p>Настройки защиты конкретных сервисов по умолчанию находятся в конфигурационном файле <code>/etc/fail2ban/jail.conf</code>. Чтобы не потерять внесенные изменения при обновлениях, копируем эти настройки в новый файл, с которым и будем работать:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+</code></pre></div><p>Далее необходимо отредактировать параметры по умолчанию (общие для всех цепочек), которые находятся в секции <code>[DEFAULT]</code>:</p>
 <pre><code>[DEFAULT]
 destemail = admin@example.com #email, на который присылать уведомления
 ignoreip  = 127.0.0.0/8 192.168.0.0/16 92.29.98.235 #IP–адреса, которые не должны быть заблокированы
@@ -101,10 +104,7 @@ banaction       = iptables-multiport #заблокировать IP-адрес �
 findtime  = 60 #интервал в секундах, за которое событие должно повториться определённое количество раз
 bantime   = 3600 #время бана в секундах
 maxretry  = 60 #количество подозрительных совпадений, после которых применяется правило
-</code></pre>
-
-<p>После изменения параметров по умолчанию, можно приступать непосредственно к настройке <code>jail</code>’ов — секций, которые мы намерены защищать. В данном примере это будут <code>[apache]</code>, <code>[apache-noscript]</code>, <code>[apache-overflows]</code> и <code>[apache-badbots]</code>, которые выглядят так:</p>
-
+</code></pre><p>После изменения параметров по умолчанию, можно приступать непосредственно к настройке <code>jail</code>’ов — секций, которые мы намерены защищать. В данном примере это будут <code>[apache]</code>, <code>[apache-noscript]</code>, <code>[apache-overflows]</code> и <code>[apache-badbots]</code>, которые выглядят так:</p>
 <pre><code>[apache]
 # блокировка ошибки basic authentication 
 enabled = true
@@ -113,51 +113,36 @@ filter = apache-auth
 logpath = /var/log/apache*/*error.log #следует изменить, если log-файл находится в другом месте
 maxretry = 3 #переопределяем значение, определенное в секции [DEFAULT]
 findtime = 600 #переопределяем значение, определенное в секции [DEFAULT]
-</code></pre>
-
-<pre><code>[apache-noscript]
+</code></pre><pre><code>[apache-noscript]
 # следует использовать, если у вас статический сайт
 enabled = true
 port  = http,https
 filter = apache-noscript
 logpath = /var/log/apache*/*error.log #следует изменить, если log-файл находится в другом месте
 maxretry = 3 #переопределяем значение, определенное в секции [DEFAULT]
-</code></pre>
-
-<pre><code>[apache-overflows]
+</code></pre><pre><code>[apache-overflows]
 # блокировка на основании слишком длинных URL
 enabled = true
 port  = http,https
 filter = apache-overflows
 logpath = /var/log/apache*/*error.log #следует изменить, если log-файл находится в другом месте
 maxretry = 2 #переопределяем значение, определенное в секции [DEFAULT]
-</code></pre>
-
-<pre><code>[apache-badbots]
+</code></pre><pre><code>[apache-badbots]
 # блокировка &quot;плохих&quot; ботов
 enabled  = true
 port     = http,https
 filter   = apache-badbots
 logpath  = /var/log/apache*/*error.log
 maxretry = 2
-</code></pre>
-
-<p>Для применения внесенных изменений следует перезапустить <code>fail2ban</code>:</p>
-
-<pre><code class="language-bash">/etc/init.d/fail2ban restart
-</code></pre>
-
-<p>Просмотреть какие <code>jail</code>’ы запущены в данный момент можно с помощью следующей команды:</p>
-
-<pre><code class="language-bash">fail2ban-client status
+</code></pre><p>Для применения внесенных изменений следует перезапустить <code>fail2ban</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/fail2ban restart
+</code></pre></div><p>Просмотреть какие <code>jail</code>’ы запущены в данный момент можно с помощью следующей команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">fail2ban-client status
 Status
-|- Number of jail:	5
-`- Jail list:		apache-overflows, apache-noscript, ssh, apache-badbots, apache
-</code></pre>
-
-<p>Также можно проверить состояние правил в файрволле командой <code>iptables --list-rules</code> или <code>iptables -S</code>:</p>
-
-<pre><code class="language-bash">iptables -S
+|- Number of jail:	<span style="color:#ae81ff">5</span>
+<span style="color:#e6db74">`</span>- Jail list:		apache-overflows, apache-noscript, ssh, apache-badbots, apache
+</code></pre></div><p>Также можно проверить состояние правил в файрволле командой <code>iptables --list-rules</code> или <code>iptables -S</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">iptables -S
 
 -P INPUT ACCEPT
 -P FORWARD ACCEPT
@@ -171,35 +156,27 @@ Status
 -A INPUT -p tcp -m multiport --dports 80,443 -j fail2ban-apache-overflows
 -A INPUT -p tcp -m multiport --dports 80,443 -j fail2ban-apache-noscript
 -A INPUT -p tcp -m multiport --dports 80,443 -j fail2ban-apache
--A INPUT -p tcp -m multiport --dports 22 -j fail2ban-ssh
+-A INPUT -p tcp -m multiport --dports <span style="color:#ae81ff">22</span> -j fail2ban-ssh
 -A fail2ban-apache -j RETURN
 -A fail2ban-apache-badbots -j RETURN
 -A fail2ban-apache-noscript -j RETURN
 -A fail2ban-apache-overflows -j RETURN
 -A fail2ban-ssh -s 116.31.116.10/32 -j DROP
 -A fail2ban-ssh -j RETURN
-</code></pre>
-
-<p>Больше информации о работе конкретного <code>jail</code>’а можно передав в качестве параметра его имя, например так:</p>
-
-<pre><code class="language-bash">fail2ban-client status ssh
-Status for the jail: ssh
+</code></pre></div><p>Больше информации о работе конкретного <code>jail</code>’а можно передав в качестве параметра его имя, например так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">fail2ban-client status ssh
+Status <span style="color:#66d9ef">for</span> the jail: ssh
 |- filter
 |  |- File list:	/var/log/auth.log
-|  |- Currently failed:	0
-|  `- Total failed:	12086
-`- action
-   |- Currently banned:	1
-   |  `- IP list:	116.31.116.10
-   `- Total banned:	1002
-</code></pre>
-
-<p>IP-адрес нарушителя разблокируется автоматически по истечению времени указанного в <code>bantime</code>, но можно разблокировать его вручную используя следующую команду:</p>
-
-<pre><code class="language-bash">fail2ban-client set ssh unbanip 116.31.116.10
-</code></pre>
-
-<p>На этом все, в следующей статье рассмотрим <a href="https://ealebed.github.io/posts/2016/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%81%D0%B2%D1%8F%D0%B7%D0%BA%D0%B8-nginx-%D0%B8-fail2ban-%D0%B2-debian/">настройку связки Nginx + Fail2ban</a>.</p>
+|  |- Currently failed:	<span style="color:#ae81ff">0</span>
+|  <span style="color:#e6db74">`</span>- Total failed:	<span style="color:#ae81ff">12086</span>
+<span style="color:#e6db74">`</span>- action
+   |- Currently banned:	<span style="color:#ae81ff">1</span>
+   |  <span style="color:#e6db74">`</span>- IP list:	116.31.116.10
+   <span style="color:#e6db74">`</span>- Total banned:	<span style="color:#ae81ff">1002</span>
+</code></pre></div><p>IP-адрес нарушителя разблокируется автоматически по истечению времени указанного в <code>bantime</code>, но можно разблокировать его вручную используя следующую команду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">fail2ban-client set ssh unbanip 116.31.116.10
+</code></pre></div><p>На этом все, в следующей статье рассмотрим <a href="https://ealebed.github.io/posts/2016/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%81%D0%B2%D1%8F%D0%B7%D0%BA%D0%B8-nginx-%D0%B8-fail2ban-%D0%B2-debian/">настройку связки Nginx + Fail2ban</a>.</p>
                 </section>
             </article>
 
@@ -241,23 +218,23 @@ Status for the jail: ssh
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

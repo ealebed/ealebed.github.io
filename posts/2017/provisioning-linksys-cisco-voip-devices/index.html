@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Provisioning [Linksys|Cisco] VoIP devices &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,35 +92,19 @@
                 </header>
                 <section id="post-body">
                     <p>Ручная настройка ip-телефонов Linksys (Cisco) несложная, но занимает очень много времени, особенно если таких телефонов в компании более сотни. Давайте разберемся с <strong>[Linksys|Cisco] Provisioning</strong> и облегчим себе жизнь!</p>
-
 <p>Информация не секретная и прекрасно находится в Google. Идея заключается в том, что модели ip-телефонов, поддерживающие provisioning при включении ищут в локальной сети <code>tftp</code>-сервер с конфигурационными файлами вида <code>spa$PSN.cfg</code> и <code>$MA.xml</code>, где <code>$PSN</code> это модель телефона (так как у меня используются три модели телефонов, то таких файлов будет тоже три), а <code>$MA</code> — MAC-адрес телефона (подробнее об этом чуть ниже).</p>
-
 <p>Для начала установим и настроим необходимое ПО:</p>
-
 <pre><code>sudo aptitude install atftp atftpd
-</code></pre>
-
-<p>Приводим конфигурационный файл <code>/etc/default/atftpd</code> к следующему виду:</p>
-
+</code></pre><p>Приводим конфигурационный файл <code>/etc/default/atftpd</code> к следующему виду:</p>
 <pre><code>USE_INETD=false
 OPTIONS=&quot;--daemon --tftpd-timeout 300 --bind-address 192.168.2.26 --retry-timeout 5 --mcast-port 1758 --mcast-addr 239.239.239.0-255 --mcast-ttl 1 --maxthread 100 --verbose=7 --logfile=/var/log/atftp.log /var/tftp&quot;
-</code></pre>
-
-<p>Создаем все необходимые каталоги, выставляем права:</p>
-
+</code></pre><p>Создаем все необходимые каталоги, выставляем права:</p>
 <pre><code>sudo mkdir /var/tftp
 sudo chmod -R 777 /var/tftp
-</code></pre>
-
-<p>Запускаем сервис:</p>
-
+</code></pre><p>Запускаем сервис:</p>
 <pre><code>systemctl start atftpd.service
-</code></pre>
-
-<p><strong>Примечание.</strong> Если порт 69/udp занят, то сервис не запустится, пока его не освободить.</p>
-
+</code></pre><p><strong>Примечание.</strong> Если порт 69/udp занят, то сервис не запустится, пока его не освободить.</p>
 <p>Далее необходимо добавить одну строку в конфигурационный файл <code>dhcp</code>-сервера (в моем случае это <code>/etc/dhcp/dhcpd.conf</code>):</p>
-
 <pre><code>...
 # Telephones
 subnet 192.168.2.0 netmask 255.255.255.0 {
@@ -117,26 +112,13 @@ subnet 192.168.2.0 netmask 255.255.255.0 {
     option tftp-server-name &quot;192.168.2.26&quot;;
 }
 ...
-</code></pre>
-
-<p>и перезапустить dhcp-сервер:</p>
-
+</code></pre><p>и перезапустить dhcp-сервер:</p>
 <pre><code>systemctl restart isc-dhcp-server.service
-</code></pre>
-
-<p>Как я уже упоминал, в моем случае используются три различные модели телефонов, поддерживающие provisioning. Создадим конфигурационные файлы с общими настройками для каждой модели:</p>
-
+</code></pre><p>Как я уже упоминал, в моем случае используются три различные модели телефонов, поддерживающие provisioning. Создадим конфигурационные файлы с общими настройками для каждой модели:</p>
 <pre><code>sudo touch /var/tftp/spa942.cfg
-</code></pre>
-
-<pre><code>sudo touch /var/tftp/spa504G.cfg
-</code></pre>
-
-<pre><code>sudo touch /var/tftp/spa509G.cfg
-</code></pre>
-
-<p>Содержимое файлов будет практически идентичным и выглядеть так:</p>
-
+</code></pre><pre><code>sudo touch /var/tftp/spa504G.cfg
+</code></pre><pre><code>sudo touch /var/tftp/spa509G.cfg
+</code></pre><p>Содержимое файлов будет практически идентичным и выглядеть так:</p>
 <pre><code>&lt;flat-profile&gt;
 &lt;Primary_NTP_Server ua=&quot;na&quot;&gt;192.168.0.13&lt;/Primary_NTP_Server&gt;
 &lt;Secondary_NTP_Server ua=&quot;na&quot;&gt;192.168.0.13&lt;/Secondary_NTP_Server&gt;
@@ -153,28 +135,14 @@ subnet 192.168.2.0 netmask 255.255.255.0 {
 &lt;Profile_Rule_B ua=&quot;na&quot;&gt;/Cisco/SPA504G/$MA.xml&lt;/Profile_Rule_B&gt;
 &lt;Resync_Periodic ua=&quot;na&quot;&gt;3600&lt;/Resync_Periodic&gt;
 &lt;/flat-profile&gt;
-</code></pre>
-
-<p>Отличаться друг от друга конфиги будут только параметром</p>
-
+</code></pre><p>Отличаться друг от друга конфиги будут только параметром</p>
 <pre><code>&lt;Profile_Rule_B ua=&quot;na&quot;&gt;/Cisco/SPA504G/$MA.xml&lt;/Profile_Rule_B&gt;
-</code></pre>
-
-<p>, в котором указан относительный путь к файлам с индивидуальными настройками каждого телефона.</p>
-
+</code></pre><p>, в котором указан относительный путь к файлам с индивидуальными настройками каждого телефона.</p>
 <p>Создаем каталоги, где будут находиться индивидуальные настройки:</p>
-
 <pre><code>mkdir -p Cisco/SPA504G
-</code></pre>
-
-<pre><code>mkdir -p Cisco/SPA509G
-</code></pre>
-
-<pre><code>mkdir -p Linksys/SPA942
-</code></pre>
-
-<p>И раскладываем внутри них файлы вида <code>$MA.xml</code>, где <code>$MA</code> — MAC-адрес телефона. Индивидуальные настройки для каждого телефона примерно следующие:</p>
-
+</code></pre><pre><code>mkdir -p Cisco/SPA509G
+</code></pre><pre><code>mkdir -p Linksys/SPA942
+</code></pre><p>И раскладываем внутри них файлы вида <code>$MA.xml</code>, где <code>$MA</code> — MAC-адрес телефона. Индивидуальные настройки для каждого телефона примерно следующие:</p>
 <pre><code>cat 30e4db80fa87.xml
 &lt;flat-profile&gt;
 &lt;Display_Name_1_ ua=&quot;na&quot;&gt;Test User&lt;/Display_Name_1_&gt;
@@ -182,10 +150,7 @@ subnet 192.168.2.0 netmask 255.255.255.0 {
 &lt;Password_1_ ua=&quot;na&quot;&gt;VeryStrongPassword&lt;/Password_1_&gt;
 &lt;Auth_ID_1_ ua=&quot;na&quot;&gt;305&lt;/Auth_ID_1_&gt;
 &lt;/flat-profile&gt;
-</code></pre>
-
-<p>После проделанных действий у нас получилась примерно следующая структура каталогов и файлов:</p>
-
+</code></pre><p>После проделанных действий у нас получилась примерно следующая структура каталогов и файлов:</p>
 <pre><code>tree
 .
 ├── Cisco
@@ -205,9 +170,7 @@ subnet 192.168.2.0 netmask 255.255.255.0 {
 ├── spa504G.cfg
 ├── spa509G.cfg
 └── spa942.cfg
-</code></pre>
-
-<p>Теперь стало гораздо удобнее управлять настройками ip-телефонов в локальной сети.</p>
+</code></pre><p>Теперь стало гораздо удобнее управлять настройками ip-телефонов в локальной сети.</p>
                 </section>
             </article>
 
@@ -249,23 +212,23 @@ subnet 192.168.2.0 netmask 255.255.255.0 {
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

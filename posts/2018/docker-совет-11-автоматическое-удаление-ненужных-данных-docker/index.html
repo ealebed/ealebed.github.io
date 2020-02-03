@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker совет №11: Автоматическое удаление ненужных данных docker &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,76 +88,49 @@
                 </header>
                 <section id="post-body">
                     <p>Ранее мы уже упоминали о проблеме быстрого «засорения» локального хранилища при работе с docker-контейнерами и рассматривали варианты <a href="https://ealebed.github.io/posts/2017/%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0-%D0%BC%D0%B5%D1%81%D1%82%D0%B0-%D0%BD%D0%B0-%D0%B4%D0%B8%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D1%81%D0%BB%D0%B5-docker/">очистки места на диске</a> после docker вручную.</p>
-
 <p>Давайте разберемся, как автоматизировать этот процесс!</p>
-
 <p>В примере используется следующая версия docker:</p>
-
-<pre><code class="language-bash">docker -v
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker -v
 Docker version 17.09.0-ce, build afdb6d4
-</code></pre>
-
-<p>Еще начиная с версии docker-engine 1.13.0 появилась команда <code>docker system prune</code>, которая и используется для очистки места на диске. Однако, начиная с версии docker 17.09 поведение этой команды изменилось — ранее она удаляла все остановленные контейнеры, неиспользуемые сети, недействительные образы (у которых нет метки), тома, которые не принадлежат ни одному запущенному контейнеру и кэш сборки docker-образов, теперь тома не удаляются:</p>
-
-<pre><code class="language-bash">docker system prune
+</code></pre></div><p>Еще начиная с версии docker-engine 1.13.0 появилась команда <code>docker system prune</code>, которая и используется для очистки места на диске. Однако, начиная с версии docker 17.09 поведение этой команды изменилось — ранее она удаляла все остановленные контейнеры, неиспользуемые сети, недействительные образы (у которых нет метки), тома, которые не принадлежат ни одному запущенному контейнеру и кэш сборки docker-образов, теперь тома не удаляются:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker system prune
 WARNING! This will remove:
         - all stopped containers
         - all networks not used by at least one container
         - all dangling images
         - all build cache
-Are you sure you want to continue? [y/N]
-</code></pre>
-
-<p>Запускать команду будем с ключом <code>-f</code> (<code>--force</code>, не требовать подтверждения). Чтобы команда запускалась автоматически, добавим ее в планировщик задач (в ОС Linux это утилита <code>cron</code>). Открываем файл <code>crontab</code> на редактирование с помощью команды:</p>
-
-<pre><code class="language-bash">crontab -e
-</code></pre>
-
-<p>и добавляем в него следующую строку:</p>
-
+Are you sure you want to <span style="color:#66d9ef">continue</span>? <span style="color:#f92672">[</span>y/N<span style="color:#f92672">]</span>
+</code></pre></div><p>Запускать команду будем с ключом <code>-f</code> (<code>--force</code>, не требовать подтверждения). Чтобы команда запускалась автоматически, добавим ее в планировщик задач (в ОС Linux это утилита <code>cron</code>). Открываем файл <code>crontab</code> на редактирование с помощью команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crontab -e
+</code></pre></div><p>и добавляем в него следующую строку:</p>
 <pre><code>0 1 * * * /usr/bin/docker system prune -f
-</code></pre>
-
-<p>В ОС MacOS можно воспользоваться планировщиком LaunchD. Для этого создаем файл:</p>
-
-<pre><code class="language-bash">sudo touch /Library/LaunchDaemons/DockerSystemPrune.plist
-</code></pre>
-
-<p>и вставляем в него следующие строки:</p>
-
-<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot;
-          http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;
-&lt;plist version=&quot;1.0&quot;&gt;
-&lt;dict&gt;
-    &lt;key&gt;Label&lt;/key&gt;
-    &lt;string&gt;DockerSystemPrune&lt;/string&gt;
-    &lt;key&gt;Program&lt;/key&gt;
-    &lt;string&gt;/usr/local/bin/docker system prune -f&lt;/string&gt;
-    &lt;key&gt;StartCalendarInterval&lt;/key&gt;
-    &lt;dict&gt;
-        &lt;key&gt;Hour&lt;/key&gt;
-        &lt;integer&gt;1&lt;/integer&gt;
-        &lt;key&gt;Minute&lt;/key&gt;
-        &lt;integer&gt;0&lt;/integer&gt;
-    &lt;/dict&gt;
-&lt;/dict&gt;
-&lt;/plist&gt;
-</code></pre>
-
-<p>Добавляем созданную задачу в планировщик командой:</p>
-
-<pre><code class="language-bash">launchctl load -w /Library/LaunchDaemons/DockerSystemPrune.plist
-</code></pre>
-
-<p>С ОС Windows я не работаю, но уверен там тоже есть возможность добавить задачу по очистке места после docker в планировщик задач.</p>
-
+</code></pre><p>В ОС MacOS можно воспользоваться планировщиком LaunchD. Для этого создаем файл:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo touch /Library/LaunchDaemons/DockerSystemPrune.plist
+</code></pre></div><p>и вставляем в него следующие строки:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
+<span style="color:#75715e">&lt;!DOCTYPE plist PUBLIC &#34;-//Apple//DTD PLIST 1.0//EN&#34;
+</span><span style="color:#75715e">          http://www.apple.com/DTDs/PropertyList-1.0.dtd&#34;&gt;</span>
+<span style="color:#f92672">&lt;plist</span> <span style="color:#a6e22e">version=</span><span style="color:#e6db74">&#34;1.0&#34;</span><span style="color:#f92672">&gt;</span>
+<span style="color:#f92672">&lt;dict</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;key</span><span style="color:#f92672">&gt;</span>Label<span style="color:#f92672">&lt;/key&gt;</span>
+    <span style="color:#f92672">&lt;string</span><span style="color:#f92672">&gt;</span>DockerSystemPrune<span style="color:#f92672">&lt;/string&gt;</span>
+    <span style="color:#f92672">&lt;key</span><span style="color:#f92672">&gt;</span>Program<span style="color:#f92672">&lt;/key&gt;</span>
+    <span style="color:#f92672">&lt;string</span><span style="color:#f92672">&gt;</span>/usr/local/bin/docker system prune -f<span style="color:#f92672">&lt;/string&gt;</span>
+    <span style="color:#f92672">&lt;key</span><span style="color:#f92672">&gt;</span>StartCalendarInterval<span style="color:#f92672">&lt;/key&gt;</span>
+    <span style="color:#f92672">&lt;dict</span><span style="color:#f92672">&gt;</span>
+        <span style="color:#f92672">&lt;key</span><span style="color:#f92672">&gt;</span>Hour<span style="color:#f92672">&lt;/key&gt;</span>
+        <span style="color:#f92672">&lt;integer</span><span style="color:#f92672">&gt;</span>1<span style="color:#f92672">&lt;/integer&gt;</span>
+        <span style="color:#f92672">&lt;key</span><span style="color:#f92672">&gt;</span>Minute<span style="color:#f92672">&lt;/key&gt;</span>
+        <span style="color:#f92672">&lt;integer</span><span style="color:#f92672">&gt;</span>0<span style="color:#f92672">&lt;/integer&gt;</span>
+    <span style="color:#f92672">&lt;/dict&gt;</span>
+<span style="color:#f92672">&lt;/dict&gt;</span>
+<span style="color:#f92672">&lt;/plist&gt;</span>
+</code></pre></div><p>Добавляем созданную задачу в планировщик командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">launchctl load -w /Library/LaunchDaemons/DockerSystemPrune.plist
+</code></pre></div><p>С ОС Windows я не работаю, но уверен там тоже есть возможность добавить задачу по очистке места после docker в планировщик задач.</p>
 <p>Если вы хотите также удалять тома (<code>volumes</code>), которые не принадлежат ни одному запущенному контейнеру, то можно воспользоваться командой:</p>
-
-<pre><code class="language-bash">docker volume prune -f
-</code></pre>
-
-<p>и также добавить ее в планировщик задач описанным выше способом.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker volume prune -f
+</code></pre></div><p>и также добавить ее в планировщик задач описанным выше способом.</p>
                 </section>
             </article>
 
@@ -188,23 +172,23 @@ Are you sure you want to continue? [y/N]
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

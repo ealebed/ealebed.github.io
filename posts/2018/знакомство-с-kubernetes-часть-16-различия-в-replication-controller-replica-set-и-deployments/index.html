@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Знакомство с Kubernetes. Часть 16: Различия в Replication Controller, Replica Set и Deployments &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,214 +88,163 @@
                 </header>
                 <section id="post-body">
                     <p>Как инструмент оркестрации контейнеров, <code>Kubernetes</code> предусматривает управление несколькими экземплярами (репликами) контейнеров. На сегодняшний день существует несколько способов организации репликации - в данной статье мы рассмотрим три варианта: <code>Replication Controllers</code>, <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>Replica Sets</code></a> и <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/"><code>Deployments</code></a>. Давайте разберемся!</p>
-
 <p>Прежде всего, нужно знать зачем нужна репликация контейнеров в кластере <code>Kubernetes</code>. Чаще всего, это нужно для:</p>
-
 <ul>
 <li><strong>надежности</strong>. C несколькими экземплярами приложения вы избавляетесь от проблем в случае отказа одного (или нескольких) из них;</li>
 <li><strong>балансировки</strong>. Наличие нескольких экземпляров приложения позволяет распределять траффик между ними, предотвращая перегрузку одного инстанса (под / контейнер) или ноды;</li>
 <li><strong>масштабирования</strong>. При возрастающей нагрузке на уже существующие экземпляры приложения <code>Kubernetes</code> позволяет легко увеличивать количество реплик по необходимости.</li>
 </ul>
-
 <p>Репликация также хорошо подходит в случае работы с микросервисами, облачными (cloud-native) и мобильными приложениями.</p>
-
 <p><code>Replication Controller</code> - традиционный (изначальный) способ организации репликации в кластере <code>Kubernetes</code>. В данный момент он заменяется более &ldquo;свежим&rdquo; вариантом - <code>Replica Sets</code>, но не будет лишним понять, что это и как работает.</p>
-
 <p>С помощью объекта <code>Replication Controller</code> можно создать несколько экземпляров подов и отслеживать их состояние. Если один (или несколько) подов завершаются с ошибкой, то контроллер создаст и запустит новый экземпляр (чтобы количество подов всегда соответствовало желаемому). Кроме того, <code>Replication Controller</code> предоставляет возможность масштабирования подов.</p>
-
 <p>Создадим файл <code>rc.yaml</code> следующего содержания:</p>
-
-<pre><code class="language-yaml">apiVersion: v1
-kind: ReplicationController
-metadata:
-  name: testrc
-spec:
-  replicas: 3
-  selector:
-    app: testrc
-  template:
-    metadata:
-      name: testrc
-      labels:
-        app: testrc
-    spec:
-      containers:
-      - name: testrc
-        image: ealebed/test
-        ports:
-        - containerPort: 80
-</code></pre>
-
-<p>Далее создадим объект <code>Replication Controller</code> в кластере на основе описания выше:</p>
-
-<pre><code class="language-bash">kubectl create -f rc.yaml
-replicationcontroller &quot;testrc&quot; created
-</code></pre>
-
-<p>Получим детальное описание созданного объекта:</p>
-
-<pre><code class="language-bash">kubectl describe rc testrc
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
+<span style="color:#66d9ef">kind</span>: ReplicationController
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: testrc
+<span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">3</span>
+  <span style="color:#66d9ef">selector</span>:
+    <span style="color:#66d9ef">app</span>: testrc
+  <span style="color:#66d9ef">template</span>:
+    <span style="color:#66d9ef">metadata</span>:
+      <span style="color:#66d9ef">name</span>: testrc
+      <span style="color:#66d9ef">labels</span>:
+        <span style="color:#66d9ef">app</span>: testrc
+    <span style="color:#66d9ef">spec</span>:
+      <span style="color:#66d9ef">containers</span>:
+      - <span style="color:#66d9ef">name</span>: testrc
+        <span style="color:#66d9ef">image</span>: ealebed/test
+        <span style="color:#66d9ef">ports</span>:
+        - <span style="color:#66d9ef">containerPort</span>: <span style="color:#ae81ff">80</span>
+</code></pre></div><p>Далее создадим объект <code>Replication Controller</code> в кластере на основе описания выше:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f rc.yaml
+replicationcontroller <span style="color:#e6db74">&#34;testrc&#34;</span> created
+</code></pre></div><p>Получим детальное описание созданного объекта:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl describe rc testrc
 Name:           testrc
 Namespace:      default
-Image(s):       ealebed/test
-Selector:       app=testrc
-Labels:         app=testrc
-Replicas:       3 current / 3 desired
-Pods Status:    3 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Image<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span>:       ealebed/test
+Selector:       app<span style="color:#f92672">=</span>testrc
+Labels:         app<span style="color:#f92672">=</span>testrc
+Replicas:       <span style="color:#ae81ff">3</span> current / <span style="color:#ae81ff">3</span> desired
+Pods Status:    <span style="color:#ae81ff">3</span> Running / <span style="color:#ae81ff">0</span> Waiting / <span style="color:#ae81ff">0</span> Succeeded / <span style="color:#ae81ff">0</span> Failed
 No volumes.
 Events:
   FirstSeen     LastSeen        Count   From                            SubobjectPath   Type   Reason                   Message
   ---------     --------        -----   ----                            -------------   --------------                  -------
-  1m            1m              1       {replication-controller }                       Normal SuccessfulCreate Created pod: testrc-g5snq
-  1m            1m              1       {replication-controller }                       Normal SuccessfulCreate Created pod: testrc-cws05
-  1m            1m              1       {replication-controller }                       Normal SuccessfulCreate Created pod: testrc-ro2bl
-</code></pre>
-
-<p>Как видно, все три реплики запущены (ожидаемо). Увидеть состояние подов можно с помощью команды:</p>
-
-<pre><code class="language-bash">kubectl get pods
+  1m            1m              <span style="color:#ae81ff">1</span>       <span style="color:#f92672">{</span>replication-controller <span style="color:#f92672">}</span>                       Normal SuccessfulCreate Created pod: testrc-g5snq
+  1m            1m              <span style="color:#ae81ff">1</span>       <span style="color:#f92672">{</span>replication-controller <span style="color:#f92672">}</span>                       Normal SuccessfulCreate Created pod: testrc-cws05
+  1m            1m              <span style="color:#ae81ff">1</span>       <span style="color:#f92672">{</span>replication-controller <span style="color:#f92672">}</span>                       Normal SuccessfulCreate Created pod: testrc-ro2bl
+</code></pre></div><p>Как видно, все три реплики запущены (ожидаемо). Увидеть состояние подов можно с помощью команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get pods
 NAME           READY     STATUS    RESTARTS   AGE
-testrc-cws05   1/1       Running   0          3m
-testrc-g5snq   1/1       Running   0          3m
-testrc-ro2bl   1/1       Running   0          3m
-</code></pre>
-
-<p>Перед рассмотрением <code>Replica Sets</code> &ldquo;убираем&rdquo; за собой:</p>
-
-<pre><code class="language-bash">kubectl delete rc testrc
-</code></pre>
-
-<p>Как мы уже <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/">ранее</a> говорили, <code>Replica Sets</code> - это более современная версия все того же <code>Replication Controller</code>, которая отличается поддержкой множественного выбора в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D0%BC%D0%B5%D1%82%D0%BA%D0%B8-%D0%B8-%D1%81%D0%B5%D0%BB%D0%B5%D0%BA%D1%82%D0%BE%D1%80%D1%8B/">селекторе</a>. Создадим файл <code>rs.yaml</code> с таким содержимым:</p>
-
-<pre><code class="language-yaml">apiVersion: extensions/v1beta1
- kind: ReplicaSet
- metadata:
-   name: testrs
- spec:
-   replicas: 3
-   selector:
-     matchLabels:
-       app: testrs
-   template:
-     metadata:
-       labels:
-         app: testrs
-         environment: dev
-     spec:
-       containers:
-       - name: testrs
-         image: ealebed/test
-         ports:
-         - containerPort: 80
-</code></pre>
-
-<p>Здесь все практически то же самое, что и в описании <code>Replication Controller</code>, за исключением того, что мы используем
+testrc-cws05   1/1       Running   <span style="color:#ae81ff">0</span>          3m
+testrc-g5snq   1/1       Running   <span style="color:#ae81ff">0</span>          3m
+testrc-ro2bl   1/1       Running   <span style="color:#ae81ff">0</span>          3m
+</code></pre></div><p>Перед рассмотрением <code>Replica Sets</code> &ldquo;убираем&rdquo; за собой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl delete rc testrc
+</code></pre></div><p>Как мы уже <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/">ранее</a> говорили, <code>Replica Sets</code> - это более современная версия все того же <code>Replication Controller</code>, которая отличается поддержкой множественного выбора в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D0%BC%D0%B5%D1%82%D0%BA%D0%B8-%D0%B8-%D1%81%D0%B5%D0%BB%D0%B5%D0%BA%D1%82%D0%BE%D1%80%D1%8B/">селекторе</a>. Создадим файл <code>rs.yaml</code> с таким содержимым:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: extensions/v1beta1
+ <span style="color:#66d9ef">kind</span>: ReplicaSet
+ <span style="color:#66d9ef">metadata</span>:
+   <span style="color:#66d9ef">name</span>: testrs
+ <span style="color:#66d9ef">spec</span>:
+   <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">3</span>
+   <span style="color:#66d9ef">selector</span>:
+     <span style="color:#66d9ef">matchLabels</span>:
+       <span style="color:#66d9ef">app</span>: testrs
+   <span style="color:#66d9ef">template</span>:
+     <span style="color:#66d9ef">metadata</span>:
+       <span style="color:#66d9ef">labels</span>:
+         <span style="color:#66d9ef">app</span>: testrs
+         <span style="color:#66d9ef">environment</span>: dev
+     <span style="color:#66d9ef">spec</span>:
+       <span style="color:#66d9ef">containers</span>:
+       - <span style="color:#66d9ef">name</span>: testrs
+         <span style="color:#66d9ef">image</span>: ealebed/test
+         <span style="color:#66d9ef">ports</span>:
+         - <span style="color:#66d9ef">containerPort</span>: <span style="color:#ae81ff">80</span>
+</code></pre></div><p>Здесь все практически то же самое, что и в описании <code>Replication Controller</code>, за исключением того, что мы используем
 <code>matchLabels</code>. Но можно пойти дальше и заменить секцию <code>matchLabels</code> на такую:</p>
-
-<pre><code class="language-yaml">     matchExpressions:
-      - {key: app, operator: In, values: [testrs, test]}
-      - {key: tier, operator: NotIn, values: [production]}
-</code></pre>
-
-<p>Создаем объект в кластере командой:</p>
-
-<pre><code class="language-bash">kubectl create -f rs.yaml
-replicaset &quot;testrs&quot; created
-</code></pre>
-
-<p>Смотрим описание:</p>
-
-<pre><code class="language-bash">kubectl describe rs testrs
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">     <span style="color:#66d9ef">matchExpressions</span>:
+      - {<span style="color:#66d9ef">key: app, operator: In, values</span>: [testrs, test]}
+      - {<span style="color:#66d9ef">key: tier, operator: NotIn, values</span>: [production]}
+</code></pre></div><p>Создаем объект в кластере командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f rs.yaml
+replicaset <span style="color:#e6db74">&#34;testrs&#34;</span> created
+</code></pre></div><p>Смотрим описание:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl describe rs testrs
 Name:           testrs
 Namespace:      default
-Image(s):       ealebed/test
-Selector:       app in (test,testrs),tier notin (production)
-Labels:         app=testrs
-Replicas:       3 current / 3 desired
-Pods Status:    3 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Image<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span>:       ealebed/test
+Selector:       app in <span style="color:#f92672">(</span>test,testrs<span style="color:#f92672">)</span>,tier notin <span style="color:#f92672">(</span>production<span style="color:#f92672">)</span>
+Labels:         app<span style="color:#f92672">=</span>testrs
+Replicas:       <span style="color:#ae81ff">3</span> current / <span style="color:#ae81ff">3</span> desired
+Pods Status:    <span style="color:#ae81ff">3</span> Running / <span style="color:#ae81ff">0</span> Waiting / <span style="color:#ae81ff">0</span> Succeeded / <span style="color:#ae81ff">0</span> Failed
 No volumes.
 Events:
   FirstSeen     LastSeen        Count   From                            SubobjectPath   Type    Reason                   Message
   ---------     --------        -----   ----                            -------------   --------------                   -------
-  1m            1m              1       {replicaset-controller }                        Normal  SuccessfulCreate Created pod: testrs-it2hf
-  1m            1m              1       {replicaset-controller }                       Normal  SuccessfulCreate Created pod: testrs-kimmm
-  1m            1m              1       {replicaset-controller }                        Normal  SuccessfulCreate Created pod: testrs-8i4ra
-</code></pre>
-
-<pre><code class="language-bash">kubectl get pods
+  1m            1m              <span style="color:#ae81ff">1</span>       <span style="color:#f92672">{</span>replicaset-controller <span style="color:#f92672">}</span>                        Normal  SuccessfulCreate Created pod: testrs-it2hf
+  1m            1m              <span style="color:#ae81ff">1</span>       <span style="color:#f92672">{</span>replicaset-controller <span style="color:#f92672">}</span>                       Normal  SuccessfulCreate Created pod: testrs-kimmm
+  1m            1m              <span style="color:#ae81ff">1</span>       <span style="color:#f92672">{</span>replicaset-controller <span style="color:#f92672">}</span>                        Normal  SuccessfulCreate Created pod: testrs-8i4ra
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get pods
 NAME           READY     STATUS    RESTARTS   AGE
-testrs-8i4ra   1/1       Running   0          1m
-testrs-it2hf   1/1       Running   0          1m
-testrs-kimmm   1/1       Running   0          1m
-</code></pre>
-
-<p>Как видим, <code>Replica Sets</code> действительно очень похожа не <code>Replication Controller</code>. Еще одно важное отличие, о котором мы не упомянули - команда <code>rolling-update</code> будет работать для <code>Replication Controller</code>, но не для <code>Replica Sets</code>.</p>
-
+testrs-8i4ra   1/1       Running   <span style="color:#ae81ff">0</span>          1m
+testrs-it2hf   1/1       Running   <span style="color:#ae81ff">0</span>          1m
+testrs-kimmm   1/1       Running   <span style="color:#ae81ff">0</span>          1m
+</code></pre></div><p>Как видим, <code>Replica Sets</code> действительно очень похожа не <code>Replication Controller</code>. Еще одно важное отличие, о котором мы не упомянули - команда <code>rolling-update</code> будет работать для <code>Replication Controller</code>, но не для <code>Replica Sets</code>.</p>
 <p>&ldquo;Убираем&rdquo; за собой:</p>
-
-<pre><code class="language-bash">kubectl delete rs testrs
-replicaset &quot;testrs&quot; deleted
-</code></pre>
-
-<p>Вариант репликации подов с использованием объекта <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/"><code>Deployment</code></a> - еще более высокий уровень абстракции. На самом деле, под капотом, <code>Deployment</code> будет самостоятельно создавать необходимые <code>Replica Sets</code> (следовательно, предоставлять тот же функционал, но с возможностью <code>rolling-update</code>/<code>rollback</code>).</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl delete rs testrs
+replicaset <span style="color:#e6db74">&#34;testrs&#34;</span> deleted
+</code></pre></div><p>Вариант репликации подов с использованием объекта <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/"><code>Deployment</code></a> - еще более высокий уровень абстракции. На самом деле, под капотом, <code>Deployment</code> будет самостоятельно создавать необходимые <code>Replica Sets</code> (следовательно, предоставлять тот же функционал, но с возможностью <code>rolling-update</code>/<code>rollback</code>).</p>
 <p>Создадим файл <code>deployment.yaml</code> следующего содержания:</p>
-
-<pre><code class="language-yaml">apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: test
-spec:
-  replicas: 5
-  template:
-    metadata:
-      labels:
-        app: test
-    spec:
-      containers:
-      - name: test
-        image: ealebed/test
-        ports:
-        - containerPort: 80
-</code></pre>
-
-<p>Запускаем объект в кластере:</p>
-
-<pre><code class="language-bash">kubectl create -f deployment.yaml
-deployment &quot;test&quot; created
-</code></pre>
-
-<p>Просмотр деталей:</p>
-
-<pre><code class="language-bash">kubectl describe deployment test
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: extensions/v1beta1
+<span style="color:#66d9ef">kind</span>: Deployment
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: test
+<span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">5</span>
+  <span style="color:#66d9ef">template</span>:
+    <span style="color:#66d9ef">metadata</span>:
+      <span style="color:#66d9ef">labels</span>:
+        <span style="color:#66d9ef">app</span>: test
+    <span style="color:#66d9ef">spec</span>:
+      <span style="color:#66d9ef">containers</span>:
+      - <span style="color:#66d9ef">name</span>: test
+        <span style="color:#66d9ef">image</span>: ealebed/test
+        <span style="color:#66d9ef">ports</span>:
+        - <span style="color:#66d9ef">containerPort</span>: <span style="color:#ae81ff">80</span>
+</code></pre></div><p>Запускаем объект в кластере:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f deployment.yaml
+deployment <span style="color:#e6db74">&#34;test&#34;</span> created
+</code></pre></div><p>Просмотр деталей:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl describe deployment test
 Name:                   test
 Namespace:              default
-CreationTimestamp:      Mon, 03 Sep 2018 13:21:19 +0000
-Labels:                 app=test
-Selector:               app=test
-Replicas:               5 updated | 5 total | 5 available | 0 unavailable
+CreationTimestamp:      Mon, <span style="color:#ae81ff">03</span> Sep <span style="color:#ae81ff">2018</span> 13:21:19 +0000
+Labels:                 app<span style="color:#f92672">=</span>test
+Selector:               app<span style="color:#f92672">=</span>test
+Replicas:               <span style="color:#ae81ff">5</span> updated | <span style="color:#ae81ff">5</span> total | <span style="color:#ae81ff">5</span> available | <span style="color:#ae81ff">0</span> unavailable
 StrategyType:           RollingUpdate
-MinReadySeconds:        0
-RollingUpdateStrategy:  1 max unavailable, 1 max surge
+MinReadySeconds:        <span style="color:#ae81ff">0</span>
+RollingUpdateStrategy:  <span style="color:#ae81ff">1</span> max unavailable, <span style="color:#ae81ff">1</span> max surge
 OldReplicaSets:         &lt;none&gt;
-NewReplicaSet:          test-3914185155 (5/5 replicas created)
+NewReplicaSet:          test-3914185155 <span style="color:#f92672">(</span>5/5 replicas created<span style="color:#f92672">)</span>
 Events:
   FirstSeen     LastSeen        Count   From                            SubobjectPath   Type    Reason                   Message
   ---------     --------        -----   ----                            -------------   --------------                   -------
-  38s           38s             1       {deployment-controller }                        Normal  ScalingReplicaSet        Scaled up replica set test-3914185155 to 3
-  36s           36s             1       {deployment-controller }                        Normal  ScalingReplicaSet        Scaled up replica set test-3914185155 to 5
-</code></pre>
-
-<pre><code class="language-bash">kubectl get pods
+  38s           38s             <span style="color:#ae81ff">1</span>       <span style="color:#f92672">{</span>deployment-controller <span style="color:#f92672">}</span>                        Normal  ScalingReplicaSet        Scaled up replica set test-3914185155 to <span style="color:#ae81ff">3</span>
+  36s           36s             <span style="color:#ae81ff">1</span>       <span style="color:#f92672">{</span>deployment-controller <span style="color:#f92672">}</span>                        Normal  ScalingReplicaSet        Scaled up replica set test-3914185155 to <span style="color:#ae81ff">5</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get pods
 NAME                    READY     STATUS    RESTARTS   AGE
-test-3914185155-7gyja   1/1       Running   0          2m
-test-3914185155-lrm20   1/1       Running   0          2m
-test-3914185155-o28px   1/1       Running   0          2m
-test-3914185155-ojzn8   1/1       Running   0          2m
-test-3914185155-r2pt7   1/1       Running   0          2m
-</code></pre>
-
-<p>Чуть больше информации о <code>Replica Sets</code> и <code>Deployment</code> можно найти в предыдущих статьях цикла - <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/">здесь</a> и <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/">здесь</a>.</p>
+test-3914185155-7gyja   1/1       Running   <span style="color:#ae81ff">0</span>          2m
+test-3914185155-lrm20   1/1       Running   <span style="color:#ae81ff">0</span>          2m
+test-3914185155-o28px   1/1       Running   <span style="color:#ae81ff">0</span>          2m
+test-3914185155-ojzn8   1/1       Running   <span style="color:#ae81ff">0</span>          2m
+test-3914185155-r2pt7   1/1       Running   <span style="color:#ae81ff">0</span>          2m
+</code></pre></div><p>Чуть больше информации о <code>Replica Sets</code> и <code>Deployment</code> можно найти в предыдущих статьях цикла - <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/">здесь</a> и <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/">здесь</a>.</p>
                 </section>
             </article>
 
@@ -326,23 +286,23 @@ test-3914185155-r2pt7   1/1       Running   0          2m
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

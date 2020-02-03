@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Call «HostStorageSystem.ComputeDiskPartitionInfo» for object «storageSystem» on ESXi failed (2088707) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,16 +88,10 @@
                 </header>
                 <section id="post-body">
                     <p>При попытке добавления еще одного диска к хосту под управлением ESXi получаем ошибку <code>Call &quot;HostStorageSystem.ComputeDiskPartitionInfo&quot; for object &quot;storageSystem&quot; on ESXi failed (2088707)</code>. Давайте разберемся!</p>
-
 <p>Данная проблема появляется, если на диске, который вы пытаетесь добавить к ESXi-хосту уже существует таблица разделов (partition table). Если автоматическая проверка, которая выполняется в момент добавления диска, находит таблицу разделов, то диск не может быть добавлен к хосту и операция завершается с ошибкой <code>Call &quot;HostStorageSystem.ComputeDiskPartitionInfo&quot; for object &quot;storageSystem&quot; on ESXi failed</code>.</p>
-
 <p>Для устранения проблемы подключаемся к хосту по ssh и выполняем следующее:</p>
-
 <pre><code>esxcfg-scsidevs –l
-</code></pre>
-
-<p>Результат выполнения команды будет выглядеть примерно так:</p>
-
+</code></pre><p>Результат выполнения команды будет выглядеть примерно так:</p>
 <pre><code>naa.6b083fe0c2c8f6001b891af71508e8d8
 
 Device Type: Direct-Access
@@ -102,34 +107,19 @@ Is Local: true Is SSD: false
 Other Names:
 vml.02000000006b083fe0c2c8f6001b891af71508e8d8504552432048
 VAAI Status: unsupported
-</code></pre>
-
-<p>После того, как определили имя диска (в данном примере это <code>naa.6b083fe0c2c8f6001b891af71508e8d8</code>), проверим какие разделы существуют на диске:</p>
-
+</code></pre><p>После того, как определили имя диска (в данном примере это <code>naa.6b083fe0c2c8f6001b891af71508e8d8</code>), проверим какие разделы существуют на диске:</p>
 <pre><code>partedUtil get /dev/disks/naa.6b083fe0c2c8f6001b891af71508e8d8
-</code></pre>
-
-<p>Если на диске существует один раздел, то результат выполнения команды будет следующий:</p>
-
+</code></pre><p>Если на диске существует один раздел, то результат выполнения команды будет следующий:</p>
 <pre><code>240614 255 63 3865468544
 1 2048 3865464831 7 0
-</code></pre>
-
-<p><strong>Примечание.</strong> Следующая команда удалит информацию о таблице разделов диска и все имеющиеся данные станут недоступными — хорошо подумайте перед ее запуском.</p>
-
+</code></pre><p><strong>Примечание.</strong> Следующая команда удалит информацию о таблице разделов диска и все имеющиеся данные станут недоступными — хорошо подумайте перед ее запуском.</p>
 <p>Удалим существующий раздел командой:</p>
-
 <pre><code>partedUtil delete /dev/disks/naa.6b083fe0c2c8f6001b891af71508e8d8 1
-</code></pre>
-
-<p>Убедимся, что раздел действительно был удален:</p>
-
+</code></pre><p>Убедимся, что раздел действительно был удален:</p>
 <pre><code>partedUtil get /dev/disks/naa.6b083fe0c2c8f6001b891af71508e8d8
 
 240614 255 63 3865468544
-</code></pre>
-
-<p>Теперь можно еще раз попробовать добавить этот диск к ESXi хосту.</p>
+</code></pre><p>Теперь можно еще раз попробовать добавить этот диск к ESXi хосту.</p>
                 </section>
             </article>
 
@@ -171,23 +161,23 @@ VAAI Status: unsupported
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

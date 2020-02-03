@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Warning: purging the environment. Suggested action: use keep_environment &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,42 +88,27 @@
                 </header>
                 <section id="post-body">
                     <p>После обновления <strong>Exim</strong> до версии 4.84.2-1 в логах почтового сервера появились следующие сообщения: <code>Warning: purging the environment. Suggested action: use keep_environment</code>. Давайте разберемся!</p>
-
-<p>Эти сообщения — последствия фикса уязвимости CVE-2016-1531, о котором подробнее можно почитать <a href="https://lists.exim.org/lurker/message/20160302.191005.a72d8433.en.html">здесь</a>. Там же предлагается два варианта решения возникшей проблемы — не обращать внимания на <code>warning</code>&lsquo;и и ждать следующей версии или добавить в конфигурационный файл exim‘а новые переменные <code>keep_environment =</code> и <code>add_environment =</code> с подходящими параметрами.</p>
-
+<p>Эти сообщения — последствия фикса уязвимости CVE-2016-1531, о котором подробнее можно почитать <a href="https://lists.exim.org/lurker/message/20160302.191005.a72d8433.en.html">здесь</a>. Там же предлагается два варианта решения возникшей проблемы — не обращать внимания на <code>warning</code>'и и ждать следующей версии или добавить в конфигурационный файл exim‘а новые переменные <code>keep_environment =</code> и <code>add_environment =</code> с подходящими параметрами.</p>
 <p><strong>Примечание.</strong> Правда, мало кто упоминает, что при втором варианте можно вообще сломать почтовый сервер.</p>
-
 <p>Проверим значения этих переменных в конфиге exim‘а:</p>
-
 <pre><code>exim4 -bP | grep environment
 LOG: MAIN
   Warning: purging the environment.
 Suggested action: use keep_environment.
 add_environment =
 keep_environment =
-</code></pre>
-
-<p>Добавим в конфигурационный файл <code>/etc/exim/exim4.conf</code> следующие строки:</p>
-
+</code></pre><p>Добавим в конфигурационный файл <code>/etc/exim/exim4.conf</code> следующие строки:</p>
 <pre><code>...
 keep_environment = X-SOURCE : X-SOURCE-ARGS : X-SOURCE-DIR
 add_environment = PATH=/usr/local/sbin::/usr/local/bin::/sbin::/bin::/usr/sbin::/usr/bin::/sbin::/bin
 ...
-</code></pre>
-
-<p>Перезапустим почтовый сервер:</p>
-
+</code></pre><p>Перезапустим почтовый сервер:</p>
 <pre><code>/etc/init.d/exim4 restart
-</code></pre>
-
-<p>Проверка:</p>
-
+</code></pre><p>Проверка:</p>
 <pre><code>exim4 -bP | grep environment
 add_environment = PATH=/usr/local/sbin::/usr/local/bin::/sbin::/bin::/usr/sbin::/usr/bin::/sbin::/bin
 keep_environment = X-SOURCE : X-SOURCE-ARGS : X-SOURCE-DIR
-</code></pre>
-
-<p>После проделанных действий в логах warning’а <code>Warning: purging the environment. Suggested action: use keep_environment</code> быть не должно.</p>
+</code></pre><p>После проделанных действий в логах warning’а <code>Warning: purging the environment. Suggested action: use keep_environment</code> быть не должно.</p>
                 </section>
             </article>
 
@@ -154,23 +150,23 @@ keep_environment = X-SOURCE : X-SOURCE-ARGS : X-SOURCE-DIR
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

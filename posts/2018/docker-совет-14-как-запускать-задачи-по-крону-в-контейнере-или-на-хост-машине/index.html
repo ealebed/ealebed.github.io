@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker cовет №14: Как запускать задачи по крону - в контейнере или на хост-машине? &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,36 +90,24 @@
                 </header>
                 <section id="post-body">
                     <p>Docker предоставляет прекрасный функционал для изоляции отдельных процессов в контейнерах, но когда дело доходит до запуска периодических задач, неизменно возникают вопросы. Давайте разберемся!</p>
-
 <p><strong>Примечание.</strong> Когда я говорю о периодических задачах, я имею в виду запуск заданий с помощью крона (<code>cron</code>) или его аналогов.</p>
-
 <p>В голову приходят как минимум три варианта запуска периодических задач касательно docker-контейнеров:</p>
-
 <ol>
 <li>Использовать кронтаб (<code>crontab</code>) на хост-машине.</li>
 <li>Создать отдельный контейнер с утилитой <code>cron</code> и запускать задачи из него.</li>
 <li>Добавить <code>cron</code> в уже существующие контейнеры и запускать в них 2 процесса.</li>
 </ol>
-
 <p>Третий вариант мы обсуждать не будем, ведь это не самая лучшая идея и она не соответствует идеологии docker (один процесс - один контейнер).</p>
-
 <p>Мне больше по душе первый вариант - использование кронтаба с хост-машины для <strong>запуска периодических задач в docker-контейнере</strong>. Например, чтобы запускать переиндексацию в docker-контейнере <code>sphinxsearch</code> каждые 15 минут, в рутовый кронтаб на хосте достаточно добавить следующую строку:</p>
-
-<pre><code class="language-text">*/15 * * * * root docker exec sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
-</code></pre>
-
-<p>Иногда данный <strong>вариант запуска периодических задач в docker-контейнерах</strong> может не подойти - например, при использовании кластера из нескольких нод под управлением docker swarm. В данном случае есть как минимум две проблемы:</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">*/15 * * * * root docker exec sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
+</code></pre></div><p>Иногда данный <strong>вариант запуска периодических задач в docker-контейнерах</strong> может не подойти - например, при использовании кластера из нескольких нод под управлением docker swarm. В данном случае есть как минимум две проблемы:</p>
 <ul>
 <li>контейнеры могут запускаться на любой ноде кластера (мы сознательно не упоминаем о настройках placement);</li>
 <li>имя контейнеров генерируется автоматически и похоже на <code>ed_sphinxsearch.1.ynaet761oxaxeq1zm5bv97fpg</code>.</li>
 </ul>
-
 <p>В этом случае уже гораздо разумнее и правильнее будет собрать отдельный docker-контейнер с утилитой <code>cron</code> и нужным <code>crontab</code> (в процессе разработки <code>crontab</code> можно монтировать с хоста в docker-контейнер).</p>
-
 <p><strong>Примечание.</strong> К слову, вы должны также позаботиться о возможности запуска задач вида <code>docker exec &lt;имя_контейнера&gt; ...</code> <strong>внутри</strong> вашего cron-контейнера, например дать возможность контейнеру взаимодействовать с docker daemon на хост-машине.</p>
-
-<p>В <a href="https://ealebed.github.io/posts/2018/cron-%D0%B2-docker-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B5/">следующей статье</a> рассмотрим подробнее пример создания docker-контейнера для запуска cron&rsquo;овых задач, которые будут успешно выполняться как на отдельном docker-хосте, так и в кластере docker swarm.</p>
+<p>В <a href="https://ealebed.github.io/posts/2018/cron-%D0%B2-docker-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B5/">следующей статье</a> рассмотрим подробнее пример создания docker-контейнера для запуска cron'овых задач, которые будут успешно выполняться как на отдельном docker-хосте, так и в кластере docker swarm.</p>
                 </section>
             </article>
 
@@ -150,23 +149,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

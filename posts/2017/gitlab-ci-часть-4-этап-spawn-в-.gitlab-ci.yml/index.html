@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>GitLab CI: Часть 4, этап spawn в .gitlab-ci.yml &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,112 +90,96 @@
                 </header>
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%B2%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B2-.gitlab-ci.yml/">предыдущей статье</a> цикла о настройке <strong>GitLab CI</strong> мы познакомились со специальным файлом <code>.gitlab-ci.yml</code>, в котором описываются инструкции для раннеров, рассмотрели несколько примеров и подготовили «скелет» для внедрения continuous integration в проекте.</p>
-
 <p>Как и обещал, каждый из этапов (<code>stage</code>) мы будем рассматривать отдельно, так что для начала давайте разберемся с этапом spawn из нашего файла <code>.gitlab-ci.yml</code>!</p>
-
 <p>Сразу стоит отметить, что названия этапов (<code>stage</code>) и задач (<code>jobs</code>) не являются зарезервированными или ключевыми словами, поэтому их можно называть как угодно (лишь бы вы понимали, что там написано).</p>
-
 <p>В данном случае самый первый этап из continuous integration я обозначил как <code>spawn</code> (порождение) — запуск всех контейнеров, необходимых при сборке проекта. В конфигурационном файле <code>.gitlab-ci.yml</code> этот этап выглядит следующим образом:</p>
-
-<pre><code class="language-yaml">...
-spawn_containers:
-  stage: spawn
-  before_script:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+<span style="color:#66d9ef">spawn_containers</span>:
+  <span style="color:#66d9ef">stage</span>: spawn
+  <span style="color:#66d9ef">before_script</span>:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-  script:
+  <span style="color:#66d9ef">script</span>:
     - set -o allexport; . ./docker/.env.staging.lc
     - docker-compose -f docker/docker-compose-build.yml up -d
-  only:
+  <span style="color:#66d9ef">only</span>:
     - develop
     - docker
 ...
-</code></pre>
-
-<p>Задачи, которые необходимо выполнить раннеру описываются в секции <code>script</code>. В нашем примере это две задачи — первая считывает переменные окружения из файла <code>/docker/.env.staging.lc</code>, вторая — создает и запускает контейнеры, описанные в конфигурационном файле <code>/docker/docker-compose-build.yml</code>.</p>
-
+</code></pre></div><p>Задачи, которые необходимо выполнить раннеру описываются в секции <code>script</code>. В нашем примере это две задачи — первая считывает переменные окружения из файла <code>/docker/.env.staging.lc</code>, вторая — создает и запускает контейнеры, описанные в конфигурационном файле <code>/docker/docker-compose-build.yml</code>.</p>
 <p><strong>Примечание.</strong> Обратите внимание, пути к конфигам указываются относительно корня проекта, ведь файл <code>.gitlab-ci.yml</code> должен лежать именно в корне проекта.</p>
-
 <p>Как оказалось в процессе тестирования, перед выполнением задач, описанных в секции <code>script</code> необходимо залогиниться в локальный Docker Registry, где хранятся нужные нам образы. Действия, которые необходимо выполнить перед основными задачами (из секции <code>script</code>) обозначить довольно легко с помощью ключевого слова <code>before_script</code>. Соответственно, действия которые выполняются после основных задач, должны описываться в секции <code>after_script</code>.</p>
-
 <p>Переменные <code>$CI_JOB_TOKEN</code> и <code>$CI_REGISTRY</code> — это специальные (предопределенные) переменные, весь список которых находится <a href="https://docs.gitlab.com/ce/ci/variables/">здесь</a>.</p>
-
 <p>С помощью ключевого слова <a href="https://docs.gitlab.com/ce/ci/yaml/#only-and-except"><code>only</code></a> мы также определяем для каких веток нужно производить все описанные действия (develop и docker), здесь можно также использовать регулярные выражения.</p>
-
 <p>Запускаемые контейнеры описаны в конфигурационном файле <code>docker-compose-build.yml</code> и выглядят так:</p>
-
-<pre><code class="language-yaml">version: '2'
-services:
-### Applications Code Container #############################
-    applications:
-        container_name: application
-        image: tianon/true
-        volumes:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+<span style="color:#66d9ef">services</span>:
+<span style="color:#75715e">### Applications Code Container #############################</span>
+    <span style="color:#66d9ef">applications</span>:
+        <span style="color:#66d9ef">container_name</span>: application
+        <span style="color:#66d9ef">image</span>: tianon/<span style="color:#66d9ef">true</span>
+        <span style="color:#66d9ef">volumes</span>:
             - ../:${PROJECT_PATH}
-### Workspace Utilities Container ###########################
-    workspace:
-        container_name: workspace
-        image: registry.gitlab.lc:5000/develop/ed:workspace-ed-sq
-        volumes_from:
+<span style="color:#75715e">### Workspace Utilities Container ###########################</span>
+    <span style="color:#66d9ef">workspace</span>:
+        <span style="color:#66d9ef">container_name</span>: workspace
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed:workspace-ed-sq
+        <span style="color:#66d9ef">volumes_from</span>:
             - applications
-### PHP-FPM Container #######################################
-    php-fpm:
-        container_name: php-fpm
-        image: registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq
-        volumes_from:
+<span style="color:#75715e">### PHP-FPM Container #######################################</span>
+    <span style="color:#66d9ef">php-fpm</span>:
+        <span style="color:#66d9ef">container_name</span>: php-fpm
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed:php-fpm-ed-sq
+        <span style="color:#66d9ef">volumes_from</span>:
             - applications
-        expose:
-            - &quot;9000&quot;
-        links:
+        <span style="color:#66d9ef">expose</span>:
+            - <span style="color:#e6db74">&#34;9000&#34;</span>
+        <span style="color:#66d9ef">links</span>:
             - workspace
-### Node+npm Container ######################################
-    node:
-        container_name: node
-        image: registry.gitlab.lc:5000/develop/ed:node-npm-ed-sq
-        volumes_from:
+<span style="color:#75715e">### Node+npm Container ######################################</span>
+    <span style="color:#66d9ef">node</span>:
+        <span style="color:#66d9ef">container_name</span>: node
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed:node-npm-ed-sq
+        <span style="color:#66d9ef">volumes_from</span>:
             - applications
-        ports:
-            - &quot;${NODE_PORT}:${NODE_PORT}&quot;
-### Redis Container #########################################
-    redis:
-        container_name: redis
-        image: registry.gitlab.lc:5000/develop/ed:redis-ed-sq
-        volumes:
+        <span style="color:#66d9ef">ports</span>:
+            - <span style="color:#e6db74">&#34;${NODE_PORT}:${NODE_PORT}&#34;</span>
+<span style="color:#75715e">### Redis Container #########################################</span>
+    <span style="color:#66d9ef">redis</span>:
+        <span style="color:#66d9ef">container_name</span>: redis
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed:redis-ed-sq
+        <span style="color:#66d9ef">volumes</span>:
             - redis:/data
-        ports:
-            - &quot;${REDIS_PORT}:${REDIS_PORT}&quot;
-        links:
+        <span style="color:#66d9ef">ports</span>:
+            - <span style="color:#e6db74">&#34;${REDIS_PORT}:${REDIS_PORT}&#34;</span>
+        <span style="color:#66d9ef">links</span>:
             - php-fpm
-### Memcached Container #####################################
-    memcached:
-        container_name: memcached
-        image: registry.gitlab.lc:5000/develop/ed:memcached-ed-sq
-        volumes:
+<span style="color:#75715e">### Memcached Container #####################################</span>
+    <span style="color:#66d9ef">memcached</span>:
+        <span style="color:#66d9ef">container_name</span>: memcached
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed:memcached-ed-sq
+        <span style="color:#66d9ef">volumes</span>:
             - memcached:/var/lib/memcached
-        ports:
-            - &quot;${MC_PORT}:${MC_PORT}&quot;
-        links:
+        <span style="color:#66d9ef">ports</span>:
+            - <span style="color:#e6db74">&#34;${MC_PORT}:${MC_PORT}&#34;</span>
+        <span style="color:#66d9ef">links</span>:
             - php-fpm
-### Websocket Container #####################################
-    websocket:
-        container_name: websocket
-        restart: always
-        image: registry.gitlab.lc:5000/develop/ed:websocket-ed-sq
-        volumes_from:
+<span style="color:#75715e">### Websocket Container #####################################</span>
+    <span style="color:#66d9ef">websocket</span>:
+        <span style="color:#66d9ef">container_name</span>: websocket
+        <span style="color:#66d9ef">restart</span>: always
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed:websocket-ed-sq
+        <span style="color:#66d9ef">volumes_from</span>:
             - applications
-        ports:
-            - &quot;${WS_PORT}:${WS_PORT}&quot;
-### Volumes Setup ###########################################
-volumes:
-    memcached:
-        driver: &quot;local&quot;
-    redis:
-        driver: &quot;local&quot;
-</code></pre>
-
-<p>Все docker-образы были заранее собраны и загружены в локальный docker registry проекта. Самый первый запуск задачи <code>spawn_containers</code> в процессе continuous integration может занять до нескольких минут (раннер должен скачать образы), но при последующих запусках это время сократится до нескольких секунд.</p>
-
+        <span style="color:#66d9ef">ports</span>:
+            - <span style="color:#e6db74">&#34;${WS_PORT}:${WS_PORT}&#34;</span>
+<span style="color:#75715e">### Volumes Setup ###########################################</span>
+<span style="color:#66d9ef">volumes</span>:
+    <span style="color:#66d9ef">memcached</span>:
+        <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+    <span style="color:#66d9ef">redis</span>:
+        <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</code></pre></div><p>Все docker-образы были заранее собраны и загружены в локальный docker registry проекта. Самый первый запуск задачи <code>spawn_containers</code> в процессе continuous integration может занять до нескольких минут (раннер должен скачать образы), но при последующих запусках это время сократится до нескольких секунд.</p>
 <p>В моем случае, запуск контейнеров занимает 18 секунд, а на вкладке pipelines детали выполнения задачи выглядят следующим образом:</p>
-
 <pre><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
 Starting service registry.gitlab.lc/develop/ed:my-docker-dind ...
@@ -210,9 +205,7 @@ Creating php-fpm
 Creating redis
 Creating memcached
 Build succeeded
-</code></pre>
-
-<p>С первым этапом из файла <code>.gitlab-ci.yml</code> разобрались, в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-%D1%8D%D1%82%D0%B0%D0%BF-build-%D0%B2-.gitlab-ci.yml-1/">следующей статье</a> рассмотрим второй этап — процесс сборки проекта.</p>
+</code></pre><p>С первым этапом из файла <code>.gitlab-ci.yml</code> разобрались, в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-%D1%8D%D1%82%D0%B0%D0%BF-build-%D0%B2-.gitlab-ci.yml-1/">следующей статье</a> рассмотрим второй этап — процесс сборки проекта.</p>
                 </section>
             </article>
 
@@ -254,23 +247,23 @@ Build succeeded
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>GitLab CI: Часть 1, запуск раннеров (runners) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,36 +90,26 @@
                 </header>
                 <section id="post-body">
                     <p>В одной из <a href="https://ealebed.github.io/posts/2017/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">предыдущих статей</a>, посвященных <strong>GitLab</strong> — одной из самых популярных систем контроля версий и управления Git-репозиториями, — мы подготовили необходимый фундамент для настройки <strong>GitLab Continuous Integration (GitLab CI)</strong>.</p>
-
 <p>Эта статья начинает цикл публикаций, в которых мы подробно рассмотрим процесс <strong>настройки GitLab CI</strong> на реальном проекте. Давайте разберемся!</p>
-
 <p>Для функционирования процесса Continuous Integration нам необходимо настроить еще один компонент — раннер (runner). Раннер в <strong>GitLab</strong> используется для запуска определенных задач (jobs, о них мы поговорим позже), их выполнения и отправки результатов обратно в <strong>GitLab</strong>.</p>
-
 <p>В <a href="https://ealebed.github.io/posts/2017/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">этой</a> статье мы добавили docker-контейнер с раннером внутри в конфигурационный файл <code>docker-compose.yml</code> и запустили всю связку. Проверим состояние интересующего нас docker-контейнера:</p>
-
-<pre><code class="language-bash">docker ps gitlab-runner
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps gitlab-runner
 CONTAINER ID        IMAGE                         COMMAND                  CREATED             STATUS              PORTS                                      NAMES
-e1470885895d        gitlab/gitlab-runner:latest   &quot;/usr/bin/dumb-ini...&quot;   2 weeks ago         Up 20 hours                                                    gitlab-runner 
-</code></pre>
-
-<p>Теперь нам необходимо зарегистрировать наш раннер, сделать это можно с помощью следующей команды:</p>
-
-<pre><code class="language-bash">docker exec -it gitlab-runner gitlab-runner register -n \
-	--url http://git.labs.lc:10080/ci \
-	--registration-token o_dsVxiqVssAPh3uxy46 \
-	--executor docker \
-	--description &quot;docker-build-runner&quot; \
-	--builds-dir &quot;/srv/my_build_directory&quot; \
-	--docker-image &quot;ealebed/dc_ssh:latest&quot; \
-	--docker-dns 192.168.0.1 \
-	--docker-privileged \
-	--docker-volumes /var/run/docker.sock:/var/run/docker.sock \
-	--docker-volumes /srv/my_build_directory:/srv/my_build_directory \
-	--docker-pull-policy &quot;if-not-present&quot;
-</code></pre>
-
-<p>Давайте подробнее остановимся на используемых параметрах:</p>
-
+e1470885895d        gitlab/gitlab-runner:latest   <span style="color:#e6db74">&#34;/usr/bin/dumb-ini...&#34;</span>   <span style="color:#ae81ff">2</span> weeks ago         Up <span style="color:#ae81ff">20</span> hours                                                    gitlab-runner 
+</code></pre></div><p>Теперь нам необходимо зарегистрировать наш раннер, сделать это можно с помощью следующей команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it gitlab-runner gitlab-runner register -n <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--url http://git.labs.lc:10080/ci <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--registration-token o_dsVxiqVssAPh3uxy46 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--executor docker <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--description <span style="color:#e6db74">&#34;docker-build-runner&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--builds-dir <span style="color:#e6db74">&#34;/srv/my_build_directory&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--docker-image <span style="color:#e6db74">&#34;ealebed/dc_ssh:latest&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--docker-dns 192.168.0.1 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--docker-privileged <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--docker-volumes /var/run/docker.sock:/var/run/docker.sock <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--docker-volumes /srv/my_build_directory:/srv/my_build_directory <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--docker-pull-policy <span style="color:#e6db74">&#34;if-not-present&#34;</span>
+</code></pre></div><p>Давайте подробнее остановимся на используемых параметрах:</p>
 <ul>
 <li><code>--url</code> — URL <strong>GitLab</strong>, к которому будет прикреплен раннер;</li>
 <li><code>--registration-token</code> — уникальный токен проекта, берется в настройках <strong>GitLab</strong>;</li>
@@ -121,11 +122,8 @@ e1470885895d        gitlab/gitlab-runner:latest   &quot;/usr/bin/dumb-ini...&quo
 <li><code>--docker-volumes</code> — указываем тома (<code>volume</code>), которые должны монтироваться из хост-системы в docker-контейнер;</li>
 <li><code>--docker-pull-policy</code> — политика скачивания docker-образов, использующихся при сборке проекта.</li>
 </ul>
-
 <p>Больше информации о возможных типах раннеров и их специфических настройках доступно <a href="https://docs.gitlab.com/runner/configuration/advanced-configuration.html">здесь</a>.</p>
-
 <p>Далее переходим в веб-интерфейс <strong>GitLab</strong>&lsquo;а, выбираем проект, для которого регистрировали раннер, жмем &ldquo;Settings -&gt; CI/CD Pipelines&rdquo; и видим список всех раннеров.</p>
-
 <p>Раннер успешно зарегистрирован и готов к работе! В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%81%D0%BF%D0%B5%D1%86%D0%B8%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D1%8B/">следующей статье</a> рассмотрим специфические docker-образы, которые будут использоваться при сборке нашего проекта.</p>
                 </section>
             </article>
@@ -168,23 +166,23 @@ e1470885895d        gitlab/gitlab-runner:latest   &quot;/usr/bin/dumb-ini...&quo
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

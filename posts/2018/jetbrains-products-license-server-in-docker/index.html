@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>JetBrains Products License Server in docker &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Jan 29, 2018 09:22
-                    · 376 words
+                    · 370 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -97,90 +108,52 @@
                 </header>
                 <section id="post-body">
                     <p>В последнее время после обновления PhpStorm (особенно до версии 2017.3.3) все чаще &ldquo;слетает&rdquo; активация продукта по методу &ldquo;License server&rdquo; - за последние пару дней приходилось раз 5 менять адрес сервера лицензий.</p>
-
 <p>Давайте разберемся <strong>как поднять свой сервер лицензий для продуктов JetBrains</strong> в docker-контейнере и навсегда забыть о <strong>проблемах с активацией PhpStorm</strong>!</p>
-
 <p>Считаем, что docker уже установлен и настроен. В моем примере используется самая последняя версия Docker for Mac из канала Edge:</p>
-
-<pre><code class="language-bash">docker -v
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker -v
 Docker version 18.01.0-ce, build 03596f5
-</code></pre>
-
-<p>Создаем каталог для работы и переходим в него:</p>
-
-<pre><code class="language-bash">mkdir -p ~/Code/jb-license-server &amp;&amp; cd ~/Code/jb-license-server
-</code></pre>
-
-<p>В каталоге создадим Dockerfile с инструкциями для сборки docker-образа:</p>
-
-<pre><code class="language-bash">nano Dockerfile
-</code></pre>
-
-<p>Содержимое файла будет следующим:</p>
-
-<pre><code class="language-Dockerfile">FROM node:9.4.0-alpine
-
-RUN apk add --update sudo \
-	&amp;&amp; sudo npm install ilsap -g --unsafe-perm \
-	&amp;&amp; rm -rf /var/cache/apk/*
-
-EXPOSE 8997
-CMD ilsap
-</code></pre>
-
-<p>Собираем docker-образ командой:</p>
-
-<pre><code class="language-bash">docker build -t my-license-server:v1 .
-</code></pre>
-
-<p>Запускаем контейнер из созданного docker-образа:</p>
-
-<pre><code class="language-bash">docker run -d --name my-license-server -p 8997:8997 --restart=always my-license-server:v1
-</code></pre>
-
-<p>После старта контейнера смотрим его логи:</p>
-
-<pre><code class="language-bash">docker logs my-license-server
-</code></pre>
-
-<p>Вывод должен быть примерно таким:</p>
-
-<pre><code class="language-bash">Starting server...
+</code></pre></div><p>Создаем каталог для работы и переходим в него:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p ~/Code/jb-license-server <span style="color:#f92672">&amp;&amp;</span> cd ~/Code/jb-license-server
+</code></pre></div><p>В каталоге создадим Dockerfile с инструкциями для сборки docker-образа:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano Dockerfile
+</code></pre></div><p>Содержимое файла будет следующим:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:9.4.0-alpine</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apk add --update sudo <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> sudo npm install ilsap -g --unsafe-perm <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> rm -rf /var/cache/apk/*<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 8997</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> ilsap<span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>Собираем docker-образ командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t my-license-server:v1 .
+</code></pre></div><p>Запускаем контейнер из созданного docker-образа:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d --name my-license-server -p 8997:8997 --restart<span style="color:#f92672">=</span>always my-license-server:v1
+</code></pre></div><p>После старта контейнера смотрим его логи:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs my-license-server
+</code></pre></div><p>Вывод должен быть примерно таким:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Starting server...
 Redirecting requests to http://xidea.online
 Listening on http://0.0.0.0:8997 &lt;- Use this url to register your product
-</code></pre>
-
-<p>Далее для активации продукта в PhpStorm в поле &ldquo;License server address&rdquo; вводим адрес из лога - <code>http://0.0.0.0:8997</code>, жмем кнопку &ldquo;Activate&rdquo; и забываем о <strong>проблемах с активацией PhpStorm навсегда</strong>!</p>
-
+</code></pre></div><p>Далее для активации продукта в PhpStorm в поле &ldquo;License server address&rdquo; вводим адрес из лога - <code>http://0.0.0.0:8997</code>, жмем кнопку &ldquo;Activate&rdquo; и забываем о <strong>проблемах с активацией PhpStorm навсегда</strong>!</p>
 <p>Описанный метод должен работать и для <strong>активации других продуктов JetBrains</strong>, однако я проверял только на примере PhpStorm.</p>
-
 <p>Кроме того, доступно еще несколько дополнительных опций для <strong>запуска личного JetBrains Products License Server</strong> - узнать о них можно с помощью такой команды:</p>
-
-<pre><code class="language-bash">docker run --rm --name my-license-server -p 8997:8997 my-license-server:v1 ilsap --help
-</code></pre>
-
-<p>Результат выполнения будет следующим:</p>
-
-<pre><code class="language-bash">Usage: ilsap [options]
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm --name my-license-server -p 8997:8997 my-license-server:v1 ilsap --help
+</code></pre></div><p>Результат выполнения будет следующим:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Usage: ilsap <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span>
 
   Options:
 
     -V, --version          output the version number
-    -h, --host &lt;host&gt;      hostname to listen on (default: 0.0.0.0)
-    -p, --port &lt;port&gt;      port to listen on (default: 8997)
-    -s, --server &lt;server&gt;  license server url (default: http://xidea.online)
+    -h, --host &lt;host&gt;      hostname to listen on <span style="color:#f92672">(</span>default: 0.0.0.0<span style="color:#f92672">)</span>
+    -p, --port &lt;port&gt;      port to listen on <span style="color:#f92672">(</span>default: 8997<span style="color:#f92672">)</span>
+    -s, --server &lt;server&gt;  license server url <span style="color:#f92672">(</span>default: http://xidea.online<span style="color:#f92672">)</span>
     -n, --ngrok            start a ngrok server pointed to your local port
     -h, --help             output usage information
-</code></pre>
-
-<p><strong>Примечание.</strong> Если собираетесь переопределить порт по умолчанию, не забудьте также изменить его и в Dockerfile (инструкция <code>EXPOSE</code>).</p>
-
+</code></pre></div><p><strong>Примечание.</strong> Если собираетесь переопределить порт по умолчанию, не забудьте также изменить его и в Dockerfile (инструкция <code>EXPOSE</code>).</p>
 <p>Например, если вы хотите проксировать запросы из docker-контейнера на другой сервер лицензирования, можно это сделать так:</p>
-
-<pre><code class="language-bash">docker run -d --name my-license-server -p 8997:8997 --restart=always my-lic-server:v1 ilsap -s http://idea.ibdyr.com
-</code></pre>
-
-<p>Если нет желания собирать docker-образ самостоятельно - можете воспользоваться готовым из <a href="https://hub.docker.com/r/ealebed/jb-license-server/">Docker Hub</a>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d --name my-license-server -p 8997:8997 --restart<span style="color:#f92672">=</span>always my-lic-server:v1 ilsap -s http://idea.ibdyr.com
+</code></pre></div><p>Если нет желания собирать docker-образ самостоятельно - можете воспользоваться готовым из <a href="https://hub.docker.com/r/ealebed/jb-license-server/">Docker Hub</a>.</p>
                 </section>
             </article>
 
@@ -222,23 +195,23 @@ Listening on http://0.0.0.0:8997 &lt;- Use this url to register your product
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

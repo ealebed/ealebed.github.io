@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Docker Swarm: stack deploy и env-переменные &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,24 +90,20 @@
                 </header>
                 <section id="post-body">
                     <p>Познакомившись с docker, рано или поздно вы начнете использовать оркестраторы Fleet/Nomad/Kubernetes/Aurora/Docker Swarm и т.д. На мой взгляд, самый простой из них — <strong>Docker Swarm</strong>, который «из коробки» дает возможность развернуть отдельный сервис или целый стек.</p>
-
 <p>Однако при использовании команды <code>docker stack deploy</code> для развертывания стека сервисов из файла <code>docker-compose.yml</code> переменные окружения заменяются пустыми значениями, хотя при использовании команды <code>docker-compose up -d</code> все работает, как ожидается. Давайте разберемся!</p>
-
 <p>В данной статье не рассматривается установка и настройка полноценного кластера Docker Swarm — работаем только с одной нодой и решаем только вопрос проброса переменных окружения при деплое стека.</p>
-
 <p>Считаем, что у вас уже установлен <code>docker</code> и <code>docker-compose</code> необходимых версий и включен режим роя (<code>swarm</code>). В данном примере используются:</p>
-
-<pre><code class="language-bash">docker info
-Containers: 16
- Running: 16
- Paused: 0
- Stopped: 0
-Images: 181
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker info
+Containers: <span style="color:#ae81ff">16</span>
+ Running: <span style="color:#ae81ff">16</span>
+ Paused: <span style="color:#ae81ff">0</span>
+ Stopped: <span style="color:#ae81ff">0</span>
+Images: <span style="color:#ae81ff">181</span>
 Server Version: 17.06.0-ce
 Storage Driver: aufs
  Root Dir: /var/lib/docker/aufs
  Backing Filesystem: extfs
- Dirs: 280
+ Dirs: <span style="color:#ae81ff">280</span>
  Dirperm1 Supported: true
 Logging Driver: json-file
 Cgroup Driver: cgroupfs
@@ -108,20 +115,20 @@ Swarm: active
  NodeID: udow4edogefqxcfs6gzkkgh6w
  Is Manager: true
  ClusterID: ut8uvfxdk1ldgguazc7snuc6u
- Managers: 1
- Nodes: 1
+ Managers: <span style="color:#ae81ff">1</span>
+ Nodes: <span style="color:#ae81ff">1</span>
  Orchestration:
-  Task History Retention Limit: 5
+  Task History Retention Limit: <span style="color:#ae81ff">5</span>
  Raft:
-  Snapshot Interval: 10000
-  Number of Old Snapshots to Retain: 0
-  Heartbeat Tick: 1
-  Election Tick: 3
+  Snapshot Interval: <span style="color:#ae81ff">10000</span>
+  Number of Old Snapshots to Retain: <span style="color:#ae81ff">0</span>
+  Heartbeat Tick: <span style="color:#ae81ff">1</span>
+  Election Tick: <span style="color:#ae81ff">3</span>
  Dispatcher:
-  Heartbeat Period: 5 seconds
+  Heartbeat Period: <span style="color:#ae81ff">5</span> seconds
  CA Configuration:
-  Expiry Duration: 3 months
-  Force Rotate: 0
+  Expiry Duration: <span style="color:#ae81ff">3</span> months
+  Force Rotate: <span style="color:#ae81ff">0</span>
  Root Rotation In Progress: false
  Node Address: 192.168.0.34
  Manager Addresses:
@@ -140,13 +147,13 @@ Kernel Version: 4.4.0-91-generic
 Operating System: Ubuntu 16.04.2 LTS
 OSType: linux
 Architecture: x86_64
-CPUs: 4
+CPUs: <span style="color:#ae81ff">4</span>
 Total Memory: 7.67GiB
 Name: e-lebed.lc
 ID: 7VNW:YUXN:EOH2:3JRQ:V7AX:O5OQ:EYJ3:UT7H:JNM3:SGTK:BRIP:DHKB
 Docker Root Dir: /var/lib/docker
-Debug Mode (client): false
-Debug Mode (server): false
+Debug Mode <span style="color:#f92672">(</span>client<span style="color:#f92672">)</span>: false
+Debug Mode <span style="color:#f92672">(</span>server<span style="color:#f92672">)</span>: false
 Username: ealebed
 Registry: https://index.docker.io/v1/
 Experimental: true
@@ -155,200 +162,185 @@ Insecure Registries:
 Live Restore Enabled: false
 
 WARNING: No swap limit support
-</code></pre>
-
-<pre><code class="language-bash">docker-compose version
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose version
 docker-compose version 1.14.0, build c7bdf9e
 docker-py version: 2.3.0
 CPython version: 2.7.13
-OpenSSL version: OpenSSL 1.0.1t  3 May 2016
-</code></pre>
-
-<p>После инициализации режима роя следует переписать файл <code>docker-compose.yml</code> минимум на 3-ю версию для развертывания сервисов через команду <code>deploy</code>. К примеру, ранее мы использовали файл второй версии:</p>
-
-<pre><code class="language-yaml">version: '2'
-services:
-### Applications Code Container #############################
-    applications:
-        container_name: application
-        image: registry.gitlab.lc:5000/develop/ed/develop.sources:latest
-### PHP-FPM Container #######################################
-    php-fpm:
-        container_name: php-fpm
-        image: registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest
-        volumes_from:
+OpenSSL version: OpenSSL 1.0.1t  <span style="color:#ae81ff">3</span> May <span style="color:#ae81ff">2016</span>
+</code></pre></div><p>После инициализации режима роя следует переписать файл <code>docker-compose.yml</code> минимум на 3-ю версию для развертывания сервисов через команду <code>deploy</code>. К примеру, ранее мы использовали файл второй версии:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+<span style="color:#66d9ef">services</span>:
+<span style="color:#75715e">### Applications Code Container #############################</span>
+    <span style="color:#66d9ef">applications</span>:
+        <span style="color:#66d9ef">container_name</span>: application
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/develop.sources:latest
+<span style="color:#75715e">### PHP-FPM Container #######################################</span>
+    <span style="color:#66d9ef">php-fpm</span>:
+        <span style="color:#66d9ef">container_name</span>: php-fpm
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/php-fpm-ed-sq:latest
+        <span style="color:#66d9ef">volumes_from</span>:
             - applications
-        expose:
-            - &quot;9000&quot;
-        logging:
-          driver: gelf
-          options:
-            gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-            tag: &quot;php-fpm&quot;
-### Nginx Server Container ##################################
-    nginx:
-        container_name: nginx
-        image: registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest
-        volumes_from:
+        <span style="color:#66d9ef">expose</span>:
+            - <span style="color:#e6db74">&#34;9000&#34;</span>
+        <span style="color:#66d9ef">logging</span>:
+          <span style="color:#66d9ef">driver</span>: gelf
+          <span style="color:#66d9ef">options</span>:
+            <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+            <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;php-fpm&#34;</span>
+<span style="color:#75715e">### Nginx Server Container ##################################</span>
+    <span style="color:#66d9ef">nginx</span>:
+        <span style="color:#66d9ef">container_name</span>: nginx
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/nginx-ed-sq:latest
+        <span style="color:#66d9ef">volumes_from</span>:
             - applications
-        depends_on:
-            - &quot;php-fpm&quot;
-        ports:
-            - &quot;80:80&quot;
-            - &quot;443:443&quot;
-### Redis Container #########################################
-    redis:
-        container_name: redis
-        image: registry.gitlab.lc:5000/develop/ed/redis-ed-sq:latest
-        volumes:
+        <span style="color:#66d9ef">depends_on</span>:
+            - <span style="color:#e6db74">&#34;php-fpm&#34;</span>
+        <span style="color:#66d9ef">ports</span>:
+            - <span style="color:#e6db74">&#34;80:80&#34;</span>
+            - <span style="color:#e6db74">&#34;443:443&#34;</span>
+<span style="color:#75715e">### Redis Container #########################################</span>
+    <span style="color:#66d9ef">redis</span>:
+        <span style="color:#66d9ef">container_name</span>: redis
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/redis-ed-sq:latest
+        <span style="color:#66d9ef">volumes</span>:
             - redis:/data
-        ports:
-            - &quot;${REDIS_PORT}:6379&quot;
-        logging:
-          driver: gelf
-          options:
-            gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-            tag: &quot;redis&quot;
-### Memcached Container #####################################
-    memcached:
-        container_name: memcached
-        image: registry.gitlab.lc:5000/develop/ed/memcached-ed-sq:latest
-        volumes:
+        <span style="color:#66d9ef">ports</span>:
+            - <span style="color:#e6db74">&#34;${REDIS_PORT}:6379&#34;</span>
+        <span style="color:#66d9ef">logging</span>:
+          <span style="color:#66d9ef">driver</span>: gelf
+          <span style="color:#66d9ef">options</span>:
+            <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+            <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;redis&#34;</span>
+<span style="color:#75715e">### Memcached Container #####################################</span>
+    <span style="color:#66d9ef">memcached</span>:
+        <span style="color:#66d9ef">container_name</span>: memcached
+        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/memcached-ed-sq:latest
+        <span style="color:#66d9ef">volumes</span>:
             - memcached:/var/lib/memcached
-        ports:
-            - &quot;${MEMCACHED_PORT}:11211&quot;
-        logging:
-          driver: gelf
-          options:
-            gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-            tag: &quot;memcached&quot;
-### Volumes Setup ###########################################
-volumes:
-    memcached:
-        driver: &quot;local&quot;
-    redis:
-        driver: &quot;local&quot;
-</code></pre>
-
-<p>То теперь файл третьей версии будет выглядеть так:</p>
-
-<pre><code class="language-yaml">version: '3.1'
-services:
-### Code from branch develop #############################################
-  applications:
-    image: registry.gitlab.lc:5000/develop/ed/develop.sources:latest
-    volumes:
+        <span style="color:#66d9ef">ports</span>:
+            - <span style="color:#e6db74">&#34;${MEMCACHED_PORT}:11211&#34;</span>
+        <span style="color:#66d9ef">logging</span>:
+          <span style="color:#66d9ef">driver</span>: gelf
+          <span style="color:#66d9ef">options</span>:
+            <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+            <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;memcached&#34;</span>
+<span style="color:#75715e">### Volumes Setup ###########################################</span>
+<span style="color:#66d9ef">volumes</span>:
+    <span style="color:#66d9ef">memcached</span>:
+        <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+    <span style="color:#66d9ef">redis</span>:
+        <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</code></pre></div><p>То теперь файл третьей версии будет выглядеть так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#39;3.1&#39;</span>
+<span style="color:#66d9ef">services</span>:
+<span style="color:#75715e">### Code from branch develop #############################################</span>
+  <span style="color:#66d9ef">applications</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/develop.sources:latest
+    <span style="color:#66d9ef">volumes</span>:
       - developcode:/var/www/develop
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 5s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-### PHP-FPM ##############################################################
-  php-fpm:
-    image: registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest
-    volumes:
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">1</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 5s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+<span style="color:#75715e">### PHP-FPM ##############################################################</span>
+  <span style="color:#66d9ef">php-fpm</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/php-fpm-ed-sq:latest
+    <span style="color:#66d9ef">volumes</span>:
       - developcode:/var/www/develop
-    deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 5s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-    logging:
-      driver: gelf
-      options:
-        gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-        tag: &quot;php-fpm&quot;
-### Nginx ################################################################
-  nginx:
-    image: registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:staging
-    volumes:
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">2</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 5s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+    <span style="color:#66d9ef">logging</span>:
+      <span style="color:#66d9ef">driver</span>: gelf
+      <span style="color:#66d9ef">options</span>:
+        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;php-fpm&#34;</span>
+<span style="color:#75715e">### Nginx ################################################################</span>
+  <span style="color:#66d9ef">nginx</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/nginx-ed-sq:staging
+    <span style="color:#66d9ef">volumes</span>:
       - developcode:/var/www/develop
-    ports:
-      - &quot;80:80&quot;
-      - &quot;443:443&quot;
-    deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 5s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-### Redis ################################################################
-  redis:
-    image: registry.gitlab.lc:5000/develop/ed/redis-ed-sq:latest
-    volumes:
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;80:80&#34;</span>
+      - <span style="color:#e6db74">&#34;443:443&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">2</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 5s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+<span style="color:#75715e">### Redis ################################################################</span>
+  <span style="color:#66d9ef">redis</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/redis-ed-sq:latest
+    <span style="color:#66d9ef">volumes</span>:
       - redis:/data
-    ports:
-      - &quot;${REDIS_PORT}:6379&quot;
-    deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 5s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-    logging:
-      driver: gelf
-      options:
-        gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-        tag: &quot;redis&quot;
-### Memcached ############################################################
-  memcached:
-    image: registry.gitlab.lc:5000/develop/ed/memcached-ed-sq:latest
-    volumes:
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;${REDIS_PORT}:6379&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">2</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 5s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+    <span style="color:#66d9ef">logging</span>:
+      <span style="color:#66d9ef">driver</span>: gelf
+      <span style="color:#66d9ef">options</span>:
+        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;redis&#34;</span>
+<span style="color:#75715e">### Memcached ############################################################</span>
+  <span style="color:#66d9ef">memcached</span>:
+    <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/memcached-ed-sq:latest
+    <span style="color:#66d9ef">volumes</span>:
       - memcached:/var/lib/memcached
-    ports:
-      - &quot;${MEMCACHED_PORT}:11211&quot;
-    deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 5s
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints: [node.role == manager]
-    logging:
-      driver: gelf
-      options:
-        gelf-address: &quot;udp://${GRAYLOG_ADDR}:12201&quot;
-        tag: &quot;memcached&quot;
-### Volumes Setup ########################################################
-volumes:
-  developcode:
-  memcached:
-    driver: &quot;local&quot;
-  redis:
-    driver: &quot;local&quot;
-</code></pre>
-
-<p>Из самого важного — мы больше не можем использовать конструкцию <code>volumes_from</code> для монтирования данных из Data Only контейнеров, приходится выкручиваться с именованными томами (<code>named volumes</code>), об этом <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-%D0%B8%D0%BC%D0%B5%D0%BD%D0%BE%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D0%B5-%D1%82%D0%BE%D0%BC%D0%B0/">отдельная подробная статья</a>. Также в режиме роя больше не нужны имена контейнеров (они генерируются автоматически и выглядят примерно так: <code>test-stack_nginx.1.kut1gjutr9zdbo1wdf1biuvti</code>), не нужно делать <code>expose</code> для портов, доступных только между контейнерами и появилась большая и гибкая секция <code>deploy</code>.</p>
-
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#e6db74">&#34;${MEMCACHED_PORT}:11211&#34;</span>
+    <span style="color:#66d9ef">deploy</span>:
+      <span style="color:#66d9ef">replicas</span>: <span style="color:#ae81ff">2</span>
+      <span style="color:#66d9ef">update_config</span>:
+        <span style="color:#66d9ef">parallelism</span>: <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">delay</span>: 5s
+      <span style="color:#66d9ef">restart_policy</span>:
+        <span style="color:#66d9ef">condition</span>: on-failure
+      <span style="color:#66d9ef">placement</span>:
+        <span style="color:#66d9ef">constraints</span>: [node.role == manager]
+    <span style="color:#66d9ef">logging</span>:
+      <span style="color:#66d9ef">driver</span>: gelf
+      <span style="color:#66d9ef">options</span>:
+        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;memcached&#34;</span>
+<span style="color:#75715e">### Volumes Setup ########################################################</span>
+<span style="color:#66d9ef">volumes</span>:
+  <span style="color:#66d9ef">developcode</span>:
+  <span style="color:#66d9ef">memcached</span>:
+    <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+  <span style="color:#66d9ef">redis</span>:
+    <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</code></pre></div><p>Из самого важного — мы больше не можем использовать конструкцию <code>volumes_from</code> для монтирования данных из Data Only контейнеров, приходится выкручиваться с именованными томами (<code>named volumes</code>), об этом <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-%D0%B8%D0%BC%D0%B5%D0%BD%D0%BE%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D0%B5-%D1%82%D0%BE%D0%BC%D0%B0/">отдельная подробная статья</a>. Также в режиме роя больше не нужны имена контейнеров (они генерируются автоматически и выглядят примерно так: <code>test-stack_nginx.1.kut1gjutr9zdbo1wdf1biuvti</code>), не нужно делать <code>expose</code> для портов, доступных только между контейнерами и появилась большая и гибкая секция <code>deploy</code>.</p>
 <p>В каталоге с вышеприведенным файлом <code>docker-compose.yml</code> находится также файл с переменными окружения <code>.env</code> с таким содержимым:</p>
-
 <pre><code>### Graylog ##############################################################
 GRAYLOG_ADDR=graylog.lc
 ### Redis ################################################################
 REDIS_PORT=6379
 ### Memcached ############################################################
 MEMCACHED_PORT=11211
-</code></pre>
-
-<p>При использовании команды <code>docker-compose up -d</code> переменные читаются из файла и подставляются при старте контейнеров — можно в этом убедиться выполнив <code>docker inspect &lt;имя_контейнера&gt;</code>, например (вывод сокращен):</p>
-
+</code></pre><p>При использовании команды <code>docker-compose up -d</code> переменные читаются из файла и подставляются при старте контейнеров — можно в этом убедиться выполнив <code>docker inspect &lt;имя_контейнера&gt;</code>, например (вывод сокращен):</p>
 <pre><code>...
         &quot;HostConfig&quot;: {
             &quot;Binds&quot;: [],
@@ -367,15 +359,9 @@ MEMCACHED_PORT=11211
                 &quot;REDIS_DOWNLOAD_SHA1=6780d1abb66f33a97aad0edbe020403d0a15b67f&quot;
             ],
 ...
-</code></pre>
-
-<p>Однако, если мы попробуем развернуть данный стек сервисов с помощью команды <code>deploy</code>, например:</p>
-
-<pre><code class="language-bash">docker stack deploy --with-registry-auth --compose-file docker-compose.yml test-stack
-</code></pre>
-
-<p>то вместо ожидаемых значений переменных из файла <code>.env</code> мы увидим пустоту:</p>
-
+</code></pre><p>Однако, если мы попробуем развернуть данный стек сервисов с помощью команды <code>deploy</code>, например:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stack deploy --with-registry-auth --compose-file docker-compose.yml test-stack
+</code></pre></div><p>то вместо ожидаемых значений переменных из файла <code>.env</code> мы увидим пустоту:</p>
 <pre><code>...
         &quot;HostConfig&quot;: {
             &quot;Binds&quot;: [],
@@ -394,14 +380,10 @@ MEMCACHED_PORT=11211
                 &quot;REDIS_DOWNLOAD_SHA1=6780d1abb66f33a97aad0edbe020403d0a15b67f&quot;
             ],
 ...
-</code></pre>
-
-<p>Точно такой же результат будет если передавать значения в контейнер с помощью секции <code>environment</code>, о чем пишут <a href="https://github.com/moby/moby/issues/30251">здесь</a>.</p>
-
+</code></pre><p>Точно такой же результат будет если передавать значения в контейнер с помощью секции <code>environment</code>, о чем пишут <a href="https://github.com/moby/moby/issues/30251">здесь</a>.</p>
 <p>Один из вариантов решения — не использовать переменные и сразу захардкодить все в <code>docker-compose.yml</code>, но иногда вследствие архитектурных решений обойтись без переменных нельзя. В таком случае предлагаю использовать следующий «велосипед» (надежный и проверенный):</p>
-
-<pre><code class="language-bash">env $(cat .env | grep ^[A-Z] | xargs) docker stack deploy --with-registry-auth --compose-file docker-compose.yml test-stack
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">env <span style="color:#66d9ef">$(</span>cat .env | grep ^<span style="color:#f92672">[</span>A-Z<span style="color:#f92672">]</span> | xargs<span style="color:#66d9ef">)</span> docker stack deploy --with-registry-auth --compose-file docker-compose.yml test-stack
+</code></pre></div>
                 </section>
             </article>
 
@@ -443,23 +425,23 @@ MEMCACHED_PORT=11211
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Использование MozJPEG в docker-контейнере &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Feb 15, 2018 08:55
-                    · 233 words
+                    · 228 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -77,57 +88,36 @@
                 </header>
                 <section id="post-body">
                     <p>Ранее мы уже упоминали о важности <strong>оптимизации и сжатия изображений</strong> перед размещением на сайте и <a href="https://ealebed.github.io/posts/2018/%D0%BE%D0%BF%D1%82%D0%B8%D0%BC%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-%D0%B8-%D1%81%D0%B6%D0%B0%D1%82%D0%B8%D0%B5-%D0%B8%D0%B7%D0%BE%D0%B1%D1%80%D0%B0%D0%B6%D0%B5%D0%BD%D0%B8%D0%B9-%D0%B8%D0%B7-%D0%BA%D0%BE%D0%BD%D1%81%D0%BE%D0%BB%D0%B8/">рассматривали несколько утилит</a> для работы с картинками.</p>
-
 <p>Давайте разберемся с использованием MozJPEG в docker-контейнере!</p>
-
 <p>Считаем, что docker уже установлен и корректно работает.</p>
-
 <p>Прежде всего, получаем исходники утилиты MozJPEG:</p>
-
-<pre><code class="language-bash">git clone git://github.com/mozilla/mozjpeg.git
-</code></pre>
-
-<p>В этом же каталоге создадим файл Dockerfile (инструкции для сборки docker-образа) следующего содержания:</p>
-
-<pre><code class="language-Dockerfile">FROM alpine:3.4
-COPY . /source
-RUN apk —update add autoconf automake build-base libtool nasm
-RUN cd /source &amp;&amp; autoreconf -fiv &amp;&amp; ./configure —prefix=/opt/mozjpeg &amp;&amp; make install
-</code></pre>
-
-<p>Собираем docker-образ следующей командой:</p>
-
-<pre><code class="language-bash">docker build -t mozjpeg .
-</code></pre>
-
-<p><strong>Примечание.</strong> Исходники утилиты MozJPEG можно стягивать непосредственно при сборке docker-образа, но в таком случае необходимо установить <code>git</code>.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone git://github.com/mozilla/mozjpeg.git
+</code></pre></div><p>В этом же каталоге создадим файл Dockerfile (инструкции для сборки docker-образа) следующего содержания:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> alpine:3.4</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> . /source<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apk —update add autoconf automake build-base libtool nasm<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> cd /source <span style="color:#f92672">&amp;&amp;</span> autoreconf -fiv <span style="color:#f92672">&amp;&amp;</span> ./configure —prefix<span style="color:#f92672">=</span>/opt/mozjpeg <span style="color:#f92672">&amp;&amp;</span> make install<span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>Собираем docker-образ следующей командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t mozjpeg .
+</code></pre></div><p><strong>Примечание.</strong> Исходники утилиты MozJPEG можно стягивать непосредственно при сборке docker-образа, но в таком случае необходимо установить <code>git</code>.</p>
 <p>После успешной сборки образа можем запустить обработку изображений в docker-контейнере с помощью команды:</p>
-
-<pre><code class="language-bash">docker run \
-    --rm \
-    -v path-to-image-dir:/img mozjpeg \
-    sh -c &quot;/opt/mozjpeg/bin/cjpeg -optimize -quality 80 /img/photo.jpg &gt; /img/photo_small.jpg&quot;
-</code></pre>
-
-<p>Параметр <code>--rm</code> удалит docker-контейнер после завершения обработки изображения, а с помощью ключа <code>-v</code> монтируем каталог <code>path-to-image-dir</code> с хост-машины в каталог <code>/img</code> в docker-контейнере.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    --rm <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    -v path-to-image-dir:/img mozjpeg <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    sh -c <span style="color:#e6db74">&#34;/opt/mozjpeg/bin/cjpeg -optimize -quality 80 /img/photo.jpg &gt; /img/photo_small.jpg&#34;</span>
+</code></pre></div><p>Параметр <code>--rm</code> удалит docker-контейнер после завершения обработки изображения, а с помощью ключа <code>-v</code> монтируем каталог <code>path-to-image-dir</code> с хост-машины в каталог <code>/img</code> в docker-контейнере.</p>
 <p>Для обработки всех изображений в каталоге удобнее создать скрипт (как мы уже делали в <a href="https://ealebed.github.io/posts/2018/%D0%BE%D0%BF%D1%82%D0%B8%D0%BC%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-%D0%B8-%D1%81%D0%B6%D0%B0%D1%82%D0%B8%D0%B5-%D0%B8%D0%B7%D0%BE%D0%B1%D1%80%D0%B0%D0%B6%D0%B5%D0%BD%D0%B8%D0%B9-%D0%B8%D0%B7-%D0%BA%D0%BE%D0%BD%D1%81%D0%BE%D0%BB%D0%B8/">предыдущем примере</a>) <code>optimize.sh</code>:</p>
-
-<pre><code class="language-bash">#!/usr/bin/env sh
-
-tmpfile=$(mktemp)
-/opt/mozjpeg/bin/cjpeg -optimize -progressive -quality 80 -outfile ${tmpfile} ${1}
-mv ${tmpfile} ${1}
-</code></pre>
-
-<p>Пересобираем docker-образ (чтобы скрипт оказался внутри контейнера), и тогда команда запуска docker-контейнера будет выглядеть примерно так:</p>
-
-<pre><code class="language-bash">docker run \
-	--rm \
-	-v path-to-image-dir:/img mozjpeg \
-	sh -c &quot;find . -iname *.jpg  | xargs -I % /optimize.sh %&quot;
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env sh
+</span><span style="color:#75715e"></span>
+tmpfile<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>mktemp<span style="color:#66d9ef">)</span>
+/opt/mozjpeg/bin/cjpeg -optimize -progressive -quality <span style="color:#ae81ff">80</span> -outfile <span style="color:#e6db74">${</span>tmpfile<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span>
+mv <span style="color:#e6db74">${</span>tmpfile<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span>
+</code></pre></div><p>Пересобираем docker-образ (чтобы скрипт оказался внутри контейнера), и тогда команда запуска docker-контейнера будет выглядеть примерно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--rm <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-v path-to-image-dir:/img mozjpeg <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	sh -c <span style="color:#e6db74">&#34;find . -iname *.jpg  | xargs -I % /optimize.sh %&#34;</span>
+</code></pre></div>
                 </section>
             </article>
 
@@ -169,23 +159,23 @@ mv ${tmpfile} ${1}
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

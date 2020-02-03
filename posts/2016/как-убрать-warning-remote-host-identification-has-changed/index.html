@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Как убрать WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,59 +88,40 @@
                 </header>
                 <section id="post-body">
                     <p>Давайте разберемся с известнейшей проблемой, часто возникающей при подключении по протоколу ssh!</p>
-
 <p>По умолчанию, для большей безопасности, в настройках ssh значение параметра <code>StrictHostKeyChecking</code> установлено в &lsquo;yes&rsquo;. Именно поэтому при первом подключении к удаленному хосту можно увидеть следующее:</p>
-
-<pre><code class="language-bash">The authenticity of host '192.168.0.166 (192.168.0.166)' can't be established.
-ECDSA key fingerprint is f0:74:54:33:93:bd:73:d1:ef:d6:fe:47:d3:93:e0:7f.
-Are you sure you want to continue connecting (yes/no)? yes
-Warning: Permanently added '192.168.0.166' (ECDSA) to the list of known hosts.
-</code></pre>
-
-<p>Введя в консоли &lsquo;yes&rsquo;, мы подтверждаем, что действительно хотим подключиться к этому хосту и отпечаток его ssh-ключа добавляется в файл <code>~/.ssh/known_hosts</code>.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">The authenticity of host <span style="color:#e6db74">&#39;192.168.0.166 (192.168.0.166)&#39;</span> can<span style="color:#e6db74">&#39;t be established.
+</span><span style="color:#e6db74">ECDSA key fingerprint is f0:74:54:33:93:bd:73:d1:ef:d6:fe:47:d3:93:e0:7f.
+</span><span style="color:#e6db74">Are you sure you want to continue connecting (yes/no)? yes
+</span><span style="color:#e6db74">Warning: Permanently added &#39;</span>192.168.0.166<span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span> to the list of known hosts.
+</code></pre></div><p>Введя в консоли &lsquo;yes&rsquo;, мы подтверждаем, что действительно хотим подключиться к этому хосту и отпечаток его ssh-ключа добавляется в файл <code>~/.ssh/known_hosts</code>.</p>
 <p>При повторной попытке подключения к хосту после изменения ключа на удаленном сервере (как правило, он меняется если была переустановлена операционная система или sshd), появляется сообщение с ошибкой:</p>
-
-<pre><code class="language-bash">@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
-Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+Someone could be eavesdropping on you right now <span style="color:#f92672">(</span>man-in-the-middle attack<span style="color:#f92672">)</span>!
 It is also possible that a host key has just been changed.
-The fingerprint for the ECDSA key sent by the remote host is
+The fingerprint <span style="color:#66d9ef">for</span> the ECDSA key sent by the remote host is
 ae:a6:0b:8d:14:e4:3c:67:f0:a3:ec:a9:9e:2a:26:72.
 Please contact your system administrator.
 Add correct host key in /root/.ssh/known_hosts to get rid of this message.
 Offending ECDSA key in /root/.ssh/known_hosts:75
-  remove with: ssh-keygen -f &quot;/root/.ssh/known_hosts&quot; -R 192.168.0.166
-ECDSA host key for 192.168.0.166 has changed and you have requested strict checking.
+  remove with: ssh-keygen -f <span style="color:#e6db74">&#34;/root/.ssh/known_hosts&#34;</span> -R 192.168.0.166
+ECDSA host key <span style="color:#66d9ef">for</span> 192.168.0.166 has changed and you have requested strict checking.
 Host key verification failed.
 lost connection
-</code></pre>
-
-<p>Для устранения данной проблемы необходимо удалить строку с указанным ssh-ключом из файла <code>/root/.ssh/known_hosts</code>. Сделать это можно несколькими способами.</p>
-
+</code></pre></div><p>Для устранения данной проблемы необходимо удалить строку с указанным ssh-ключом из файла <code>/root/.ssh/known_hosts</code>. Сделать это можно несколькими способами.</p>
 <p>Первый (указан в самом сообщении с ошибкой):</p>
-
-<pre><code class="language-bash">ssh-keygen -f &quot;/root/.ssh/known_hosts&quot; -R 192.168.0.166
-# Host 192.168.0.166 found: line 75 type ECDSA
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ssh-keygen -f <span style="color:#e6db74">&#34;/root/.ssh/known_hosts&#34;</span> -R 192.168.0.166
+<span style="color:#75715e"># Host 192.168.0.166 found: line 75 type ECDSA</span>
 /root/.ssh/known_hosts updated.
 Original contents retained as /root/.ssh/known_hosts.old
-</code></pre>
-
-<p>Второй вариант удаления ключа:</p>
-
-<pre><code class="language-bash">sed -i '75d' /root/.ssh/known_hosts
-</code></pre>
-
-<p><strong>Примечание.</strong> Номер строки с ssh-ключем, который нужно удалить, указывается с помощью &lsquo;75d&rsquo;.</p>
-
+</code></pre></div><p>Второй вариант удаления ключа:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sed -i <span style="color:#e6db74">&#39;75d&#39;</span> /root/.ssh/known_hosts
+</code></pre></div><p><strong>Примечание.</strong> Номер строки с ssh-ключем, который нужно удалить, указывается с помощью &lsquo;75d&rsquo;.</p>
 <p>Третий вариант удаления ключа (с использованием <code>perl</code>):</p>
-
-<pre><code class="language-bash">perl -pi -e 's/\Q$_// if ($. == 75);' /root/.ssh/known_hosts
-</code></pre>
-
-<p>После проделанных действий пробуем подключиться по ssh к удаленному хосту — проблема должна исчезнуть.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">perl -pi -e <span style="color:#e6db74">&#39;s/\Q$_// if ($. == 75);&#39;</span> /root/.ssh/known_hosts
+</code></pre></div><p>После проделанных действий пробуем подключиться по ssh к удаленному хосту — проблема должна исчезнуть.</p>
                 </section>
             </article>
 
@@ -171,23 +163,23 @@ Original contents retained as /root/.ssh/known_hosts.old
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

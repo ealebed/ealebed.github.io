@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Пишем свой плагин для Munin: nginx request time &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -81,154 +92,127 @@
                 </header>
                 <section id="post-body">
                     <p>Давайте разберемся с <strong>созданием плагина для munin</strong>, который в красивой и понятной форме даст нам представление о времени обработки запросов nginx’ом.</p>
-
 <p>Итак, на графике нам нужно видеть количество запросов (в процентах от общего числа), время обработки которых:</p>
-
 <ul>
 <li>дольше 1 секунды;</li>
 <li>от 100 милисекунд до 1 секунды;</li>
 <li>от 50 до 100 милисекунд;</li>
 <li>менее 50 милисекунд;</li>
 </ul>
-
 <p>Почему именно <strong>плагин для munin</strong>? Во-первых, это просто и понятно — можно написать плагин, потратив минимум времени на чтение документации. Во-вторых, получение данных от всех плагинов сервером <code>munin</code> происходит каждые 5 минут (по умолчанию). В-третьих, ротация логов <code>nginx’а</code> происходит также каждые 5 минут (в моем случае).</p>
-
 <p>Алгоритм действий следующий:</p>
-
 <ul>
-<li><p>открываем на редактирование конфиг <code>/etc/nginx/nginx.conf</code>:</p>
-
-<pre><code class="language-bash">nano /etc/nginx/nginx.conf
-</code></pre></li>
-
-<li><p>в секции <code>http</code> находим строку <code>log_format</code> и добавляем в нее параметр <code>$request_time</code>:</p>
-
-<pre><code class="language-text">log_format  main  '$remote_addr $remote_user [$time_local] &quot;$request&quot; $status $request_time $bytes_sent '
-                      '&quot;$http_referer&quot; &quot;$http_user_agent&quot;';
-</code></pre></li>
+<li>открываем на редактирование конфиг <code>/etc/nginx/nginx.conf</code>:</li>
 </ul>
-
-<p><strong>Примечание.</strong> <code>$request_time</code> — время обработки запроса в секундах с точностью до миллисекунд; время, прошедшее с момента чтения первых байт от клиента до момента записи в лог после отправки последних байт клиенту.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano /etc/nginx/nginx.conf
+</code></pre></div><ul>
+<li>в секции <code>http</code> находим строку <code>log_format</code> и добавляем в нее параметр <code>$request_time</code>:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">log_format  main  &#39;$remote_addr $remote_user [$time_local] &#34;$request&#34; $status $request_time $bytes_sent &#39;
+                          &#39;&#34;$http_referer&#34; &#34;$http_user_agent&#34;&#39;;
+</code></pre></div><p><strong>Примечание.</strong> <code>$request_time</code> — время обработки запроса в секундах с точностью до миллисекунд; время, прошедшее с момента чтения первых байт от клиента до момента записи в лог после отправки последних байт клиенту.</p>
 <ul>
-<li><p>перечитываем конфигурацию <code>nginx’а</code>:</p>
-
-<pre><code class="language-bash">nginx -s reload
-</code></pre></li>
+<li>перечитываем конфигурацию <code>nginx’а</code>:</li>
 </ul>
-
-<p>После этих действий <code>/var/log/nginx/access.log</code> должен выгдядеть примерно так:</p>
-
-<pre><code class="language-text">...
-31.43.5.37 - [20/Feb/2014:10:54:04 +0200] &quot;GET /_data/search_categories.php?search=%D0%BD HTTP/1.1&quot; 200 0.016 311 &quot;-&quot; &quot;Opera/9.80 (Windows NT 5.1) Presto/2.12.388 Version/12.16&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -s reload
+</code></pre></div><p>После этих действий <code>/var/log/nginx/access.log</code> должен выгдядеть примерно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
+31.43.5.37 - [20/Feb/2014:10:54:04 +0200] &#34;GET /_data/search_categories.php?search=%D0%BD HTTP/1.1&#34; 200 0.016 311 &#34;-&#34; &#34;Opera/9.80 (Windows NT 5.1) Presto/2.12.388 Version/12.16&#34;
 ...
-</code></pre>
-
-<p><strong>Примечание.</strong> Именно значение 0.016 в примере из лога — то, с чем мы будем работать дальше</p>
-
+</code></pre></div><p><strong>Примечание.</strong> Именно значение 0.016 в примере из лога — то, с чем мы будем работать дальше</p>
 <p>Далее непосредственно <strong>написание плагина для munin</strong>:</p>
-
 <ul>
-<li><p>переходим в каталог <code>/etc/munin/plugins</code>:</p>
-
-<pre><code class="language-bash">cd /etc/munin/plugins
-</code></pre></li>
-
-<li><p>создаем файл <code>nginx_request_time</code>:</p>
-
-<pre><code class="language-bash">nano nginx_request_time
-</code></pre></li>
-
-<li><p>вставляем следующий код:</p>
-
-<pre><code class="language-php">#!/usr/bin/php
-&lt;?php
-if ($argv[1] == 'config')
+<li>переходим в каталог <code>/etc/munin/plugins</code>:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /etc/munin/plugins
+</code></pre></div><ul>
+<li>создаем файл <code>nginx_request_time</code>:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano nginx_request_time
+</code></pre></div><ul>
+<li>вставляем следующий код:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">#!/usr/bin/php
+<span style="color:#75715e">&lt;?php</span>
+<span style="color:#66d9ef">if</span> ($argv[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;config&#39;</span>)
 {
-echo &quot;graph_category nginx
-graph_title Nginx request time
-graph_vlabel %
-graph_scale no
-graph_args --base 1000 -r --lower-limit 0 --upper-limit 100
-t0.label less 50ms
-t0.draw AREA
-t0.type GAUGE
-t0.min 0
-t1.label less 100ms
-t1.draw STACK
-t1.type GAUGE
-t1.min 0
-t2.label less 1s
-t2.draw STACK
-t2.type GAUGE
-t2.min 0
-t3.label more 1s
-t3.draw STACK
-t3.type GAUGE
-t3.min 0
-&quot;;
+  <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;graph_category nginx
+</span><span style="color:#e6db74">  graph_title Nginx request time
+</span><span style="color:#e6db74">  graph_vlabel %
+</span><span style="color:#e6db74">  graph_scale no
+</span><span style="color:#e6db74">  graph_args --base 1000 -r --lower-limit 0 --upper-limit 100
+</span><span style="color:#e6db74">  t0.label less 50ms
+</span><span style="color:#e6db74">  t0.draw AREA
+</span><span style="color:#e6db74">  t0.type GAUGE
+</span><span style="color:#e6db74">  t0.min 0
+</span><span style="color:#e6db74">  t1.label less 100ms
+</span><span style="color:#e6db74">  t1.draw STACK
+</span><span style="color:#e6db74">  t1.type GAUGE
+</span><span style="color:#e6db74">  t1.min 0
+</span><span style="color:#e6db74">  t2.label less 1s
+</span><span style="color:#e6db74">  t2.draw STACK
+</span><span style="color:#e6db74">  t2.type GAUGE
+</span><span style="color:#e6db74">  t2.min 0
+</span><span style="color:#e6db74">  t3.label more 1s
+</span><span style="color:#e6db74">  t3.draw STACK
+</span><span style="color:#e6db74">  t3.type GAUGE
+</span><span style="color:#e6db74">  t3.min 0
+</span><span style="color:#e6db74">  &#34;</span>;
 }
-else
+<span style="color:#66d9ef">else</span>
 {
-$result    = `grep '\&quot; 200 ' /var/log/nginx/access.log.0 | awk '{print $9;}'`;
-$resultArray = explode(&quot;\n&quot;, $result);
-$return    = array(0, 0, 0, 0);
-if (count($resultArray))
-{
-foreach ($resultArray as $one)
-{
-  if ($one &lt; 0.05)
+  $result    <span style="color:#f92672">=</span> <span style="color:#e6db74">`grep &#39;\&#34; 200 &#39; /var/log/nginx/access.log.0 | awk &#39;{print $9;}&#39;`</span>;
+  $resultArray <span style="color:#f92672">=</span> <span style="color:#a6e22e">explode</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, $result);
+  $return    <span style="color:#f92672">=</span> <span style="color:#66d9ef">array</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
+  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">count</span>($resultArray))
   {
-    $return[0] ++;
+    <span style="color:#66d9ef">foreach</span> ($resultArray <span style="color:#66d9ef">as</span> $one)
+    {
+      <span style="color:#66d9ef">if</span> ($one <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0.05</span>)
+      {
+        $return[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">++</span>;
+      }
+      <span style="color:#66d9ef">elseif</span> ($one <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0.1</span>)
+      {
+        $return[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">++</span>;
+      }
+      <span style="color:#66d9ef">elseif</span> ($one <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">1</span>)
+      {
+        $return[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">++</span>;
+      }
+      <span style="color:#66d9ef">else</span>
+      {
+        $return[<span style="color:#ae81ff">3</span>] <span style="color:#f92672">++</span>;
+      }
+    }
   }
-  elseif ($one &lt; 0.1)
+  $all_request <span style="color:#f92672">=</span> <span style="color:#a6e22e">array_sum</span>($return);
+  <span style="color:#66d9ef">foreach</span> ($return <span style="color:#66d9ef">as</span> $key <span style="color:#f92672">=&gt;</span> $one)
   {
-    $return[1] ++;
-  }
-  elseif ($one &lt; 1)
-  {
-    $return[2] ++;
-  }
-  else
-  {
-    $return[3] ++;
+    $value <span style="color:#f92672">=</span> <span style="color:#a6e22e">round</span>(($one <span style="color:#f92672">/</span> $all_request <span style="color:#f92672">*</span> <span style="color:#ae81ff">100</span>), <span style="color:#ae81ff">4</span>);
+    <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#39;t&#39;</span><span style="color:#f92672">.</span>$key<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;.value &#39;</span><span style="color:#f92672">.</span>$value<span style="color:#f92672">.</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
   }
 }
-}
-$all_request = array_sum($return);
-foreach ($return as $key =&gt; $one)
-{
-$value = round(($one / $all_request * 100), 4);
-echo 't'.$key.'.value '.$value.&quot;\n&quot;;
-}
-}
-</code></pre></li>
-
-<li><p>меняем права доступа для <code>nginx_request_time</code>:</p>
-
-<pre><code class="language-bash">chmod 755 nginx_request_time
-</code></pre></li>
-
-<li><p>переходим в каталог <code>/etc/munin/plugin-conf.d</code>:</p>
-
-<pre><code class="language-bash">cd /etc/munin/plugin-conf.d
-</code></pre></li>
-
-<li><p>в файле <code>munin-node</code> находим (или создаем) секцию <code>nginx*</code>, где в качестве пользователя укажем <code>root</code>:</p>
-
-<pre><code class="language-text">...
+</code></pre></div><ul>
+<li>меняем права доступа для <code>nginx_request_time</code>:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod <span style="color:#ae81ff">755</span> nginx_request_time
+</code></pre></div><ul>
+<li>переходим в каталог <code>/etc/munin/plugin-conf.d</code>:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /etc/munin/plugin-conf.d
+</code></pre></div><ul>
+<li>в файле <code>munin-node</code> находим (или создаем) секцию <code>nginx*</code>, где в качестве пользователя укажем <code>root</code>:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
 [nginx*]
 user root
 ...
-</code></pre></li>
-
-<li><p>перезапускаем демон <code>munin-node</code>:</p>
-
-<pre><code class="language-bash">/etc/init.d/munin-node restart
-</code></pre></li>
+</code></pre></div><ul>
+<li>перезапускаем демон <code>munin-node</code>:</li>
 </ul>
-
-<p>Через некоторое время вы сможете увидеть результаты проделанной работы в виде графика.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/munin-node restart
+</code></pre></div><p>Через некоторое время вы сможете увидеть результаты проделанной работы в виде графика.</p>
                 </section>
             </article>
 
@@ -270,23 +254,23 @@ user root
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

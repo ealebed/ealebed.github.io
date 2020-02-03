@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>3ware 9650SE-4LPML — пересборка RAID-массива &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,9 +90,7 @@
                 </header>
                 <section id="post-body">
                     <p>На днях с одного из серверов пришло оповещение о развалившемся RAID-массиве. Давайте разберемся как исправить данную проблему и <strong>пересобрать RAID-массив</strong> на конкретном примере <strong>контроллера 3ware 9650SE-4LPML</strong>.</p>
-
 <p>Прежде всего подключаемся к серверу и проверяем состояние RAID-массива:</p>
-
 <pre><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
@@ -94,18 +103,12 @@ p0     NOT-PRESENT      -      -           -             -
 p1     NOT-PRESENT      -      -           -             -
 p2     DEGRADED         u0     465.76 GB   976773168     WD-WMAYP6626070     
 p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
-</code></pre>
-
-<p>Так и есть, статус нашего RAID-массива <code>DEGRADED</code>. Удалим проблемный диск, подключенный ко второму порту <strong>контроллера 3ware 9650SE-4LPML</strong> из массива:</p>
-
+</code></pre><p>Так и есть, статус нашего RAID-массива <code>DEGRADED</code>. Удалим проблемный диск, подключенный ко второму порту <strong>контроллера 3ware 9650SE-4LPML</strong> из массива:</p>
 <pre><code>tw_cli /c0/p2 remove
 Removing /c0/p2 will take the disk offline.
 Do you want to continue ? Y|N [N]: y
 Removing port /c0/p2 ... Done.
-</code></pre>
-
-<p>Еще раз проверяем состояние RAID-массива:</p>
-
+</code></pre><p>Еще раз проверяем состояние RAID-массива:</p>
 <pre><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
@@ -118,18 +121,12 @@ p0     NOT-PRESENT      -      -           -             -
 p1     NOT-PRESENT      -      -           -             -
 p2     NOT-PRESENT      -      -           -             -
 p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
-</code></pre>
-
-<p>Проблемный диск отсутствует. В данный момент мы его не будем менять, но точно так же, как и при установке нового жесткого диска нужно выполнить <code>rescan</code>:</p>
-
+</code></pre><p>Проблемный диск отсутствует. В данный момент мы его не будем менять, но точно так же, как и при установке нового жесткого диска нужно выполнить <code>rescan</code>:</p>
 <pre><code>tw_cli /c0 rescan
 Rescanning controller /c0 for units and drives ...Done.
 Found the following unit(s): [none].
 Found the following drive(s): [/c0/p2].
-</code></pre>
-
-<p>Проверяем состояние RAID-массива:</p>
-
+</code></pre><p>Проверяем состояние RAID-массива:</p>
 <pre><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
@@ -142,20 +139,12 @@ p0     NOT-PRESENT      -      -           -             -
 p1     NOT-PRESENT      -      -           -             -
 p2     OK               -      465.76 GB   976773168     WD-WMAYP6626070     
 p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
-</code></pre>
-
-<p>Как видим, у нас появился подключенный ко второму порту <strong>контроллера 3ware 9650SE-4LPML</strong> жесткий диск.</p>
-
+</code></pre><p>Как видим, у нас появился подключенный ко второму порту <strong>контроллера 3ware 9650SE-4LPML</strong> жесткий диск.</p>
 <p><strong>Примечание.</strong> Обратите внимание, что у «нового» диска в графе <code>Unit</code> должен быть прочерк.</p>
-
 <p>Теперь можно запустить <strong>пересборку RAID-массива</strong>:</p>
-
 <pre><code>tw_cli /c0/u0 start rebuild disk=2
 Sending rebuild start request to /c0/u0 on 1 disk(s) [2] ... Done.
-</code></pre>
-
-<p>Через некоторое время проверяем состояние RAID-массива:</p>
-
+</code></pre><p>Через некоторое время проверяем состояние RAID-массива:</p>
 <pre><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
@@ -168,10 +157,7 @@ p0     NOT-PRESENT      -      -           -             -
 p1     NOT-PRESENT      -      -           -             -
 p2     DEGRADED         u0     465.76 GB   976773168     WD-WMAYP6626070     
 p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
-</code></pre>
-
-<p>Видим, что статус RAID-массива теперь <code>REBUILDING</code> вместо <code>DEGRADED</code>, как было ранее и рядом указан прогресс (4%). После завершения пересборки статус RAID-массива будет следующим:</p>
-
+</code></pre><p>Видим, что статус RAID-массива теперь <code>REBUILDING</code> вместо <code>DEGRADED</code>, как было ранее и рядом указан прогресс (4%). После завершения пересборки статус RAID-массива будет следующим:</p>
 <pre><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
@@ -226,23 +212,23 @@ p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

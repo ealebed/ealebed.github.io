@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Встречайте — New Relic Infrastructure &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,100 +90,44 @@
                 </header>
                 <section id="post-body">
                     <p>С помощью нового инструмента <strong>New Relic Infrastructure</strong> можно оперативно отслеживать изменения в данных и настройках серверов, будь-то физический сервер или сотни инстансов на Amazon EC2. Давайте разберемся!</p>
-
 <p>Установка агента не должна вызывать сложностей. Для начала необходимо создать конфигурационный файл <code>/etc/newrelic-infra.yml</code>, котором будет находиться ваш лицензионный ключ (считаем, что его вы знаете):</p>
-
 <pre><code>printf &quot;license_key: 0e603da76351097005043a6b7a90d598d6c85adc&quot; | sudo tee -a /etc/newrelic-infra.yml
-</code></pre>
-
-<p>Далее добавляем в систему GPG-ключ командой (делаем только для debian-based дистрибутивов):</p>
-
+</code></pre><p>Далее добавляем в систему GPG-ключ командой (делаем только для debian-based дистрибутивов):</p>
 <pre><code>curl https://download.newrelic.com/infrastructure_agent/gpg/newrelic-infra.gpg | sudo apt-key add -
-</code></pre>
-
-<p>Теперь в зависимости от используемого дистрибутива добавляем репозиторий, с которого будет устанавливаться агент. Например, для Debian 7 (Wheezy):</p>
-
+</code></pre><p>Теперь в зависимости от используемого дистрибутива добавляем репозиторий, с которого будет устанавливаться агент. Например, для Debian 7 (Wheezy):</p>
 <pre><code>printf &quot;deb http://download.newrelic.com/infrastructure_agent/linux/apt wheezy main&quot; | sudo tee -a /etc/apt/sources.list.d/newrelic-infra.list
-</code></pre>
-
-<p>для Debian 8 (Jessie):</p>
-
+</code></pre><p>для Debian 8 (Jessie):</p>
 <pre><code>printf &quot;deb http://download.newrelic.com/infrastructure_agent/linux/apt jessie main&quot; | sudo tee -a /etc/apt/sources.list.d/newrelic-infra.list
-</code></pre>
-
-<p>для Debian 9 (Stretch):</p>
-
+</code></pre><p>для Debian 9 (Stretch):</p>
 <pre><code>printf &quot;deb http://download.newrelic.com/infrastructure_agent/linux/apt stretch main&quot; | sudo tee -a /etc/apt/sources.list.d/newrelic-infra.list
-</code></pre>
-
-<p>для Debian 10 (Buster):</p>
-
+</code></pre><p>для Debian 10 (Buster):</p>
 <pre><code>printf &quot;deb http://download.newrelic.com/infrastructure_agent/linux/apt buster main&quot; | sudo tee -a /etc/apt/sources.list.d/newrelic-infra.list
-</code></pre>
-
-<p>для Ubuntu 12 (Precise):</p>
-
+</code></pre><p>для Ubuntu 12 (Precise):</p>
 <pre><code>printf &quot;deb http://download.newrelic.com/infrastructure_agent/linux/apt precise main&quot; | sudo tee -a /etc/apt/sources.list.d/newrelic-infra.list
-</code></pre>
-
-<p>для Ubuntu 14 (Trusty):</p>
-
+</code></pre><p>для Ubuntu 14 (Trusty):</p>
 <pre><code>printf &quot;deb http://download.newrelic.com/infrastructure_agent/linux/apt trusty main&quot; | sudo tee -a /etc/apt/sources.list.d/newrelic-infra.list
-</code></pre>
-
-<p>для Ubuntu 16 (Xenial):</p>
-
+</code></pre><p>для Ubuntu 16 (Xenial):</p>
 <pre><code>printf &quot;deb http://download.newrelic.com/infrastructure_agent/linux/apt xenial main&quot; | sudo tee -a /etc/apt/sources.list.d/newrelic-infra.list
-</code></pre>
-
-<p>для Amazon Linux, CentOS 6, RHEL 6:</p>
-
+</code></pre><p>для Amazon Linux, CentOS 6, RHEL 6:</p>
 <pre><code>printf &quot;[newrelic-infra]\nname=New Relic Infrastructure\nbaseurl=http://download.newrelic.com/infrastructure_agent/linux/yum/el/6/x86_64\nenable=1\ngpgcheck=0&quot; | sudo tee -a /etc/yum.repos.d/newrelic-infra.repo
-</code></pre>
-
-<p>для CentOS 7, RHEL 7:</p>
-
+</code></pre><p>для CentOS 7, RHEL 7:</p>
 <pre><code>printf &quot;[newrelic-infra]\nname=New Relic Infrastructure\nbaseurl=http://download.newrelic.com/infrastructure_agent/linux/yum/el/7/x86_64\nenable=1\ngpgcheck=0&quot; | sudo tee -a /etc/yum.repos.d/newrelic-infra.repo
-</code></pre>
-
-<p>Обновляем информацию о пакетах в системе:</p>
-
+</code></pre><p>Обновляем информацию о пакетах в системе:</p>
 <pre><code>sudo apt-get update
-</code></pre>
-
-<p>или</p>
-
+</code></pre><p>или</p>
 <pre><code>yum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'
-</code></pre>
-
-<p>И выполняем установку агента:</p>
-
+</code></pre><p>И выполняем установку агента:</p>
 <pre><code>sudo apt-get install newrelic-infra -y
-</code></pre>
-
-<p>или</p>
-
+</code></pre><p>или</p>
 <pre><code>sudo yum install newrelic-infra -y
-</code></pre>
-
-<p>Для управления агентом в зависимости от дистрибутива можно использовать следующие команды:</p>
-
+</code></pre><p>Для управления агентом в зависимости от дистрибутива можно использовать следующие команды:</p>
 <p>Debian 7:</p>
-
 <pre><code>sudo /etc/init.d/newrelic-infra 
-</code></pre>
-
-<p>Amazon Linux, CentOS 6, RHEL 6, Ubuntu 14.10 или ниже:</p>
-
+</code></pre><p>Amazon Linux, CentOS 6, RHEL 6, Ubuntu 14.10 или ниже:</p>
 <pre><code>sudo initctl newrelic-infra
-</code></pre>
-
-<p>CentOS 7, Debian 8, RHEL 7, Ubuntu 15.04 и выше:</p>
-
+</code></pre><p>CentOS 7, Debian 8, RHEL 7, Ubuntu 15.04 и выше:</p>
 <pre><code>sudo systemctl newrelic-infra
-</code></pre>
-
-<p>Спустя некоторое время в аккаунте New Relic на вкладке INFRASTRUCTURE уже будет видно изменения данных и события. Далее можно заняться более тонкой настройкой фильтров, уведомлений и отслеживаемых параметров, но это уже тема для отдельной статьи.</p>
+</code></pre><p>Спустя некоторое время в аккаунте New Relic на вкладке INFRASTRUCTURE уже будет видно изменения данных и события. Далее можно заняться более тонкой настройкой фильтров, уведомлений и отслеживаемых параметров, но это уже тема для отдельной статьи.</p>
                 </section>
             </article>
 
@@ -214,23 +169,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Очистка места в private docker-registry &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,74 +88,50 @@
                 </header>
                 <section id="post-body">
                     <p><a href="https://ealebed.github.io/posts/2017/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">Ранее</a> мы рассматривали вариант docker-установки Gitlab-сервера с расширенной функциональностью (в том числе с использованием приватного docker-registry), которая стала фундаментом для организации процесса CI (continuous integration).</p>
-
 <p>Не так давно обнаружились проблемы с очисткой места, которое занимают собранные docker-образы в настроенном нами docker-registry — давайте разберемся!</p>
-
 <p>Выяснилось, что в веб-интерфейсе <strong>Gitlab</strong> на вкладке Registry при нажатии на кнопку «удалить» на самом деле происходит удаление только тэга образа, а сами данные никуда не деваются и продолжают занимать место на жестком диске.</p>
-
 <p>Аналогичная проблема наблюдается если docker-образ создается с одним и тем же тэгом (например, <code>latest</code>) — а это обычное дело для процесса CI. В этом случае, при сборке нового образа старый не удаляется (как ожидается), у него просто пропадает тэг (<code>latest</code>).</p>
-
 <p>Например, у образа <code>master/lebed/test:latest</code> на самом деле на жестком диске хранится 2 версии:</p>
-
-<pre><code class="language-bash">ls -la /srv/gitlab/shared/registry/docker/registry/v2/repositories/master/lebed/test/_manifests/tags/latest/index/sha256
-total 16
-drwxr-xr-x 4 root root 4096 Jun 15 12:20 .
-drwxr-xr-x 3 root root 4096 Jun 15 09:25 ..
-drwxr-xr-x 2 root root 4096 Jun 15 12:20 694a3871d67d64d5c59d3f6943be3cfc0d11aae2082261735e87b1c3c58bd66b
-drwxr-xr-x 2 root root 4096 Jun 15 09:25 e1f5741ced3f0280bd372baa6ca293d1033dfefc7db021cd81ca1527d2f1c08e
-</code></pre>
-
-<p>При частых сборках docker-образов отведенное место в docker-registry может закончиться — при этом невозможно будет пушить в него новые образы и весь процесс CI перестанет работать.</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la /srv/gitlab/shared/registry/docker/registry/v2/repositories/master/lebed/test/_manifests/tags/latest/index/sha256
+total <span style="color:#ae81ff">16</span>
+drwxr-xr-x <span style="color:#ae81ff">4</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 12:20 .
+drwxr-xr-x <span style="color:#ae81ff">3</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 09:25 ..
+drwxr-xr-x <span style="color:#ae81ff">2</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 12:20 694a3871d67d64d5c59d3f6943be3cfc0d11aae2082261735e87b1c3c58bd66b
+drwxr-xr-x <span style="color:#ae81ff">2</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 09:25 e1f5741ced3f0280bd372baa6ca293d1033dfefc7db021cd81ca1527d2f1c08e
+</code></pre></div><p>При частых сборках docker-образов отведенное место в docker-registry может закончиться — при этом невозможно будет пушить в него новые образы и весь процесс CI перестанет работать.</p>
 <p>Для очистки места в приватном docker-registry необходимо выполнить следующие действия:</p>
-
 <ul>
 <li>удалить старые версии тегов docker-образа;</li>
 <li>удалить старые версии ревизий docker-образа;</li>
 <li>запустить процесс «уборки мусора» в контейнере с docker-registry.</li>
 </ul>
-
 <p>Рассмотрим подробнее пример выполнения данных действий.
 Находясь на docker-хосте, смотрим содержимое каталога с интересующим нас docker-образом и его тэгом в каталоге <code>/srv/gitlab/shared/registry/docker/registry/v2/repositories/{имя_докер_образа}/_manifests/tags/{тег_образа}/index/sha256</code>
 В нем должны находиться один или несколько каталогов вида <code>e1f5741ced3f0280bd372baa6ca293d1033dfefc7db021cd81ca1527d2f1c08e</code>. Если каталог один, то никаких действий производить не следует, если же таких директорий несколько, то нужно удалить все старые версии, оставив только одну, самую последнюю по дате создания.</p>
-
 <p>Смотрим содержимое каталога с ревизиями интересующего нас docker-образа <code>/srv/gitlab/shared/registry/docker/registry/v2/repositories/{имя_докер_образа}/_manifests/revisions/sha256</code>
 В нем должны также быть вложены директории с именами вида <code>e1f5741ced3f0280bd372baa6ca293d1033dfefc7db021cd81ca1527d2f1c08e</code> — точно такие же, как и в предыдущем шаге. Удаляем более старые (ориентируемся по дате создания), оставляя только один каталог.</p>
-
 <p>После удаления вышеуказанных файлов запускаем процесс «уборки мусора» командой:</p>
-
-<pre><code class="language-bash">docker exec -it {имя_контейнера_c_registry} bin/registry garbage-collect {путь_к_конфигу_внутри_контейнера} 
-</code></pre>
-
-<p>В нашем случае команда выглядит так:</p>
-
-<pre><code class="language-bash">docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
-</code></pre>
-
-<p>Для чистки места также можно использовать скрипт <code>clean_docker_registry.sh</code> следующего содержания:</p>
-
-<pre><code class="language-bash">#!/bin/sh
-REPOPATH=/srv/gitlab/shared/registry/docker/registry/v2/repositories/
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it <span style="color:#f92672">{</span>имя_контейнера_c_registry<span style="color:#f92672">}</span> bin/registry garbage-collect <span style="color:#f92672">{</span>путь_к_конфигу_внутри_контейнера<span style="color:#f92672">}</span> 
+</code></pre></div><p>В нашем случае команда выглядит так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
+</code></pre></div><p>Для чистки места также можно использовать скрипт <code>clean_docker_registry.sh</code> следующего содержания:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/sh
+</span><span style="color:#75715e"></span>REPOPATH<span style="color:#f92672">=</span>/srv/gitlab/shared/registry/docker/registry/v2/repositories/
 echo Docker image name is $1
 echo Docker image tag is $2
-echo &quot;\n&quot;;
-TAGPATH=$REPOPATH$1/_manifests/tags/$2/index/sha256
-REVPATH=$REPOPATH$1/_manifests/revisions/sha256
+echo <span style="color:#e6db74">&#34;\n&#34;</span>;
+TAGPATH<span style="color:#f92672">=</span>$REPOPATH$1/_manifests/tags/$2/index/sha256
+REVPATH<span style="color:#f92672">=</span>$REPOPATH$1/_manifests/revisions/sha256
   
-for hash in $(ls $TAGPATH -t | tail -n +2)
-do
+<span style="color:#66d9ef">for</span> hash in <span style="color:#66d9ef">$(</span>ls $TAGPATH -t | tail -n +2<span style="color:#66d9ef">)</span>
+<span style="color:#66d9ef">do</span>
   rm -rf $TAGPATH/$hash;
   rm -rf $REVPATH/$hash;
-done
+<span style="color:#66d9ef">done</span>
 docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
-</code></pre>
-
-<p>Запускаем скрипт с параметрами, первый из которых — имя docker-образа, второй — тэг docker-образа, например:</p>
-
-<pre><code class="language-bash">./clean_docker_registry.sh master/lebed/test latest
-</code></pre>
-
-<p>Не забывайте также освобождать место от неиспользуемых более docker-образов и томов, как описано <a href="https://ealebed.github.io/posts/2017/%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0-%D0%BC%D0%B5%D1%81%D1%82%D0%B0-%D0%BD%D0%B0-%D0%B4%D0%B8%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D1%81%D0%BB%D0%B5-docker/">здесь</a>.</p>
+</code></pre></div><p>Запускаем скрипт с параметрами, первый из которых — имя docker-образа, второй — тэг docker-образа, например:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./clean_docker_registry.sh master/lebed/test latest
+</code></pre></div><p>Не забывайте также освобождать место от неиспользуемых более docker-образов и томов, как описано <a href="https://ealebed.github.io/posts/2017/%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0-%D0%BC%D0%B5%D1%81%D1%82%D0%B0-%D0%BD%D0%B0-%D0%B4%D0%B8%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D1%81%D0%BB%D0%B5-docker/">здесь</a>.</p>
                 </section>
             </article>
 
@@ -186,23 +173,23 @@ docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registr
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

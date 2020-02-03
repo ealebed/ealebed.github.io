@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Ресурсы в Kubernetes. Часть 1: Память (Memory) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,54 +88,35 @@
                 </header>
                 <section id="post-body">
                     <p>Чтобы <code>Kubernetes</code> смог максимально эффективно использовать доступную инфраструктуру и корректно выделить ресурсы, необходимые для работы вашего приложения, вам следует указать требования в ресурсам каждого контейнера. В данный момент есть возможность задавать два типа требований (<code>requests</code> и <code>limits</code>) для двух типов ресурсов - памяти (<code>memory</code>) и процессора (<code>CPU</code>). В данной статье рассмотрим <code>requests</code> и <code>limits</code> применительно к памяти - давайте разберемся!</p>
-
 <p>При описании пода (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) для каждого из его контейнеров могут быть заданы требования к ресурсам в следующем формате:</p>
-
-<pre><code class="language-yaml">...
-resources:
-  limits:
-    cpu: &quot;2&quot;
-    memory: 2Gi
-  requests:
-    cpu: &quot;2&quot;
-    memory: 2Gi
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+<span style="color:#66d9ef">resources</span>:
+  <span style="color:#66d9ef">limits</span>:
+    <span style="color:#66d9ef">cpu</span>: <span style="color:#e6db74">&#34;2&#34;</span>
+    <span style="color:#66d9ef">memory</span>: 2Gi
+  <span style="color:#66d9ef">requests</span>:
+    <span style="color:#66d9ef">cpu</span>: <span style="color:#e6db74">&#34;2&#34;</span>
+    <span style="color:#66d9ef">memory</span>: 2Gi
 ...
-</code></pre>
-
-<p>Тип требований <code>requests</code> используется в <code>Kubernetes</code> планировщиком для корректного размещения и запуска подов в существующей инфраструктуре, как бы говоря &ldquo;запусти контейнеры данного пода там, где есть достаточное количество запрощенных ресурсов&rdquo;. <code>Limits</code> - жесткое ограничение ресурсов, доступных контейнеру и среде его выполнения (тут и далее имеется в виду Docker container runtime). Превышение указанных лимитов (<code>limits</code>) ресурсов зачастую приводит к троттлингу или остановке (termination) контейнера.</p>
-
+</code></pre></div><p>Тип требований <code>requests</code> используется в <code>Kubernetes</code> планировщиком для корректного размещения и запуска подов в существующей инфраструктуре, как бы говоря &ldquo;запусти контейнеры данного пода там, где есть достаточное количество запрощенных ресурсов&rdquo;. <code>Limits</code> - жесткое ограничение ресурсов, доступных контейнеру и среде его выполнения (тут и далее имеется в виду Docker container runtime). Превышение указанных лимитов (<code>limits</code>) ресурсов зачастую приводит к троттлингу или остановке (termination) контейнера.</p>
 <p>Если значение <code>requests</code> для контейнера не указано, то по умолчанию будет использоваться значение установленное в <code>limits</code>. Если же не указано значение <code>limits</code>, то по умолчанию это значение будет равно 0 (если верить документации - неограниченно. На самом деле ограничивается ресурсами узла, на котором запускается под).</p>
-
 <p>Возникает вопрос, стоит ли указывать значения <code>limits</code> больше, чем <code>requests</code>? Если ваше приложение стабильно использует предсказуемый объем оперативной памяти, то устанавливать разные значения параметров <code>requests</code> и <code>limits</code> для памяти нет смысла. В случае с CPU, разница между заданными значениями <code>requests</code> и <code>limits</code> может не устанавливаться (при условии, что эти же ресурсы не используются другими контейнерами и их не нужно &ldquo;делить&rdquo;).</p>
-
 <p>Если вы новичок в <code>Kubernetes</code>, для начала лучше всего использовать значения <code>limits</code> точно такие же как и <code>requests</code> - это обеспечит так называемый &ldquo;гарантированный класс качества сервиса&rdquo; (<code>Guaranteed QoS</code> class, об этих классах чуть ниже). С другой стороны, класс <code>Burstable QoS</code> потенциально позволяет более эффективно использовать ресурсы инфраструктуры, правда, за счет большей непредсказуемости - например, рост CPU-latency может повлиять на остальные поды/контейнеры, запущенные на том же рабочем узле (ноде).</p>
-
 <p>В <code>Kubernetes</code> QoS классы используются в соответствии с наличием и конфигурацией <code>requests</code> и <code>limits</code> (<a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/resource-qos.md#qos-classes">детальное описание</a>):</p>
-
 <ul>
 <li>если для всех контейнеров пода установлены отличные от 0 <code>requests</code> и <code>limits</code> для всех типов ресурсов, и эти значения равны, то под будет принадлежать к классу <code>Guaranteed</code>;</li>
 <li>если для одного или нескольких контейнера пода установлены отличные от 0 <code>requests</code> и <code>limits</code> для одного или всех типов ресурсов и эти значения не равны, то под будет принадлежать к классу <code>Burstable</code>;</li>
 <li>если для всех контейнеров пода не установлены значения <code>requests</code> и <code>limits</code> для всех типов ресурсов, то поду будет присвоен класс <code>Best-Effort</code>.</li>
 </ul>
-
 <p>Поды класса <code>Best-Effort</code> обладают наименьшим приоритетом. Они могут использовать любое количество свободной памяти, доступное на рабочем узле, но будут остановлены в первую очередь, если система испытывает недостаток памяти (under memory pressure). Поды класса <code>Burstable</code> обычно имеют некоторое гарантированное количество ресурсов (благодаря <code>requests</code>), но могут использовать больше ресурсов (если такие доступны). Если система испытывает недостаток памяти (и остановка подов с классом <code>Best-Effort</code> не помогла), то поды данного класса, которые превысили значение заданное в <code>requests</code> будут остановлены. Класс <code>Guaranteed</code> обладает максимальным приоритетом, и поды данного класса будут остановлены только если они используют больше ресурсов, чем установлено в <code>limits</code>.</p>
-
 <p>Итак, что же означает память (<code>memory</code>) в данном контексте? В нашем случае, это общее значение размера страниц памяти (Resident set size, RSS) и использования кэша страниц (page cache) контейнерами.</p>
-
-<p><strong>Примечание.</strong> В &ldquo;чистом&rdquo; docker&rsquo;е в это значение также входит своп (swap), который предусмотрительно отключен в <code>Kubernetes</code>.</p>
-
+<p><strong>Примечание.</strong> В &ldquo;чистом&rdquo; docker'е в это значение также входит своп (swap), который предусмотрительно отключен в <code>Kubernetes</code>.</p>
 <p><strong>RSS</strong> - размер страниц памяти, выделенных процессу операционной системой и в настоящее время находящихся в ОЗУ. Например, для Java процесса это heap (куча), non-heap (стек) память, оff-heap (она же native memory) и т. д.</p>
-
 <p>Кэш страниц - иногда также называемый дисковый кэшем, используется для кеширования блоков с HDD/SSD. Все операции ввода/вывода обычно происходят через этот кэш (из соображений производительности). Чем больше данных читает/записывает ваше приложение на диск, тем больший объем памяти необходим для кэша страниц. Ядро будет использовать доступную память для кэша страниц, но будет освобождать ее, если память понадобится в другом месте/процессе - таким образом производительность вашего приложения может снижаться при недостаточном объеме оперативной памяти.</p>
-
 <p>Исходя из <a href="https://docs.docker.com/config/containers/runmetrics/#metrics-from-cgroups-memory-cpu-block-io">документации</a> docker, можно сказать, что размер кэша страниц, используемых контейнером, может сильно отличаться в зависимости от того, могут ли некоторые файлы &ldquo;поделены&rdquo; между несколькими контейнерами, запущенными на одном рабочем узле (достигается благодаря overlayfs storage driver).</p>
-
 <p>Значения параметров <code>requests</code> и <code>limits</code> измеряются в байтах, однако можно использовать и <a href="https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory">суффиксы</a>. К примеру, настройка памяти JVM <code>Xmx1g</code> (1024³ bytes) будет соответствовать <code>1Gi</code> в спецификации контейнера.</p>
-
 <p>Ограничения по памяти (<code>limits</code>) с точки зрения <code>Kubernetes</code> считаются &ldquo;несжимаемыми&rdquo; (non-compressible), следовательно при превышении этих ограничений троттлинг невозможен - ядро будет агрессивно очищать кэш страниц (для освобождения ресурсов / достижения желаемого состояния рабочего узла) и контейнеры к конце концов могут быть остановлены (прерваны) хорошо известным Linux Out of Memory (OOM) Killer.</p>
-
 <p>Для хорошей настройки приложения часто приходится эмпирическим путем подбирать необходимые значения <code>requests</code> и <code>limits</code> и менять их на протяжении всего жизненного цикла приложения, поэтому не стоит пренебрегать сбором метрик, мониторингом и оповещением о использовании ресурсов.</p>
-
 <p>На этом все, в <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">следующей статье</a> рассмотрим <code>requests</code> и <code>limits</code> применительно к использованию процессора (<code>CPU</code>).</p>
                 </section>
             </article>
@@ -167,23 +159,23 @@ resources:
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/deploy-to-k8s-with-spinnaker-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0/">Deploy to k8s with Spinnaker. Часть 1: Установка<aside class="dates">Jan 24 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/deploy-to-k8s-with-spinnaker-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0/">Deploy to k8s with Spinnaker. Часть 1: Установка<aside class="dates">Jan 24 2019</aside></a>
         </li>
     
 </ul>

@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Дефрагментация таблиц InnoDB &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -51,6 +58,10 @@
 	<a href='https://ealebed.github.io/about'>About</a>
 
 	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
 </nav>
 
 
@@ -62,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Aug 17, 2015 11:33
-                    · 330 words
+                    · 329 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -77,68 +88,57 @@
                 </header>
                 <section id="post-body">
                     <p>Как я уже упоминал в <a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D1%81%D0%B6%D0%B0%D1%82%D0%B8%D0%B5-%D1%82%D0%B0%D0%B1%D0%BB%D0%B8%D1%86-innodb/">данной статье</a>, при использовании <strong>движка базы данных InnoDB</strong> для освобождения места на жестком диске недостаточно просто удалить записи из таблиц — нужно обязательно выполнить <strong>дефрагментацию таблиц InnoDB</strong>.</p>
-
 <p>Логически табличное пространство в <strong>таблицах InnoDB</strong> может расширяться и уменьшаться, но физически оно изменяется только в сторону увеличения. Что делать? Давайте разберемся!</p>
-
 <p><strong>Примечание.</strong> Табличное пространство — логическое пространство, которое используется для хранения объектов базы данных, таких как индексы, таблицы и т. п. Физически табличные пространства обычно хранятся в виде файлов на жестком диске</p>
-
 <p>Чаще всего для <strong>дефрагментации таблиц InnoDB</strong> предлагают сделать следующие шаги:</p>
-
 <ul>
 <li>сделать резервную копию БД с помощью <a href="https://ealebed.github.io/posts/2015/%D1%88%D0%BF%D0%B0%D1%80%D0%B3%D0%B0%D0%BB%D0%BA%D0%B0-%D0%BF%D0%BE-%D1%83%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D0%B5-mysqldump/">утилиты <code>mysqldump</code></a>;</li>
 <li>удалить существующую БД;</li>
 <li>создать пустую БД с таким же именем;</li>
 <li>восстановить таблицы в пустую БД из резервной копии.</li>
 </ul>
-
 <p>Если база данных маленькая, то никаких проблем с предложенным вариантом возникнуть не должно. Но что делать, если в вашем проекте база данных занимает сотни гигабайт? И как, например, сделать <strong>дефрагментацию одной таблицы InnoDB</strong>?</p>
-
 <p>Мы уже знаем как <a href="https://ealebed.github.io/posts/2015/%D1%82%D1%8E%D0%BD%D0%B8%D0%BD%D0%B3-mysql-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BE%D0%BF%D1%86%D0%B8%D0%B8-innodb_file_per_table/">включить опцию <strong>innodb_file_per_table</strong></a>, следовательно можем использовать <code>OPTIMIZE TABLE</code>.</p>
-
 <p><strong>Примечание.</strong> <code>OPTIMIZE TABLE tbl_name</code> реорганизует физическое пространство данных таблицы и связанных индексов. Используется для уменьшения объема физического пространства и повышения эффективности операций ввода/вывода при доступе к таблице.</p>
-
 <p>Разработчики советуют использовать <code>OPTIMIZE TABLE tbl_name</code> после добавления, удаления и обновления большого количества записей в таблице. Следует помнить, что <code>OPTIMIZE TABLE tbl_name</code> работает только с MyISAM, InnoDB и ARCHIVE таблицами.</p>
-
 <p>Для <strong>движка базы данных InnoDB</strong> операция <code>OPTIMIZE TABLE tbl_name</code> — то же самое, что и <code>ALTER TABLE tbl_name ENGINE=InnoDB</code>. Следовательно, выполнение <code>OPTIMIZE TABLE tbl_name</code> будет блокировать таблицу.</p>
-
 <p>В своих проектах для <strong>дефрагментации таблиц InnoDB</strong> я использую следующий скрипт:</p>
-
-<pre><code class="language-php">#!/usr/bin/php
-&lt;?php
-$host='&lt;имя_хоста&gt;';
-$database='&lt;имя_базы_данных&gt;';
-$user='&lt;имя_пользователя_бд&gt;';
-$pwd='&lt;очень_сложный_пароль&gt;';
-$tables=array(
-    &quot;&lt;имя_таблицы_1&gt;&quot;,
-    &quot;имя_таблицы_2&quot;,
-    &quot;имя_таблицы_3&quot;);
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">#!/usr/bin/php
+<span style="color:#75715e">&lt;?php</span>
+$host<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;имя_хоста&gt;&#39;</span>;
+$database<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;имя_базы_данных&gt;&#39;</span>;
+$user<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;имя_пользователя_бд&gt;&#39;</span>;
+$pwd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;очень_сложный_пароль&gt;&#39;</span>;
+$tables<span style="color:#f92672">=</span><span style="color:#66d9ef">array</span>(
+    <span style="color:#e6db74">&#34;&lt;имя_таблицы_1&gt;&#34;</span>,
+    <span style="color:#e6db74">&#34;имя_таблицы_2&#34;</span>,
+    <span style="color:#e6db74">&#34;имя_таблицы_3&#34;</span>);
  
-$c_mysql = mysql_connect($host, $user, $pwd);
-if(!$c_mysql)
+$c_mysql <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_connect</span>($host, $user, $pwd);
+<span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>$c_mysql)
 {
-    echo('Cannot connect to mysql server');
+    <span style="color:#66d9ef">echo</span>(<span style="color:#e6db74">&#39;Cannot connect to mysql server&#39;</span>);
 }
  
-$db = mysql_select_db($database, $c_mysql);
-if (!$db)
+$db <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_select_db</span>($database, $c_mysql);
+<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>$db)
 {
-    echo('Cannot connect to database');
+    <span style="color:#66d9ef">echo</span>(<span style="color:#e6db74">&#39;Cannot connect to database&#39;</span>);
 }
  
-$rec = mysql_query('SHOW TABLE STATUS');
-while ($data = mysql_fetch_object($rec))
-    if ($data-&gt;Engine == 'InnoDB')
-  if (in_array($data-&gt;Name, $tables))
+$rec <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_query</span>(<span style="color:#e6db74">&#39;SHOW TABLE STATUS&#39;</span>);
+<span style="color:#66d9ef">while</span> ($data <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_fetch_object</span>($rec))
+    <span style="color:#66d9ef">if</span> ($data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Engine</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;InnoDB&#39;</span>)
+  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">in_array</span>($data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Name</span>, $tables))
   {
-      echo 'Processing ', $data-&gt;Name, ' ... '; 
-      flush();
-      mysql_query(&quot;ALTER TABLE {$data-&gt;Name} ENGINE=InnoDB&quot;);
-      echo &quot;done.\n&quot;;
+      <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#39;Processing &#39;</span>, $data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Name</span>, <span style="color:#e6db74">&#39; ... &#39;</span>; 
+      <span style="color:#a6e22e">flush</span>();
+      <span style="color:#a6e22e">mysql_query</span>(<span style="color:#e6db74">&#34;ALTER TABLE </span><span style="color:#e6db74">{</span>$data-&gt;Name<span style="color:#e6db74">}</span><span style="color:#e6db74"> ENGINE=InnoDB&#34;</span>);
+      <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;done.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
   }
-mysql_free_result($rec);
-mysql_close();
-</code></pre>
+<span style="color:#a6e22e">mysql_free_result</span>($rec);
+<span style="color:#a6e22e">mysql_close</span>();
+</code></pre></div>
                 </section>
             </article>
 
@@ -180,23 +180,23 @@ mysql_close();
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

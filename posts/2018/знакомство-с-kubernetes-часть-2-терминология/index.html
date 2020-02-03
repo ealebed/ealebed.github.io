@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Знакомство с Kubernetes. Часть 2: Терминология &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -77,17 +88,11 @@
                 </header>
                 <section id="post-body">
                     <p>В данной статье предлагаю перечислить и кратко рассмотреть базовые понятия <code>Kubernetes</code> - это будет основой для понимания работы оркестратора и пригодится перед ознакомлением с остальными статьями цикла.</p>
-
 <p>Архитектура <code>Kubernetes</code> гораздо проще, чем кажется на первый взгляд - вы не взаимодействуете напрямую с нодами, на которых запущено приложение. Вся работа с кластером <code>Kubernetes</code> осуществляется через панель управления (dashboard), API или с помощью инструмента командной строки (<code>kubectl</code>), который в свою очередь взаимодействует с API <code>Kubernetes</code>.</p>
-
 <p>Далее мы будем использовать именно <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-15-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-kubectl/"><code>kubectl</code></a> - для распространения информации о желаемом состоянии приложения в кластере (проще говоря о развертывании / удалении) или для сбора данных о текущем состоянии инфраструктуры.</p>
-
 <p>В кластере <code>Kubernetes</code> может быть два типа узлов - <strong>мастеры</strong> (masters) и <strong>ноды</strong> (nodes). На мастерах - управляющих узлах кластера - запускается API-сервер (<code>kube-apiserver</code>), планировщик (<code>kube-scheduler</code>), менеджер контроллеров (<code>kube-controller-manager</code>) и хранилище <code>etcd</code>.</p>
-
 <p>На нодах - рабочих узлах кластера - запускаются еще два дополнительных компонента, а именно <code>kube-proxy</code> и <code>kubelet</code>. Первый используется для маршрутизации траффика, а второй - за получение инструкций от управляющего узла и приведение подов на данном рабочем узле в желаемое состояние. Кроме тога, на рабочих нодах могут запускаться (и запускаются) дополнительные плагины (например <code>flannel</code>), для организации сетевого взаимодействия или мониторинга и сбора метрик. Контейнеры (docker/rkt и т.д.) с приложением запускаются на рабочих узлах (нодах).</p>
-
 <p>У <code>Kubernetes</code> есть свой набор терминов, который дает некоторое представление об организации ресурсов кластера. О ресурсах нужно думать как о некотором наборе строительных блоков или абстракций, которые предоставляются API <code>Kubernetes</code> для запуска программного обеспечения в кластере. Подробно каждый из этих ресурсов мы рассмотрим в отдельных статьях, а сейчас просто перечислим их:</p>
-
 <ul>
 <li><a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><strong>Pods</strong></a> - минимальная сущность (юнит) для развертывания в кластере;</li>
 <li><a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><strong>ReplicaSets</strong></a> (ранее <strong>Replication Controller</strong>) - гарантирует, что в определенный момент времени будет запущено нужно кол-во контейнеров;</li>
@@ -102,7 +107,6 @@
 <li><a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-13-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%BC%D0%B0%D0%BF%D1%8B-configmap/"><strong>ConfigMaps</strong></a> - позволяет переопределить конфигурацию запускаемых подов;</li>
 <li><a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-14-%D1%81%D0%B5%D0%BA%D1%80%D0%B5%D1%82%D1%8B-secrets/"><strong>Secrets</strong></a> - используются для хранения конфиденциальной информации (пароли, токены, ssh-ключи).</li>
 </ul>
-
 <p>Скорее всего, некоторые ресурсы вам не понадобятся при работе с кластером <code>Kubernetes</code>, но нужно хотя бы знать о них, чтобы понимать как лучше взаимодействовать с кластером. В следующей статье цикла будем подробно рассматривать <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><strong>Pods</strong></a>.</p>
                 </section>
             </article>
@@ -145,23 +149,23 @@
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

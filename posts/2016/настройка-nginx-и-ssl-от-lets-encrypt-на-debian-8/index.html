@@ -29,13 +29,20 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.59.1" />
+		<meta name="generator" content="Hugo 0.63.2" />
 		<title>Настройка Nginx &#43; SSL от Let’s Encrypt на Debian 8 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
 
+		
 		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
 
 		
 	</head>
@@ -50,6 +57,10 @@
 	<a href='https://ealebed.github.io/tags'>Tags</a>
 	<a href='https://ealebed.github.io/about'>About</a>
 
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
 	
 </nav>
 
@@ -79,100 +90,66 @@
                 </header>
                 <section id="post-body">
                     <p><a href="https://letsencrypt.org/">Let’s Encrypt</a> – это Certificate Authority (CA) провайдер, который раздает TLS/SSL сертификаты бесплатно. Давайте разберемся, <strong>как настроить Nginx на использование ssl-сертификата от Let’s Encrypt</strong>!</p>
-
 <p>Получение ssl-сертификата всегда было связано с рядом неудобств, заключающихся в выполнении следующих пунктов:</p>
-
 <ul>
 <li>формирование CSR-запроса;</li>
 <li>отправка CSR-запроса в СЦ;</li>
-<li>подтверждение владения доменом (ссылка в письме на почту admin@yourhost.ru);</li>
+<li>подтверждение владения доменом (ссылка в письме на почту <a href="mailto:admin@yourhost.ru">admin@yourhost.ru</a>);</li>
 <li>получение сертификатов на почту;</li>
 <li>подготовка полученных сертификатов к использованию (для Nginx, например, цепочку сертификатов нужно склеивать в один);</li>
 <li>через год — проделать всё заново.</li>
 </ul>
-
 <p>Для автоматизации всего вышеизложенного некоммерческая организация Let’s Encrypt разработала протокол ACME и работающий с ним клиент и создала свой доверенный центр сертификации, который уже признаётся корневыми центрами сертификации.</p>
-
 <p>Итак, приступим. Действия производятся на:</p>
-
-<pre><code class="language-bash">sb_release -a
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sb_release -a
 No LSB modules are available.
 Distributor ID:	Debian
-Description:	Debian GNU/Linux 8.4 (jessie)
+Description:	Debian GNU/Linux 8.4 <span style="color:#f92672">(</span>jessie<span style="color:#f92672">)</span>
 Release:	8.4
 Codename:	jessie
-</code></pre>
-
-<p>Загружаем репозиторий:</p>
-
-<pre><code class="language-bash">git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
-</code></pre>
-
-<p>Подключать сертификаты будем с помощью плагина Webroot. Для этого открываем файл настроек хоста (например, <code>/etc/nginx/conf.d/example.com.conf</code>) и в блок <code>server</code> добавляем следующие строки:</p>
-
+</code></pre></div><p>Загружаем репозиторий:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
+</code></pre></div><p>Подключать сертификаты будем с помощью плагина Webroot. Для этого открываем файл настроек хоста (например, <code>/etc/nginx/conf.d/example.com.conf</code>) и в блок <code>server</code> добавляем следующие строки:</p>
 <pre><code>...
     # Webroot for Lets Encrypt
     location ~ /.well-known {
        allow all;
     }
 ...
-</code></pre>
-
-<p>Проверяем:</p>
-
-<pre><code class="language-bash">nginx -t
+</code></pre><p>Проверяем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -t
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
-</code></pre>
-
-<p>Перечитываем конфиг веб-сервера:</p>
-
-<pre><code class="language-bash">service nginx reload
-</code></pre>
-
-<p>Переходим к созданию сертификата с помощью клиента Let’s Encrypt:</p>
-
-<pre><code class="language-bash">cd /opt/letsencrypt
-</code></pre>
-
-<p>Запускаем следующую команду:</p>
-
-<pre><code class="language-bash">./letsencrypt-auto certonly -a webroot --webroot-path=/var/www/example --email webmaster@example.com -d example.com -d www.example.com
-</code></pre>
-
-<p>В данном примере используются следующие опции:</p>
-
+</code></pre></div><p>Перечитываем конфиг веб-сервера:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service nginx reload
+</code></pre></div><p>Переходим к созданию сертификата с помощью клиента Let’s Encrypt:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /opt/letsencrypt
+</code></pre></div><p>Запускаем следующую команду:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./letsencrypt-auto certonly -a webroot --webroot-path<span style="color:#f92672">=</span>/var/www/example --email webmaster@example.com -d example.com -d www.example.com
+</code></pre></div><p>В данном примере используются следующие опции:</p>
 <ul>
 <li><code>certonly</code> — скачать сертификат, но не устанавливать (сами разберемся);</li>
 <li><code>--webroot-path</code> — путь к каталогу с сайтом;</li>
 <li><code>--email</code> — почтовый ящик для контактов;</li>
 <li><code>-d</code> — домен (можно указать несколько, еще раз указав <code>-d</code>).</li>
 </ul>
-
 <p>После создания сертификатов вы увидите примерно следующее:</p>
-
-<pre><code class="language-bash">...
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
 IMPORTANT NOTES:
  - Congratulations! Your certificate and chain have been saved at
    /etc/letsencrypt/live/example.com/fullchain.pem. Your cert will
    expire on 2016-07-19. To obtain a new version of the certificate in
-   the future, simply run Let's Encrypt again.
- - If you like Let's Encrypt, please consider supporting our work by:
+   the future, simply run Let<span style="color:#e6db74">&#39;s Encrypt again.
+</span><span style="color:#e6db74"> - If you like Let&#39;</span>s Encrypt, please consider supporting our work by:
 
-   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to ISRG / Let<span style="color:#960050;background-color:#1e0010">&#39;</span>s Encrypt:   https://letsencrypt.org/donate
    Donating to EFF:                    https://eff.org/donate-le
-</code></pre>
-
-<p>Генерируем ключ Diffie–Hellman:</p>
-
-<pre><code class="language-bash">mkdir /etc/nginx/ssl &amp;&amp; openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048
-Generating DH parameters, 2048 bit long safe prime, generator 2
+</code></pre></div><p>Генерируем ключ Diffie–Hellman:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /etc/nginx/ssl <span style="color:#f92672">&amp;&amp;</span> openssl dhparam -out /etc/nginx/ssl/dhparam.pem <span style="color:#ae81ff">2048</span>
+Generating DH parameters, <span style="color:#ae81ff">2048</span> bit long safe prime, generator <span style="color:#ae81ff">2</span>
 This is going to take a long time
 ...
-</code></pre>
-
-<p>Возвращаемся к настройкам хоста в Nginx (например, <code>/etc/nginx/conf.d/example.com.conf</code>) и приводим их к следующему виду:</p>
-
+</code></pre></div><p>Возвращаемся к настройкам хоста в Nginx (например, <code>/etc/nginx/conf.d/example.com.conf</code>) и приводим их к следующему виду:</p>
 <pre><code>server {
     listen 80;
     listen 443 ssl;
@@ -210,24 +187,15 @@ This is going to take a long time
     }
  
 ... # далее ваши специфические настройки
-</code></pre>
-
-<p>Проверяем:</p>
-
-<pre><code class="language-bash">nginx -t
+</code></pre><p>Проверяем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -t
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
-</code></pre>
-
-<p>Перезапускаем:</p>
-
-<pre><code class="language-bash">service nginx restart
-</code></pre>
-
-<p>Процесс обновления сертификатов можно запустить с помощью следующей команды:</p>
-
-<pre><code class="language-bash">./letsencrypt-auto renew
-Checking for new version...
+</code></pre></div><p>Перезапускаем:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service nginx restart
+</code></pre></div><p>Процесс обновления сертификатов можно запустить с помощью следующей команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./letsencrypt-auto renew
+Checking <span style="color:#66d9ef">for</span> new version...
 Requesting root privileges to run letsencrypt...
    /root/.local/share/letsencrypt/bin/letsencrypt renew
 
@@ -235,19 +203,13 @@ Requesting root privileges to run letsencrypt...
 Processing /etc/letsencrypt/renewal/example.com.conf
 -------------------------------------------------------------------------------
 
-The following certs are not due for renewal yet:
-  /etc/letsencrypt/live/example.com/fullchain.pem (skipped)
+The following certs are not due <span style="color:#66d9ef">for</span> renewal yet:
+  /etc/letsencrypt/live/example.com/fullchain.pem <span style="color:#f92672">(</span>skipped<span style="color:#f92672">)</span>
 No renewals were attempted.
-</code></pre>
-
-<p>Сейчас продление не требуется — сертификат был получен только сегодня.
+</code></pre></div><p>Сейчас продление не требуется — сертификат был получен только сегодня.
 Для автоматизации добавляем следующую задачу в <code>crontab</code>:</p>
-
-<pre><code class="language-bash">@monthly /opt/letsencrypt/letsencrypt-auto renew &gt;&gt; /var/log/le-renew.log
-</code></pre>
-
-<p>А еще теперь можно <a href="https://ealebed.github.io/posts/2016/%D0%BA%D0%B0%D0%BA-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C-http2.0-%D0%B2-nginx/">включить поддержку протокола HTTP2.0 в Nginx</a>!</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">@monthly /opt/letsencrypt/letsencrypt-auto renew &gt;&gt; /var/log/le-renew.log
+</code></pre></div><p>А еще теперь можно <a href="https://ealebed.github.io/posts/2016/%D0%BA%D0%B0%D0%BA-%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C-http2.0-%D0%B2-nginx/">включить поддержку протокола HTTP2.0 в Nginx</a>!</p>
 <p>С опытом пришел более <a href="https://ealebed.github.io/posts/2017/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-nginx-ssl-%D0%BE%D1%82-lets-encrypt-%D0%B2%D0%B0%D1%80%D0%B8%D0%B0%D0%BD%D1%82-2-%D1%8D%D0%BB%D0%B5%D0%B3%D0%B0%D0%BD%D1%82%D0%BD%D1%8B%D0%B9/">элегантный вариант настройки Nginx + SSL от Let’s Encrypt</a>.</p>
                 </section>
             </article>
@@ -290,23 +252,23 @@ No renewals were attempted.
     
     
         <li>
-            <a href="/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
         </li>
     
         <li>
-            <a href="/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

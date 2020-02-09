@@ -13,8 +13,8 @@
     
   
   
-  <meta name="twitter:title" content="Docker совет №1: Вывод содержимого файла из контейнера"/>
-  <meta name="twitter:description" content="Время от времени появляется необходимость сбрасывать файл из docker-контейнера на хост-систему. Вот один из способов сделать это — давайте разберемся!"/>
+  <meta name="twitter:title" content="Gradle запуск checkstyle только на измененных файлах"/>
+  <meta name="twitter:description" content="В одной из предыдущих статей мы уже рассматривали настройку плагина checkstyle для статического анализа кода на языке Java, однако теперь требования усложнились - необходимо проводить анализ только действительно измененных файлов, а не всего содержимого проекта. Давайте разберемся!"/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -30,7 +30,7 @@
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
 		<meta name="generator" content="Hugo 0.63.2" />
-		<title>Docker совет №1: Вывод содержимого файла из контейнера &middot; Yevhen Lebid&#39;s website</title>
+		<title>Gradle запуск checkstyle только на измененных файлах &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
@@ -69,17 +69,21 @@
             <article>
                 <header>
                     <h1>
-                        Docker совет №1: Вывод содержимого файла из контейнера
+                        Gradle запуск checkstyle только на измененных файлах
                     </h1>
                     <h2 class="headline">
-                    Sep 14, 2017 14:53
-                    · 201 words
+                    Feb 9, 2020 10:34
+                    · 158 words
                     · 1 minute read
                       <span class="tags">
                       
                       
                           
-                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                              <a href="https://ealebed.github.io/tags/gradle">gradle</a>
+                          
+                              <a href="https://ealebed.github.io/tags/ci">ci</a>
+                          
+                              <a href="https://ealebed.github.io/tags/jenkins">jenkins</a>
                           
                       
                       
@@ -87,43 +91,18 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>Время от времени появляется необходимость сбрасывать файл из docker-контейнера на хост-систему. Вот один из способов сделать это — давайте разберемся!</p>
-<p>Такая необходимость возникает прежде всего при отладке, например, когда нужно скопировать содержимое файла конфигурации из контейнера, чтобы открыть его в своем любимом редакторе, или когда требуется отправить кому-то дамп конфигурационного файла. Конечно, можно сразу запускать docker-контейнеры с монтированием томов (<code>volumes</code>) из хост-системы в контейнер, но вы ведь не знаете, какой конфиг вам может потребоваться?</p>
-<p>В первом случае, когда у вас уже запущен docker-контейнер, и вы не желаете перезапускать его с монтированием тома, получить содержимое конфигурационного файла можно так:</p>
-<pre><code>docker exec nginx cat /etc/hosts
-127.0.0.1	localhost
-::1	localhost ip6-localhost ip6-loopback
-fe00::0	ip6-localnet
-ff00::0	ip6-mcastprefix
-ff02::1	ip6-allnodes
-ff02::2	ip6-allrouters
-172.20.0.3	d09203ce7f6e
-</code></pre><p>Во втором случае, когда контейнер еще не запущен, получить конфиг можно так:</p>
-<pre><code>docker run --rm alpine cat /etc/hosts
-127.0.0.1	localhost
-::1	localhost ip6-localhost ip6-loopback
-fe00::0	ip6-localnet
-ff00::0	ip6-mcastprefix
-ff02::1	ip6-allnodes
-ff02::2	ip6-allrouters
-172.17.0.2	67451966e901
-</code></pre><p>Но это только половина дела — не забудьте перенаправить этот вывод в новый файл на хост-системе, вот так:</p>
-<pre><code>docker run --rm alpine cat /etc/hosts &gt; ~/temp.txt
-</code></pre><p>Теперь проверим содержимое файла:</p>
-<pre><code>cat ~/temp.txt 
-127.0.0.1	localhost
-::1	localhost ip6-localhost ip6-loopback
-fe00::0	ip6-localnet
-ff00::0	ip6-mcastprefix
-ff02::1	ip6-allnodes
-ff02::2	ip6-allrouters
-172.17.0.2	22c44d8dc95c
-</code></pre>
+                    <p>В одной из предыдущих статей мы уже рассматривали настройку <a href="https://ealebed.github.io/posts/2019/gradle-checkstyle-plugin/">плагина checkstyle</a> для статического анализа кода на языке Java, однако теперь требования усложнились - необходимо проводить анализ только действительно измененных файлов, а не всего содержимого проекта. Давайте разберемся!</p>
+<p>В больших проектах тысячи и десятки тысяч кода при статическом анализе могут генерировать множество ошибок и предупреждений, за которыми очень легко пропустить те, которые действительно относятся к только что измененным файлам.</p>
+<p>Для решения задачи создадим отдельную gradle-задачу:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/b032ba09e31d9df50057f1b5e998f94e.js?file=checkstyle.gradle"></script>
+
+<p>Здесь с помощью утилиты <code>git</code> мы получаем список всех измененных файлов (кроме удаленных), отбираем из полученного списка только те, которые имеют расширение <code>.java</code> и, с помощью параметра &ldquo;include&rdquo; включаем их в список файлов для статического анализа плагином checkstyle. Если же у нас нет ни одного измененного <code>java</code>-файла в проекте, то параметром &ldquo;exclude&rdquo; исключаем все файлы и не проводим анализ изменений.</p>
+<p>Конечно же, данную задачу можно выполнять и в процессе CI с созданием комментариев к пуллреквесту на github (как это сделать в Jenkins читайте <a href="https://ealebed.github.io/posts/2019/gradle-checkstyle-plugin/">здесь</a>).</p>
                 </section>
             </article>
 
             
-                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2017%2fdocker-%25D1%2581%25D0%25BE%25D0%25B2%25D0%25B5%25D1%2582-1-%25D0%25B2%25D1%258B%25D0%25B2%25D0%25BE%25D0%25B4-%25D1%2581%25D0%25BE%25D0%25B4%25D0%25B5%25D1%2580%25D0%25B6%25D0%25B8%25D0%25BC%25D0%25BE%25D0%25B3%25D0%25BE-%25D1%2584%25D0%25B0%25D0%25B9%25D0%25BB%25D0%25B0-%25D0%25B8%25D0%25B7-%25D0%25BA%25D0%25BE%25D0%25BD%25D1%2582%25D0%25B5%25D0%25B9%25D0%25BD%25D0%25B5%25D1%2580%25D0%25B0%2f - Docker%20%d1%81%d0%be%d0%b2%d0%b5%d1%82%20%e2%84%961%3a%20%d0%92%d1%8b%d0%b2%d0%be%d0%b4%20%d1%81%d0%be%d0%b4%d0%b5%d1%80%d0%b6%d0%b8%d0%bc%d0%be%d0%b3%d0%be%20%d1%84%d0%b0%d0%b9%d0%bb%d0%b0%20%d0%b8%d0%b7%20%d0%ba%d0%be%d0%bd%d1%82%d0%b5%d0%b9%d0%bd%d0%b5%d1%80%d0%b0 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2020%2fgradle-checkstyle-on-changed-files-only%2f - Gradle%20%d0%b7%d0%b0%d0%bf%d1%83%d1%81%d0%ba%20checkstyle%20%d1%82%d0%be%d0%bb%d1%8c%d0%ba%d0%be%20%d0%bd%d0%b0%20%d0%b8%d0%b7%d0%bc%d0%b5%d0%bd%d0%b5%d0%bd%d0%bd%d1%8b%d1%85%20%d1%84%d0%b0%d0%b9%d0%bb%d0%b0%d1%85 by @ealebed"><span class="icon-twitter"> tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(
@@ -160,10 +139,6 @@ ff02::2	ip6-allrouters
     
     
         <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
-        </li>
-    
-        <li>
             <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
@@ -177,6 +152,10 @@ ff02::2	ip6-allrouters
     
         <li>
             <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2019/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-19-horizontalpodautoscaler/">Знакомство с Kubernetes. Часть 19: HorizontalPodAutoscaler<aside class="dates">Jun 12 2019</aside></a>
         </li>
     
 </ul>

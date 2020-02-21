@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Миграции и контроль версий БД с помощью Flyway"/>
+  <meta name="twitter:description" content="Процесс преобразования одной структуры базы данных в другой без потери косистентности, при котором меняется схема (таблицы и их колонки, индексы и пр.) называется миграцией. В данной статье рассмотрим использование инструмента flyway для работы с миграциями в БД postgres - давайте разберемся!"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.63.2" />
+		<title>Миграции и контроль версий БД с помощью Flyway &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Миграции и контроль версий БД с помощью Flyway
+                    </h1>
+                    <h2 class="headline">
+                    Feb 21, 2020 07:57
+                    · 838 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/flyway">flyway</a>
+                          
+                              <a href="https://ealebed.github.io/tags/postgres">postgres</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Процесс преобразования одной структуры базы данных в другой без потери косистентности, при котором меняется схема (таблицы и их колонки, индексы и пр.) называется миграцией. В данной статье рассмотрим использование инструмента <a href="https://flywaydb.org/"><code>flyway</code></a> для работы с миграциями в БД postgres - давайте разберемся!</p>
+<p>Можно ли обойтись без миграций? Да, если это:</p>
+<ul>
+<li>совсем маленький pet-проект;</li>
+<li>stateless приложение;</li>
+<li>данные не важны и могут быть легко удалены/восстановлены;</li>
+<li>приложение не развивается и/или не меняет структуру хранения данных.</li>
+</ul>
+<p>В остальных случаях стоит использовать миграции - хотя бы исходя из правил &ldquo;хорошего тона&rdquo;.</p>
+<p>В терминогии <code>flyway</code> любые изменения в базе данных называются миграциями. Миграции могут быть <em>версионированными</em> (versioned) и <em>повторяемыми</em> (repeatable).</p>
+<p><strong>Версионированные</strong> миграции имеют <em>версию</em> (очевидно же), <em>описание</em> и <em>контрольную сумму</em>. Версия должна быть уникальна, а описание достаточно информативным - при виде описания вы должны понимать, для чего предназначена эта миграция на самом деле. Контрольная сумма используется для обнаружения (и блокирования) случайных изменений. Версионнированные миграции - это наиболее частый тип миграций (их мы и будем подробно рассматривать), которые применяются к БД единожды.</p>
+<p><strong>Повторяемые</strong> миграции имеют <em>описание</em> и <em>контрольную сумму</em>, но у них нет <em>версии</em>. Таким образом, вместо того, чтобы применяться единожды, эти миграции будут переприменяться каждый раз, когда меняется их контрольная сумма. В процессе применения миграций, повторяемые миграции будут выполняться ПОСЛЕ всех версионированных и в алфавитном порядке их описания.</p>
+<p>По умолчанию, миграции могут быть написаны на Java или SQL (наш случай) и содержать в себе несколько утверждений. Для контроля работы с миграциями (какие миграции уже применены, кем и когда), утилита <code>flyway</code> добавляет в базу данных таблицу <code>flyway_schema_history</code>.</p>
+<p>Пример версионированной миграции:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> hero_data.hero
+(
+    id BIGSERIAL <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    name VARCHAR(<span style="color:#ae81ff">250</span>) <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    description TEXT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    debut_year INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    appearances INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    special_powers INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    cunning INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    strength INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    technology INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    created_at TIMESTAMPTZ <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+    updated_at TIMESTAMPTZ <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>
+);
+
+<span style="color:#66d9ef">ALTER</span> <span style="color:#66d9ef">TABLE</span> hero_data.hero <span style="color:#66d9ef">ADD</span> <span style="color:#66d9ef">CONSTRAINT</span> pk_hero_id <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> (id);
+</code></pre></div><p>Пример повторяемой миграции:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">OR</span> <span style="color:#66d9ef">REPLACE</span> <span style="color:#66d9ef">VIEW</span> blue_cars <span style="color:#66d9ef">AS</span> 
+    <span style="color:#66d9ef">SELECT</span> id, license_plate <span style="color:#66d9ef">FROM</span> cars <span style="color:#66d9ef">WHERE</span> color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">blue</span><span style="color:#e6db74">&#39;</span>;
+</code></pre></div><p>Как правило, миграции проще всего писать в формате SQL - так легче начать работу, использовать существующие скрипты/навыки/инструменты. Опять же, такой подход сразу дает доступ ко всем возможностям используемой базы данных и не требует понимания &ldquo;промежуточных&rdquo; уровней транслирования sql-выражений. SQL-миграции хорошо подходят для:</p>
+<ul>
+<li>DDL-изменений (CREATE/ALTER/DROP утверждения для TABLES,VIEWS,TRIGGERS,SEQUENCES,…);</li>
+<li>Несложные изменения справочных данных (CRUD in reference data tables);</li>
+<li>Несложные и массовые изменения данных (CRUD in regular data tables).</li>
+</ul>
+<p>SQL-миграции должны соответствовать определенному шаблону именования для того, чтобы <code>flyway</code> мог работать с ними. Имя файла должно содержать:</p>
+<ul>
+<li><strong>Префикс:</strong> V для версионированных и R для повторяемых миграций (можно изменить);</li>
+<li><strong>Версию:</strong> Версия может содержать точки и/или нижние подчеркивания (только не для повторяемых миграций). Я бы рекомендовал использовать для версии timestamp в формате 20200214141830. Чтобы получить отформатированный timestamp выполните команду <code>date '+%Y%m%d%H%M%S'</code>;</li>
+<li><strong>Разделитель:</strong> __ (два нижних подчеркивания, можно изменить);</li>
+<li><strong>Описание:</strong> слова разделяются пробелами или нижними подчеркиваниями;</li>
+<li><strong>Суффикс:</strong> .sql (настраивается).</li>
+</ul>
+<p>Пример правильно названного файла с миграциями - <code>V20200214141830__Create_hero_schema.sql</code>.</p>
+<p>Миграции могут быть применены ко всем необходимым базам данных, но для простоты рассмотрим пример работы только с одной БД.</p>
+<p>Все взаимодействие утилиты <code>flyway</code> с БД будет осуществляться из docker-контейнера, дабы не захламлять систему. Для сборки образа воспользуемся следующим <code>Dockerfile</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> adoptopenjdk/openjdk13:jdk-13.0.2_8-ubuntu-slim</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">LABEL</span> maintainer<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Yevhen Lebid &lt;ealebed@gmail.com&gt;&#34;</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">WORKDIR</span><span style="color:#e6db74"> /flyway</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> FLYWAY_VERSION<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> FLYWAY_VERSION<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    apt-get install -y <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>      curl <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    apt-get -y autoremove <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    apt-get -y clean <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    rm -rf /var/lib/apt/lists/*<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>/flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz -o flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> tar -xzf flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz --strip-components<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> rm flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> ln -s /flyway/flyway /usr/local/bin/flyway<span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>Соберем образ <code>flyway</code> следующей командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -f Dockerfile <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --build-arg FLYWAY_VERSION<span style="color:#f92672">=</span>6.2.4 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -t ealebed/flyway:1.0.0 .
+</code></pre></div><p>Предположим, что у нас уже существует БД. Чтобы начать с ней работать используя миграции, необходимо:</p>
+<ul>
+<li>создать sql-скрипт, содержащий текущее состоянии БД (DDL, Data Definition Language) со всеми индексами, триггерами, процедурами и т.д. (например, используя <code>pg_dump -s ...</code>);</li>
+<li>создать версионированную миграцию из данного скрипта, используя корректную версию и описание (например, V20190814141830__Base_version.sql);</li>
+<li>назначить (зафиксировать) базе данных базовую версию, используя версию и описание с предыдущего шага. Чтобы выполнить данную операцию в docker-контейнере запустите:</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --rm
+  -e FLYWAY_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_USER<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -e FLYWAY_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_PASSWORD<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -e FLYWAY_URL<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_URL<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  ealebed/flyway:1.0.0 flyway baseline -baselineVersion<span style="color:#f92672">=</span><span style="color:#ae81ff">20190814141830</span> -baselineDescription<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Base version&#34;</span>
+</code></pre></div><p>Здесь <code>${FLYWAY_USER}</code>, <code>${FLYWAY_PASSWORD}</code> и <code>${FLYWAY_URL}</code> - необходимые параметры для авторизованного подключения к интересующей вас БД. Полный список параметров можно найти <a href="https://flywaydb.org/documentation/envvars">здесь</a>.</p>
+<p>Теперь можно приступать к написанию миграций. Если вы работаете в IntelliJ IDEA, то рекомендую использовать плагин <a href="https://plugins.jetbrains.com/plugin/8597-flyway-migration-creation">Flyway Migration Creation</a>.</p>
+<p>Для того, чтобы применить одну или несколько миграций (помним о версионировании), необходимо смонтировать внутрь docker-контейнера каталог с sql-миграциями и выполнить команду <code>migrate</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --rm <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -v &lt;path_to_database_directory&gt;:/flyway/sql <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -e FLYWAY_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_USER<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -e FLYWAY_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_PASSWORD<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -e FLYWAY_URL<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_URL<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  ealebed/flyway:1.0.0 flyway migrate
+</code></pre></div><p>Просмотреть детальную информацию и статус всех миграций можно с помощью команды <code>info</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --rm <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -e FLYWAY_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_USER<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -e FLYWAY_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_PASSWORD<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -e FLYWAY_URL<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_URL<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  ealebed/flyway:1.0.0 flyway info
+</code></pre></div><p>Стоит отметить, что в платной версии <code>flyway</code> есть возможность выполнять проверку применения миграций с помощью так называемых <a href="https://flywaydb.org/documentation/dryruns">Dry Runs</a> - вещь очень полезная (иногда и жизненно необходимая). В одной из следующих статей я расскажу как можно организовать аналогичные проверки и валидацию миграций еще до их применения к БД, причем совершенно бесплатно, без смс и регистрации!</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2020%2fflyway-version-control-for-db%2f - %d0%9c%d0%b8%d0%b3%d1%80%d0%b0%d1%86%d0%b8%d0%b8%20%d0%b8%20%d0%ba%d0%be%d0%bd%d1%82%d1%80%d0%be%d0%bb%d1%8c%20%d0%b2%d0%b5%d1%80%d1%81%d0%b8%d0%b9%20%d0%91%d0%94%20%d1%81%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20Flyway by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">Ресурсы в Kubernetes. Часть 1: Память (Memory)<aside class="dates">Jul 15 2019</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2020 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+
+    </body>
+</html>

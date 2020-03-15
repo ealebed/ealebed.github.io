@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Сбор и анализ логов Kubernetes кластера с помощью EFK-стека"/>
+  <meta name="twitter:description" content="На дворе уже 2020 год, а стандартного решения для агрегации логов в Kubernetes до сих пор нет. В данной статье рассмотрим особенности сбора и анализа логов в кластере Kubernetes с помощью EFK-стека. Давайте разберемся!"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.63.2" />
+		<title>Сбор и анализ логов Kubernetes кластера с помощью EFK-стека &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Сбор и анализ логов Kubernetes кластера с помощью EFK-стека
+                    </h1>
+                    <h2 class="headline">
+                    Mar 15, 2020 10:18
+                    · 648 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                              <a href="https://ealebed.github.io/tags/fluentbit">fluentbit</a>
+                          
+                              <a href="https://ealebed.github.io/tags/elasticsearch">elasticsearch</a>
+                          
+                              <a href="https://ealebed.github.io/tags/logs">logs</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>На дворе уже 2020 год, а стандартного решения для агрегации логов в <code>Kubernetes</code> до сих пор нет. В данной статье рассмотрим особенности сбора и анализа логов в кластере <code>Kubernetes</code> с помощью EFK-стека. Давайте разберемся!</p>
+<p>С ростом популярности <code>Kubernetes</code> известная проблема сбора логов стала еще болезненнее: многие старые сервисы начали миграцию на микросервисную инфраструктуру. В контексте логирования это проявилось в растущем числе источников логов, их различном жизненном цикле, и, самое главное, в необходимости отслеживать через логи взаимосвязь всех компонентов системы…</p>
+<p>Сейчас, к сожалению, нет стандартизированного варианта логирования для <code>Kubernetes</code>, который бы работал во всех без исключения случаях или имел существенные преимущества. Наиболее популярные варианты на сегодня:</p>
+<ul>
+<li>стек EFK (Elasticsearch, <a href="https://www.fluentd.org/">Fluentd</a>, Kibana);</li>
+<li><a href="https://grafana.com/oss/loki/">Loki</a> или <a href="https://banzaicloud.com/products/logging-operator/">Logging operator</a>;</li>
+<li>собственная разработка (типа <a href="https://github.com/flant/loghouse">loghouse</a>).</li>
+</ul>
+<p>В нашем случае было решено использовать стек EFK, во многом из-за простоты развертывания и наличия опыта работы с elasticsearch, однако <strong>Fluentd</strong> мы заменили на <strong>Fluent Bit</strong>. Причина такого решения вполне очевидна, если взглянуть на рекомендуемые значения <code>.resources</code> в манифестах для обоих утилит:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e">#Fluentd</span>
+<span style="color:#66d9ef">resources</span>:
+  <span style="color:#66d9ef">limits</span>:
+    <span style="color:#66d9ef">memory</span>: 500Mi
+  <span style="color:#66d9ef">requests</span>:
+    <span style="color:#66d9ef">cpu</span>: 100m
+    <span style="color:#66d9ef">memory</span>: 200Mi
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e">#Fluent Bit</span>
+<span style="color:#66d9ef">resources</span>:
+  <span style="color:#66d9ef">requests</span>:
+    <span style="color:#66d9ef">cpu</span>: 5m
+    <span style="color:#66d9ef">memory</span>: 10Mi
+  <span style="color:#66d9ef">limits</span>:
+    <span style="color:#66d9ef">cpu</span>: 50m
+    <span style="color:#66d9ef">memory</span>: 60Mi
+</code></pre></div><p>Казалось бы, есть вполне пригодная <a href="https://docs.fluentbit.io/manual/filter/kubernetes">документация</a> и масса примеров установки данного стека, что же может пойти не так и зачем эта статья?</p>
+<p>Дело в том, что все доступные материалы и примеры годятся только если ваш <code>Kubernetes</code> кластер использует в качестве исполняемой среды контейнеров (<em>container runtimes</em>) <strong>Docker</strong>, который долгое время оставался runtime'ом по умолчанию (а у некоторых облачных провайдеров остается и по сей день) и требовался для функционирования кластера. В нашем же случае используется <strong><a href="https://containerd.io/">containerd</a></strong> - независимая реализация runtime'а для <code>Kubernetes</code> через (Container Runtime Interface - <a href="https://github.com/cri-o/cri-o">CRI</a>), и, как оказалось, без &ldquo;велосипедов&rdquo; не обойтись.</p>
+<p>Задача: необходимо собирать логи из десятков java-приложений (особое внимание уделить стектрейсам) и доставлять их в elasticsearch. Причем, вариант просмотра логов через <code>kubectl logs ...</code> также должен остаться.</p>
+<p>Fluent Bit с помощью input-плагина <code>tail</code> может читать файлы (например, <code>/var/log/containers/*_default_*.log</code>), обрабатывать их содержимое и помощью парсеров и фильтров отправлять в output (в нашем случае это кластер elasticsearch).</p>
+<p><strong>Проблема первая:</strong> формат логов у docker и containerd существенно отличается (первый вообще пишет в json). К счастью, после данного <a href="https://github.com/fluent/fluent-bit/pull/667">PR</a> в github-репозитории она легко решается через изменение формата парсера.</p>
+<p><strong>Проблема вторая:</strong> java-стектрейсы попадают в лог-файл (<code>/var/log/containers/*_default_*.log</code>) так же, как вы можете их видеть с помощью команды <code>kubectl logs ...</code> - при этом каждая отдельная строка становится отдельным лог-сообщением, и попадает в elasticsearch тоже отдельно. Как правило, в java-приложениях для логов используется Logback или Log4j, поэтому вторую проблему можно устранить изменением формата логов - вполне достаточно будет заменить символ переноса строки (LF, <code>\n</code>) на символ разделителя строк (LS, <code>\u2028</code>).</p>
+<p>В нашем случае было решено во всех java-приложениях использовать следующий формат логов:</p>
+<pre><code>...
+%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{40} - %msg %replace(%xException){'\n','\u2028'}%nopex %n
+...
+</code></pre><p><strong>Проблема третья:</strong> появилась после решения второй - в elasticsearch теперь логи попадают хоть и одним сообщением, но стектрейсы становятся нечитабельными из-за символов <code>\u2028</code>. К счастью, это тоже можно решить с помощью <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/pipeline.html">elastic pipelines</a> - перед вставкой сообщения в мы выполним обратную замену символов <code>\u2028</code> на <code>\n</code> (ну и попутно удалим несколько ненужных полей).</p>
+<p><code>Kubernetes</code> манифест со всеми необходимыми объектами (Namespace, ServiceAccount, ConfigMap, &hellip;) для тестирования fluent bit будет выглядеть так:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/ae884bf825897f7a9fc89b4f3e00ff0e.js?file=00-fluentbit-test.yaml"></script>
+
+<p><strong>Примечание.</strong> Не забудьте изменить <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/">Deployment</a> на DaemonSet при использовании в реальном кластере.</p>
+<p>Elastic-пайплайн выглядит так:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/ae884bf825897f7a9fc89b4f3e00ff0e.js?file=00-java-logs-pipeline.json"></script>
+
+<p>Данный пайплайн добавляется с помощью следующей команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -k -XPUT -u user:passw0rd -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> -d @00-java-logs-pipeline.json <span style="color:#e6db74">&#34;https://elasticsearch:9200/_ingest/pipeline/java-logs-pipeline&#34;</span>
+</code></pre></div><p>Если у вас нет под рукой подходящего java-приложения для тестирования, можете воспользоваться <a href="https://github.com/fabianlee/spring-music">этим</a>, например с таким манифестом:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/ae884bf825897f7a9fc89b4f3e00ff0e.js?file=00-java-log-test.yaml"></script>
+
+<p>По результатам могу сказать, что сбор логов из кластера <code>Kubernetes</code> с первого взгляда выглядит простой задачей, но вовсе таковой не является. Важно помнить, что:</p>
+<ul>
+<li>логировать подробно стоит только действительно критичные компоненты;</li>
+<li>логи в production стоит делать минимальными, чтобы не создавать излишнюю нагрузку на всю цепочку;</li>
+<li>логи должны быть машиночитаемыми, нормализованными и иметь строгий формат (иначе у вас будут только проблемы, а не логи);</li>
+<li>будет плюсом критичные логи отправлять отдельным потоком, который должен быть отделён от остальных.</li>
+</ul>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2020%2f%25D1%2581%25D0%25B1%25D0%25BE%25D1%2580-%25D0%25B8-%25D0%25B0%25D0%25BD%25D0%25B0%25D0%25BB%25D0%25B8%25D0%25B7-%25D0%25BB%25D0%25BE%25D0%25B3%25D0%25BE%25D0%25B2-kubernetes-%25D0%25BA%25D0%25BB%25D0%25B0%25D1%2581%25D1%2582%25D0%25B5%25D1%2580%25D0%25B0-%25D1%2581-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-efk%2f - %d0%a1%d0%b1%d0%be%d1%80%20%d0%b8%20%d0%b0%d0%bd%d0%b0%d0%bb%d0%b8%d0%b7%20%d0%bb%d0%be%d0%b3%d0%be%d0%b2%20Kubernetes%20%d0%ba%d0%bb%d0%b0%d1%81%d1%82%d0%b5%d1%80%d0%b0%20%d1%81%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20EFK-%d1%81%d1%82%d0%b5%d0%ba%d0%b0 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">Приоритетность подов в Kubernetes<aside class="dates">Sep 19 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">Ресурсы в Kubernetes. Часть 2: Процессор (CPU)<aside class="dates">Jul 25 2019</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2020 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+
+    </body>
+</html>

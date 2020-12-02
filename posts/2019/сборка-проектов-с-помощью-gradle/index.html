@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Сборка проектов с помощью Gradle &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -112,7 +112,7 @@
 <p>К слову, если инит-скриптов несколько, то они все будут выполнены в порядке описанном выше. Если же инит-скрипты находятся в одном каталоге, то выполняться они будут в алфавитном порядке.</p>
 <p>Рассмотрим самый простой пример из документации Gradle. Допустим, <code>build.gradle</code> выглядит так:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">repositories <span style="color:#f92672">{</span>
-    mavenCentral<span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+    mavenCentral<span style="color:#f92672">()</span>
 <span style="color:#f92672">}</span>
 
 task showRepos <span style="color:#f92672">{</span>
@@ -124,7 +124,7 @@ task showRepos <span style="color:#f92672">{</span>
 </code></pre></div><p>Инит-скрипт <code>init.gradle</code> содержит строки:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">allprojects <span style="color:#f92672">{</span>
     repositories <span style="color:#f92672">{</span>
-        mavenLocal<span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+        mavenLocal<span style="color:#f92672">()</span>
     <span style="color:#f92672">}</span>
 <span style="color:#f92672">}</span>
 </code></pre></div><p>Для теста в командной строке выполним задачу showRepos:</p>
@@ -135,7 +135,7 @@ All repos:
 <p>Разберем более сложный и реальный пример. Создаем файл <code>build-scripts.gradle</code> следующего содержания:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">gradle<span style="color:#f92672">.</span><span style="color:#a6e22e">projectsLoaded</span> <span style="color:#f92672">{</span>
     rootProject<span style="color:#f92672">.</span><span style="color:#a6e22e">allprojects</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">getenv</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>BUILD_ENVIRONMENT<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">?</span><span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>DEVELOPER<span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>CI<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">getenv</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>BUILD_ENVIRONMENT<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">?:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>DEVELOPER<span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#f92672">==</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>CI<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
             buildscript <span style="color:#f92672">{</span>
                 repositories <span style="color:#f92672">{</span>
                     maven <span style="color:#f92672">{</span> url <span style="color:#960050;background-color:#1e0010">&#39;</span>http<span style="color:#f92672">:</span><span style="color:#75715e">//artifactory:8081/artifactory/libs-release/&#39; }
@@ -182,13 +182,13 @@ artifactoryUser=admin
 artifactoryPassword=Very$tr0ngPaS$wd
 </code></pre></div><p>Создадим еще один инит-скрипт, в котором будем проверять/устанавливать версию для проекта:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">allprojects <span style="color:#f92672">{</span>
-    afterEvaluate <span style="color:#f92672">{</span> project <span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>
+    afterEvaluate <span style="color:#f92672">{</span> project <span style="color:#f92672">-&gt;</span>
         project<span style="color:#f92672">.</span><span style="color:#a6e22e">plugins</span><span style="color:#f92672">.</span><span style="color:#a6e22e">withId</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;java&#34;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
             <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
-                project<span style="color:#f92672">.</span><span style="color:#a6e22e">version</span> <span style="color:#f92672">=</span> System<span style="color:#f92672">.</span><span style="color:#a6e22e">getenv</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>PROJECT_VERSION<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">?</span><span style="color:#f92672">:</span> System<span style="color:#f92672">.</span><span style="color:#a6e22e">properties</span><span style="color:#f92672">[</span><span style="color:#960050;background-color:#1e0010">&#39;</span>user<span style="color:#f92672">.</span><span style="color:#a6e22e">name</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">]</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;_DEV&#34;</span>
+                project<span style="color:#f92672">.</span><span style="color:#a6e22e">version</span> <span style="color:#f92672">=</span> System<span style="color:#f92672">.</span><span style="color:#a6e22e">getenv</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>PROJECT_VERSION<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">?:</span> System<span style="color:#f92672">.</span><span style="color:#a6e22e">properties</span><span style="color:#f92672">[</span><span style="color:#960050;background-color:#1e0010">&#39;</span>user<span style="color:#f92672">.</span><span style="color:#a6e22e">name</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">]</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;_DEV&#34;</span>
                 println <span style="color:#e6db74">&#34;&#39;java&#39; plugin common config&#34;</span>
                 println <span style="color:#e6db74">&#34; |- set project version: ${project.version}&#34;</span>
-                println <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
+                println <span style="color:#960050;background-color:#1e0010">&#39;&#39;</span>
             <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>UnknownPluginException<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
                 println UnknownPluginException
             <span style="color:#f92672">}</span>
@@ -200,7 +200,7 @@ artifactoryPassword=Very$tr0ngPaS$wd
 <p>Следующим логичным шагом будет возможность использования инит-скриптов всеми членами команды разработки - проще всего поместить эти скрипты в git-репозиторий. Опять же, для удобства настройки можно создать небольшой скрипт - назовем его <code>initilaze-gradle.sh</code> - с таким содержимым:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env bash
 </span><span style="color:#75715e"></span>
-LINK_OR_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/.gradle/init.d</span><span style="color:#e6db74">&#34;</span>
+LINK_OR_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/.gradle/init.d&#34;</span>
 
 <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -d <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LINK_OR_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
   <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -L <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LINK_OR_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
@@ -217,7 +217,7 @@ DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><
 ln -s <span style="color:#e6db74">${</span>DIR<span style="color:#e6db74">}</span>/init.d <span style="color:#e6db74">${</span>LINK_OR_DIR<span style="color:#e6db74">}</span>
 
 <span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
-  read -p <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Do you wish add credentials template to </span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/.gradle/gradle.properties? </span><span style="color:#e6db74">&#34;</span> yn
+  read -p <span style="color:#e6db74">&#34;Do you wish add credentials template to </span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/.gradle/gradle.properties? &#34;</span> yn
   <span style="color:#66d9ef">case</span> $yn in
     <span style="color:#f92672">[</span>Yy<span style="color:#f92672">]</span>* <span style="color:#f92672">)</span> echo <span style="color:#e6db74">&#34;artifactoryUser=&#34;</span> &gt;&gt;  <span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/.gradle/gradle.properties; echo <span style="color:#e6db74">&#34;artifactoryPassword=&#34;</span> &gt;&gt;  <span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/.gradle/gradle.properties; break;;
     <span style="color:#f92672">[</span>Nn<span style="color:#f92672">]</span>* <span style="color:#f92672">)</span> exit;;
@@ -229,29 +229,29 @@ ln -s <span style="color:#e6db74">${</span>DIR<span style="color:#e6db74">}</spa
 </code></pre></div><p>и &ldquo;свежие&rdquo; скрипты станут доступны по пути <code>USER_HOME/.gradle/init.d/</code>.</p>
 <p>Так как на CI-сервере абсолютно все сборки запускаются в docker-контейнерах, для использования данных инит-скриптов нам нужно добавить их в docker-образ. В моем случае инструкции по сборке образа (Dockerfile) выглядят так:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> openjdk:11.0.1-jdk-slim</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> GRADLE_HOME /opt/gradle<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> GRADLE_VERSION 5.0<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> GRADLE_DOWNLOAD_SHA256<span style="color:#f92672">=</span>6157ac9f3410bc63644625b3b3e9e96c963afd7910ae0697792db57813ee79a6
 <span style="color:#66d9ef">RUN</span> apt update <span style="color:#f92672">&amp;&amp;</span> apt install -y wget<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> set -o errexit -o nounset <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;Downloading Gradle&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget --no-verbose --output-document<span style="color:#f92672">=</span>gradle.zip <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">https://services.gradle.org/distributions/gradle-</span><span style="color:#e6db74">${</span>GRADLE_VERSION<span style="color:#e6db74">}</span><span style="color:#e6db74">-bin.zip</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget --no-verbose --output-document<span style="color:#f92672">=</span>gradle.zip <span style="color:#e6db74">&#34;https://services.gradle.org/distributions/gradle-</span><span style="color:#e6db74">${</span>GRADLE_VERSION<span style="color:#e6db74">}</span><span style="color:#e6db74">-bin.zip&#34;</span> <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;Checking download hash&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRADLE_DOWNLOAD_SHA256<span style="color:#e6db74">}</span><span style="color:#e6db74"> *gradle.zip</span><span style="color:#e6db74">&#34;</span> | sha256sum --check - <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRADLE_DOWNLOAD_SHA256<span style="color:#e6db74">}</span><span style="color:#e6db74"> *gradle.zip&#34;</span> | sha256sum --check - <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;Installing Gradle&#34;</span> <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> unzip gradle.zip <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm gradle.zip <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> mv <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">gradle-</span><span style="color:#e6db74">${</span>GRADLE_VERSION<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRADLE_HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ln --symbolic <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRADLE_HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/bin/gradle</span><span style="color:#e6db74">&#34;</span> /usr/bin/gradle<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> mv <span style="color:#e6db74">&#34;gradle-</span><span style="color:#e6db74">${</span>GRADLE_VERSION<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRADLE_HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ln --symbolic <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRADLE_HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/bin/gradle&#34;</span> /usr/bin/gradle<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> BUILD_ENVIRONMENT<span style="color:#f92672">=</span>CI
 
 <span style="color:#66d9ef">COPY</span> init.d/ <span style="color:#e6db74">${</span>GRADLE_HOME<span style="color:#e6db74">}</span>/init.d/<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">WORKDIR</span><span style="color:#e6db74"> /project</span><span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>Больше информации о использовании инит-скриптов в Gradle можно найти в <a href="https://docs.gradle.org/current/userguide/init_scripts.html">официальной документации</a>, а в следующей статье рассмотрим использование плагина checkstyle для статического анализа кода.</p>
                 </section>
@@ -295,6 +295,10 @@ ln -s <span style="color:#e6db74">${</span>DIR<span style="color:#e6db74">}</spa
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -308,10 +312,6 @@ ln -s <span style="color:#e6db74">${</span>DIR<span style="color:#e6db74">}</spa
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

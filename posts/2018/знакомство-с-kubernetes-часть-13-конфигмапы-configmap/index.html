@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Знакомство с Kubernetes. Часть 13: Конфигмапы (ConfigMap) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -108,7 +108,7 @@ Labels:         &lt;none&gt;
 Annotations:    &lt;none&gt;
 
 Data
-<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>
+<span style="color:#f92672">====</span>
 game.properties:        <span style="color:#ae81ff">158</span> bytes
 ui.properties:          <span style="color:#ae81ff">83</span> bytes
 </code></pre></div><p>Проверим содержимое конфигмапа (секция <code>data:</code>), вывод сокращен:</p>
@@ -142,7 +142,7 @@ Labels:         &lt;none&gt;
 Annotations:    &lt;none&gt;
 
 Data
-<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>
+<span style="color:#f92672">====</span>
 game.properties:        <span style="color:#ae81ff">158</span> bytes
 </code></pre></div><p>К слову, есть возможность несколько раз указывать параметр <code>--from-file</code> для данной команды - при этом будет создан конфигмап из нескольких файлов, например:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create configmap game-config-2 --from-file<span style="color:#f92672">=</span>configmap-from-dir/game.properties --from-file<span style="color:#f92672">=</span>configmap-from-dir/ui.properties
@@ -195,110 +195,110 @@ kind: ConfigMap
 metadata:
 ...
 </code></pre></div><p>Напоследок - самый удобный (на мой взгляд) вариант создания конфигмапов - описание их в отдельном yaml-файле (по аналогии с другими объектами <code>Kubernetes</code>). Создадим два таких файла:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: ConfigMap
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: special-config
-  <span style="color:#66d9ef">namespace</span>: default
-<span style="color:#66d9ef">data</span>:
-  <span style="color:#66d9ef">special.how</span>: very
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: ConfigMap
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: env-config
-  <span style="color:#66d9ef">namespace</span>: default
-<span style="color:#66d9ef">data</span>:
-  <span style="color:#66d9ef">log_level</span>: INFO
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ConfigMap</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">special-config</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">default</span>
+<span style="color:#f92672">data</span>:
+  <span style="color:#f92672">special.how</span>: <span style="color:#ae81ff">very</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ConfigMap</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">env-config</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">default</span>
+<span style="color:#f92672">data</span>:
+  <span style="color:#f92672">log_level</span>: <span style="color:#ae81ff">INFO</span>
 </code></pre></div><p>Теперь мы можем использовать созданные выше конфигмапы при описании пода (<code>Pod</code>):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: test-pod
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-    - <span style="color:#66d9ef">name</span>: test-container
-      <span style="color:#66d9ef">image</span>: k8s.gcr.io/busybox
-      <span style="color:#66d9ef">command</span>: [ <span style="color:#e6db74">&#34;/bin/sh&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;env&#34;</span> ]
-      <span style="color:#66d9ef">env</span>:
-        - <span style="color:#66d9ef">name</span>: SPECIAL_LEVEL_KEY
-          <span style="color:#66d9ef">valueFrom</span>:
-            <span style="color:#66d9ef">configMapKeyRef</span>:
-              <span style="color:#66d9ef">name</span>: special-config
-              <span style="color:#66d9ef">key</span>: special.how
-        - <span style="color:#66d9ef">name</span>: LOG_LEVEL
-          <span style="color:#66d9ef">valueFrom</span>:
-            <span style="color:#66d9ef">configMapKeyRef</span>:
-              <span style="color:#66d9ef">name</span>: env-config
-              <span style="color:#66d9ef">key</span>: log_level
-  <span style="color:#66d9ef">restartPolicy</span>: Never
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-pod</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-container</span>
+      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">k8s.gcr.io/busybox</span>
+      <span style="color:#f92672">command</span>: [ <span style="color:#e6db74">&#34;/bin/sh&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;env&#34;</span> ]
+      <span style="color:#f92672">env</span>:
+        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">SPECIAL_LEVEL_KEY</span>
+          <span style="color:#f92672">valueFrom</span>:
+            <span style="color:#f92672">configMapKeyRef</span>:
+              <span style="color:#f92672">name</span>: <span style="color:#ae81ff">special-config</span>
+              <span style="color:#f92672">key</span>: <span style="color:#ae81ff">special.how</span>
+        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">LOG_LEVEL</span>
+          <span style="color:#f92672">valueFrom</span>:
+            <span style="color:#f92672">configMapKeyRef</span>:
+              <span style="color:#f92672">name</span>: <span style="color:#ae81ff">env-config</span>
+              <span style="color:#f92672">key</span>: <span style="color:#ae81ff">log_level</span>
+  <span style="color:#f92672">restartPolicy</span>: <span style="color:#ae81ff">Never</span>
 </code></pre></div><p>В данном примере для настройки <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/">пода</a> мы явно указываем с каких конфигмапов и значения каких ключей необходимо брать.</p>
 <p>Можно создать конфигмап с несколькими парами ключ=значение, например:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: ConfigMap
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: special-config
-  <span style="color:#66d9ef">namespace</span>: default
-<span style="color:#66d9ef">data</span>:
-  <span style="color:#66d9ef">SPECIAL_LEVEL</span>: very
-  <span style="color:#66d9ef">SPECIAL_TYPE</span>: charm
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ConfigMap</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">special-config</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">default</span>
+<span style="color:#f92672">data</span>:
+  <span style="color:#f92672">SPECIAL_LEVEL</span>: <span style="color:#ae81ff">very</span>
+  <span style="color:#f92672">SPECIAL_TYPE</span>: <span style="color:#ae81ff">charm</span>
 </code></pre></div><p>Такой конфигмап в описании пода будет выглядеть несколько проще:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: test-pod
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-    - <span style="color:#66d9ef">name</span>: test-container
-      <span style="color:#66d9ef">image</span>: k8s.gcr.io/busybox
-      <span style="color:#66d9ef">command</span>: [ <span style="color:#e6db74">&#34;/bin/sh&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;env&#34;</span> ]
-      <span style="color:#66d9ef">envFrom</span>:
-      - <span style="color:#66d9ef">configMapRef</span>:
-          <span style="color:#66d9ef">name</span>: special-config
-  <span style="color:#66d9ef">restartPolicy</span>: Never
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-pod</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-container</span>
+      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">k8s.gcr.io/busybox</span>
+      <span style="color:#f92672">command</span>: [ <span style="color:#e6db74">&#34;/bin/sh&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;env&#34;</span> ]
+      <span style="color:#f92672">envFrom</span>:
+      - <span style="color:#f92672">configMapRef</span>:
+          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">special-config</span>
+  <span style="color:#f92672">restartPolicy</span>: <span style="color:#ae81ff">Never</span>
 </code></pre></div><p>Еще одна важная (и самая востребованная) особенность - возможность монтировать конфигмапы в контейнеры в качестве томов. Пример с использованием созданного ранее конфигмапа <code>special-config</code>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: dapi-test-pod
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-    - <span style="color:#66d9ef">name</span>: test-container
-      <span style="color:#66d9ef">image</span>: k8s.gcr.io/busybox
-      <span style="color:#66d9ef">command</span>: [ <span style="color:#e6db74">&#34;/bin/sh&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;ls /etc/config/&#34;</span> ]
-      <span style="color:#66d9ef">volumeMounts</span>:
-      - <span style="color:#66d9ef">name</span>: config-volume
-        <span style="color:#66d9ef">mountPath</span>: /etc/config
-  <span style="color:#66d9ef">volumes</span>:
-    - <span style="color:#66d9ef">name</span>: config-volume
-      <span style="color:#66d9ef">configMap</span>:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">dapi-test-pod</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-container</span>
+      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">k8s.gcr.io/busybox</span>
+      <span style="color:#f92672">command</span>: [ <span style="color:#e6db74">&#34;/bin/sh&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;ls /etc/config/&#34;</span> ]
+      <span style="color:#f92672">volumeMounts</span>:
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">config-volume</span>
+        <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/etc/config</span>
+  <span style="color:#f92672">volumes</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">config-volume</span>
+      <span style="color:#f92672">configMap</span>:
         <span style="color:#75715e"># Provide the name of the ConfigMap containing the files you want</span>
         <span style="color:#75715e"># to add to the container</span>
-        <span style="color:#66d9ef">name</span>: special-config
-  <span style="color:#66d9ef">restartPolicy</span>: Never
+        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">special-config</span>
+  <span style="color:#f92672">restartPolicy</span>: <span style="color:#ae81ff">Never</span>
 </code></pre></div><p>При старте данного пода команда <code>ls /etc/config/</code> выведет на экран следующее:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">special.level
 special.type
 </code></pre></div><p>Можно указывать конкретный путь для монтирования данных из конфигмапа. Например, сущность <code>special.level</code> из конфигмапа с именем <code>special-config</code> может быть смонтирована в <code>/etc/config/keys</code> внутри контейнера:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: dapi-test-pod
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-    - <span style="color:#66d9ef">name</span>: test-container
-      <span style="color:#66d9ef">image</span>: k8s.gcr.io/busybox
-      <span style="color:#66d9ef">command</span>: [ <span style="color:#e6db74">&#34;/bin/sh&#34;</span>,<span style="color:#e6db74">&#34;-c&#34;</span>,<span style="color:#e6db74">&#34;cat /etc/config/keys&#34;</span> ]
-      <span style="color:#66d9ef">volumeMounts</span>:
-      - <span style="color:#66d9ef">name</span>: config-volume
-        <span style="color:#66d9ef">mountPath</span>: /etc/config
-  <span style="color:#66d9ef">volumes</span>:
-    - <span style="color:#66d9ef">name</span>: config-volume
-      <span style="color:#66d9ef">configMap</span>:
-        <span style="color:#66d9ef">name</span>: special-config
-        <span style="color:#66d9ef">items</span>:
-        - <span style="color:#66d9ef">key</span>: special.level
-          <span style="color:#66d9ef">path</span>: keys
-  <span style="color:#66d9ef">restartPolicy</span>: Never
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">dapi-test-pod</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-container</span>
+      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">k8s.gcr.io/busybox</span>
+      <span style="color:#f92672">command</span>: [ <span style="color:#e6db74">&#34;/bin/sh&#34;</span>,<span style="color:#e6db74">&#34;-c&#34;</span>,<span style="color:#e6db74">&#34;cat /etc/config/keys&#34;</span> ]
+      <span style="color:#f92672">volumeMounts</span>:
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">config-volume</span>
+        <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/etc/config</span>
+  <span style="color:#f92672">volumes</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">config-volume</span>
+      <span style="color:#f92672">configMap</span>:
+        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">special-config</span>
+        <span style="color:#f92672">items</span>:
+        - <span style="color:#f92672">key</span>: <span style="color:#ae81ff">special.level</span>
+          <span style="color:#f92672">path</span>: <span style="color:#ae81ff">keys</span>
+  <span style="color:#f92672">restartPolicy</span>: <span style="color:#ae81ff">Never</span>
 </code></pre></div><p>При запуске пода команда <code>cat /etc/config/keys</code> выведет на экран:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">very
 </code></pre></div><p>Напоследок стоит отметить, что смонтированные внутрь контейнера конфигмапы будут обновляться автоматически (за исключением монтирования как <a href="https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath">subPath</a>). Период обновления, как указано в документации, составляет <code>kubelet sync period + ttl of ConfigMaps cache in kubelet</code>. В <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-14-%D1%81%D0%B5%D0%BA%D1%80%D0%B5%D1%82%D1%8B-secrets/">следующей статье</a> цикла рассмотрим создание и работу с секретами в кластере <code>Kubernetes</code>.</p>
@@ -343,6 +343,10 @@ special.type
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -356,10 +360,6 @@ special.type
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

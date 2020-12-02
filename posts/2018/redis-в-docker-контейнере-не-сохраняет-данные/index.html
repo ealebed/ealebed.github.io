@@ -14,7 +14,7 @@
   
   
   <meta name="twitter:title" content="Redis в docker-контейнере не сохраняет данные"/>
-  <meta name="twitter:description" content="Случайно заметил, что при остановке docker-контейнера redis не сохраняет данные из памяти в файл dump.rdb, и, следовательно, при следующем запуске данных в redis&#39;е не окажется."/>
+  <meta name="twitter:description" content="Случайно заметил, что при остановке docker-контейнера redis не сохраняет данные из памяти в файл dump.rdb, и, следовательно, при следующем запуске данных в redis&rsquo;е не окажется."/>
   
     <meta name="twitter:site" content="@ealebed"/>
   
@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Redis в docker-контейнере не сохраняет данные &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -89,7 +89,7 @@
                     </h2>
                 </header>
                 <section id="post-body">
-                    <p>Случайно заметил, что при остановке docker-контейнера redis не сохраняет данные из памяти в файл <code>dump.rdb</code>, и, следовательно, при следующем запуске данных в redis'е не окажется.</p>
+                    <p>Случайно заметил, что при остановке docker-контейнера redis не сохраняет данные из памяти в файл <code>dump.rdb</code>, и, следовательно, при следующем запуске данных в redis&rsquo;е не окажется.</p>
 <p>Давайте разберемся!</p>
 <p>Версия docker:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version 
@@ -117,19 +117,19 @@ Digest: sha256:0153c5db97e5852b25c5c4715cf88cff9d9dfd8fef5c4c81df8b4dd1a984abc7
 Status: Image is up to date <span style="color:#66d9ef">for</span> redis:4.0-alpine
 </code></pre></div><p>В моем случае контейнер с redis запускается в связке с другими контейнерами, описанными в файле <code>docker-compose.yml</code>. Описание интересующего нас сервиса выглядит так:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
-  <span style="color:#66d9ef">redis</span>:
-    <span style="color:#66d9ef">container_name</span>: redis
-    <span style="color:#66d9ef">image</span>: redis:<span style="color:#ae81ff">4.0</span>-alpine
-    <span style="color:#66d9ef">command</span>:
+  <span style="color:#f92672">redis</span>:
+    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis:4.0-alpine</span>
+    <span style="color:#f92672">command</span>:
       - <span style="color:#e6db74">&#39;redis-server&#39;</span>
       - <span style="color:#e6db74">&#39;--loglevel ${REDIS_LOGLEVEL:-warning}&#39;</span>
       - <span style="color:#e6db74">&#39;--databases 2&#39;</span>
       - <span style="color:#e6db74">&#39;--maxmemory ${REDIS_MAXMEM:-50mb}&#39;</span>
       - <span style="color:#e6db74">&#39;--maxmemory-policy ${REDIS_POLICY:-noeviction}&#39;</span>
       - <span style="color:#e6db74">&#39;--requirepass ${REDIS_PASS}&#39;</span>
-    <span style="color:#66d9ef">volumes</span>:
-      - redis:/data
-    <span style="color:#66d9ef">ports</span>:
+    <span style="color:#f92672">volumes</span>:
+      - <span style="color:#ae81ff">redis:/data</span>
+    <span style="color:#f92672">ports</span>:
       - <span style="color:#e6db74">&#34;6379:6379&#34;</span>
 ...
 </code></pre></div><p>Как описано здесь, для персистентности данных можно использовать RDB (наш случай) или AOF стратегии. Для работы RDB в конфиге redis должны быть определены значения параметра <code>save</code>, например в настройках по умолчанию это выглядит так:</p>
@@ -144,10 +144,10 @@ save <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">10000</sp
 2<span style="color:#f92672">)</span> <span style="color:#e6db74">&#34;&#34;</span>
 </code></pre></div><p>Приводим описание сервиса redis в файле <code>docker-compose.yml</code> к следующему виду:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
-  <span style="color:#66d9ef">redis</span>:
-    <span style="color:#66d9ef">container_name</span>: redis
-    <span style="color:#66d9ef">image</span>: redis:<span style="color:#ae81ff">4.0</span>-alpine
-    <span style="color:#66d9ef">command</span>:
+  <span style="color:#f92672">redis</span>:
+    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis:4.0-alpine</span>
+    <span style="color:#f92672">command</span>:
       - <span style="color:#e6db74">&#39;redis-server&#39;</span>
       - <span style="color:#e6db74">&#39;--loglevel ${REDIS_LOGLEVEL:-warning}&#39;</span>
       - <span style="color:#e6db74">&#39;--databases 2&#39;</span>
@@ -157,9 +157,9 @@ save <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">10000</sp
       - <span style="color:#e6db74">&#39;--maxmemory ${REDIS_MAXMEM:-50mb}&#39;</span>
       - <span style="color:#e6db74">&#39;--maxmemory-policy ${REDIS_POLICY:-noeviction}&#39;</span>
       - <span style="color:#e6db74">&#39;--requirepass ${REDIS_PASS}&#39;</span>
-    <span style="color:#66d9ef">volumes</span>:
-      - redis:/data
-    <span style="color:#66d9ef">ports</span>:
+    <span style="color:#f92672">volumes</span>:
+      - <span style="color:#ae81ff">redis:/data</span>
+    <span style="color:#f92672">ports</span>:
       - <span style="color:#e6db74">&#34;6379:6379&#34;</span>
 ...
 </code></pre></div><p>Перезапускаем контейнеры командой (контейнер redis будет пересоздан с новыми настройками):</p>
@@ -223,6 +223,10 @@ save <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">10000</sp
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -236,10 +240,6 @@ save <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">10000</sp
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

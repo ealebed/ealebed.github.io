@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Jenkins as a code. Часть 2 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -101,19 +101,19 @@
 <span style="color:#f92672">import</span> org.jenkinsci.plugins.workflow.libs.LibraryConfiguration
 <span style="color:#f92672">import</span> org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever
 
-List libraries <span style="color:#f92672">=</span> <span style="color:#f92672">[</span><span style="color:#f92672">]</span> as ArrayList
+List libraries <span style="color:#f92672">=</span> <span style="color:#f92672">[]</span> as ArrayList
 
-def instance <span style="color:#f92672">=</span> Jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+def instance <span style="color:#f92672">=</span> Jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">()</span>
 
 println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- Configuring global library getting&#34;</span><span style="color:#f92672">)</span>
 def githubRepo      <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>https<span style="color:#f92672">:</span><span style="color:#75715e">//github.com/ealebed/jenkins-shared-libs.git&#39;
 </span><span style="color:#75715e"></span>def libraryName     <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>jenkins<span style="color:#f92672">-</span>shared<span style="color:#f92672">-</span>libs<span style="color:#960050;background-color:#1e0010">&#39;</span>
 def githubBranch    <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>master<span style="color:#960050;background-color:#1e0010">&#39;</span>
-def credentialsId   <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
+def credentialsId   <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">&#39;&#39;</span>
 
 def scm             <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> GitSCMSource<span style="color:#f92672">(</span>githubRepo<span style="color:#f92672">)</span>
 scm<span style="color:#f92672">.</span><span style="color:#a6e22e">credentialsId</span>   <span style="color:#f92672">=</span> credentialsId
-scm<span style="color:#f92672">.</span><span style="color:#a6e22e">traits</span>          <span style="color:#f92672">=</span> <span style="color:#f92672">[</span><span style="color:#66d9ef">new</span> BranchDiscoveryTrait<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">]</span>
+scm<span style="color:#f92672">.</span><span style="color:#a6e22e">traits</span>          <span style="color:#f92672">=</span> <span style="color:#f92672">[</span><span style="color:#66d9ef">new</span> BranchDiscoveryTrait<span style="color:#f92672">()]</span>
 def retriever       <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> SCMSourceRetriever<span style="color:#f92672">(</span>scm<span style="color:#f92672">)</span>
 
 def library         <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> LibraryConfiguration<span style="color:#f92672">(</span>libraryName<span style="color:#f92672">,</span> retriever<span style="color:#f92672">)</span>
@@ -122,11 +122,11 @@ library<span style="color:#f92672">.</span><span style="color:#a6e22e">implicit<
 library<span style="color:#f92672">.</span><span style="color:#a6e22e">allowVersionOverride</span>    <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>
 library<span style="color:#f92672">.</span><span style="color:#a6e22e">includeInChangesets</span>     <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>
 
-libraries <span style="color:#f92672">&lt;</span><span style="color:#f92672">&lt;</span> library
+libraries <span style="color:#f92672">&lt;&lt;</span> library
 
-def global_settings <span style="color:#f92672">=</span> instance<span style="color:#f92672">.</span><span style="color:#a6e22e">getExtensionList</span><span style="color:#f92672">(</span>GlobalLibraries<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">)</span><span style="color:#f92672">[</span>0<span style="color:#f92672">]</span>
+def global_settings <span style="color:#f92672">=</span> instance<span style="color:#f92672">.</span><span style="color:#a6e22e">getExtensionList</span><span style="color:#f92672">(</span>GlobalLibraries<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">)[</span>0<span style="color:#f92672">]</span>
 global_settings<span style="color:#f92672">.</span><span style="color:#a6e22e">libraries</span> <span style="color:#f92672">=</span> libraries
-global_settings<span style="color:#f92672">.</span><span style="color:#a6e22e">save</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+global_settings<span style="color:#f92672">.</span><span style="color:#a6e22e">save</span><span style="color:#f92672">()</span>
 </code></pre></div><p>Интересующие нас настройки задаются с помощью четырех параметров - <code>githubRepo</code>, <code>libraryName</code>, <code>githubBranch</code> и <code>credentialsId</code>.</p>
 <p>Здесь:</p>
 <ul>
@@ -177,6 +177,10 @@ global_settings<span style="color:#f92672">.</span><span style="color:#a6e22e">s
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -190,10 +194,6 @@ global_settings<span style="color:#f92672">.</span><span style="color:#a6e22e">s
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

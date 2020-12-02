@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Приоритетность подов в Kubernetes &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -97,36 +97,36 @@
 <code>PriorityClass</code> имеет два опциональных поля - <code>globalDefault</code> и <code>description</code>. Поле <code>globalDefault</code> со значением установленным в <code>true</code> указывает, что данный класс приоритета будет использоваться по умолчанию для всех подов кластера, в описании которых нет поля <code>priorityClassName</code>. В системе может существовать один и только один класс приоритета, в котором <code>globalDefault</code> установлено в <code>true</code>; если же во всех классах кластера это значение будет установлено в <code>false</code>, то по умолчанию приоритет всех подов в спецификации которых нет поля <code>priorityClassName</code> будет равен нулю (0).</p>
 <p><strong>Примечание.</strong> Если вы создаете объект(ы) <code>PriorityClass</code> в кластере <code>Kubernetes</code>, в котором уже запущены поды, то следует помнить, что для существующих подов приоритет будет равняться 0 (даже если вы добавили класс с иным значением и полем <code>globalDefault</code> равным <code>true</code>) - значения определенные в классе приоритетов будут применяться только к подам, которые были созданы после создания объекта(ов) <code>PriorityClass</code>.</p>
 <p>Пример объекта <code>PriorityClass</code> выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: scheduling.k8s.io/v1
-<span style="color:#66d9ef">kind</span>: PriorityClass
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: high-priority
-<span style="color:#66d9ef">value</span>: <span style="color:#ae81ff">1000000</span>
-<span style="color:#66d9ef">globalDefault</span>: <span style="color:#66d9ef">false</span>
-<span style="color:#66d9ef">description</span>: <span style="color:#e6db74">&#34;This priority class should be used for very important services/pods only&#34;</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">scheduling.k8s.io/v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PriorityClass</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">high-priority</span>
+<span style="color:#f92672">value</span>: <span style="color:#ae81ff">1000000</span>
+<span style="color:#f92672">globalDefault</span>: <span style="color:#66d9ef">false</span>
+<span style="color:#f92672">description</span>: <span style="color:#e6db74">&#34;This priority class should be used for very important services/pods only&#34;</span>
 </code></pre></div><p>В версии <code>Kubernetes</code> 1.15 (в качестве альфа-фичи) в объект <code>PriorityClass</code> добавлено поле <code>PreemptionPolicy</code>, в котором по умолчанию установлено значение <code>PreemptLowerPriority</code>, что позволяет подам данного класса приоритета &ldquo;вытеснять&rdquo; поды с более низким классом приоритета для освобождения ресурсов. В поле <code>PreemptionPolicy</code> также можно установить значение <code>Never</code> - в данном случае поды будут размещены в очереди планировщика перед подами с более низким приоритетом, но не смогут вытеснять другие поды, ожидая &ldquo;естественного&rdquo; освобождения ресурсов.</p>
 <p>Пример объекта <code>PriorityClass</code> с отключенным вытеснением будет таким:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: scheduling.k8s.io/v1
-<span style="color:#66d9ef">kind</span>: PriorityClass
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: high-priority-nonpreempting
-<span style="color:#66d9ef">value</span>: <span style="color:#ae81ff">1000000</span>
-<span style="color:#66d9ef">preemptionPolicy</span>: Never
-<span style="color:#66d9ef">globalDefault</span>: <span style="color:#66d9ef">false</span>
-<span style="color:#66d9ef">description</span>: <span style="color:#e6db74">&#34;This priority class will not cause other pods to be preempted&#34;</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">scheduling.k8s.io/v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PriorityClass</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">high-priority-nonpreempting</span>
+<span style="color:#f92672">value</span>: <span style="color:#ae81ff">1000000</span>
+<span style="color:#f92672">preemptionPolicy</span>: <span style="color:#ae81ff">Never</span>
+<span style="color:#f92672">globalDefault</span>: <span style="color:#66d9ef">false</span>
+<span style="color:#f92672">description</span>: <span style="color:#e6db74">&#34;This priority class will not cause other pods to be preempted&#34;</span>
 </code></pre></div><p>После создания одного или нескольких классов приоритета необходимо добавить поле <code>priorityClassName</code> с именем соответствующего класса в спецификацию пода (или <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>ReplicaSet</code></a>, или <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/"><code>Deployments</code></a>), например:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: myapp-pod
-  <span style="color:#66d9ef">labels</span>:
-    <span style="color:#66d9ef">app</span>: myapp
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-  - <span style="color:#66d9ef">name</span>: myapp-container
-    <span style="color:#66d9ef">image</span>: busybox
-    <span style="color:#66d9ef">command</span>: [<span style="color:#e6db74">&#39;sh&#39;</span>, <span style="color:#e6db74">&#39;-c&#39;</span>, <span style="color:#e6db74">&#39;echo Hello Kubernetes! &amp;&amp; sleep 3600&#39;</span>]
-  <span style="color:#66d9ef">priorityClassName</span>: high-priority
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-pod</span>
+  <span style="color:#f92672">labels</span>:
+    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">myapp</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-container</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">busybox</span>
+    <span style="color:#f92672">command</span>: [<span style="color:#e6db74">&#39;sh&#39;</span>, <span style="color:#e6db74">&#39;-c&#39;</span>, <span style="color:#e6db74">&#39;echo Hello Kubernetes! &amp;&amp; sleep 3600&#39;</span>]
+  <span style="color:#f92672">priorityClassName</span>: <span style="color:#ae81ff">high-priority</span>
 </code></pre></div><p>В результате под с более высоким приоритетом будет поставлен в очередь и запущен раньше подов с приоритетом ниже. Если же под с высоким приоритетом не может быть запущен в данный момент времени, то планировщик (<code>scheduler</code>) попробует запустить его позднее, таким образом давая возможность стартонуть подам с более низким приоритетом.</p>
 <p>Итак, когда под (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) создан, он помещается в очередь и ожидает, пока планировщик определит ему подходящий узел кластера для запуска. Если планировщик не может найти ни одного подходящего узла, соответствующего всем требованиям запускаемого пода, то для ожидающего пода запускается процесс вытеснения. Допустим, <code>P</code> - это под в очереди, тогда логика вытеснения пытается найти подходящую ноду в кластере, на которой удаление одного или нескольких подов <code>p0,1,2-...</code> с более низким приоритетом, чем у <code>P</code>, позволило бы запустить под <code>P</code> на этом узле. Когда такая нода найдена, один или несколько подов <code>p0,1,2-...</code> &ldquo;выселяются&rdquo; с нее, освобождая необходимые ресурсы для запуска пода <code>P</code> из очереди планировщика.</p>
 <p>Когда под <code>P</code> &ldquo;выселяет&rdquo; один или несколько подов <code>p0,1,2-...</code> с узла <code>N</code>, в поле <code>nominatedNodeName</code> пода <code>P</code> появляется имя узла <code>N</code> - именно это поле помогает планировщику отслеживать необходимое количество ресурсов для пода <code>P</code> и дает пользователю информацию о вытеснениях подов в кластере.</p>
@@ -173,6 +173,10 @@
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -186,10 +190,6 @@
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

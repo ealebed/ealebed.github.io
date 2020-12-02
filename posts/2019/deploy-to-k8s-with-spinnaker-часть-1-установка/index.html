@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Deploy to k8s with Spinnaker. Часть 1: Установка &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -114,7 +114,7 @@
 <p>Создаем отдельный сервис-аккаунт для Spinnaker и сгенерируем ему токен для доступа к кластеру Kubernetes:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CONTEXT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl config current-context<span style="color:#66d9ef">)</span>
 
-<span style="color:#75715e"># This service account uses the ClusterAdmin role -- this is not necessary,</span> 
+<span style="color:#75715e"># This service account uses the ClusterAdmin role -- this is not necessary, </span>
 <span style="color:#75715e"># more restrictive roles can by applied.</span>
 kubectl apply --context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    -f https://spinnaker.io/downloads/kubernetes/service-account.yml
@@ -131,51 +131,51 @@ kubectl config set-credentials <span style="color:#e6db74">${</span>CONTEXT<span
 
 kubectl config set-context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> --user <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span>-token-user
 </code></pre></div><p>По желанию также можно настроить RBAC (Role-Based Access Control) для сервис-аккаунта Spinnaker, например, создав файл <code>spinnaker-role.yaml</code> с таким содержимым:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: rbac.authorization.k8s.io/v1
-<span style="color:#66d9ef">kind</span>: ClusterRole
-<span style="color:#66d9ef">metadata</span>:
- <span style="color:#66d9ef">name</span>: spinnaker-role
-<span style="color:#66d9ef">rules</span>:
-- <span style="color:#66d9ef">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
-  <span style="color:#66d9ef">resources</span>: [<span style="color:#e6db74">&#34;namespaces&#34;</span>, <span style="color:#e6db74">&#34;configmaps&#34;</span>, <span style="color:#e6db74">&#34;events&#34;</span>, <span style="color:#e6db74">&#34;replicationcontrollers&#34;</span>, <span style="color:#e6db74">&#34;serviceaccounts&#34;</span>, <span style="color:#e6db74">&#34;pods/log&#34;</span>]
-  <span style="color:#66d9ef">verbs</span>: [<span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>]
-- <span style="color:#66d9ef">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
-  <span style="color:#66d9ef">resources</span>: [<span style="color:#e6db74">&#34;pods&#34;</span>, <span style="color:#e6db74">&#34;services&#34;</span>, <span style="color:#e6db74">&#34;secrets&#34;</span>]
-  <span style="color:#66d9ef">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
-- <span style="color:#66d9ef">apiGroups</span>: [<span style="color:#e6db74">&#34;autoscaling&#34;</span>]
-  <span style="color:#66d9ef">resources</span>: [<span style="color:#e6db74">&#34;horizontalpodautoscalers&#34;</span>]
-  <span style="color:#66d9ef">verbs</span>: [<span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>]
-- <span style="color:#66d9ef">apiGroups</span>: [<span style="color:#e6db74">&#34;apps&#34;</span>]
-  <span style="color:#66d9ef">resources</span>: [<span style="color:#e6db74">&#34;controllerrevisions&#34;</span>, <span style="color:#e6db74">&#34;statefulsets&#34;</span>]
-  <span style="color:#66d9ef">verbs</span>: [<span style="color:#e6db74">&#34;list&#34;</span>]
-- <span style="color:#66d9ef">apiGroups</span>: [<span style="color:#e6db74">&#34;extensions&#34;</span>, <span style="color:#e6db74">&#34;apps&#34;</span>]
-  <span style="color:#66d9ef">resources</span>: [<span style="color:#e6db74">&#34;deployments&#34;</span>, <span style="color:#e6db74">&#34;replicasets&#34;</span>, <span style="color:#e6db74">&#34;ingresses&#34;</span>]
-  <span style="color:#66d9ef">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">rbac.authorization.k8s.io/v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ClusterRole</span>
+<span style="color:#f92672">metadata</span>:
+ <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-role</span>
+<span style="color:#f92672">rules</span>:
+- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
+  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;namespaces&#34;</span>, <span style="color:#e6db74">&#34;configmaps&#34;</span>, <span style="color:#e6db74">&#34;events&#34;</span>, <span style="color:#e6db74">&#34;replicationcontrollers&#34;</span>, <span style="color:#e6db74">&#34;serviceaccounts&#34;</span>, <span style="color:#e6db74">&#34;pods/log&#34;</span>]
+  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>]
+- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
+  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;pods&#34;</span>, <span style="color:#e6db74">&#34;services&#34;</span>, <span style="color:#e6db74">&#34;secrets&#34;</span>]
+  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
+- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;autoscaling&#34;</span>]
+  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;horizontalpodautoscalers&#34;</span>]
+  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>]
+- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;apps&#34;</span>]
+  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;controllerrevisions&#34;</span>, <span style="color:#e6db74">&#34;statefulsets&#34;</span>]
+  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;list&#34;</span>]
+- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;extensions&#34;</span>, <span style="color:#e6db74">&#34;apps&#34;</span>]
+  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;deployments&#34;</span>, <span style="color:#e6db74">&#34;replicasets&#34;</span>, <span style="color:#e6db74">&#34;ingresses&#34;</span>]
+  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
 <span style="color:#75715e"># These permissions are necessary for halyard to operate. We use this role also to deploy Spinnaker itself.</span>
-- <span style="color:#66d9ef">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
-  <span style="color:#66d9ef">resources</span>: [<span style="color:#e6db74">&#34;services/proxy&#34;</span>, <span style="color:#e6db74">&#34;pods/portforward&#34;</span>]
-  <span style="color:#66d9ef">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
+- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
+  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;services/proxy&#34;</span>, <span style="color:#e6db74">&#34;pods/portforward&#34;</span>]
+  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
 ---
 
-<span style="color:#66d9ef">apiVersion</span>: rbac.authorization.k8s.io/v1
-<span style="color:#66d9ef">kind</span>: ClusterRoleBinding
-<span style="color:#66d9ef">metadata</span>:
- <span style="color:#66d9ef">name</span>: spinnaker-role-binding
-<span style="color:#66d9ef">roleRef</span>:
- <span style="color:#66d9ef">apiGroup</span>: rbac.authorization.k8s.io
- <span style="color:#66d9ef">kind</span>: ClusterRole
- <span style="color:#66d9ef">name</span>: spinnaker-role
-<span style="color:#66d9ef">subjects</span>:
-- <span style="color:#66d9ef">namespace</span>: spinnaker
-  <span style="color:#66d9ef">kind</span>: ServiceAccount
-  <span style="color:#66d9ef">name</span>: spinnaker-service-account
+<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">rbac.authorization.k8s.io/v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ClusterRoleBinding</span>
+<span style="color:#f92672">metadata</span>:
+ <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-role-binding</span>
+<span style="color:#f92672">roleRef</span>:
+ <span style="color:#f92672">apiGroup</span>: <span style="color:#ae81ff">rbac.authorization.k8s.io</span>
+ <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ClusterRole</span>
+ <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-role</span>
+<span style="color:#f92672">subjects</span>:
+- <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">spinnaker</span>
+  <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ServiceAccount</span>
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-service-account</span>
 ---
 
-<span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: ServiceAccount
-<span style="color:#66d9ef">metadata</span>:
- <span style="color:#66d9ef">name</span>: spinnaker-service-account
- <span style="color:#66d9ef">namespace</span>: spinnaker
+<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ServiceAccount</span>
+<span style="color:#f92672">metadata</span>:
+ <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-service-account</span>
+ <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">spinnaker</span>
 </code></pre></div><p>и применив его с помощью команды:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl apply -f spinnaker-role.yaml
 </code></pre></div><p>Теперь можем в настройках Spinnaker’а включить поддержку Kubernetes V2 провайдера и добавить аккаунт(ы):</p>
@@ -205,7 +205,7 @@ gcloud iam service-accounts create <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    --display-name <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_NAME<span style="color:#e6db74">}</span>
 
 SA_EMAIL<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>gcloud iam service-accounts list <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">displayName:</span><span style="color:#e6db74">${</span>SERVICE_ACCOUNT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    --filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;displayName:</span><span style="color:#e6db74">${</span>SERVICE_ACCOUNT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    --format<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;value(email)&#39;</span><span style="color:#66d9ef">)</span>
 
 PROJECT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>gcloud info --format<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;value(config.project)&#39;</span><span style="color:#66d9ef">)</span>
@@ -244,8 +244,8 @@ echo ${PASS} | hal config provider docker-registry account add private-dockerhub
 2019-01-22 12:59:56.034 ERROR 1 --- [RxIoScheduler-3] c.n.spinnaker.igor.docker.DockerMonitor  : Number of items (5546) to cache exceeds upper threshold (1000) in monitor=DockerMonitor partition=private-dockerhub
 ...
 </code></pre></div><p>Исправить ситуацию можно создав файл <code>~/.hal/default/profiles/igor-local.yml</code> следующего содержания:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">dockerRegistry</span>:
-  <span style="color:#66d9ef">itemUpperThreshold</span>: <span style="color:#ae81ff">10000</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">dockerRegistry</span>:
+  <span style="color:#f92672">itemUpperThreshold</span>: <span style="color:#ae81ff">10000</span>
 </code></pre></div><p>Двигаемся дальше. Указываем тип установки для Spinnaker (в моем примере это будет distributed) и ранее созданный Kubernetes-аккаунт (в какой кластер устанавливать):</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal config deploy edit --type distributed --account-name k8s-account
 </code></pre></div><p>Далее следует выбрать версию Spinnaker для установки. Список доступных версий можно просмотреть командой:</p>
@@ -307,6 +307,10 @@ hal config security api edit <span style="color:#ae81ff">\
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -320,10 +324,6 @@ hal config security api edit <span style="color:#ae81ff">\
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

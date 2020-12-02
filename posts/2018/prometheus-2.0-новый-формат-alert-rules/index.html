@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Prometheus 2.0: Новый формат Alert rules &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -137,50 +137,50 @@ ALERT prometheus_eating_memory
       description = &quot;{{ $labels.name }} is eating up a LOT of memory. Memory consumption of {{ $labels.name }} is at {{ humanize $value}}.&quot;,
   }
 </code></pre><p>В новом варианте файл должен называться <code>containers.rules.yml</code>, а содержимое его будет следующим:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">groups</span>:
-- <span style="color:#66d9ef">name</span>: /var/www/monitor/prometheus/containers.rules
-  <span style="color:#66d9ef">rules</span>:
-  - <span style="color:#66d9ef">alert</span>: high_cpu_usage_on_container
-    <span style="color:#66d9ef">expr</span>: sum(rate(container_cpu_usage_seconds_total{name=~<span style="color:#e6db74">&#34;.+&#34;</span>}[1m])) BY (name, host)
-      * <span style="color:#ae81ff">100</span> &gt; <span style="color:#ae81ff">70</span>
-    <span style="color:#66d9ef">for</span>: 5m
-    <span style="color:#66d9ef">labels</span>:
-      <span style="color:#66d9ef">severity</span>: warning
-    <span style="color:#66d9ef">annotations</span>:
-      <span style="color:#66d9ef">description</span>: <span style="color:#e6db74">&#39;{{ $labels.name }} is using a LOT of CPU. CPU usage is {{ humanize
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">groups</span>:
+- <span style="color:#f92672">name</span>: <span style="color:#ae81ff">/var/www/monitor/prometheus/containers.rules</span>
+  <span style="color:#f92672">rules</span>:
+  - <span style="color:#f92672">alert</span>: <span style="color:#ae81ff">high_cpu_usage_on_container</span>
+    <span style="color:#f92672">expr</span>: <span style="color:#ae81ff">sum(rate(container_cpu_usage_seconds_total{name=~&#34;.+&#34;}[1m])) BY (name, host)</span>
+      * <span style="color:#ae81ff">100</span> <span style="color:#ae81ff">&gt; 70</span>
+    <span style="color:#f92672">for</span>: <span style="color:#ae81ff">5m</span>
+    <span style="color:#f92672">labels</span>:
+      <span style="color:#f92672">severity</span>: <span style="color:#ae81ff">warning</span>
+    <span style="color:#f92672">annotations</span>:
+      <span style="color:#f92672">description</span>: <span style="color:#e6db74">&#39;{{ $labels.name }} is using a LOT of CPU. CPU usage is {{ humanize
 </span><span style="color:#e6db74">        $value}}%.&#39;</span>
-      <span style="color:#66d9ef">summary: &#39;High CPU usage</span>: CONTAINER <span style="color:#e6db74">&#39;&#39;</span>{{ $labels.name }}<span style="color:#e6db74">&#39;&#39;</span> on <span style="color:#e6db74">&#39;&#39;</span>{{ $labels.host
-        }}<span style="color:#e6db74">&#39;&#39;</span><span style="color:#e6db74">&#39;
+      <span style="color:#f92672">summary: &#39;High CPU usage</span>: <span style="color:#ae81ff">CONTAINER &#39;&#39;{{ $labels.name }}&#39;&#39; on &#39;&#39;{{ $labels.host</span>
+        }}<span style="color:#e6db74">&#39;&#39;&#39;
 </span><span style="color:#e6db74">  - alert: graylog_eating_memory
 </span><span style="color:#e6db74">    expr: sum(container_memory_rss{name=~&#34;graylog&#34;}) BY (name) &gt; 1.5e+09
 </span><span style="color:#e6db74">    for: 5m
 </span><span style="color:#e6db74">    labels:
 </span><span style="color:#e6db74">      severity: warning
 </span><span style="color:#e6db74">    annotations:
-</span><span style="color:#e6db74">      description: &#39;</span>{{ $labels.name }} is eating up a LOT of memory. Memory consumption
-        of {{ $labels.name }} is at {{ humanize $value}}.<span style="color:#e6db74">&#39;
-</span><span style="color:#e6db74">      summary: &#39;</span><span style="color:#66d9ef">High memory usage</span>: CONTAINER <span style="color:#e6db74">&#39;&#39;</span>{{ $labels.name }}<span style="color:#e6db74">&#39;&#39;</span> on <span style="color:#e6db74">&#39;&#39;</span>{{ $labels.instance
-        }}<span style="color:#e6db74">&#39;&#39;</span><span style="color:#e6db74">&#39;
+</span><span style="color:#e6db74">      description: &#39;</span>{{ <span style="color:#ae81ff">$labels.name }} is eating up a LOT of memory. Memory consumption</span>
+        <span style="color:#ae81ff">of {{ $labels.name }} is at {{ humanize $value}}.&#39;</span>
+      <span style="color:#f92672">summary: &#39;High memory usage</span>: <span style="color:#ae81ff">CONTAINER &#39;&#39;{{ $labels.name }}&#39;&#39; on &#39;&#39;{{ $labels.instance</span>
+        }}<span style="color:#e6db74">&#39;&#39;&#39;
 </span><span style="color:#e6db74">  - alert: elasticsearch_eating_memory
 </span><span style="color:#e6db74">    expr: sum(container_memory_rss{name=~&#34;elasticsearch&#34;}) BY (name) &gt; 1.5e+09
 </span><span style="color:#e6db74">    for: 5m
 </span><span style="color:#e6db74">    labels:
 </span><span style="color:#e6db74">      severity: warning
 </span><span style="color:#e6db74">    annotations:
-</span><span style="color:#e6db74">      description: &#39;</span>{{ $labels.name }} is eating up a LOT of memory. Memory consumption
-        of {{ $labels.name }} is at {{ humanize $value}}.<span style="color:#e6db74">&#39;
-</span><span style="color:#e6db74">      summary: &#39;</span><span style="color:#66d9ef">High memory usage</span>: CONTAINER <span style="color:#e6db74">&#39;&#39;</span>{{ $labels.name }}<span style="color:#e6db74">&#39;&#39;</span> on <span style="color:#e6db74">&#39;&#39;</span>{{ $labels.instance
-        }}<span style="color:#e6db74">&#39;&#39;</span><span style="color:#e6db74">&#39;
+</span><span style="color:#e6db74">      description: &#39;</span>{{ <span style="color:#ae81ff">$labels.name }} is eating up a LOT of memory. Memory consumption</span>
+        <span style="color:#ae81ff">of {{ $labels.name }} is at {{ humanize $value}}.&#39;</span>
+      <span style="color:#f92672">summary: &#39;High memory usage</span>: <span style="color:#ae81ff">CONTAINER &#39;&#39;{{ $labels.name }}&#39;&#39; on &#39;&#39;{{ $labels.instance</span>
+        }}<span style="color:#e6db74">&#39;&#39;&#39;
 </span><span style="color:#e6db74">  - alert: prometheus_eating_memory
 </span><span style="color:#e6db74">    expr: sum(container_memory_rss{name=~&#34;prometheus&#34;}) BY (name) &gt; 1.2e+09
 </span><span style="color:#e6db74">    for: 5m
 </span><span style="color:#e6db74">    labels:
 </span><span style="color:#e6db74">      severity: warning
 </span><span style="color:#e6db74">    annotations:
-</span><span style="color:#e6db74">      description: &#39;</span>{{ $labels.name }} is eating up a LOT of memory. Memory consumption
-        of {{ $labels.name }} is at {{ humanize $value}}.<span style="color:#e6db74">&#39;
-</span><span style="color:#e6db74">      summary: &#39;</span><span style="color:#66d9ef">High memory usage</span>: CONTAINER <span style="color:#e6db74">&#39;&#39;</span>{{ $labels.name }}<span style="color:#e6db74">&#39;&#39;</span> on <span style="color:#e6db74">&#39;&#39;</span>{{ $labels.instance
-        }}<span style="color:#e6db74">&#39;&#39;</span>&#39;
+</span><span style="color:#e6db74">      description: &#39;</span>{{ <span style="color:#ae81ff">$labels.name }} is eating up a LOT of memory. Memory consumption</span>
+        <span style="color:#ae81ff">of {{ $labels.name }} is at {{ humanize $value}}.&#39;</span>
+      <span style="color:#f92672">summary: &#39;High memory usage</span>: <span style="color:#ae81ff">CONTAINER &#39;&#39;{{ $labels.name }}&#39;&#39; on &#39;&#39;{{ $labels.instance</span>
+        }}<span style="color:#e6db74">&#39;&#39;</span><span style="color:#ae81ff">&#39;</span>
 </code></pre></div><p>Переписывать файл(ы) вручную — не вариант, поэтому воспользуемся утилитой <code>promtool</code> для автоматического обновления всех файлов правил. Сначала получим последнюю версию данной утилиты (2.0):</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget https://github.com/prometheus/prometheus/releases/download/v2.0.0/prometheus-2.0.0.linux-amd64.tar.gz
 </code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar zxvf prometheus-2.0.0.linux-amd64.tar.gz
@@ -191,7 +191,7 @@ ALERT prometheus_eating_memory
 </code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./promtool update rules /var/www/monitor/prometheus/containers.rules
 </code></pre></div><p>После успешного обновления файлов изменятся также из имена, поэтому в конфигурационном файле <code>prometheus.yml</code> также меняем соответствующие строки на:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
-<span style="color:#66d9ef">rule_files</span>:
+<span style="color:#f92672">rule_files</span>:
   - <span style="color:#e6db74">&#34;targets.rules.yml&#34;</span>
   - <span style="color:#e6db74">&#34;host.rules.yml&#34;</span>
   - <span style="color:#e6db74">&#34;containers.rules.yml&#34;</span>
@@ -238,6 +238,10 @@ ALERT prometheus_eating_memory
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -251,10 +255,6 @@ ALERT prometheus_eating_memory
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

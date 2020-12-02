@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Знакомство с Kubernetes. Часть 17: Введение в YAML &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -104,8 +104,8 @@
 <p>Этого достаточно. Конечно, это могут быть мапы списков (или списки мап), но наличия этих двух структур вполне хватит.</p>
 <p>Начнем со знакомства с мапами (maps). Мапы позволяют связывать (маппить) пары ключ-значение - это именно то, что нужно при описании конфигурационных файлов. Например, у вас может быть файл конфигурации, который выглядит следующим образом:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-<span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
+<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
 </code></pre></div><p>Здесь первая линия (три дефиса) - это разделитель (нужен, если вы планируете использовать несколько разных структур в одном файле), далее описаны два ключа (<code>apiVersion</code> и <code>kind</code>) и их значения (<code>v1</code> и <code>Pod</code> соответственно).</p>
 <p>В формате JSON это выглядело бы так:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
@@ -114,12 +114,12 @@
 }
 </code></pre></div><p>Можно описывать более сложные структуры, у которых значением для определенного ключа может быть еще одна мапа:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-<span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: test-site
-  <span style="color:#66d9ef">labels</span>:
-    <span style="color:#66d9ef">app</span>: web
+<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-site</span>
+  <span style="color:#f92672">labels</span>:
+    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">web</span>
 </code></pre></div><p>Как видим, у ключа <code>metadata</code> значением будут еще две мапы (с ключами <code>name</code> и <code>labels</code>), а у ключа <code>labels</code>, в свою очередь, значением будет мапа с ключом <code>app</code>. Можно создавать такие структуры любого уровня вложенности - все зависит от ваших потребностей.</p>
 <p>YAML-процессор &ldquo;понимает&rdquo; связанность этих элементов благодаря форматированию - обратите внимание на отступы. В этом примере для отступов используются 2 пробела, но на самом деле количество пробелов не имеет значения - главное соблюдать уровни отступов. Например, ключи <code>name</code> и <code>labels</code> находятся на одном уровне отступов, следовательно процессор будет считать, что они являются значением для ключа одной и той же мапы; точно также YAML-процессор знает, что <code>app</code> - это значение для ключа <code>labels</code>.</p>
 <p>Небольшой совет: не стоит использовать в YAML-файле в качестве отступов табуляцию.</p>
@@ -135,10 +135,10 @@
               }
 }
 </code></pre></div><p>Что касается YAML-списков, то по сути это просто перечисление объектов, например:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">args
-  - sleep
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#ae81ff">args</span>
+  - <span style="color:#ae81ff">sleep</span>
   - <span style="color:#e6db74">&#34;1000&#34;</span>
-  - message
+  - <span style="color:#ae81ff">message</span>
   - <span style="color:#e6db74">&#34;Hello world!&#34;</span>
 </code></pre></div><p>Как видно из примера, можно указать любое количество элементов в списке (главное, чтобы каждый новый элемент находится в отдельной строке и начинался с дефиса). В JSON это будет выглядеть так:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
@@ -146,22 +146,22 @@
 }
 </code></pre></div><p>Ну и конечно же элементами списка могут быть мапы:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-<span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: test-site
-  <span style="color:#66d9ef">labels</span>:
-    <span style="color:#66d9ef">app</span>: web
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-    - <span style="color:#66d9ef">name</span>: front-end
-      <span style="color:#66d9ef">image</span>: nginx
-      <span style="color:#66d9ef">ports</span>:
-        - <span style="color:#66d9ef">containerPort</span>: <span style="color:#ae81ff">80</span>
-    - <span style="color:#66d9ef">name</span>: test
-      <span style="color:#66d9ef">image</span>: ealebed/test:v1
-      <span style="color:#66d9ef">ports</span>:
-        - <span style="color:#66d9ef">containerPort</span>: <span style="color:#ae81ff">88</span>
+<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-site</span>
+  <span style="color:#f92672">labels</span>:
+    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">web</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">front-end</span>
+      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">nginx</span>
+      <span style="color:#f92672">ports</span>:
+        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">80</span>
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test</span>
+      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">ealebed/test:v1</span>
+      <span style="color:#f92672">ports</span>:
+        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">88</span>
 </code></pre></div><p>Эквивалент в JSON-формате:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
    <span style="color:#f92672">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;v1&#34;</span>,
@@ -235,6 +235,10 @@ pod <span style="color:#e6db74">&#34;test-site&#34;</span> created
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -248,10 +252,6 @@ pod <span style="color:#e6db74">&#34;test-site&#34;</span> created
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

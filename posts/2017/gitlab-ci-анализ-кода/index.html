@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>GitLab CI: Анализ кода &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -126,11 +126,11 @@ testing:
 <p>Кроме этого в файл <code>docker/docker-compose-build.yml</code> необходимо добавить описание нового контейнера:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
 <span style="color:#75715e">### Test Utilities Container (phpqa) ########################</span>
-    <span style="color:#66d9ef">phpqa</span>:
-        <span style="color:#66d9ef">container_name</span>: phpqa
-        <span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/phpqa-ed-sq:latest
-        <span style="color:#66d9ef">volumes_from</span>:
-            - php-fpm
+    <span style="color:#f92672">phpqa</span>:
+        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">phpqa</span>
+        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/phpqa-ed-sq:latest</span>
+        <span style="color:#f92672">volumes_from</span>:
+            - <span style="color:#ae81ff">php-fpm</span>
 ...
 </code></pre></div><p>Можно использовать самосборный docker-образ, хранящийся в локальном docker registry (как в моем случае) или взять готовый образ <a href="https://hub.docker.com/r/eko3alpha/docker-phpqa/">отсюда</a>.</p>
 <p>Подробности выполнения «нового» этапа тестирования выглядят так:</p>
@@ -145,12 +145,12 @@ Starting application
 <span style="color:#f92672">[</span>Edge<span style="color:#ae81ff">\Q</span>A<span style="color:#ae81ff">\T</span>ask<span style="color:#ae81ff">\P</span>arallelExec<span style="color:#f92672">]</span> /composer/vendor/edgedesign/phpqa/../../../vendor/bin/pdepend --jdepend-xml<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/www/html/build/pdepend-jdepend.xml&#34;</span> --summary-xml<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/www/html/build/pdepend-summary.xml&#34;</span> --dependency-xml<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/www/html/build/pdepend-dependencies.xml&#34;</span> --jdepend-chart<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/www/html/build/pdepend-jdepend.svg&#34;</span> --overview-pyramid<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/www/html/build/pdepend-pyramid.svg&#34;</span>  --ignore<span style="color:#f92672">=</span>/node_modules/,/bin/,/data/logs/,/vendor/,/build/,/tests/,/public/ <span style="color:#e6db74">&#34;/var/www/html/&#34;</span>
 <span style="color:#f92672">[</span>Edge<span style="color:#ae81ff">\Q</span>A<span style="color:#ae81ff">\T</span>ask<span style="color:#ae81ff">\P</span>arallelExec<span style="color:#f92672">]</span> /composer/vendor/edgedesign/phpqa/../../../vendor/bin/phpcpd --progress  --exclude<span style="color:#f92672">=</span>node_modules --exclude<span style="color:#f92672">=</span>bin --exclude<span style="color:#f92672">=</span>data/logs --exclude<span style="color:#f92672">=</span>vendor --exclude<span style="color:#f92672">=</span>build --exclude<span style="color:#f92672">=</span>tests --exclude<span style="color:#f92672">=</span>public <span style="color:#e6db74">&#34;/var/www/html/&#34;</span> --min-lines <span style="color:#ae81ff">5</span> --min-tokens <span style="color:#ae81ff">70</span> --log-pmd <span style="color:#e6db74">&#34;/var/www/html/build/phpcpd.xml&#34;</span>
 0/6 <span style="color:#f92672">[</span>&gt;---------------------------<span style="color:#f92672">]</span>   0% 0/6 <span style="color:#f92672">[</span>&gt;---------------------------<span style="color:#f92672">]</span>   0%
-1/6 <span style="color:#f92672">[</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>&gt;-----------------------<span style="color:#f92672">]</span>  16%
-2/6 <span style="color:#f92672">[</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>&gt;------------------<span style="color:#f92672">]</span>  33%
-3/6 <span style="color:#f92672">[</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>&gt;-------------<span style="color:#f92672">]</span>  50%
-4/6 <span style="color:#f92672">[</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>&gt;---------<span style="color:#f92672">]</span>  66%
-5/6 <span style="color:#f92672">[</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>&gt;----<span style="color:#f92672">]</span>  83%
-6/6 <span style="color:#f92672">[</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">]</span> 100%
+1/6 <span style="color:#f92672">[====</span>&gt;-----------------------<span style="color:#f92672">]</span>  16%
+2/6 <span style="color:#f92672">[=========</span>&gt;------------------<span style="color:#f92672">]</span>  33%
+3/6 <span style="color:#f92672">[==============</span>&gt;-------------<span style="color:#f92672">]</span>  50%
+4/6 <span style="color:#f92672">[==================</span>&gt;---------<span style="color:#f92672">]</span>  66%
+5/6 <span style="color:#f92672">[=======================</span>&gt;----<span style="color:#f92672">]</span>  83%
+6/6 <span style="color:#f92672">[============================]</span> 100%
 <span style="color:#f92672">[</span>Edge<span style="color:#ae81ff">\Q</span>A<span style="color:#ae81ff">\T</span>ask<span style="color:#ae81ff">\P</span>arallelExec<span style="color:#f92672">]</span> <span style="color:#e6db74">&#39;/composer/vendor/edgedesign/phpqa/../../../vendor/bin/phpcs -p --extensions=php --standard=PSR2  --ignore=*/node_modules/*,*/bin/*,*/data/logs/*,*/vendor/*,*/build/*,*/tests/*,*/public/* &#34;/var/www/html/&#34; --report-checkstyle=&#34;/var/www/html/build/checkstyle.xml&#34;&#39;</span> exited with code <span style="color:#ae81ff">1</span>
 <span style="color:#f92672">[</span>Edge<span style="color:#ae81ff">\Q</span>A<span style="color:#ae81ff">\T</span>ask<span style="color:#ae81ff">\P</span>arallelExec<span style="color:#f92672">]</span> <span style="color:#e6db74">&#39;/composer/vendor/edgedesign/phpqa/../../../vendor/bin/phpmd &#34;/var/www/html/&#34; xml &#34;/composer/vendor/edgedesign/phpqa/app/phpmd.xml&#34; --suffixes php  --exclude /node_modules/,/bin/,/data/logs/,/vendor/,/build/,/tests/,/public/ --reportfile &#34;/var/www/html/build/phpmd.xml&#34;&#39;</span> exited with code <span style="color:#ae81ff">2</span>
 <span style="color:#f92672">[</span>Edge<span style="color:#ae81ff">\Q</span>A<span style="color:#ae81ff">\T</span>ask<span style="color:#ae81ff">\P</span>arallelExec<span style="color:#f92672">]</span> <span style="color:#e6db74">&#39;/composer/vendor/edgedesign/phpqa/../../../vendor/bin/phpcpd --progress  --exclude=node_modules --exclude=bin --exclude=data/logs --exclude=vendor --exclude=build --exclude=tests --exclude=public &#34;/var/www/html/&#34; --min-lines 5 --min-tokens 70 --log-pmd &#34;/var/www/html/build/phpcpd.xml&#34;&#39;</span> exited with code <span style="color:#ae81ff">1</span>
@@ -213,6 +213,10 @@ Starting application
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -226,10 +230,6 @@ Starting application
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

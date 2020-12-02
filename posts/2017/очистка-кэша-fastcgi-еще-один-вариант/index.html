@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Очистка кэша FastCGI: еще один вариант &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -73,7 +73,7 @@
                     </h1>
                     <h2 class="headline">
                     Nov 13, 2017 10:36
-                    · 333 words
+                    · 332 words
                     · 2 minute read
                       <span class="tags">
                       
@@ -106,7 +106,7 @@
 </code></pre><p>и</p>
 <pre><code>/var/tmp/nginx_cache/d/59/5b5d5cfc3aba90a81ecb7fddf0d8259d
 </code></pre><p>Зная структуру каталогов кэш-зоны, можно легко создать скрипт очистки кэша (в данном примере используется PHP). В корневой директории сайта создайте файл <code>cleancache.php</code> следующего содержания:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?php</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
 $cache_path <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;/var/tmp/nginx_cache/&#39;</span>;
 $url <span style="color:#f92672">=</span> <span style="color:#a6e22e">parse_url</span>($_POST[<span style="color:#e6db74">&#39;url&#39;</span>]);
  
@@ -122,8 +122,8 @@ $hash_ru <span style="color:#f92672">=</span> <span style="color:#a6e22e">md5</s
  
 <span style="color:#a6e22e">var_dump</span>(<span style="color:#a6e22e">unlink</span>($cache_path <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ua, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ua,<span style="color:#f92672">-</span><span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> $hash_ua));
 <span style="color:#a6e22e">var_dump</span>(<span style="color:#a6e22e">unlink</span>($cache_path <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ru, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ru,<span style="color:#f92672">-</span><span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> $hash_ru));
-<span style="color:#75715e">?&gt;</span>
-</code></pre></div><p>Теперь можно отправить POST-запрос на этот файл с URL, который нужно очистить, в качестве параметра:</p>
+<span style="color:#75715e">?&gt;</span><span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>Теперь можно отправить POST-запрос на этот файл с URL, который нужно очистить, в качестве параметра:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -d <span style="color:#e6db74">&#39;url=http://example.com/url-for-clean.php&#39;</span> http://example.com/cleancache.php
 </code></pre></div><p>В результате выполнения скрипта вы увидите в консоли <code>true</code> или <code>false</code> в зависимости от того, очистился кэш или нет.</p>
 <p>Не забудьте исключить данный скрипт из кэширования и ограничить доступ к нему.</p>
@@ -168,6 +168,10 @@ $hash_ru <span style="color:#f92672">=</span> <span style="color:#a6e22e">md5</s
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -181,10 +185,6 @@ $hash_ru <span style="color:#f92672">=</span> <span style="color:#a6e22e">md5</s
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

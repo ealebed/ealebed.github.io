@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Jenkins as a code. Часть 3 &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -114,49 +114,49 @@
 </code></pre></div><p>Вообщем, так себе вариант, особенно если у вас 150-200 заданий&hellip;</p>
 <p>Вспоминаем о возможностях настройки экземпляра Jenkins еще в момент старта с помощью хуков, которые мы рассматривали в <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">первой </a> и <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2/">второй</a> статьях данного цикла. Идея - хранить в отдельном файле определенного формата (<code>.json</code> или <code>.xml</code>) минимально необходимый набор параметров (ссылка на git-репозиторий, название ветки, путь к <code>Jenkinsfile</code> и т. д.) для создания задачи. При запуске Jenkins groovy-скрипт берет из данного файла параметры и создает задачи, в качестве дополнительного бонуса - сразу распределяет эти задачи по представлениям (views).</p>
 <p>Создаем файл <code>job_list.yaml</code> с набором параметров для задач, в моем случае выглядящий так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">dev</span>:
-  <span style="color:#66d9ef">1st-project</span>:
-    <span style="color:#66d9ef">jobDisabled</span>:          <span style="color:#66d9ef">false</span>
-    <span style="color:#66d9ef">enableGithubPolling</span>:  <span style="color:#66d9ef">false</span>
-    <span style="color:#66d9ef">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;1&#39;</span>
-    <span style="color:#66d9ef">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;5&#39;</span>
-    <span style="color:#66d9ef">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
-    <span style="color:#66d9ef">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
-    <span style="color:#66d9ef">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master, */test&#39;</span>
-    <span style="color:#66d9ef">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
-    <span style="color:#66d9ef">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;Jenkinsfile&#39;</span>
-  <span style="color:#66d9ef">2nd-project</span>:
-    <span style="color:#66d9ef">jobDisabled</span>:          <span style="color:#66d9ef">false</span>
-    <span style="color:#66d9ef">enableGithubPolling</span>:  <span style="color:#66d9ef">true</span>
-    <span style="color:#66d9ef">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;2&#39;</span>
-    <span style="color:#66d9ef">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;10&#39;</span>
-    <span style="color:#66d9ef">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
-    <span style="color:#66d9ef">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
-    <span style="color:#66d9ef">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master&#39;</span>
-    <span style="color:#66d9ef">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
-    <span style="color:#66d9ef">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;Jenkinsfile&#39;</span>
-<span style="color:#66d9ef">stage</span>:
-  <span style="color:#66d9ef">3rd-project</span>:
-    <span style="color:#66d9ef">jobDisabled</span>:          <span style="color:#66d9ef">false</span>
-    <span style="color:#66d9ef">enableGithubPolling</span>:  <span style="color:#66d9ef">true</span>
-    <span style="color:#66d9ef">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;3&#39;</span>
-    <span style="color:#66d9ef">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;15&#39;</span>
-    <span style="color:#66d9ef">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
-    <span style="color:#66d9ef">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
-    <span style="color:#66d9ef">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master&#39;</span>
-    <span style="color:#66d9ef">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
-    <span style="color:#66d9ef">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;dir/Jenkinsfile&#39;</span>
-<span style="color:#66d9ef">test</span>:
-  <span style="color:#66d9ef">4th-project</span>:
-    <span style="color:#66d9ef">jobDisabled</span>:          <span style="color:#66d9ef">true</span>
-    <span style="color:#66d9ef">enableGithubPolling</span>:  <span style="color:#66d9ef">true</span>
-    <span style="color:#66d9ef">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;4&#39;</span>
-    <span style="color:#66d9ef">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;20&#39;</span>
-    <span style="color:#66d9ef">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
-    <span style="color:#66d9ef">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
-    <span style="color:#66d9ef">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master&#39;</span>
-    <span style="color:#66d9ef">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
-    <span style="color:#66d9ef">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;Jenkinsfile&#39;</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">dev</span>:
+  <span style="color:#f92672">1st-project</span>:
+    <span style="color:#f92672">jobDisabled</span>:          <span style="color:#66d9ef">false</span>
+    <span style="color:#f92672">enableGithubPolling</span>:  <span style="color:#66d9ef">false</span>
+    <span style="color:#f92672">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;1&#39;</span>
+    <span style="color:#f92672">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;5&#39;</span>
+    <span style="color:#f92672">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
+    <span style="color:#f92672">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
+    <span style="color:#f92672">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master, */test&#39;</span>
+    <span style="color:#f92672">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
+    <span style="color:#f92672">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;Jenkinsfile&#39;</span>
+  <span style="color:#f92672">2nd-project</span>:
+    <span style="color:#f92672">jobDisabled</span>:          <span style="color:#66d9ef">false</span>
+    <span style="color:#f92672">enableGithubPolling</span>:  <span style="color:#66d9ef">true</span>
+    <span style="color:#f92672">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;2&#39;</span>
+    <span style="color:#f92672">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;10&#39;</span>
+    <span style="color:#f92672">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
+    <span style="color:#f92672">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
+    <span style="color:#f92672">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master&#39;</span>
+    <span style="color:#f92672">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
+    <span style="color:#f92672">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;Jenkinsfile&#39;</span>
+<span style="color:#f92672">stage</span>:
+  <span style="color:#f92672">3rd-project</span>:
+    <span style="color:#f92672">jobDisabled</span>:          <span style="color:#66d9ef">false</span>
+    <span style="color:#f92672">enableGithubPolling</span>:  <span style="color:#66d9ef">true</span>
+    <span style="color:#f92672">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;3&#39;</span>
+    <span style="color:#f92672">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;15&#39;</span>
+    <span style="color:#f92672">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
+    <span style="color:#f92672">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
+    <span style="color:#f92672">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master&#39;</span>
+    <span style="color:#f92672">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
+    <span style="color:#f92672">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;dir/Jenkinsfile&#39;</span>
+<span style="color:#f92672">test</span>:
+  <span style="color:#f92672">4th-project</span>:
+    <span style="color:#f92672">jobDisabled</span>:          <span style="color:#66d9ef">true</span>
+    <span style="color:#f92672">enableGithubPolling</span>:  <span style="color:#66d9ef">true</span>
+    <span style="color:#f92672">daysBuildsKeep</span>:       <span style="color:#e6db74">&#39;4&#39;</span>
+    <span style="color:#f92672">numberBuildsKeep</span>:     <span style="color:#e6db74">&#39;20&#39;</span>
+    <span style="color:#f92672">githubRepoUrl</span>:        <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1/&#39;</span>
+    <span style="color:#f92672">githubRepo</span>:           <span style="color:#e6db74">&#39;https://github.com/ealebed/hn1.git&#39;</span>
+    <span style="color:#f92672">githubBranch</span>:         <span style="color:#e6db74">&#39;*/master&#39;</span>
+    <span style="color:#f92672">credentialId</span>:         <span style="color:#e6db74">&#39;&#39;</span>
+    <span style="color:#f92672">jenkinsfilePath</span>:      <span style="color:#e6db74">&#39;Jenkinsfile&#39;</span>
 </code></pre></div><p><strong>Примечание.</strong> Если планируется переезд со старого экземпляра Jenkins на новый, то можно легко написать скрипт, который возьмет нужные параметры на старом сервере и сформирует <code>yaml</code>-файл в нужном формате.</p>
 <p>Скрипт, который должен &ldquo;разобрать&rdquo; данный файл и создать задачи у меня называется <code>05-create-jobs.groovy</code> и выглядит следующим образом:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Grab</span><span style="color:#f92672">(</span>group<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">&#39;</span>org<span style="color:#f92672">.</span><span style="color:#a6e22e">yaml</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> module<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">&#39;</span>snakeyaml<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> version<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">&#39;</span>1<span style="color:#f92672">.</span><span style="color:#a6e22e">18</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span>
@@ -170,15 +170,15 @@
 <span style="color:#f92672">import</span> com.cloudbees.jenkins.GitHubPushTrigger
 <span style="color:#f92672">import</span> org.yaml.snakeyaml.Yaml
 
-Jenkins jenkins <span style="color:#f92672">=</span> Jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+Jenkins jenkins <span style="color:#f92672">=</span> Jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">()</span>
 
 def pluginParameter <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;workflow-aggregator github-pullrequest&#34;</span>
-def plugins         <span style="color:#f92672">=</span> pluginParameter<span style="color:#f92672">.</span><span style="color:#a6e22e">split</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
-def pm              <span style="color:#f92672">=</span> jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">getPluginManager</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+def plugins         <span style="color:#f92672">=</span> pluginParameter<span style="color:#f92672">.</span><span style="color:#a6e22e">split</span><span style="color:#f92672">()</span>
+def pm              <span style="color:#f92672">=</span> jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">getPluginManager</span><span style="color:#f92672">()</span>
 def installed       <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>
 
 plugins<span style="color:#f92672">.</span><span style="color:#a6e22e">each</span> <span style="color:#f92672">{</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#f92672">!</span>pm<span style="color:#f92672">.</span><span style="color:#a6e22e">getPlugin</span><span style="color:#f92672">(</span>it<span style="color:#f92672">)</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>pm<span style="color:#f92672">.</span><span style="color:#a6e22e">getPlugin</span><span style="color:#f92672">(</span>it<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
         println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Plugin ${it} not installed, skip creating jobs!&#34;</span><span style="color:#f92672">)</span>
     <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
         installed <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>
@@ -188,47 +188,47 @@ plugins<span style="color:#f92672">.</span><span style="color:#a6e22e">each</spa
 <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>installed<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
     def listExistingJob     <span style="color:#f92672">=</span> jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">items</span><span style="color:#f92672">.</span><span style="color:#a6e22e">collect</span> <span style="color:#f92672">{</span> it<span style="color:#f92672">.</span><span style="color:#a6e22e">name</span> <span style="color:#f92672">}</span>
     def listExistingViews   <span style="color:#f92672">=</span> jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">views</span><span style="color:#f92672">.</span><span style="color:#a6e22e">collect</span> <span style="color:#f92672">{</span> it<span style="color:#f92672">.</span><span style="color:#a6e22e">name</span> <span style="color:#f92672">}</span>
-    def jobParameters       <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Yaml<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">load</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> FileReader<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">/</span>temp<span style="color:#f92672">/</span>job_list<span style="color:#f92672">.</span><span style="color:#a6e22e">yaml</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+    def jobParameters       <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Yaml<span style="color:#f92672">().</span><span style="color:#a6e22e">load</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> FileReader<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">/</span>temp<span style="color:#f92672">/</span>job_list<span style="color:#f92672">.</span><span style="color:#a6e22e">yaml</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">))</span>
 
     <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>view in jobParameters<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>jobParameters<span style="color:#f92672">.</span><span style="color:#a6e22e">any</span> <span style="color:#f92672">{</span> listExistingViews<span style="color:#f92672">.</span><span style="color:#a6e22e">contains</span><span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span> <span style="color:#f92672">}</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>jobParameters<span style="color:#f92672">.</span><span style="color:#a6e22e">any</span> <span style="color:#f92672">{</span> listExistingViews<span style="color:#f92672">.</span><span style="color:#a6e22e">contains</span><span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span> <span style="color:#f92672">})</span> <span style="color:#f92672">{</span>
             println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- View ${view.key} already exist, skip&#34;</span><span style="color:#f92672">)</span>
         <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
             println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- Create new view ${view.key}&#34;</span><span style="color:#f92672">)</span>
-            jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">addView</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ListView<span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+            jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">addView</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ListView<span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">))</span>
         <span style="color:#f92672">}</span>
         <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>item in view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">any</span> <span style="color:#f92672">{</span> listExistingJob<span style="color:#f92672">.</span><span style="color:#a6e22e">contains</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span> <span style="color:#f92672">}</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">any</span> <span style="color:#f92672">{</span> listExistingJob<span style="color:#f92672">.</span><span style="color:#a6e22e">contains</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span> <span style="color:#f92672">})</span> <span style="color:#f92672">{</span>
                 println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- Job ${item.key} already exist, skip&#34;</span><span style="color:#f92672">)</span>
                 <span style="color:#66d9ef">continue</span>
             <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
                 println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- Create new job ${item.key}&#34;</span><span style="color:#f92672">)</span>
 
                 def jobName             <span style="color:#f92672">=</span> item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span>
-                def jobDisabled         <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;jobDisabled&#34;</span><span style="color:#f92672">)</span>
-                def enableGithubPolling <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;enableGithubPolling&#34;</span><span style="color:#f92672">)</span>
-                def daysBuildsKeep      <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;daysBuildsKeep&#34;</span><span style="color:#f92672">)</span>
-                def numberBuildsKeep    <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;numberBuildsKeep&#34;</span><span style="color:#f92672">)</span>
-                def githubRepoUrl       <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;githubRepoUrl&#34;</span><span style="color:#f92672">)</span>
-                def githubRepo          <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;githubRepo&#34;</span><span style="color:#f92672">)</span>
-                def githubBranch        <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;githubBranch&#34;</span><span style="color:#f92672">)</span>
-                def credentialId        <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;credentialId&#34;</span><span style="color:#f92672">)</span>
-                def jenkinsfilePath     <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;jenkinsfilePath&#34;</span><span style="color:#f92672">)</span>
+                def jobDisabled         <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;jobDisabled&#34;</span><span style="color:#f92672">)</span>
+                def enableGithubPolling <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;enableGithubPolling&#34;</span><span style="color:#f92672">)</span>
+                def daysBuildsKeep      <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;daysBuildsKeep&#34;</span><span style="color:#f92672">)</span>
+                def numberBuildsKeep    <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;numberBuildsKeep&#34;</span><span style="color:#f92672">)</span>
+                def githubRepoUrl       <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;githubRepoUrl&#34;</span><span style="color:#f92672">)</span>
+                def githubRepo          <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;githubRepo&#34;</span><span style="color:#f92672">)</span>
+                def githubBranch        <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;githubBranch&#34;</span><span style="color:#f92672">)</span>
+                def credentialId        <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;credentialId&#34;</span><span style="color:#f92672">)</span>
+                def jenkinsfilePath     <span style="color:#f92672">=</span> view<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>item<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">getAt</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;jenkinsfilePath&#34;</span><span style="color:#f92672">)</span>
 
                 def githubBranchList <span style="color:#f92672">=</span> githubBranch<span style="color:#f92672">.</span><span style="color:#a6e22e">split</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span>
-                def branchConfig <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ArrayList<span style="color:#f92672">&lt;</span>BranchSpec<span style="color:#f92672">&gt;</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+                def branchConfig <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ArrayList<span style="color:#f92672">&lt;</span>BranchSpec<span style="color:#f92672">&gt;()</span>
                 <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>branch in githubBranchList<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span> branch <span style="color:#f92672">!</span><span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">)</span>
+                    <span style="color:#66d9ef">if</span><span style="color:#f92672">(</span> branch <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">)</span>
                     <span style="color:#f92672">{</span>
-                        branchConfig<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> BranchSpec<span style="color:#f92672">(</span>branch<span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+                        branchConfig<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> BranchSpec<span style="color:#f92672">(</span>branch<span style="color:#f92672">))</span>
                     <span style="color:#f92672">}</span>
                     <span style="color:#66d9ef">else</span>
                     <span style="color:#f92672">{</span>
-                        branchConfig<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> BranchSpec<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;*/master&#34;</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+                        branchConfig<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> BranchSpec<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;*/master&#34;</span><span style="color:#f92672">))</span>
                     <span style="color:#f92672">}</span>
                 <span style="color:#f92672">}</span>
-                def userConfig          <span style="color:#f92672">=</span> <span style="color:#f92672">[</span><span style="color:#66d9ef">new</span> UserRemoteConfig<span style="color:#f92672">(</span>githubRepo<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> credentialId<span style="color:#f92672">)</span><span style="color:#f92672">]</span>
-                def scm                 <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> GitSCM<span style="color:#f92672">(</span>userConfig<span style="color:#f92672">,</span> branchConfig<span style="color:#f92672">,</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">,</span> <span style="color:#f92672">[</span><span style="color:#f92672">]</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+                def userConfig          <span style="color:#f92672">=</span> <span style="color:#f92672">[</span><span style="color:#66d9ef">new</span> UserRemoteConfig<span style="color:#f92672">(</span>githubRepo<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> credentialId<span style="color:#f92672">)]</span>
+                def scm                 <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> GitSCM<span style="color:#f92672">(</span>userConfig<span style="color:#f92672">,</span> branchConfig<span style="color:#f92672">,</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">,</span> <span style="color:#f92672">[],</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
                 def flowDefinition      <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> CpsScmFlowDefinition<span style="color:#f92672">(</span>scm<span style="color:#f92672">,</span> jenkinsfilePath<span style="color:#f92672">)</span>
 
                 flowDefinition<span style="color:#f92672">.</span><span style="color:#a6e22e">setLightweight</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">)</span>
@@ -237,16 +237,16 @@ plugins<span style="color:#f92672">.</span><span style="color:#a6e22e">each</spa
                 job<span style="color:#f92672">.</span><span style="color:#a6e22e">definition</span> <span style="color:#f92672">=</span> flowDefinition
                 job<span style="color:#f92672">.</span><span style="color:#a6e22e">setConcurrentBuild</span><span style="color:#f92672">(</span><span style="color:#66d9ef">false</span><span style="color:#f92672">)</span>
                 job<span style="color:#f92672">.</span><span style="color:#a6e22e">setDisabled</span><span style="color:#f92672">(</span>jobDisabled<span style="color:#f92672">)</span>
-                job<span style="color:#f92672">.</span><span style="color:#a6e22e">addProperty</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> BuildDiscarderProperty<span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> LogRotator<span style="color:#f92672">(</span>daysBuildsKeep<span style="color:#f92672">,</span> numberBuildsKeep<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
-                job<span style="color:#f92672">.</span><span style="color:#a6e22e">addProperty</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> GithubProjectProperty<span style="color:#f92672">(</span>githubRepoUrl<span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+                job<span style="color:#f92672">.</span><span style="color:#a6e22e">addProperty</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> BuildDiscarderProperty<span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> LogRotator<span style="color:#f92672">(</span>daysBuildsKeep<span style="color:#f92672">,</span> numberBuildsKeep<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)))</span>
+                job<span style="color:#f92672">.</span><span style="color:#a6e22e">addProperty</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> GithubProjectProperty<span style="color:#f92672">(</span>githubRepoUrl<span style="color:#f92672">))</span>
 
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">true</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> enableGithubPolling<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-                    job<span style="color:#f92672">.</span><span style="color:#a6e22e">addTrigger</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> GitHubPushTrigger<span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">)</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">true</span> <span style="color:#f92672">==</span> enableGithubPolling<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    job<span style="color:#f92672">.</span><span style="color:#a6e22e">addTrigger</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> GitHubPushTrigger<span style="color:#f92672">())</span>
                 <span style="color:#f92672">}</span>
 
-                jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">save</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
-                jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">reload</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
-                hudson<span style="color:#f92672">.</span><span style="color:#a6e22e">model</span><span style="color:#f92672">.</span><span style="color:#a6e22e">Hudson</span><span style="color:#f92672">.</span><span style="color:#a6e22e">instance</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getView</span><span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">doAddJobToView</span><span style="color:#f92672">(</span>jobName<span style="color:#f92672">)</span>
+                jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">save</span><span style="color:#f92672">()</span>
+                jenkins<span style="color:#f92672">.</span><span style="color:#a6e22e">reload</span><span style="color:#f92672">()</span>
+                hudson<span style="color:#f92672">.</span><span style="color:#a6e22e">model</span><span style="color:#f92672">.</span><span style="color:#a6e22e">Hudson</span><span style="color:#f92672">.</span><span style="color:#a6e22e">instance</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getView</span><span style="color:#f92672">(</span>view<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">).</span><span style="color:#a6e22e">doAddJobToView</span><span style="color:#f92672">(</span>jobName<span style="color:#f92672">)</span>
             <span style="color:#f92672">}</span>
         <span style="color:#f92672">}</span>
     <span style="color:#f92672">}</span>
@@ -295,6 +295,10 @@ plugins<span style="color:#f92672">.</span><span style="color:#a6e22e">each</spa
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -308,10 +312,6 @@ plugins<span style="color:#f92672">.</span><span style="color:#a6e22e">each</spa
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

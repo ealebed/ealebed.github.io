@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Знакомство с Kubernetes. Часть 7: Образы (Images) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -153,14 +153,14 @@ Docker хранит ключи для частных реестров образ
 secret <span style="color:#e6db74">&#34;myregistrykey&#34;</span> created.
 </code></pre></div><p><strong>Примечание.</strong> Если необходим доступ к нескольким частным реестрам образов, для каждого из них генерируем отдельный secret.</p>
 <p>Альтернативный вариант описания секретной переменной - создаем манифест для объекта <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-14-%D1%81%D0%B5%D0%BA%D1%80%D0%B5%D1%82%D1%8B-secrets/"><code>Secret</code></a> следующего вида:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Secret
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: myregistrykey
-  <span style="color:#66d9ef">namespace</span>: awesomeapps
-<span style="color:#66d9ef">data</span>:
-  <span style="color:#66d9ef">.dockerconfigjson</span>: ewogICJhdXRocyIgOiB7CiAgICAiaHR0cHM6Ly9yZWdpc3RyeS5naXRsYWIubGM6NTAwMCIgOiB7CgogICAgfSwKICAgICJyZWdpc3RyeS5naXRsYWIubGM6NTAwMCIgOiB7CgogICAgfQogIH0sCiAgIkh0dHBIZWFkZXJzIiA6IHsKICAgICJVc2VyLUFnZW50IiA6ICJEb2NrZXItQ2xpZW50LzE4LjAyLjAtY2UtcmMyIChkYXJ3aW4pIgogIH0sCiAgImV4cGVyaW1lbnRhbCIgOiAiZW5hYmxlZCIsCiAgImNyZWRzU3RvcmUiIDogIm9zeGtleWNoYWluIiwKICAib3JjaGVzdHJhdG9yIiA6ICJzd2FybSIKfQ==
-<span style="color:#66d9ef">type</span>: kubernetes.io/dockerconfigjson
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Secret</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myregistrykey</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">awesomeapps</span>
+<span style="color:#f92672">data</span>:
+  <span style="color:#f92672">.dockerconfigjson</span>: <span style="color:#ae81ff">ewogICJhdXRocyIgOiB7CiAgICAiaHR0cHM6Ly9yZWdpc3RyeS5naXRsYWIubGM6NTAwMCIgOiB7CgogICAgfSwKICAgICJyZWdpc3RyeS5naXRsYWIubGM6NTAwMCIgOiB7CgogICAgfQogIH0sCiAgIkh0dHBIZWFkZXJzIiA6IHsKICAgICJVc2VyLUFnZW50IiA6ICJEb2NrZXItQ2xpZW50LzE4LjAyLjAtY2UtcmMyIChkYXJ3aW4pIgogIH0sCiAgImV4cGVyaW1lbnRhbCIgOiAiZW5hYmxlZCIsCiAgImNyZWRzU3RvcmUiIDogIm9zeGtleWNoYWluIiwKICAib3JjaGVzdHJhdG9yIiA6ICJzd2FybSIKfQ==</span>
+<span style="color:#f92672">type</span>: <span style="color:#ae81ff">kubernetes.io/dockerconfigjson</span>
 </code></pre></div><p>Убедитесь, что:</p>
 <ul>
 <li>имя элемента данных в поле <code>data</code> установлено в <code>.dockerconfigjson</code>;</li>
@@ -169,17 +169,17 @@ secret <span style="color:#e6db74">&#34;myregistrykey&#34;</span> created.
 </ul>
 <p><strong>Примечание.</strong> Команда для кодирования строки выглядит так: <code>cat ~/.docker/config.json | base64</code>.</p>
 <p>Теперь, при описании манифеста для каждого пода, использующего частный реестр образов, не забудьте добавить поле <code>imagePullSecrets</code>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: foo
-  <span style="color:#66d9ef">namespace</span>: awesomeapps
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-    - <span style="color:#66d9ef">name</span>: foo
-      <span style="color:#66d9ef">image</span>: janedoe/awesomeapp:v1
-  <span style="color:#66d9ef">imagePullSecrets</span>:
-    - <span style="color:#66d9ef">name</span>: myregistrykey
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">foo</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">awesomeapps</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">foo</span>
+      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">janedoe/awesomeapp:v1</span>
+  <span style="color:#f92672">imagePullSecrets</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myregistrykey</span>
 </code></pre></div>
                 </section>
             </article>
@@ -222,6 +222,10 @@ secret <span style="color:#e6db74">&#34;myregistrykey&#34;</span> created.
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -235,10 +239,6 @@ secret <span style="color:#e6db74">&#34;myregistrykey&#34;</span> created.
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>GitLab CI: Часть 9, этап deploy в .gitlab-ci.yml &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -93,20 +93,20 @@
 <p>Давайте разберемся со следующим этапом из конфигурационного файла <code>.gitlab-ci.yml</code> — этапом деплоя!</p>
 <p>Часть специального файла <code>.gitlab-ci.yml</code>, в которой описаны инстукции для этапа деплоя в нашем случае выглядит так:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
-<span style="color:#66d9ef">deploy-to-review</span>:
-  <span style="color:#66d9ef">stage</span>: deploy
-  <span style="color:#66d9ef">before_script</span>:
-    - eval $(ssh-agent -s)
-    - ssh-add &lt;(echo <span style="color:#e6db74">&#34;$SSH_PRIVATE_KEY&#34;</span>)
-  <span style="color:#66d9ef">script</span>:
-    - scp ./docker/.env.staging.lc ./docker/docker-compose-staging.yml provisioner@staging.lc:~/docker
-    - ssh provisioner@staging.lc <span style="color:#e6db74">&#39;bash -s&#39;</span> &lt; ./docker/deploy.sh
-  <span style="color:#66d9ef">environment</span>:
-    <span style="color:#66d9ef">name</span>: review/$CI_COMMIT_REF_NAME
-    <span style="color:#66d9ef">url</span>: https://www.$CI_COMMIT_REF_SLUG.labs.lc
-  <span style="color:#66d9ef">only</span>:
-    - develop
-    - docker
+<span style="color:#f92672">deploy-to-review</span>:
+  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">deploy</span>
+  <span style="color:#f92672">before_script</span>:
+    - <span style="color:#ae81ff">eval $(ssh-agent -s)</span>
+    - <span style="color:#ae81ff">ssh-add &lt;(echo &#34;$SSH_PRIVATE_KEY&#34;)</span>
+  <span style="color:#f92672">script</span>:
+    - <span style="color:#ae81ff">scp ./docker/.env.staging.lc ./docker/docker-compose-staging.yml provisioner@staging.lc:~/docker</span>
+    - <span style="color:#ae81ff">ssh provisioner@staging.lc &#39;bash -s&#39; &lt; ./docker/deploy.sh</span>
+  <span style="color:#f92672">environment</span>:
+    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">review/$CI_COMMIT_REF_NAME</span>
+    <span style="color:#f92672">url</span>: <span style="color:#ae81ff">https://www.$CI_COMMIT_REF_SLUG.labs.lc</span>
+  <span style="color:#f92672">only</span>:
+    - <span style="color:#ae81ff">develop</span>
+    - <span style="color:#ae81ff">docker</span>
 ...
 </code></pre></div><p>В статье про <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%81%D0%BF%D0%B5%D1%86%D0%B8%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D1%8B/">специальные docker-образы</a>, которые используются в процессе <strong>GitLab CI</strong>, мы упоминали о необходимости установки ssh-клиента — он нам пригодится в момент деплоя на ревью (сервер с именем staging.lc). Как обычно, действия выполняются для веток develop и docker, но у нас появилась новая секция — <code>environment</code> — в которой описаны настройки окружения (отличаются, как не сложно догадаться, именем ветки).</p>
 <p>Например, если <strong>GitLab CI</strong> выполняется для ветки docker, то после успешного деплоя сайт будет доступен из браузера по адресу <a href="https://www.docker.labs.lc">https://www.docker.labs.lc</a>. Больше подробностей об окружениях, в частности о динамических окружениях которые используются в данном примере можно прочесть <a href="https://docs.gitlab.com/ce/ci/environments.html#dynamic-environments">здесь</a>.</p>
@@ -194,6 +194,10 @@ HTTP_PORT=80
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -207,10 +211,6 @@ HTTP_PORT=80
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

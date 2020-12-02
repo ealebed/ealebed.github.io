@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Sphinxsearch в docker-контейнере &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -93,12 +93,12 @@
 <p>Несмотря на то, что в данный момент уже есть <a href="http://sphinxsearch.com/blog/2017/12/18/sphinx-3-0-1-released/">Sphinxsearch версии 3.0.1</a>, в данном примере мы будем использовать стабильную и &ldquo;обкатанную&rdquo; версию поискового движка - 2.2.11.</p>
 <p>За основу для нашего docker-образа возьмем ubuntu:16.04, и наш Dockerfile будет выглядеть следующим образом:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> ubuntu:16.04</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> APP_ENV<span style="color:#f92672">=</span>dev
 <span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get -y install <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>        software-properties-common<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> add-apt-repository ppa:builds/sphinxsearch-rel22 <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get update <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get -y install <span style="color:#ae81ff">\
@@ -110,18 +110,18 @@
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoremove -y <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoclean <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -r /var/lib/apt/lists/*<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> ln -sf /dev/stdout /var/log/sphinxsearch/searchd.log <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ln -sf /dev/stderr /var/log/sphinxsearch/query.log<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> start.sh /start.sh<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> sphinx.conf.<span style="color:#e6db74">${</span>APP_ENV<span style="color:#e6db74">}</span> /etc/sphinxsearch/sphinx.conf<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span> [<span style="color:#e6db74">&#34;/etc/sphinxsearch&#34;</span>]<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span> [<span style="color:#e6db74">&#34;/var/lib/sphinxsearch/data&#34;</span>]<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 9312 9306</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;/start.sh&#34;</span>]<span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>В зависимости от переданного при сборке docker-образа значения аргумента <code>APP_ENV</code> (по умолчанию это dev), в образ будет скопирован соответствующий конфигурационный файл <code>sphinx.conf.${APP_ENV}</code>.</p>
 <p>При старте docker-контейнера будет выполнен bash-скрипт <code>start.sh</code>, который выполняет переиндексацию и запуск поискового движка. Содержимое скрипта довольно простое:</p>
@@ -207,17 +207,17 @@ searchd
 </code></pre></div><p>Или с помощью <code>docker-compose.yml</code> (для удобства редактирования конфиг sphinx монтируем с хост-машины в docker-контейнер):</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
 <span style="color:#75715e">### Sphinxsearch Container ##################################</span>
-  <span style="color:#66d9ef">sphinxsearch</span>:
-    <span style="color:#66d9ef">container_name</span>: sphinxsearch
-    <span style="color:#66d9ef">image</span>: sphinx:latest
-    <span style="color:#66d9ef">volumes</span>:
-      - ./sphinx/sphinx.conf:/etc/sphinxsearch/sphinx.conf
-      - sphinx:/var/lib/sphinxsearch/data
+  <span style="color:#f92672">sphinxsearch</span>:
+    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">sphinxsearch</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">sphinx:latest</span>
+    <span style="color:#f92672">volumes</span>:
+      - <span style="color:#ae81ff">./sphinx/sphinx.conf:/etc/sphinxsearch/sphinx.conf</span>
+      - <span style="color:#ae81ff">sphinx:/var/lib/sphinxsearch/data</span>
 ...
 <span style="color:#75715e">### Volumes Setup ###########################################</span>
-<span style="color:#66d9ef">volumes</span>:
-  <span style="color:#66d9ef">sphinx</span>:
-    <span style="color:#66d9ef">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+<span style="color:#f92672">volumes</span>:
+  <span style="color:#f92672">sphinx</span>:
+    <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
 </code></pre></div><p>При необходимости можно запустить переиндексацию с помощью команды:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
 </code></pre></div>
@@ -262,6 +262,10 @@ searchd
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -275,10 +279,6 @@ searchd
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

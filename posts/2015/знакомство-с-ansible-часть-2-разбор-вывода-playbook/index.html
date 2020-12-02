@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Знакомство с Ansible. Часть 2: разбор вывода playbook &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -174,26 +174,26 @@ test-2                 : ok<span style="color:#f92672">=</span><span style="colo
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ansible-playbook debug.yml --step --start-at-task<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Debug&#34;</span>
 </code></pre></div><p>Весьма полезной является возможность вызывать набор инструкций из другого набора инструкций. Хороший пример — обновление установленных пакетов в ОС. Для этого создадим playbook <code>update_os.yml</code> со следующим содержанием:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-  <span style="color:#66d9ef">tasks</span>:
+  <span style="color:#f92672">tasks</span>:
  
-  - <span style="color:#66d9ef">name</span>: Update
-    <span style="color:#66d9ef">apt</span>: update_cache=yes
-  - <span style="color:#66d9ef">name</span>: Upgrade
-    <span style="color:#66d9ef">apt</span>: upgrade=full
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Update</span>
+    <span style="color:#f92672">apt</span>: <span style="color:#ae81ff">update_cache=yes</span>
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Upgrade</span>
+    <span style="color:#f92672">apt</span>: <span style="color:#ae81ff">upgrade=full</span>
 </code></pre></div><p>Этот playbook можно включить как задачу в набор инструкций <code>install_nginx.yml</code>, который мы создавали в предыдущей статье:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-- <span style="color:#66d9ef">hosts</span>: test
-  <span style="color:#66d9ef">tasks</span>:
+- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
+  <span style="color:#f92672">tasks</span>:
  
-  - <span style="color:#66d9ef">include</span>: update_os.yml
+  - <span style="color:#f92672">include</span>: <span style="color:#ae81ff">update_os.yml</span>
  
-  - <span style="color:#66d9ef">name</span>: Install nginx package
-    <span style="color:#66d9ef">apt</span>: name=nginx update_cache=yes
-    <span style="color:#66d9ef">sudo</span>: yes
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Install nginx package</span>
+    <span style="color:#f92672">apt</span>: <span style="color:#ae81ff">name=nginx update_cache=yes</span>
+    <span style="color:#f92672">sudo</span>: <span style="color:#66d9ef">yes</span>
  
-  - <span style="color:#66d9ef">name</span>: Starting nginx service
-    <span style="color:#66d9ef">service</span>: name=nginx state=started
-    <span style="color:#66d9ef">sudo</span>: yes
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Starting nginx service</span>
+    <span style="color:#f92672">service</span>: <span style="color:#ae81ff">name=nginx state=started</span>
+    <span style="color:#f92672">sudo</span>: <span style="color:#66d9ef">yes</span>
 </code></pre></div><p>И теперь, перед установкой web-сервера <code>nginx</code> на удаленных хостах будут обновлены установленные пакеты.</p>
 <p>В <a href="https://ealebed.github.io/posts/2015/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-ansible-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5/">следующей статье</a> рассмотрим использование условий и переменных в наборах инструкций.</p>
                 </section>
@@ -237,6 +237,10 @@ test-2                 : ok<span style="color:#f92672">=</span><span style="colo
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -250,10 +254,6 @@ test-2                 : ok<span style="color:#f92672">=</span><span style="colo
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

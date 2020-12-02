@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Cron в docker контейнере &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -90,23 +90,23 @@
                 </header>
                 <section id="post-body">
                     <p>Как мы уже упоминали <a href="https://ealebed.github.io/posts/2018/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-14-%D0%BA%D0%B0%D0%BA-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B0%D1%82%D1%8C-%D0%B7%D0%B0%D0%B4%D0%B0%D1%87%D0%B8-%D0%BF%D0%BE-%D0%BA%D1%80%D0%BE%D0%BD%D1%83-%D0%B2-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B5-%D0%B8%D0%BB%D0%B8-%D0%BD%D0%B0-%D1%85%D0%BE%D1%81%D1%82-%D0%BC%D0%B0%D1%88%D0%B8%D0%BD%D0%B5/">ранее</a>, иногда есть смысл собрать отдельный docker-контейнер для запуска периодических задач. Давайте разберемся!</p>
-<p>В моем случае создаваемый контейнер с cron'ом должен уметь запускать периодические задачи не только в отдельных контейнерах на docker-хостах, но и в сервисах, запущенных в кластере docker swarm. Отдельным требованием было перенаправление всех результатов работы кронтасок в централизованное хранилище логов под управлением graylog2.</p>
+<p>В моем случае создаваемый контейнер с cron&rsquo;ом должен уметь запускать периодические задачи не только в отдельных контейнерах на docker-хостах, но и в сервисах, запущенных в кластере docker swarm. Отдельным требованием было перенаправление всех результатов работы кронтасок в централизованное хранилище логов под управлением graylog2.</p>
 <p>Начнем с Dockerfile, который выглядит следующим образом:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> library/docker:stable</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> APP_ENV<span style="color:#f92672">=</span>dev
 <span style="color:#66d9ef">ENV</span> HOME_DIR<span style="color:#f92672">=</span>/opt/crontab<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apk add --no-cache --virtual .run-deps bash jq <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> mkdir -p <span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span>/jobs <span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span>/projects <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> adduser -S docker -D <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> sed -i <span style="color:#e6db74">&#34;s/999/99/&#34;</span> /etc/group<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> config.json.<span style="color:#e6db74">${</span>APP_ENV<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span>/config.json<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> graylogger.sh /bin/graylogger.sh<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> docker-entrypoint.sh /<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENTRYPOINT</span> [<span style="color:#e6db74">&#34;/docker-entrypoint.sh&#34;</span>]<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;crond&#34;</span>,<span style="color:#e6db74">&#34;-f&#34;</span>]<span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>Из особенностей - при сборке docker-образа я передаю дополнительный аргумент, указывающий окружение, на котором будет запускаться контейнер, например <code>--build-arg APP_ENV=prod</code> (по умолчанию значение установлено на окружение разработчика - <code>APP_ENV=dev</code>). В зависимости от данного значения в образ будет скопирован соответствующий файл <code>config.json.${APP_ENV}</code>, из которого позже будет сформирован <code>crontab</code>.</p>
 <p>В процессе тестирования выяснилось, что на некоторых docker-хостах у группы docker id=999 (номер группы ping внутри контейнера), из-за чего контейнер не мог запуститься (сваливался на шаге <code># Create docker group using correct gid from host</code> в entrypoint-скрипте). Для устранения данной ошибки в Dockerfile пришлось добавить строку <code>sed -i &quot;s/999/99/&quot; /etc/group</code>.</p>
@@ -135,7 +135,7 @@ echo -e <span style="color:#f92672">{</span><span style="color:#ae81ff">\&#34;</
 	export DOCKER_HOST<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;tcp://docker:2375&#39;</span>
 <span style="color:#66d9ef">fi</span>
 
-<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LOG_FILE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LOG_FILE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
     LOG_DIR<span style="color:#f92672">=</span>/var/log/crontab
 	LOG_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>LOG_DIR<span style="color:#e6db74">}</span>/jobs.log
 	mkdir -p <span style="color:#e6db74">${</span>LOG_DIR<span style="color:#e6db74">}</span>
@@ -157,21 +157,21 @@ mkdir -p <span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74
 	adduser docker docker
 <span style="color:#66d9ef">fi</span>
 
-slugify<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+slugify<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
     echo <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> | iconv -t ascii | sed -r s/<span style="color:#f92672">[</span>~<span style="color:#ae81ff">\^</span><span style="color:#f92672">]</span>+//g | sed -r s/<span style="color:#f92672">[</span>^a-zA-Z0-9<span style="color:#f92672">]</span>+/-/g | sed -r s/^-+<span style="color:#ae81ff">\|</span>-+$//g | tr A-Z a-z
 <span style="color:#f92672">}</span>
 
-make_image_cmd<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+make_image_cmd<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
     DOCKERARGS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> | jq -r .dockerargs<span style="color:#66d9ef">)</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DOCKERARGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> DOCKERARGS<span style="color:#f92672">=</span>; <span style="color:#66d9ef">fi</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DOCKERARGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> DOCKERARGS<span style="color:#f92672">=</span>; <span style="color:#66d9ef">fi</span>
     IMAGE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> | jq -r .image<span style="color:#66d9ef">)</span>
     TMP_COMMAND<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> | jq -r .command<span style="color:#66d9ef">)</span>
-    echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRAYLOG<span style="color:#e6db74">}</span><span style="color:#e6db74"> &#39;docker run </span><span style="color:#e6db74">${</span>DOCKERARGS<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>IMAGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>TMP_COMMAND<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">&#34;</span>
+    echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRAYLOG<span style="color:#e6db74">}</span><span style="color:#e6db74"> &#39;docker run </span><span style="color:#e6db74">${</span>DOCKERARGS<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>IMAGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>TMP_COMMAND<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span>
 <span style="color:#f92672">}</span>
 
-make_container_cmd<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+make_container_cmd<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
     DOCKERARGS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> | jq -r .dockerargs<span style="color:#66d9ef">)</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DOCKERARGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> DOCKERARGS<span style="color:#f92672">=</span>; <span style="color:#66d9ef">fi</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DOCKERARGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> DOCKERARGS<span style="color:#f92672">=</span>; <span style="color:#66d9ef">fi</span>
     SCRIPT_NAME<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> | jq -r .name<span style="color:#66d9ef">)</span>
     PROJECT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> | jq -r .project<span style="color:#66d9ef">)</span>
     CONTAINER<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> | jq -r .container<span style="color:#66d9ef">)</span>
@@ -179,7 +179,7 @@ make_container_cmd<span style="color:#f92672">(</span><span style="color:#f92672
 
     <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PROJECT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
         <span style="color:#75715e"># create bash script to detect all running containers</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
             SCRIPT_NAME<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>cat /proc/sys/kernel/random/uuid<span style="color:#66d9ef">)</span>
         <span style="color:#66d9ef">fi</span>
 cat <span style="color:#e6db74">&lt;&lt; EOF &gt; ${HOME_DIR}/projects/${SCRIPT_NAME}.sh
@@ -195,13 +195,13 @@ cat <span style="color:#e6db74">&lt;&lt; EOF &gt; ${HOME_DIR}/projects/${SCRIPT_
 </span><span style="color:#e6db74">    ${GRAYLOG} &#34;docker exec ${DOCKERARGS} \${CONTAINER_NAME} ${TMP_COMMAND}&#34;
 </span><span style="color:#e6db74">done
 </span><span style="color:#e6db74">EOF</span>
-        echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">/bin/bash </span><span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/projects/</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.sh</span><span style="color:#e6db74">&#34;</span>
+        echo <span style="color:#e6db74">&#34;/bin/bash </span><span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/projects/</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.sh&#34;</span>
     <span style="color:#66d9ef">else</span>
-        echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRAYLOG<span style="color:#e6db74">}</span><span style="color:#e6db74"> &#39;docker exec </span><span style="color:#e6db74">${</span>DOCKERARGS<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>CONTAINER<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>TMP_COMMAND<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">&#34;</span>
+        echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GRAYLOG<span style="color:#e6db74">}</span><span style="color:#e6db74"> &#39;docker exec </span><span style="color:#e6db74">${</span>DOCKERARGS<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>CONTAINER<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>TMP_COMMAND<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span>
     <span style="color:#66d9ef">fi</span>
 <span style="color:#f92672">}</span>
 
-make_cmd<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+make_cmd<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
     <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> | jq -r .image<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
         make_image_cmd <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
     <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span> | jq -r .container<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
@@ -211,7 +211,7 @@ make_cmd<span style="color:#f92672">(</span><span style="color:#f92672">)</span>
     <span style="color:#66d9ef">fi</span>
 <span style="color:#f92672">}</span>
 
-parse_schedule<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+parse_schedule<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
 	<span style="color:#66d9ef">case</span> $1 in
         <span style="color:#e6db74">&#34;@yearly&#34;</span><span style="color:#f92672">)</span>
             echo <span style="color:#e6db74">&#34;0 0 1 1 *&#34;</span>
@@ -252,7 +252,7 @@ parse_schedule<span style="color:#f92672">(</span><span style="color:#f92672">)<
                 TOTAL<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>$TOTAL <span style="color:#f92672">+</span> <span style="color:#e6db74">${</span>D:<span style="color:#66d9ef">:-</span>1<span style="color:#e6db74">}</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">60</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">24</span><span style="color:#66d9ef">))</span>
             <span style="color:#66d9ef">fi</span>
 
-            echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">*/</span><span style="color:#e6db74">${</span>TOTAL<span style="color:#e6db74">}</span><span style="color:#e6db74"> * * * *</span><span style="color:#e6db74">&#34;</span>
+            echo <span style="color:#e6db74">&#34;*/</span><span style="color:#e6db74">${</span>TOTAL<span style="color:#e6db74">}</span><span style="color:#e6db74"> * * * *&#34;</span>
             ;;
         *<span style="color:#f92672">)</span>
             echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>@<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
@@ -260,36 +260,36 @@ parse_schedule<span style="color:#f92672">(</span><span style="color:#f92672">)<
     <span style="color:#66d9ef">esac</span>
 <span style="color:#f92672">}</span>
 
-<span style="color:#66d9ef">function</span> build_crontab<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+<span style="color:#66d9ef">function</span> build_crontab<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
     rm -rf <span style="color:#e6db74">${</span>CRONTAB_FILE<span style="color:#e6db74">}</span>
 
-    ONSTART<span style="color:#f92672">=</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+    ONSTART<span style="color:#f92672">=()</span>
     <span style="color:#66d9ef">while</span> read i ; <span style="color:#66d9ef">do</span>
 
         SCHEDULE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.schedule <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span> | sed <span style="color:#e6db74">&#39;s/\*/\\*/g&#39;</span><span style="color:#66d9ef">)</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SCHEDULE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-            echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Schedule Missing: </span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.schedule <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SCHEDULE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+            echo <span style="color:#e6db74">&#34;Schedule Missing: </span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.schedule <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
             <span style="color:#66d9ef">continue</span>
         <span style="color:#66d9ef">fi</span>
         SCHEDULE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>parse_schedule <span style="color:#e6db74">${</span>SCHEDULE<span style="color:#e6db74">}</span> | sed <span style="color:#e6db74">&#39;s/\\//g&#39;</span><span style="color:#66d9ef">)</span>
 
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.command <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-            echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Command Missing: </span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.command <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.command <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+            echo <span style="color:#e6db74">&#34;Command Missing: </span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.command <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
             <span style="color:#66d9ef">continue</span>
         <span style="color:#66d9ef">fi</span>
 
         COMMENT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.comment <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>
         <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMENT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-            echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74"># </span><span style="color:#e6db74">${</span>COMMENT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>CRONTAB_FILE<span style="color:#e6db74">}</span>
+            echo <span style="color:#e6db74">&#34;# </span><span style="color:#e6db74">${</span>COMMENT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>CRONTAB_FILE<span style="color:#e6db74">}</span>
         <span style="color:#66d9ef">fi</span>
 
         SCRIPT_NAME<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.name <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>
         SCRIPT_NAME<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>slugify $SCRIPT_NAME<span style="color:#66d9ef">)</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
             SCRIPT_NAME<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>cat /proc/sys/kernel/random/uuid<span style="color:#66d9ef">)</span>
         <span style="color:#66d9ef">fi</span>
 
-        COMMAND<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">/bin/bash </span><span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/jobs/</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.sh</span><span style="color:#e6db74">&#34;</span>
+        COMMAND<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/bin/bash </span><span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/jobs/</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.sh&#34;</span>
 cat <span style="color:#e6db74">&lt;&lt; EOF &gt; ${HOME_DIR}/jobs/${SCRIPT_NAME}.sh
 </span><span style="color:#e6db74">#!/usr/bin/env bash
 </span><span style="color:#e6db74">set -e
@@ -301,20 +301,20 @@ cat <span style="color:#e6db74">&lt;&lt; EOF &gt; ${HOME_DIR}/jobs/${SCRIPT_NAME
 
         <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.trigger <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
             <span style="color:#66d9ef">while</span> read j ; <span style="color:#66d9ef">do</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>jq .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.trigger<span style="color:#f92672">[</span>$j<span style="color:#f92672">]</span>.command <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-                    echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Command Missing: </span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.trigger<span style="color:#f92672">[</span>$j<span style="color:#f92672">]</span>.command <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>jq .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.trigger<span style="color:#f92672">[</span>$j<span style="color:#f92672">]</span>.command <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+                    echo <span style="color:#e6db74">&#34;Command Missing: </span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.trigger<span style="color:#f92672">[</span>$j<span style="color:#f92672">]</span>.command <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
                     <span style="color:#66d9ef">continue</span>
                 <span style="color:#66d9ef">fi</span>
                 echo <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>make_cmd <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>jq -c .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.trigger<span style="color:#f92672">[</span>$j<span style="color:#f92672">]</span> <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span>/jobs/<span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span>.sh
             <span style="color:#66d9ef">done</span> &lt; &lt;<span style="color:#f92672">(</span>jq -r <span style="color:#e6db74">&#39;.[&#39;</span>$i<span style="color:#e6db74">&#39;].trigger|keys[]&#39;</span> <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#f92672">)</span>
         <span style="color:#66d9ef">fi</span>
 
-        echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">echo \&#34;End Cronjob **</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">** </span><span style="color:#e6db74">${</span>COMMENT<span style="color:#e6db74">}</span><span style="color:#e6db74">\&#34;</span><span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span>/jobs/<span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span>.sh
+        echo <span style="color:#e6db74">&#34;echo \&#34;End Cronjob **</span><span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">** </span><span style="color:#e6db74">${</span>COMMENT<span style="color:#e6db74">}</span><span style="color:#e6db74">\&#34;&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span>/jobs/<span style="color:#e6db74">${</span>SCRIPT_NAME<span style="color:#e6db74">}</span>.sh
 
         echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SCHEDULE<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>COMMAND<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>CRONTAB_FILE<span style="color:#e6db74">}</span>
 
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.onstart <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-            ONSTART<span style="color:#f92672">+=</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMAND<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">)</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>jq -r .<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>.onstart <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+            ONSTART<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMAND<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">)</span>
         <span style="color:#66d9ef">fi</span>
     <span style="color:#66d9ef">done</span> &lt; &lt;<span style="color:#f92672">(</span>jq -r <span style="color:#e6db74">&#39;.|keys[]&#39;</span> <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span><span style="color:#f92672">)</span>
 
@@ -332,7 +332,7 @@ cat <span style="color:#e6db74">&lt;&lt; EOF &gt; ${HOME_DIR}/jobs/${SCRIPT_NAME
     <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -f <span style="color:#e6db74">${</span>CONFIG<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
         build_crontab
     <span style="color:#66d9ef">else</span>
-        echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Unable to find </span><span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/config.json</span><span style="color:#e6db74">&#34;</span>
+        echo <span style="color:#e6db74">&#34;Unable to find </span><span style="color:#e6db74">${</span>HOME_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/config.json&#34;</span>
     <span style="color:#66d9ef">fi</span>
 <span style="color:#66d9ef">fi</span>
 
@@ -369,23 +369,23 @@ exec <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;
 </code></pre></div><p>Или добавить новый сервис в файл <code>docker-compose.yml</code>, например так (вариант с монтированием <code>config.json</code> в docker-контейнер с машины разработчика):</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
 <span style="color:#75715e">### Crontab Container #######################################</span>
-  <span style="color:#66d9ef">crond</span>:
-    <span style="color:#66d9ef">container_name</span>: crond
-    <span style="color:#66d9ef">image</span>: crontab:latest
-    <span style="color:#66d9ef">environment</span>:
-      - HOST_SOURCE=${SERVER_NAME_BASE:-crontab_container}
-      - GRAYLOG_ADDR=${GRAYLOG_ADDR:-graylog.lc}
-      - GRAYLOG_PORT=${GRAYLOG_PORT:-<span style="color:#ae81ff">12202</span>}
-    <span style="color:#66d9ef">volumes</span>:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./crond/config.json.dev:/opt/crontab/config.json:rw
-    <span style="color:#66d9ef">logging</span>:
-      <span style="color:#66d9ef">driver</span>: gelf
-      <span style="color:#66d9ef">options</span>:
-        <span style="color:#66d9ef">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR:-graylog.lc}:12201&#34;</span>
-        <span style="color:#66d9ef">tag</span>: <span style="color:#e6db74">&#34;crond&#34;</span>
+  <span style="color:#f92672">crond</span>:
+    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">crond</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">crontab:latest</span>
+    <span style="color:#f92672">environment</span>:
+      - <span style="color:#ae81ff">HOST_SOURCE=${SERVER_NAME_BASE:-crontab_container}</span>
+      - <span style="color:#ae81ff">GRAYLOG_ADDR=${GRAYLOG_ADDR:-graylog.lc}</span>
+      - <span style="color:#ae81ff">GRAYLOG_PORT=${GRAYLOG_PORT:-12202}</span>
+    <span style="color:#f92672">volumes</span>:
+      - <span style="color:#ae81ff">/var/run/docker.sock:/var/run/docker.sock:ro</span>
+      - <span style="color:#ae81ff">./crond/config.json.dev:/opt/crontab/config.json:rw</span>
+    <span style="color:#f92672">logging</span>:
+      <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
+      <span style="color:#f92672">options</span>:
+        <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR:-graylog.lc}:12201&#34;</span>
+        <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;crond&#34;</span>
 ...
-</code></pre></div><p>За основу реализованного <strong>docker-контейнера для запуска cron'овых задач</strong> был взят <a href="https://github.com/willfarrell/docker-crontab">этот проект</a>, там же  можно найти больше примеров запуска периодических задач.</p>
+</code></pre></div><p>За основу реализованного <strong>docker-контейнера для запуска cron&rsquo;овых задач</strong> был взят <a href="https://github.com/willfarrell/docker-crontab">этот проект</a>, там же  можно найти больше примеров запуска периодических задач.</p>
                 </section>
             </article>
 
@@ -427,6 +427,10 @@ exec <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -440,10 +444,6 @@ exec <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

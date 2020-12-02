@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Кэш пакетов для Composer &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -94,21 +94,21 @@
 <p>Проблема заключается в частой установке одних и тех же пакетов. Каждая новая установка проекта, это обращение к packagist.org для нахождения источников зависимостей вашего пакета, зависимостей зависимостей и т.д. и скачивание необходимых пакетов. Конечно, у Composer есть встроенный кэш, но он хранится в <code>~/.composer/cache</code>, индивидуален для каждого пользователя и не доступен для других разработчиков, QA и окружений разработки.</p>
 <p><a href="https://github.com/composer/satis">Satis</a> — статическое хранилище Composer пакетов, ультра-легкая версия Packagist, которая также может быть использована для размещения приватных пакетов вашей компании.</p>
 <p>Поднимать локальную версию хранилища пакетов будем с помощью docker-контейнера, сам контейнер будет запускаться с помощью файла <code>docker-compose.yml</code> следующего содержания:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#34;2&#34;</span>
-<span style="color:#66d9ef">services</span>:
-  <span style="color:#66d9ef">satis</span>:
-    <span style="color:#66d9ef">image</span>: ealebed/satis:<span style="color:#ae81ff">1.0</span>
-    <span style="color:#66d9ef">container_name</span>: satis
-    <span style="color:#66d9ef">hostname</span>: satis
-    <span style="color:#66d9ef">volumes</span>:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#34;2&#34;</span>
+<span style="color:#f92672">services</span>:
+  <span style="color:#f92672">satis</span>:
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">ealebed/satis:1.0</span>
+    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">satis</span>
+    <span style="color:#f92672">hostname</span>: <span style="color:#ae81ff">satis</span>
+    <span style="color:#f92672">volumes</span>:
       - <span style="color:#e6db74">&#34;/srv/satis/COMPOSER_CACHE:/root/.composer&#34;</span>
       - <span style="color:#e6db74">&#34;/srv/satis/satis.json:/app/config.json&#34;</span>
       - <span style="color:#e6db74">&#34;/srv/satis/dist:/satisfy/web/dist&#34;</span>
       - <span style="color:#e6db74">&#34;/srv/satis/include:/satisfy/web/include&#34;</span>
-    <span style="color:#66d9ef">environment</span>:
-      <span style="color:#66d9ef">CRONTAB_FREQUENCY</span>: <span style="color:#e6db74">&#34;*/10 * * * *&#34;</span>
-      <span style="color:#66d9ef">VIRTUAL_HOST</span>: satis.lc
-    <span style="color:#66d9ef">ports</span>:
+    <span style="color:#f92672">environment</span>:
+      <span style="color:#f92672">CRONTAB_FREQUENCY</span>: <span style="color:#e6db74">&#34;*/10 * * * *&#34;</span>
+      <span style="color:#f92672">VIRTUAL_HOST</span>: <span style="color:#ae81ff">satis.lc</span>
+    <span style="color:#f92672">ports</span>:
       - <span style="color:#ae81ff">3333</span>:<span style="color:#ae81ff">3000</span>
       - <span style="color:#ae81ff">8181</span>:<span style="color:#ae81ff">80</span>
 </code></pre></div><p>Перед запуском docker-контейнера в каталоге <code>/srv/satis/www</code> на хост-машине создаем конфигурационный файл <code>satis.json</code> примерно с таким содержимым:</p>
@@ -300,6 +300,10 @@ sys	0m4.496s
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -313,10 +317,6 @@ sys	0m4.496s
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

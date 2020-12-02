@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Поднимаем Gitlab в docker-контейнерах за Nginx &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -199,85 +199,85 @@ location /.well-known {
     root /var/www/le;
 }
 </code></pre></div><p>Gitlab будем поднимать с помощью инструмента <code>docker-compose</code>, инструкции для которого описаны в конфигурационном файле <code>docker-compose.yml</code> и выглядят следующим образом:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
-<span style="color:#66d9ef">services</span>:
-  <span style="color:#66d9ef">redis</span>:
-    <span style="color:#66d9ef">container_name</span>: gitlab-redis
-    <span style="color:#66d9ef">restart</span>: always
-    <span style="color:#66d9ef">image</span>: sameersbn/redis:latest
-    <span style="color:#66d9ef">command</span>:
-    - --loglevel warning
-    <span style="color:#66d9ef">volumes</span>:
-    - /srv/redis:/var/lib/redis:Z
-    <span style="color:#66d9ef">networks</span>:
-    - mynet
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+<span style="color:#f92672">services</span>:
+  <span style="color:#f92672">redis</span>:
+    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">gitlab-redis</span>
+    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">sameersbn/redis:latest</span>
+    <span style="color:#f92672">command</span>:
+    - --<span style="color:#ae81ff">loglevel warning</span>
+    <span style="color:#f92672">volumes</span>:
+    - <span style="color:#ae81ff">/srv/redis:/var/lib/redis:Z</span>
+    <span style="color:#f92672">networks</span>:
+    - <span style="color:#ae81ff">mynet</span>
  
-  <span style="color:#66d9ef">postgresql</span>:
-    <span style="color:#66d9ef">container_name</span>: gitlab-postgres
-    <span style="color:#66d9ef">restart</span>: always
-    <span style="color:#66d9ef">image</span>: sameersbn/postgresql:<span style="color:#ae81ff">9.6</span><span style="color:#ae81ff">-2</span>
-    <span style="color:#66d9ef">volumes</span>:
-    - /srv/postgresql:/var/lib/postgresql:Z
-    <span style="color:#66d9ef">environment</span>:
-    - DB_USER=gitlab
-    - DB_PASS=password
-    - DB_NAME=gitlabhq_production
-    - DB_EXTENSION=pg_trgm
-    <span style="color:#66d9ef">networks</span>:
-    - mynet
+  <span style="color:#f92672">postgresql</span>:
+    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">gitlab-postgres</span>
+    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">sameersbn/postgresql:9.6-2</span>
+    <span style="color:#f92672">volumes</span>:
+    - <span style="color:#ae81ff">/srv/postgresql:/var/lib/postgresql:Z</span>
+    <span style="color:#f92672">environment</span>:
+    - <span style="color:#ae81ff">DB_USER=gitlab</span>
+    - <span style="color:#ae81ff">DB_PASS=password</span>
+    - <span style="color:#ae81ff">DB_NAME=gitlabhq_production</span>
+    - <span style="color:#ae81ff">DB_EXTENSION=pg_trgm</span>
+    <span style="color:#f92672">networks</span>:
+    - <span style="color:#ae81ff">mynet</span>
  
-  <span style="color:#66d9ef">gitlab</span>:
-    <span style="color:#66d9ef">container_name</span>: gitlab
-    <span style="color:#66d9ef">restart</span>: always
-    <span style="color:#66d9ef">image</span>: sameersbn/gitlab:<span style="color:#ae81ff">9.0</span><span style="color:#ae81ff">.2</span>
-    <span style="color:#66d9ef">depends_on</span>:
-    - redis
-    - postgresql
-    <span style="color:#66d9ef">ports</span>:
+  <span style="color:#f92672">gitlab</span>:
+    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">gitlab</span>
+    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">sameersbn/gitlab:9.0.2</span>
+    <span style="color:#f92672">depends_on</span>:
+    - <span style="color:#ae81ff">redis</span>
+    - <span style="color:#ae81ff">postgresql</span>
+    <span style="color:#f92672">ports</span>:
     - <span style="color:#e6db74">&#34;10080:80&#34;</span>
     - <span style="color:#e6db74">&#34;10022:22&#34;</span>
-    <span style="color:#66d9ef">volumes</span>:
-    - /srv/gitlab/data:/home/git/data:Z
-    - /srv/gitlab/logs:/var/log/gitlab
-    - /srv/certs:/certs
-    <span style="color:#66d9ef">environment</span>:
-    - DEBUG=<span style="color:#66d9ef">false</span>
+    <span style="color:#f92672">volumes</span>:
+    - <span style="color:#ae81ff">/srv/gitlab/data:/home/git/data:Z</span>
+    - <span style="color:#ae81ff">/srv/gitlab/logs:/var/log/gitlab</span>
+    - <span style="color:#ae81ff">/srv/certs:/certs</span>
+    <span style="color:#f92672">environment</span>:
+    - <span style="color:#ae81ff">DEBUG=false</span>
  
-    - DB_ADAPTER=postgresql
-    - DB_HOST=postgresql
-    - DB_PORT=<span style="color:#ae81ff">5432</span>
-    - DB_USER=gitlab
-    - DB_PASS=password
-    - DB_NAME=gitlabhq_production
+    - <span style="color:#ae81ff">DB_ADAPTER=postgresql</span>
+    - <span style="color:#ae81ff">DB_HOST=postgresql</span>
+    - <span style="color:#ae81ff">DB_PORT=5432</span>
+    - <span style="color:#ae81ff">DB_USER=gitlab</span>
+    - <span style="color:#ae81ff">DB_PASS=password</span>
+    - <span style="color:#ae81ff">DB_NAME=gitlabhq_production</span>
  
-    - REDIS_HOST=redis
-    - REDIS_PORT=<span style="color:#ae81ff">6379</span>
-    - GITLAB_SSH_PORT=<span style="color:#ae81ff">10022</span>
-    - GITLAB_PORT=<span style="color:#ae81ff">443</span>
-    - GITLAB_HTTPS=<span style="color:#66d9ef">true</span>
-    - GITLAB_HOST=gitlab.example.com
+    - <span style="color:#ae81ff">REDIS_HOST=redis</span>
+    - <span style="color:#ae81ff">REDIS_PORT=6379</span>
+    - <span style="color:#ae81ff">GITLAB_SSH_PORT=10022</span>
+    - <span style="color:#ae81ff">GITLAB_PORT=443</span>
+    - <span style="color:#ae81ff">GITLAB_HTTPS=true</span>
+    - <span style="color:#ae81ff">GITLAB_HOST=gitlab.example.com</span>
  
-    - GITLAB_SECRETS_SECRET_KEY_BASE=&lt;случайная строка длиной <span style="color:#ae81ff">64</span> символа<span style="color:#e6db74">&gt;
-</span><span style="color:#e6db74">   </span><span style="color:#e6db74"> </span><span style="color:#e6db74">- GITLAB_SECRETS_OTP_KEY_BASE=&lt;случайная строка длиной 64 символа&gt;</span>
-    - GITLAB_SECRETS_DB_KEY_BASE=&lt;случайная строка длиной <span style="color:#ae81ff">64</span> символа<span style="color:#e6db74">&gt;
-</span><span style="color:#e6db74"> 
-</span><span style="color:#e6db74">   </span><span style="color:#e6db74"> </span><span style="color:#e6db74">- GITLAB_EMAIL=gitlab@test.example.com</span>
-    - SMTP_ENABLED=<span style="color:#66d9ef">true</span>
-    - SMTP_DOMAIN=test.example.com
-    - SMTP_HOST=smtp.yandex.ru
-    - SMTP_PORT=<span style="color:#ae81ff">587</span>
-    - SMTP_USER=gitlab@test.example.com
-    - SMTP_PASS=supersecretpassword
-    - SMTP_STARTTLS=<span style="color:#66d9ef">true</span>
-    - SMTP_AUTHENTICATION=login
+    - <span style="color:#ae81ff">GITLAB_SECRETS_SECRET_KEY_BASE=&lt;случайная строка длиной 64 символа&gt;</span>
+    - <span style="color:#ae81ff">GITLAB_SECRETS_OTP_KEY_BASE=&lt;случайная строка длиной 64 символа&gt;</span>
+    - <span style="color:#ae81ff">GITLAB_SECRETS_DB_KEY_BASE=&lt;случайная строка длиной 64 символа&gt;</span>
  
-    <span style="color:#66d9ef">networks</span>:
-     <span style="color:#66d9ef">mynet</span>:
-      <span style="color:#66d9ef">aliases</span>:
-      - gitlab.example.com
+    - <span style="color:#ae81ff">GITLAB_EMAIL=gitlab@test.example.com</span>
+    - <span style="color:#ae81ff">SMTP_ENABLED=true</span>
+    - <span style="color:#ae81ff">SMTP_DOMAIN=test.example.com</span>
+    - <span style="color:#ae81ff">SMTP_HOST=smtp.yandex.ru</span>
+    - <span style="color:#ae81ff">SMTP_PORT=587</span>
+    - <span style="color:#ae81ff">SMTP_USER=gitlab@test.example.com</span>
+    - <span style="color:#ae81ff">SMTP_PASS=supersecretpassword</span>
+    - <span style="color:#ae81ff">SMTP_STARTTLS=true</span>
+    - <span style="color:#ae81ff">SMTP_AUTHENTICATION=login</span>
  
-<span style="color:#66d9ef">networks</span>:
-  <span style="color:#66d9ef">mynet</span>:
+    <span style="color:#f92672">networks</span>:
+     <span style="color:#f92672">mynet</span>:
+      <span style="color:#f92672">aliases</span>:
+      - <span style="color:#ae81ff">gitlab.example.com</span>
+ 
+<span style="color:#f92672">networks</span>:
+  <span style="color:#f92672">mynet</span>:
 </code></pre></div><p>Сгенерировать случайные значения для параметров <code>GITLAB_SECRETS_SECRET_KEY_BASE</code>, <code>GITLAB_SECRETS_OTP_KEY_BASE</code> и <code>GITLAB_SECRETS_DB_KEY_BASE</code> можно с помощью <a href="https://ealebed.github.io/posts/2016/%D0%B3%D0%B5%D0%BD%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F-%D0%BD%D0%B0%D0%B4%D0%B5%D0%B6%D0%BD%D1%8B%D1%85-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D0%B5%D0%B9-%D0%B2-linux-4-%D0%BF%D1%80%D0%BE%D1%81%D1%82%D1%8B%D1%85-%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1%D0%B0/">утилиты <code>pwgen</code></a>, например так:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pwgen -Bsv1 <span style="color:#ae81ff">64</span>
 </code></pre></div><p>После этого, находясь в каталоге с файлом <code>docker-compose.yml</code> выполняем команду:</p>
@@ -324,6 +324,10 @@ location /.well-known {
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -337,10 +341,6 @@ location /.well-known {
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

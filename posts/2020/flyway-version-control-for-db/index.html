@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Миграции и контроль версий БД с помощью Flyway &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -123,7 +123,7 @@
 <span style="color:#66d9ef">ALTER</span> <span style="color:#66d9ef">TABLE</span> hero_data.hero <span style="color:#66d9ef">ADD</span> <span style="color:#66d9ef">CONSTRAINT</span> pk_hero_id <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> (id);
 </code></pre></div><p>Пример повторяемой миграции:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">OR</span> <span style="color:#66d9ef">REPLACE</span> <span style="color:#66d9ef">VIEW</span> blue_cars <span style="color:#66d9ef">AS</span> 
-    <span style="color:#66d9ef">SELECT</span> id, license_plate <span style="color:#66d9ef">FROM</span> cars <span style="color:#66d9ef">WHERE</span> color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">blue</span><span style="color:#e6db74">&#39;</span>;
+    <span style="color:#66d9ef">SELECT</span> id, license_plate <span style="color:#66d9ef">FROM</span> cars <span style="color:#66d9ef">WHERE</span> color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blue&#39;</span>;
 </code></pre></div><p>Как правило, миграции проще всего писать в формате SQL - так легче начать работу, использовать существующие скрипты/навыки/инструменты. Опять же, такой подход сразу дает доступ ко всем возможностям используемой базы данных и не требует понимания &ldquo;промежуточных&rdquo; уровней транслирования sql-выражений. SQL-миграции хорошо подходят для:</p>
 <ul>
 <li>DDL-изменений (CREATE/ALTER/DROP утверждения для TABLES,VIEWS,TRIGGERS,SEQUENCES,…);</li>
@@ -142,21 +142,21 @@
 <p>Миграции могут быть применены ко всем необходимым базам данных, но для простоты рассмотрим пример работы только с одной БД.</p>
 <p>Все взаимодействие утилиты <code>flyway</code> с БД будет осуществляться из docker-контейнера, дабы не захламлять систему. Для сборки образа воспользуемся следующим <code>Dockerfile</code>:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> adoptopenjdk/openjdk13:jdk-13.0.2_8-ubuntu-slim</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">LABEL</span> maintainer<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Yevhen Lebid &lt;ealebed@gmail.com&gt;&#34;</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">WORKDIR</span><span style="color:#e6db74"> /flyway</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> FLYWAY_VERSION<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> FLYWAY_VERSION<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    apt-get install -y <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>      curl <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    apt-get -y autoremove <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    apt-get -y clean <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    rm -rf /var/lib/apt/lists/*<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>/flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz -o flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> tar -xzf flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz --strip-components<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> rm flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
@@ -237,6 +237,10 @@
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -250,10 +254,6 @@
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">Развертывание Apache Airflow в Kubernetes кластере<aside class="dates">Jan 28 2020</aside></a>
         </li>
     
 </ul>

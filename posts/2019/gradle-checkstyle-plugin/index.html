@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Gradle Checkstyle plugin &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -96,11 +96,11 @@
 <p>Для решения задачи будем использовать плагин <a href="https://docs.gradle.org/current/userguide/checkstyle_plugin.html">Checkstyle</a>. Пример схемы (файл <code>checkstyle.xml</code>) для данного плагина можно взять <a href="https://github.com/checkstyle/checkstyle/blob/master/src/main/resources/google_checks.xml">здесь</a> и, при необходимости, подредактировать под свои нужды.</p>
 <p>В <a href="https://ealebed.github.io/posts/2019/%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%BE%D0%B2-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-gradle/">предыдущей статье</a> мы уже рассматривали использование инит-скриптов гредла, и, так как нам нужна масштабируемость, настройку статического анализа кода мы тоже сделаем через инит-скрипт. Создаем файл <code>checkstyle.gradle</code> со следующим содержимым:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">allprojects <span style="color:#f92672">{</span>
-    afterEvaluate <span style="color:#f92672">{</span> project <span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>
+    afterEvaluate <span style="color:#f92672">{</span> project <span style="color:#f92672">-&gt;</span>
         project<span style="color:#f92672">.</span><span style="color:#a6e22e">plugins</span><span style="color:#f92672">.</span><span style="color:#a6e22e">withId</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>checkstyle<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
             <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
                 def _toolVersion <span style="color:#f92672">=</span> ext<span style="color:#f92672">.</span><span style="color:#a6e22e">has</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>toolVersion<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">?</span> ext<span style="color:#f92672">[</span><span style="color:#960050;background-color:#1e0010">&#39;</span>toolVersion<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">]</span> <span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>8<span style="color:#f92672">.</span><span style="color:#a6e22e">15</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
-                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">getenv</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>BUILD_ENVIRONMENT<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">?</span><span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>DEVELOPER<span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>CI<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">getenv</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>BUILD_ENVIRONMENT<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">?:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>DEVELOPER<span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#f92672">==</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>CI<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
                     println <span style="color:#e6db74">&#34;&#39;checkstyle&#39; plugin common config&#34;</span>
                     println <span style="color:#e6db74">&#34; |- use toolVersion version: $_toolVersion&#34;</span>
                     checkstyle <span style="color:#f92672">{</span>
@@ -108,7 +108,7 @@
 
                         configFile <span style="color:#f92672">=</span> file<span style="color:#f92672">(</span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">getenv</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>GRADLE_HOME<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/checkstyle.xml&#34;</span><span style="color:#f92672">)</span>
                         println <span style="color:#e6db74">&#34; |- use checkstyle.xml: &#34;</span> <span style="color:#f92672">+</span> configFile
-                        println <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
+                        println <span style="color:#960050;background-color:#1e0010">&#39;&#39;</span>
                         reportsDir <span style="color:#f92672">=</span> file<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;${buildDir}/checkstyleReports&#34;</span><span style="color:#f92672">)</span>
                     <span style="color:#f92672">}</span>
                     checkstyleMain <span style="color:#f92672">{</span>
@@ -125,7 +125,7 @@
 
                         configFile <span style="color:#f92672">=</span> file<span style="color:#f92672">(</span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">getenv</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>HOME<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/.gradle/checkstyle.xml&#34;</span><span style="color:#f92672">)</span>
                         println <span style="color:#e6db74">&#34; |- use checkstyle.xml: &#34;</span> <span style="color:#f92672">+</span> configFile
-                        println <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
+                        println <span style="color:#960050;background-color:#1e0010">&#39;&#39;</span>
                         reportsDir <span style="color:#f92672">=</span> file<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;${project.buildDir}/checkstyleReports&#34;</span><span style="color:#f92672">)</span>
                     <span style="color:#f92672">}</span>
                     checkstyleMain <span style="color:#f92672">{</span>
@@ -157,10 +157,10 @@
 <p><strong>Примечание.</strong> Для отправки комментариев в пулл реквесту нам понадобится jenkins-плагин <a href="https://wiki.jenkins.io/display/JENKINS/Violation+Comments+to+GitHub+Plugin">Violation Comments to GitHub</a>. Установить его можно руками или с помощью скрипта <code>00-install-plugins.groovy</code> как описано <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">здесь</a>.</p>
 <p>Pipeline (файл <code>adsCheckstylePipeline</code>) в нашем случае будет выглядеть так:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">def <span style="color:#a6e22e">call</span><span style="color:#f92672">(</span>body<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    def pipelineParams <span style="color:#f92672">=</span> <span style="color:#f92672">[</span><span style="color:#f92672">:</span><span style="color:#f92672">]</span>
+    def pipelineParams <span style="color:#f92672">=</span> <span style="color:#f92672">[:]</span>
     body<span style="color:#f92672">.</span><span style="color:#a6e22e">resolveStrategy</span> <span style="color:#f92672">=</span> Closure<span style="color:#f92672">.</span><span style="color:#a6e22e">DELEGATE_FIRST</span>
     body<span style="color:#f92672">.</span><span style="color:#a6e22e">delegate</span> <span style="color:#f92672">=</span> pipelineParams
-    <span style="color:#a6e22e">body</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+    <span style="color:#a6e22e">body</span><span style="color:#f92672">()</span>
 
     pipeline <span style="color:#f92672">{</span>
         agent any
@@ -171,14 +171,14 @@
                         env<span style="color:#f92672">.</span><span style="color:#a6e22e">REPO_NAME</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;${pipelineParams.repoName}&#34;</span>
                         sh <span style="color:#e6db74">&#39;&#39;&#39;</span>
                             docker run <span style="color:#960050;background-color:#1e0010">\</span>
-                                <span style="color:#f92672">-</span><span style="color:#f92672">-</span>rm <span style="color:#960050;background-color:#1e0010">\</span>
-                                <span style="color:#f92672">-</span>v <span style="color:#a6e22e">$</span><span style="color:#f92672">(</span>pwd<span style="color:#f92672">)</span><span style="color:#f92672">:</span><span style="color:#f92672">/</span>project <span style="color:#960050;background-color:#1e0010">\</span>
+                                <span style="color:#f92672">--</span>rm <span style="color:#960050;background-color:#1e0010">\</span>
+                                <span style="color:#f92672">-</span>v <span style="color:#a6e22e">$</span><span style="color:#f92672">(</span>pwd<span style="color:#f92672">):/</span>project <span style="color:#960050;background-color:#1e0010">\</span>
                                 <span style="color:#f92672">-</span>w <span style="color:#f92672">/</span>project <span style="color:#960050;background-color:#1e0010">\</span>
                             myorganization<span style="color:#f92672">/</span>gradle<span style="color:#f92672">:</span>5<span style="color:#f92672">.</span><span style="color:#a6e22e">0</span><span style="color:#f92672">-</span>jdk11 gradle clean check
                         <span style="color:#e6db74">&#39;&#39;&#39;</span>
-                        env<span style="color:#f92672">.</span><span style="color:#a6e22e">BUILD_STATUS</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;${currentBuild.currentResult}&#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">toLowerCase</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+                        env<span style="color:#f92672">.</span><span style="color:#a6e22e">BUILD_STATUS</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;${currentBuild.currentResult}&#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">toLowerCase</span><span style="color:#f92672">()</span>
                     <span style="color:#f92672">}</span>
-                    step<span style="color:#f92672">(</span><span style="color:#f92672">[</span>$class<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>ViolationsToGitHubRecorder<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span>
+                    step<span style="color:#f92672">([</span>$class<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>ViolationsToGitHubRecorder<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span>
                         config<span style="color:#f92672">:</span> <span style="color:#f92672">[</span>
                             gitHubUrl<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>https<span style="color:#f92672">:</span><span style="color:#75715e">//api.github.com/&#39;,
 </span><span style="color:#75715e"></span>                            repositoryOwner<span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;${GITHUB_PR_SOURCE_REPO_OWNER}&#34;</span><span style="color:#f92672">,</span>
@@ -193,7 +193,7 @@
                             minSeverity<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>WARN<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span>
                             keepOldComments<span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">,</span>
 
-                            commentTemplate: <span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;
+                            commentTemplate: <span style="color:#e6db74">&#34;&#34;&#34;
 </span><span style="color:#e6db74">Reporter: {{violation.reporter}}{{#violation.rule}}
 </span><span style="color:#e6db74">    
 </span><span style="color:#e6db74">Rule: {{violation.rule}}{{/violation.rule}}
@@ -203,7 +203,7 @@
 </span><span style="color:#e6db74">Source: {{violation.source}}{{/violation.source}}
 </span><span style="color:#e6db74">    
 </span><span style="color:#e6db74">{{violation.message}}
-</span><span style="color:#e6db74">                            &#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">,</span>
+</span><span style="color:#e6db74">                            &#34;&#34;&#34;</span><span style="color:#f92672">,</span>
 
                             violationConfigs: <span style="color:#f92672">[</span>
                                 <span style="color:#f92672">[</span> pattern<span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;.*/checkstyleReports/.*\\.xml\$&#34;</span><span style="color:#f92672">,</span>
@@ -212,19 +212,19 @@
                                 <span style="color:#f92672">]</span>
                             <span style="color:#f92672">]</span>
                         <span style="color:#f92672">]</span>
-                    <span style="color:#f92672">]</span><span style="color:#f92672">)</span>
+                    <span style="color:#f92672">])</span>
                     <span style="color:#f92672">}</span>
                 post <span style="color:#f92672">{</span>
                     always <span style="color:#f92672">{</span>
-                        publishHTML<span style="color:#f92672">(</span><span style="color:#f92672">[</span>
+                        publishHTML<span style="color:#f92672">([</span>
                             allowMissing<span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">,</span>
                             alwaysLinkToLastBuild<span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">,</span>
                             keepAll<span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">,</span>
                             reportDir<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>build<span style="color:#f92672">/</span>checkstyleReports<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span>
                             reportFiles<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>main<span style="color:#f92672">.</span><span style="color:#a6e22e">html</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span>
                             reportName<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>HTML Report<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span>
-                            reportTitles<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
-                        <span style="color:#f92672">]</span><span style="color:#f92672">)</span>
+                            reportTitles<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;&#39;</span>
+                        <span style="color:#f92672">])</span>
                         slackSend<span style="color:#f92672">(</span>channel<span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;${pipelineParams.slackChannel}&#34;</span><span style="color:#f92672">,</span> <span style="color:#960050;background-color:#1e0010">\</span>
                               message<span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Build &#39;${env.JOB_NAME}&#39; is *${BUILD_STATUS}* \n (${env.BUILD_URL}) \n\n&#34;</span> <span style="color:#f92672">+</span>
                             <span style="color:#e6db74">&#34;See report on &#39;${JOB_URL}HTML_20Report/&#39;&#34;</span><span style="color:#f92672">)</span>
@@ -243,7 +243,7 @@ adsCheckstylePipeline <span style="color:#f92672">{</span>
 </span><span style="color:#75715e"></span><span style="color:#f92672">}</span>
 </code></pre></div><p>Для публикации комментариев с результатами анализа кода плагину необходимо авторизоваться на GitHub. Это делается с помощью строки <code>credentialsId: 'token-pr'</code> - конечно же, соответствующие креденшелы нужно создать. Можно это сделать вручную - в Интернете множество примеров с картинками, как это сделать, а можно немного &ldquo;доработать&rdquo; уже существующие groovy-скрипты по настройке Jenkins (см. цикл статей &ldquo;Jenkins as a code&rdquo; - <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1/">1</a>, <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2/">2</a>, <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3/">3</a>, <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4/">4</a>).</p>
 <p>Я выбрал второй вариант, поэтому мне пришлось добавить в скрипт <code>01-global-settings.groovy</code> следующие строки:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">.</span><span style="color:#f92672">.</span><span style="color:#f92672">.</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">...</span>
 
 println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- Configuring credentials&#34;</span><span style="color:#f92672">)</span>
 Credentials secretText <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>Credentials<span style="color:#f92672">)</span> <span style="color:#66d9ef">new</span> StringCredentialsImpl<span style="color:#f92672">(</span>
@@ -252,14 +252,14 @@ Credentials secretText <span style="color:#f92672">=</span> <span style="color:#
 </span><span style="color:#75715e"></span>    <span style="color:#e6db74">&#34;GitHub token for PR&#34;</span><span style="color:#f92672">,</span> <span style="color:#75715e">// description for this token
 </span><span style="color:#75715e"></span>    Secret<span style="color:#f92672">.</span><span style="color:#a6e22e">fromString</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;bw4aeqkmejay.....xip4ln727u0wg7q&#34;</span><span style="color:#f92672">)</span> <span style="color:#75715e">// token generated on github: https://github.com/settings/tokens
 </span><span style="color:#75715e"></span><span style="color:#f92672">)</span>
-SystemCredentialsProvider<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getStore</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">addCredentials</span><span style="color:#f92672">(</span>Domain<span style="color:#f92672">.</span><span style="color:#a6e22e">global</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">,</span> secretText<span style="color:#f92672">)</span>
+SystemCredentialsProvider<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getStore</span><span style="color:#f92672">().</span><span style="color:#a6e22e">addCredentials</span><span style="color:#f92672">(</span>Domain<span style="color:#f92672">.</span><span style="color:#a6e22e">global</span><span style="color:#f92672">(),</span> secretText<span style="color:#f92672">)</span>
 
 println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;--- Configuring GitHubServer&#34;</span><span style="color:#f92672">)</span>
 GitHubServerConfig server <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> GitHubServerConfig<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>token<span style="color:#f92672">-</span>pr<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span>
 server<span style="color:#f92672">.</span><span style="color:#a6e22e">setManageHooks</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">)</span>
 server<span style="color:#f92672">.</span><span style="color:#a6e22e">setApiUrl</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>https<span style="color:#f92672">:</span><span style="color:#75715e">//api.github.com&#39;)
 </span><span style="color:#75715e"></span>server<span style="color:#f92672">.</span><span style="color:#a6e22e">setClientCacheSize</span><span style="color:#f92672">(</span>20<span style="color:#f92672">)</span>
-GitHubPlugin<span style="color:#f92672">.</span><span style="color:#a6e22e">configuration</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getConfigs</span><span style="color:#f92672">(</span><span style="color:#f92672">)</span><span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>server<span style="color:#f92672">)</span>
+GitHubPlugin<span style="color:#f92672">.</span><span style="color:#a6e22e">configuration</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getConfigs</span><span style="color:#f92672">().</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>server<span style="color:#f92672">)</span>
 </code></pre></div><p>Осталось создать задачу в Jenkins, где в качестве триггера указать &ldquo;GitHub Pull Requests&rdquo;. <strong>Trigger Mode</strong> в данном случае будет &ldquo;Cron with Persisted Data&rdquo;, а <strong>Trigger Events</strong> - &ldquo;Pull Request Opened&rdquo; (конечно, вы можете выбрать другие значения в зависимости от ваших требований). Также в поле <strong>Branches to build</strong> нужно указать &ldquo;origin/pull/${GITHUB_PR_NUMBER}/merge&rdquo;, а в расширенных настройках репозитория в <strong>Refspec</strong> вписать &ldquo;+refs/pull/${GITHUB_PR_NUMBER}/merge:refs/remotes/origin/pull/${GITHUB_PR_NUMBER}/merge&rdquo;. Опять же, для 1-2 задач это быстрее сделать руками, но если нужно настроить несколько сотен таких задач, то проще доработать groovy-скрипт <code>05-create-jobs.groovy</code> из <a href="https://ealebed.github.io/posts/2018/jenkins-as-a-code-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3/">этой</a> статьи.</p>
 <p>Больше полезной информации о настройке плагинов Checkstyle (анализ кода), Violation Comments to GitHub (комментарии с результатами чекстайла) и GitHub integration plugin (триггер &ldquo;GitHub Pull Requests&rdquo;) можно найти <a href="https://docs.gradle.org/current/userguide/checkstyle_plugin.html">здесь</a>, <a href="https://github.com/jenkinsci/violation-comments-to-github-plugin">здесь</a> и <a href="https://github.com/KostyaSha/github-integration-plugin/blob/master/docs/Configuration.adoc">здесь</a>.</p>
                 </section>
@@ -303,6 +303,10 @@ GitHubPlugin<span style="color:#f92672">.</span><span style="color:#a6e22e">conf
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -316,10 +320,6 @@ GitHubPlugin<span style="color:#f92672">.</span><span style="color:#a6e22e">conf
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

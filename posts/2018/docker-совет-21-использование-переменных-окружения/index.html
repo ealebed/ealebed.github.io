@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Docker совет №21: Использование переменных окружения &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -91,7 +91,7 @@
 <p>Рано или поздно наступит время, когда вам необходимо будет добавить переменную окружения к своему экземпляру docker-образа, и значение этой переменной должно отличаться в зависимости от того, где собирается образ. Конечно же, каждый раз редактировать <code>Dockerfile</code>, меняя это значение, и пересобирать образ - не вариант. Еще может потребоваться заменить значение переменной во время запуска docker-контейнера из собранного образа.</p>
 <p>Добавим в <code>Dockerfile</code> пару новых инструкций, например:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> alpine:3.7</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> APP_ENV<span style="color:#f92672">=</span>production
 <span style="color:#66d9ef">ENV</span> APP_ENV<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>APP_ENV<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>Вместо <code>APP_ENV</code> вы можете написать <code>RAILS_ENV</code>, <code>NODE_ENV</code> или любую другую переменную окружения, значение которой вы хотите установить во время сборки docker-образа.</p>
@@ -108,14 +108,14 @@ docker run --rm my_test_app env | grep APP_ENV
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm -e APP_ENV<span style="color:#f92672">=</span>development my_test_app env | grep APP_ENV
 &gt; APP_ENV<span style="color:#f92672">=</span>development
 </code></pre></div><p>Если вы используете утилиту docker-compose, то конфигурационный файл <code>docker-compose.yml</code> может выглядеть так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#34;3&#34;</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#34;3&#34;</span>
 
-<span style="color:#66d9ef">services</span>:
-  <span style="color:#66d9ef">my_test_app</span>:
-    <span style="color:#66d9ef">build</span>:
-      <span style="color:#66d9ef">context</span>: <span style="color:#e6db74">&#34;.&#34;</span>
-      <span style="color:#66d9ef">args</span>:
-        <span style="color:#66d9ef">APP_ENV</span>: <span style="color:#e6db74">&#34;helloworld&#34;</span>
+<span style="color:#f92672">services</span>:
+  <span style="color:#f92672">my_test_app</span>:
+    <span style="color:#f92672">build</span>:
+      <span style="color:#f92672">context</span>: <span style="color:#e6db74">&#34;.&#34;</span>
+      <span style="color:#f92672">args</span>:
+        <span style="color:#f92672">APP_ENV</span>: <span style="color:#e6db74">&#34;helloworld&#34;</span>
 </code></pre></div><p>Теперь, если выполнить команду <code>docker-compose up --build</code> и проверить переменные окружения в docker-контейнере, то можно увидеть <code>APP_ENV=helloworld</code> - как и ожидалось, значение переменной соответствует тому, которое было установлено в конфигурационном файле.</p>
                 </section>
             </article>
@@ -158,6 +158,10 @@ docker run --rm my_test_app env | grep APP_ENV
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -171,10 +175,6 @@ docker run --rm my_test_app env | grep APP_ENV
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

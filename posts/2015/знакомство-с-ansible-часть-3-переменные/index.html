@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Знакомство с Ansible. Часть 3: переменные &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -96,81 +96,81 @@
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch /etc/ansible/playbooks/install_apache.yml
 </code></pre></div><p>Содержимое файла следующее:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-- <span style="color:#66d9ef">hosts</span>: test
-  <span style="color:#66d9ef">tasks</span>:
+- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
+  <span style="color:#f92672">tasks</span>:
  
-  - <span style="color:#66d9ef">name</span>: Debug
-    <span style="color:#66d9ef">debug</span>: msg={{ ansible_os_family }}
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Debug</span>
+    <span style="color:#f92672">debug</span>: <span style="color:#ae81ff">msg={{ ansible_os_family }}</span>
  
-  - <span style="color:#66d9ef">set_fact</span>: package_name=httpd
-    <span style="color:#66d9ef">when</span>: ansible_os_family == <span style="color:#e6db74">&#34;Redhat&#34;</span>
+  - <span style="color:#f92672">set_fact</span>: <span style="color:#ae81ff">package_name=httpd</span>
+    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">ansible_os_family == &#34;Redhat&#34;</span>
  
-  - <span style="color:#66d9ef">set_fact</span>: package_name=apache2
-    <span style="color:#66d9ef">when</span>: ansible_os_family == <span style="color:#e6db74">&#34;Debian&#34;</span>
+  - <span style="color:#f92672">set_fact</span>: <span style="color:#ae81ff">package_name=apache2</span>
+    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">ansible_os_family == &#34;Debian&#34;</span>
  
-  - <span style="color:#66d9ef">name</span>: Install httpd package
-    <span style="color:#66d9ef">yum</span>: name={{ package_name }} state=latest
-    <span style="color:#66d9ef">sudo</span>: yes
-    <span style="color:#66d9ef">when</span>: ansible_os_family == <span style="color:#e6db74">&#34;Redhat&#34;</span>
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Install httpd package</span>
+    <span style="color:#f92672">yum</span>: <span style="color:#ae81ff">name={{ package_name }} state=latest</span>
+    <span style="color:#f92672">sudo</span>: <span style="color:#66d9ef">yes</span>
+    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">ansible_os_family == &#34;Redhat&#34;</span>
    
-  - <span style="color:#66d9ef">name</span>: Debug1
-    <span style="color:#66d9ef">debug</span>: msg={{ package_name }}
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Debug1</span>
+    <span style="color:#f92672">debug</span>: <span style="color:#ae81ff">msg={{ package_name }}</span>
  
-  - <span style="color:#66d9ef">name</span>: Install apache2 package
-    <span style="color:#66d9ef">apt</span>: name={{ package_name }} state=latest
-    <span style="color:#66d9ef">sudo</span>: yes
-    <span style="color:#66d9ef">when</span>: ansible_os_family == <span style="color:#e6db74">&#34;Debian&#34;</span>
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Install apache2 package</span>
+    <span style="color:#f92672">apt</span>: <span style="color:#ae81ff">name={{ package_name }} state=latest</span>
+    <span style="color:#f92672">sudo</span>: <span style="color:#66d9ef">yes</span>
+    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">ansible_os_family == &#34;Debian&#34;</span>
 </code></pre></div><p>Таким будет результат выполнения данного набора инструкций:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">ansible-playbook install_apache.yml 
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#ae81ff">ansible-playbook install_apache.yml </span>
 
-PLAY [test] <span style="color:#75715e">*******************************************************************</span> 
+<span style="color:#ae81ff">PLAY [test] ******************************************************************* </span>
 
-GATHERING FACTS <span style="color:#75715e">***************************************************************</span> 
-<span style="color:#66d9ef">ok</span>: [test<span style="color:#ae81ff">-1</span>]
+<span style="color:#ae81ff">GATHERING FACTS *************************************************************** </span>
+<span style="color:#f92672">ok</span>: [<span style="color:#ae81ff">test-1]</span>
 
-<span style="color:#66d9ef">TASK</span>: [Debug] <span style="color:#75715e">*****************************************************************</span> 
-<span style="color:#66d9ef">ok</span>: [test<span style="color:#ae81ff">-1</span>] =&gt; {
-    <span style="color:#66d9ef">&#34;msg&#34;: </span><span style="color:#e6db74">&#34;Debian&#34;</span>
+<span style="color:#f92672">TASK</span>: [<span style="color:#ae81ff">Debug] ***************************************************************** </span>
+<span style="color:#f92672">ok</span>: [<span style="color:#ae81ff">test-1] =&gt; {</span>
+    <span style="color:#f92672">&#34;msg&#34;: </span><span style="color:#e6db74">&#34;Debian&#34;</span>
 }
 
-<span style="color:#66d9ef">TASK</span>: [set_fact package_name=httpd] <span style="color:#75715e">*******************************************</span> 
-<span style="color:#66d9ef">skipping</span>: [test<span style="color:#ae81ff">-1</span>]
+<span style="color:#f92672">TASK</span>: [<span style="color:#ae81ff">set_fact package_name=httpd] ******************************************* </span>
+<span style="color:#f92672">skipping</span>: [<span style="color:#ae81ff">test-1]</span>
 
-<span style="color:#66d9ef">TASK</span>: [set_fact package_name=apache2] <span style="color:#75715e">*****************************************</span> 
-<span style="color:#66d9ef">ok</span>: [test<span style="color:#ae81ff">-1</span>]
+<span style="color:#f92672">TASK</span>: [<span style="color:#ae81ff">set_fact package_name=apache2] ***************************************** </span>
+<span style="color:#f92672">ok</span>: [<span style="color:#ae81ff">test-1]</span>
 
-<span style="color:#66d9ef">TASK</span>: [Install httpd package] <span style="color:#75715e">*************************************************</span> 
-<span style="color:#66d9ef">skipping</span>: [test<span style="color:#ae81ff">-1</span>]
+<span style="color:#f92672">TASK</span>: [<span style="color:#ae81ff">Install httpd package] ************************************************* </span>
+<span style="color:#f92672">skipping</span>: [<span style="color:#ae81ff">test-1]</span>
 
-<span style="color:#66d9ef">TASK</span>: [Debug1] <span style="color:#75715e">****************************************************************</span> 
-<span style="color:#66d9ef">ok</span>: [test<span style="color:#ae81ff">-1</span>] =&gt; {
-    <span style="color:#66d9ef">&#34;msg&#34;: </span><span style="color:#e6db74">&#34;apache2&#34;</span>
+<span style="color:#f92672">TASK</span>: [<span style="color:#ae81ff">Debug1] **************************************************************** </span>
+<span style="color:#f92672">ok</span>: [<span style="color:#ae81ff">test-1] =&gt; {</span>
+    <span style="color:#f92672">&#34;msg&#34;: </span><span style="color:#e6db74">&#34;apache2&#34;</span>
 }
 
-<span style="color:#66d9ef">TASK</span>: [Install apache2 package] <span style="color:#75715e">***********************************************</span> 
-<span style="color:#66d9ef">changed</span>: [test<span style="color:#ae81ff">-1</span>]
+<span style="color:#f92672">TASK</span>: [<span style="color:#ae81ff">Install apache2 package] *********************************************** </span>
+<span style="color:#f92672">changed</span>: [<span style="color:#ae81ff">test-1]</span>
 
-PLAY RECAP <span style="color:#75715e">********************************************************************</span> 
-<span style="color:#66d9ef">test-1                 </span>: ok=<span style="color:#ae81ff">5</span>    changed=<span style="color:#ae81ff">1</span>    unreachable=<span style="color:#ae81ff">0</span>    failed=<span style="color:#ae81ff">0</span>   
+<span style="color:#ae81ff">PLAY RECAP ******************************************************************** </span>
+<span style="color:#f92672">test-1                 </span>: <span style="color:#ae81ff">ok=5    changed=1    unreachable=0    failed=0   </span>
 </code></pre></div><p><strong>Примечание.</strong> Дополнительные задачи Debug и Debug1 позволяют увидеть, что на удаленном хосте установлена ОС Debian, и в переменную <code>package_name</code> записано значение <code>apache2</code>.</p>
 <p>Благодаря успешному использованию переменной <code>package_name</code> данный набор инструкций правильно установит web-сервер <code>apache</code> и на RedHat, и на Debian.</p>
 <p>В <code>Ansible</code> переменные можно задавать в отдельном (глобальном) файле, а потом включать этот файл в playbook с помощью ключевого слова <code>vars_files:</code>. Например, у нас есть файл с переменными <code>/etc/ansible/vars/test_var.yml</code> с таким содержанием:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-<span style="color:#66d9ef">package_name</span>: <span style="color:#e6db74">&#34;apache2&#34;</span>
+<span style="color:#f92672">package_name</span>: <span style="color:#e6db74">&#34;apache2&#34;</span>
 </code></pre></div><p>В наборе инструкций включение этого файла с переменными будет выглядеть следующим образом:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-- <span style="color:#66d9ef">hosts</span>: test
-  <span style="color:#66d9ef">vars_files</span>:
-    - /etc/ansible/vars/test_var.yml
-  <span style="color:#66d9ef">tasks</span>:
-    ...
+- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
+  <span style="color:#f92672">vars_files</span>:
+    - <span style="color:#ae81ff">/etc/ansible/vars/test_var.yml</span>
+  <span style="color:#f92672">tasks</span>:
+    <span style="color:#ae81ff">...</span>
 </code></pre></div><p>Также есть возможность устанавливать переменные непосредственно в playbook с помощью ключевого слова <code>vars:</code>, выглядит это так:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-- <span style="color:#66d9ef">hosts</span>: test
-  <span style="color:#66d9ef">vars</span>:
-    - <span style="color:#66d9ef">package_name</span>: <span style="color:#e6db74">&#34;apache2&#34;</span>
-  <span style="color:#66d9ef">tasks</span>:
-    ...
+- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
+  <span style="color:#f92672">vars</span>:
+    - <span style="color:#f92672">package_name</span>: <span style="color:#e6db74">&#34;apache2&#34;</span>
+  <span style="color:#f92672">tasks</span>:
+    <span style="color:#ae81ff">...</span>
 </code></pre></div><p>Как уже упоминалось во <a href="https://ealebed.github.io/posts/2015/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-ansible-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%80%D0%B0%D0%B7%D0%B1%D0%BE%D1%80-%D0%B2%D1%8B%D0%B2%D0%BE%D0%B4%D0%B0-playbook/">второй части</a> знакомства с <code>Ansible</code>, в качестве переменных можно использовать данные, полученные при выполнении задачи <code>GATHERING FACTS</code>.</p>
 <p>Посмотреть переменные и их значения можно командой:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ansible -m setup test
@@ -233,6 +233,10 @@ ssh_port=5555
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -246,10 +250,6 @@ ssh_port=5555
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

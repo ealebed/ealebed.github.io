@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>GitLab CI: Часть 7, этап test в .gitlab-ci.yml &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -93,31 +93,31 @@
 <p>Давайте разберемся с этапом тестирования в <strong>GitLab CI</strong> на примере <code>phpmetrics</code> — инструмента для визуализации качества кода!</p>
 <p>В специальном файле <code>.gitlab-ci.yml</code>, который находится в корне проекта, инструкции для этапа тестирования будут выглядеть следующим образом:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
-<span style="color:#66d9ef">testing</span>:
-  <span style="color:#66d9ef">stage</span>: test
-  <span style="color:#66d9ef">dependencies</span>:
-  - compile
-  <span style="color:#66d9ef">script</span>:
-    - docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c <span style="color:#e6db74">&#34;./bin/phpmetrics \&#34;./\&#34;  --exclude=\&#34;node_modules|bin|log|temp|var|vendor|public|www|tests\&#34; --report-html=./build&#34;</span>
-  <span style="color:#66d9ef">artifacts</span>:
-    <span style="color:#66d9ef">paths</span>:
-    - build/all.html
-    - build/complexity.html
-    - build/coupling.html
-    - build/css/
-    - build/images/
-    - build/index.html
-    - build/js/
-    - build/loc.html
-    - build/oop.html
-    - build/panel.html
-    - build/relations.html
-    - build/violations.html
-    <span style="color:#66d9ef">when</span>: on_success
-    <span style="color:#66d9ef">expire_in</span>: 1h
-  <span style="color:#66d9ef">only</span>:
-    - develop
-    - docker
+<span style="color:#f92672">testing</span>:
+  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">test</span>
+  <span style="color:#f92672">dependencies</span>:
+  - <span style="color:#ae81ff">compile</span>
+  <span style="color:#f92672">script</span>:
+    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./bin/phpmetrics \&#34;./\&#34;  --exclude=\&#34;node_modules|bin|log|temp|var|vendor|public|www|tests\&#34; --report-html=./build&#34;</span>
+  <span style="color:#f92672">artifacts</span>:
+    <span style="color:#f92672">paths</span>:
+    - <span style="color:#ae81ff">build/all.html</span>
+    - <span style="color:#ae81ff">build/complexity.html</span>
+    - <span style="color:#ae81ff">build/coupling.html</span>
+    - <span style="color:#ae81ff">build/css/</span>
+    - <span style="color:#ae81ff">build/images/</span>
+    - <span style="color:#ae81ff">build/index.html</span>
+    - <span style="color:#ae81ff">build/js/</span>
+    - <span style="color:#ae81ff">build/loc.html</span>
+    - <span style="color:#ae81ff">build/oop.html</span>
+    - <span style="color:#ae81ff">build/panel.html</span>
+    - <span style="color:#ae81ff">build/relations.html</span>
+    - <span style="color:#ae81ff">build/violations.html</span>
+    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">on_success</span>
+    <span style="color:#f92672">expire_in</span>: <span style="color:#ae81ff">1h</span>
+  <span style="color:#f92672">only</span>:
+    - <span style="color:#ae81ff">develop</span>
+    - <span style="color:#ae81ff">docker</span>
 ...
 </code></pre></div><p>Здесь уже много знакомых нам секций и ключевых слов, которые мы рассматривали ранее. Единственное, что мы еще не встречали — секция <code>dependencies</code> (зависимости). В этой секции следует указывать с каких заданий брать артефакты (как раз в <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-6-%D1%8D%D1%82%D0%B0%D0%BF-build-%D0%B2-.gitlab-ci.yml-2/">прошлой статье</a> мы создавали артефакты для задания <code>compile</code> из этапа <code>build</code>).</p>
 <p>Так как анализатор кода <code>phpmetrics</code> в процессе выполнения также создает свои файлы, которые нужно передавать на следующие этапы <strong>GitLab CI</strong>, мы воспользуемся артефактами и здесь.</p>
@@ -307,6 +307,10 @@ Build succeeded
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -320,10 +324,6 @@ Build succeeded
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Вставка данных в Redis при запуске контейнера в Kubernetes кластере"/>
+  <meta name="twitter:description" content="Довольно часто встречаются варианты конфигурирования и запуска Redis сервиса в кластере Kubernetes классифицируемые как stateless (т.е. без сохранения данных). В данной статье рассмотрим вариант вставки данных в Redis на старте пода в кластере - давайте разберемся!"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.78.2" />
+		<title>Вставка данных в Redis при запуске контейнера в Kubernetes кластере &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Вставка данных в Redis при запуске контейнера в Kubernetes кластере
+                    </h1>
+                    <h2 class="headline">
+                    Dec 1, 2020 16:22
+                    · 499 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/redis">redis</a>
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                              <a href="https://ealebed.github.io/tags/k8s">k8s</a>
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes-controller">kubernetes-controller</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Довольно часто встречаются варианты конфигурирования и запуска <a href="https://redis.io/"><code>Redis</code></a> сервиса в кластере <code>Kubernetes</code> классифицируемые как <strong>stateless</strong> (т.е. без сохранения данных). В данной статье рассмотрим вариант вставки данных в <code>Redis</code> на старте <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/">пода</a> в кластере - давайте разберемся!</p>
+<p>Сразу отмечу, что кейс довольно специфический, и если ваши приложения зависят от данных в <code>Redis</code> (или вы хотите вставить пару миллионов ключей за 1 секунду - об этом будет отдельная статья), то лучше использовать решения для <strong>stateful</strong> приложений - операторы, StatefulSet и т. д.</p>
+<p>Итак, в нашем конкретном случае используется самый настоящий <strong>stateless</strong> <code>Redis</code> - <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/">деплоймент</a> с одной репликой. То есть мы готовы к потере данных - это некритично, но &ldquo;было бы хорошо&rdquo; иметь в редисе одну пару ключ/значение сразу же после запуска контейнера.</p>
+<p>Очевидно, что вариант с <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">initContainers</a> не подходит (<code>Redis</code> уже должен быть запущен на момент вставки данных), а вариант с переписыванием Dockerfile и/или entrypoint-скриптов, мягко говоря, не элегантный.</p>
+<p>Самым интересным вариантом для данного кейса оказалось написание собственного контроллера, который, будучи подключен к кластеру <code>Kubernetes</code> &ldquo;слушает&rdquo; интересующие нас события и выполняет предусмотренные операции.</p>
+<p>Go клиент для <code>Kubernetes</code> (<a href="https://github.com/kubernetes/client-go"><code>client-go</code></a>) содержит пакет, который позволяет с легкостью получать события (events) используя Kubernetes API: <code>k8s.io/client-go/tools/cache</code>. Кроме того, этот пакет позволяет нам легко добавлять функции, которые будут вызваны при получении определенного события и хранить объекты в памяти (в так называемом хранилище, <code>Store</code>).</p>
+<p>Хотя пакет <code>cache</code> предоставляет необходимые нам инструменты, его инициализация и использование могут быть избыточными и несколько обременительными, когда речь идет о получении простых обновлений от Kubernetes API. Практически все статьи по использованию <code>k8s.io/client-go/tools/cache</code>, которые мне удалось найти, предлагают использовать этот пакет &ldquo;как есть&rdquo;.</p>
+<p>Однако существует еще один пакет, который объединяет концепции, которые предоставленные пакетом <code>cache</code>, в один: <code>k8s.io/client-go/informers</code>. Он поставляется с простой фабрикой для всех ресурсов <code>Kubernetes</code> - то, что нам нужно!</p>
+<p>Инициализация фабрики выглядит примерно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">...</span>
+	<span style="color:#a6e22e">kubeInformerFactory</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">informers</span>.<span style="color:#a6e22e">NewSharedInformerFactoryWithOptions</span>(<span style="color:#a6e22e">clientset</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span><span style="color:#f92672">*</span><span style="color:#ae81ff">30</span>,
+		<span style="color:#a6e22e">informers</span>.<span style="color:#a6e22e">WithNamespace</span>(<span style="color:#e6db74">&#34;default&#34;</span>),
+		<span style="color:#a6e22e">informers</span>.<span style="color:#a6e22e">WithTweakListOptions</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">options</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">v1</span>.<span style="color:#a6e22e">ListOptions</span>) {
+			<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">LabelSelector</span> = <span style="color:#e6db74">&#34;app=ads-redis-statistic&#34;</span>
+		}))
+<span style="color:#f92672">...</span>
+</code></pre></div><p>Так мы получаем новый экземпляр <a href="https://pkg.go.dev/k8s.io/client-go/informers#SharedInformerFactory"><code>SharedInformerFactory</code></a> с дополнительными опциями (неймспейс <code>default</code> и <code>LabelSelector</code> &ldquo;app=ads-redis-statistic&rdquo;). Первым агрументом является наш клиент, который подключается и взаимодействует с Kubernetes API, а вторым - периодичность, с которой информер будет синхронизировать данные.</p>
+<p>Теперь мы можем с легкостью начать получать необходимые нам события о интересующем нас ресурсе - новом поде в кластере <code>Kubernetes</code>. Выглядеть это будет примерно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">...</span>
+	<span style="color:#a6e22e">podInformer</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">kubeInformerFactory</span>.<span style="color:#a6e22e">Core</span>().<span style="color:#a6e22e">V1</span>().<span style="color:#a6e22e">Pods</span>().<span style="color:#a6e22e">Informer</span>()
+
+	<span style="color:#a6e22e">podInformer</span>.<span style="color:#a6e22e">AddEventHandler</span>(<span style="color:#a6e22e">cache</span>.<span style="color:#a6e22e">ResourceEventHandlerFuncs</span>{
+		<span style="color:#a6e22e">AddFunc</span>: <span style="color:#a6e22e">onAdd</span>,
+	})
+<span style="color:#f92672">...</span>
+</code></pre></div><p>Первая строка инициализирует информер, который настроен на получение событий о подах групы Core/v1 API (фильтрация по неймспейсу/селектору у нас указана еще на этапе создания фабрики).</p>
+<p>Вторая строка добавляет функцию-обработчик (handler), которая будет вызываться каждый раз, когда информет получает от Kubernetes API интересующее нас событие (а именно, добавление в неймспейсе <code>default</code> нового пода с селектором <code>app: ads-redis-statistic</code>).</p>
+<p>Сама функция <code>onAdd</code> выглядит следующим образом:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">...</span>
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">onAdd</span>(<span style="color:#a6e22e">obj</span> <span style="color:#66d9ef">interface</span>{}) {
+	<span style="color:#a6e22e">rc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">redis</span>.<span style="color:#a6e22e">InitRedisClient</span>(
+		<span style="color:#a6e22e">helpers</span>.<span style="color:#a6e22e">GetEnvironmentVariableAsString</span>(<span style="color:#e6db74">&#34;REDIS_HOST&#34;</span>, <span style="color:#e6db74">&#34;127.0.0.1:6379&#34;</span>),
+		<span style="color:#a6e22e">helpers</span>.<span style="color:#a6e22e">GetEnvironmentVariableAsString</span>(<span style="color:#e6db74">&#34;REDIS_PASSWORD&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>),
+		<span style="color:#a6e22e">helpers</span>.<span style="color:#a6e22e">GetEnvironmentVariableAsInteger</span>(<span style="color:#e6db74">&#34;REDIS_DB&#34;</span>, <span style="color:#ae81ff">4</span>))
+
+	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">Connect</span>()
+	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">SetValue</span>(
+		<span style="color:#e6db74">&#34;flow-rules-key&#34;</span>,
+		<span style="color:#e6db74">&#34;[{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AdsTxtRecordService/GetAdsTxtRelationships\&#34;,\&#34;count\&#34;:100.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.PublisherAccountService/GetPublisherById\&#34;,\&#34;count\&#34;:5.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v1.PublisherAccountService/GetPublisherById\&#34;,\&#34;count\&#34;:5.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.BundleLegacyService/GetBundleByKey\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.lsm.ssp.v0.BundleService/GetBundleById\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.lsm.ssp.v0.BundleService/QueryBundle\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppById\&#34;,\&#34;count\&#34;:10.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppIdByKey\&#34;,\&#34;count\&#34;:10.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppIdByContainerKey\&#34;,\&#34;count\&#34;:16.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppByContainerKey\&#34;,\&#34;count\&#34;:10.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;ExchangeThrottleRateService/GetThrottleRatesByKeys\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;dsp-fetcher\&#34;,\&#34;count\&#34;:25.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;exchange-fetcher\&#34;,\&#34;count\&#34;:300.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;kafka_dmp_ads_requests_info\&#34;,\&#34;count\&#34;:500.0,\&#34;grade\&#34;:\&#34;QPS\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;}]&#34;</span>)
+
+	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">QueryValue</span>(<span style="color:#e6db74">&#34;flow-rules-key&#34;</span>))
+	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">Disconnect</span>()
+<span style="color:#f92672">...</span>
+}
+</code></pre></div><p>Функция инициализирует redis-клиент с заданными параметрами, выполняет подключение к сервису, вставляет данные в БД, для проверки получает значение для указанного ключа и отключается от данного экземпляра <code>Redis</code>.</p>
+<p>Полный пример кода (а также пример деплоймента для данного контроллера) доступен <a href="https://github.com/ealebed/redins">здесь</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2020%2f%25D0%25B2%25D1%2581%25D1%2582%25D0%25B0%25D0%25B2%25D0%25BA%25D0%25B0-%25D0%25B4%25D0%25B0%25D0%25BD%25D0%25BD%25D1%258B%25D1%2585-%25D0%25B2-redis-%25D0%25BD%25D0%25B0-%25D1%2581%25D1%2582%25D0%25B0%25D1%2580%25D1%2582%25D0%25B5-%25D0%25BA%25D0%25BE%25D0%25BD%25D1%2582%25D0%25B5%25D0%25B9%25D0%25BD%25D0%25B5%25D1%2580%25D0%25B0%2f - %d0%92%d1%81%d1%82%d0%b0%d0%b2%d0%ba%d0%b0%20%d0%b4%d0%b0%d0%bd%d0%bd%d1%8b%d1%85%20%d0%b2%20Redis%20%d0%bf%d1%80%d0%b8%20%d0%b7%d0%b0%d0%bf%d1%83%d1%81%d0%ba%d0%b5%20%d0%ba%d0%be%d0%bd%d1%82%d0%b5%d0%b9%d0%bd%d0%b5%d1%80%d0%b0%20%d0%b2%20Kubernetes%20%d0%ba%d0%bb%d0%b0%d1%81%d1%82%d0%b5%d1%80%d0%b5 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D0%B1%D0%B5%D0%B7-%D1%81%D0%BC%D1%81-%D0%B8-%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D0%B8/">Валидация flyway-миграций без СМС и регистрации<aside class="dates">Mar 27 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D1%81%D0%B1%D0%BE%D1%80-%D0%B8-%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-kubernetes-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B0-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-efk/">Сбор и анализ логов Kubernetes кластера с помощью EFK-стека<aside class="dates">Mar 15 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2020 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+
+    </body>
+</html>

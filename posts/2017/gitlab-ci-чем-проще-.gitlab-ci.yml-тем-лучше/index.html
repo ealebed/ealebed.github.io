@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>GitLab CI: Чем проще .gitlab-ci.yml, тем лучше &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -92,161 +92,161 @@
                     <p>В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-10-%D1%8D%D1%82%D0%B0%D0%BF-cleanup-%D0%B2-.gitlab-ci.yml/">статье</a>, завершающей <strong>цикл о настройке Gitlab CI</strong> (continuous integration) была приведена в качестве примера финальная, полностью рабочая версия конфигурационного файла <code>.gitlab-ci.yml</code>.</p>
 <p>С момента ее публикации прошло чуть более четырех месяцев, теперь настройки CI в репозитории проекта немного изменились — давайте разберемся!</p>
 <p>Целиком наш конфигурационный файл <code>.gitlab-ci.yml</code> выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">image</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/tmaier-dc-ssh:latest
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/tmaier-dc-ssh:latest</span>
  
-<span style="color:#66d9ef">services</span>:
-  - registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/my-docker-dind:latest
+<span style="color:#f92672">services</span>:
+  - <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/my-docker-dind:latest</span>
  
-<span style="color:#66d9ef">variables</span>:
-  <span style="color:#66d9ef">DOCKER_DRIVER</span>: overlay2
-  <span style="color:#66d9ef">NODEIMAGE</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/node-npm-ed-sq:latest
-  <span style="color:#66d9ef">NODEHOTIMAGE</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/node-hot-ed-sq:latest
-  <span style="color:#66d9ef">WORKSPACEIMAGE</span>: registry.gitlab.lc:<span style="color:#ae81ff">5000</span>/develop/ed/workspace-ed-sq:latest
-  <span style="color:#66d9ef">DIR_IGNORED</span>: node_modules,bin,data/logs,data/mail,data/migrations,vendor,build,tests,public,docker
-  <span style="color:#66d9ef">STAGING_DC_STACK_FILE</span>: docker-compose-stack-staging.yml
-  <span style="color:#66d9ef">STAGING_ENV_FILE</span>: .env.staging.lc
-  <span style="color:#66d9ef">RELEASE_DC_STACK_FILE</span>: docker-compose-stack-release.yml
-  <span style="color:#66d9ef">RELEASE_ENV_FILE</span>: .env.release
+<span style="color:#f92672">variables</span>:
+  <span style="color:#f92672">DOCKER_DRIVER</span>: <span style="color:#ae81ff">overlay2</span>
+  <span style="color:#f92672">NODEIMAGE</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/node-npm-ed-sq:latest</span>
+  <span style="color:#f92672">NODEHOTIMAGE</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/node-hot-ed-sq:latest</span>
+  <span style="color:#f92672">WORKSPACEIMAGE</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/workspace-ed-sq:latest</span>
+  <span style="color:#f92672">DIR_IGNORED</span>: <span style="color:#ae81ff">node_modules,bin,data/logs,data/mail,data/migrations,vendor,build,tests,public,docker</span>
+  <span style="color:#f92672">STAGING_DC_STACK_FILE</span>: <span style="color:#ae81ff">docker-compose-stack-staging.yml</span>
+  <span style="color:#f92672">STAGING_ENV_FILE</span>: <span style="color:#ae81ff">.env.staging.lc</span>
+  <span style="color:#f92672">RELEASE_DC_STACK_FILE</span>: <span style="color:#ae81ff">docker-compose-stack-release.yml</span>
+  <span style="color:#f92672">RELEASE_ENV_FILE</span>: <span style="color:#ae81ff">.env.release</span>
  
-<span style="color:#66d9ef">stages</span>:
-  - build
-  - test
-  - release
-  - deploy
+<span style="color:#f92672">stages</span>:
+  - <span style="color:#ae81ff">build</span>
+  - <span style="color:#ae81ff">test</span>
+  - <span style="color:#ae81ff">release</span>
+  - <span style="color:#ae81ff">deploy</span>
  
-<span style="color:#66d9ef">compile</span>:
-  <span style="color:#66d9ef">stage</span>: build
-  <span style="color:#66d9ef">before_script</span>:
-    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
-  <span style="color:#66d9ef">script</span>:
-    - cp -u .env.develop .env
-    - docker run -v $(pwd):/var/www/example --rm --user www-data ${WORKSPACEIMAGE} sh -c <span style="color:#e6db74">&#34;composer install --no-dev &amp;&amp; ./zf routes compile &amp;&amp; ./zf cache clean-modified-content &amp;&amp; ./zf user-default-avatar&#34;</span>
-    - docker run -v $(pwd):/var/www/example --rm ${NODEIMAGE} sh -c <span style="color:#e6db74">&#34;npm install --production --quiet &amp;&amp; grunt install-build --no-dev&#34;</span>
-    - docker run -v $(pwd):/var/www/example --rm ${NODEHOTIMAGE} sh -c <span style="color:#e6db74">&#34;npm run aglio-build&#34;</span>
-  <span style="color:#66d9ef">cache</span>:
-    <span style="color:#66d9ef">key</span>: ${CI_COMMIT_REF_NAME}
-    <span style="color:#66d9ef">paths</span>:
-      - node_modules/
-      - vendor/
-  <span style="color:#66d9ef">artifacts</span>:
-    <span style="color:#66d9ef">paths</span>:
-    - build/api.html
-    - vendor/
-    - public/dsd/js/utils/routes.js
-    - bin/
-    - .env
-    - public/default_img/user/en/
-    - public/default_img/user/ru/
-    - public/dsd/css/style.css
-    - public/dsd/css/style.css.map
-    - public/dsd/mix/tmp-pages-bundle/
-    - public/dsd/js/bundles/
-    - public/dsd/js/templates.hbs.js
-    - public/dsd/js/templates.html.js
-    - public/dsl/css/
-    - public/dsl/js/bundles/
-    - public/vendor/
-    <span style="color:#66d9ef">when</span>: on_success
-    <span style="color:#66d9ef">expire_in</span>: 1h
-  <span style="color:#66d9ef">only</span>:
-    - develop
-    - /^release\/.<span style="color:#75715e">*$/</span>
+<span style="color:#f92672">compile</span>:
+  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">build</span>
+  <span style="color:#f92672">before_script</span>:
+    - <span style="color:#ae81ff">docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}</span>
+  <span style="color:#f92672">script</span>:
+    - <span style="color:#ae81ff">cp -u .env.develop .env</span>
+    - <span style="color:#ae81ff">docker run -v $(pwd):/var/www/example --rm --user www-data ${WORKSPACEIMAGE} sh -c &#34;composer install --no-dev &amp;&amp; ./zf routes compile &amp;&amp; ./zf cache clean-modified-content &amp;&amp; ./zf user-default-avatar&#34;</span>
+    - <span style="color:#ae81ff">docker run -v $(pwd):/var/www/example --rm ${NODEIMAGE} sh -c &#34;npm install --production --quiet &amp;&amp; grunt install-build --no-dev&#34;</span>
+    - <span style="color:#ae81ff">docker run -v $(pwd):/var/www/example --rm ${NODEHOTIMAGE} sh -c &#34;npm run aglio-build&#34;</span>
+  <span style="color:#f92672">cache</span>:
+    <span style="color:#f92672">key</span>: <span style="color:#ae81ff">${CI_COMMIT_REF_NAME}</span>
+    <span style="color:#f92672">paths</span>:
+      - <span style="color:#ae81ff">node_modules/</span>
+      - <span style="color:#ae81ff">vendor/</span>
+  <span style="color:#f92672">artifacts</span>:
+    <span style="color:#f92672">paths</span>:
+    - <span style="color:#ae81ff">build/api.html</span>
+    - <span style="color:#ae81ff">vendor/</span>
+    - <span style="color:#ae81ff">public/dsd/js/utils/routes.js</span>
+    - <span style="color:#ae81ff">bin/</span>
+    - <span style="color:#ae81ff">.env</span>
+    - <span style="color:#ae81ff">public/default_img/user/en/</span>
+    - <span style="color:#ae81ff">public/default_img/user/ru/</span>
+    - <span style="color:#ae81ff">public/dsd/css/style.css</span>
+    - <span style="color:#ae81ff">public/dsd/css/style.css.map</span>
+    - <span style="color:#ae81ff">public/dsd/mix/tmp-pages-bundle/</span>
+    - <span style="color:#ae81ff">public/dsd/js/bundles/</span>
+    - <span style="color:#ae81ff">public/dsd/js/templates.hbs.js</span>
+    - <span style="color:#ae81ff">public/dsd/js/templates.html.js</span>
+    - <span style="color:#ae81ff">public/dsl/css/</span>
+    - <span style="color:#ae81ff">public/dsl/js/bundles/</span>
+    - <span style="color:#ae81ff">public/vendor/</span>
+    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">on_success</span>
+    <span style="color:#f92672">expire_in</span>: <span style="color:#ae81ff">1h</span>
+  <span style="color:#f92672">only</span>:
+    - <span style="color:#ae81ff">develop</span>
+    - <span style="color:#ae81ff">/^release\/.*$/</span>
 <span style="color:#75715e">#    - master</span>
  
-<span style="color:#66d9ef">testing</span>:
-  <span style="color:#66d9ef">stage</span>: test
-  <span style="color:#66d9ef">dependencies</span>:
-  - compile
-  <span style="color:#66d9ef">script</span>:
-    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phpmetrics --exclude=${DIR_IGNORED} --report-html=./build/phpmetrics/ .
+<span style="color:#f92672">testing</span>:
+  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">test</span>
+  <span style="color:#f92672">dependencies</span>:
+  - <span style="color:#ae81ff">compile</span>
+  <span style="color:#f92672">script</span>:
+    - <span style="color:#ae81ff">docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phpmetrics --exclude=${DIR_IGNORED} --report-html=./build/phpmetrics/ .</span>
 <span style="color:#75715e">#    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phpmd . html codesize --reportfile ./build/phpmd.html --exclude ${DIR_IGNORED}</span>
 <span style="color:#75715e">#    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phploc --exclude=${DIR_IGNORED} --log-xml=./build/phploc.xml .</span>
 <span style="color:#75715e">#    - docker run -v $(pwd):/project --rm -w /project jakzal/phpqa phpcpd --exclude=${DIR_IGNORED} --log-pmd=./build/phpcpd.xml .</span>
-  <span style="color:#66d9ef">artifacts</span>:
-    <span style="color:#66d9ef">paths</span>:
+  <span style="color:#f92672">artifacts</span>:
+    <span style="color:#f92672">paths</span>:
 <span style="color:#75715e">#    - build/phpcpd.xml</span>
 <span style="color:#75715e">#    - build/phploc.xml</span>
 <span style="color:#75715e">#    - build/phpmd.html</span>
-    - build/phpmetrics/
-    <span style="color:#66d9ef">when</span>: on_success
-    <span style="color:#66d9ef">expire_in</span>: 1h
-  <span style="color:#66d9ef">only</span>:
-    - develop-disabled
+    - <span style="color:#ae81ff">build/phpmetrics/</span>
+    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">on_success</span>
+    <span style="color:#f92672">expire_in</span>: <span style="color:#ae81ff">1h</span>
+  <span style="color:#f92672">only</span>:
+    - <span style="color:#ae81ff">develop-disabled</span>
 <span style="color:#75715e">#    - /^release\/.*$/</span>
 <span style="color:#75715e">#    - master</span>
  
-<span style="color:#66d9ef">release-image</span>:
-  <span style="color:#66d9ef">stage</span>: release
-  <span style="color:#66d9ef">dependencies</span>:
-  - compile
-  - testing
-  <span style="color:#66d9ef">before_script</span>:
-    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
-    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $1}&#39;</span>)
-    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $2}&#39;</span>)
-    - CONTAINER_RELEASE_IMAGE=${CI_REGISTRY}/develop/ed/${BRANCH_NAME}.sources:${TAG:-latest}
-  <span style="color:#66d9ef">script</span>:
-    - docker build --squash -t ${CONTAINER_RELEASE_IMAGE} -f Dockerfile . --build-arg BRANCH_NAME=${BRANCH_NAME}
-    - docker push ${CONTAINER_RELEASE_IMAGE}
-  <span style="color:#66d9ef">only</span>:
-    - develop
-    - /^release\/.<span style="color:#75715e">*$/</span>
+<span style="color:#f92672">release-image</span>:
+  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">release</span>
+  <span style="color:#f92672">dependencies</span>:
+  - <span style="color:#ae81ff">compile</span>
+  - <span style="color:#ae81ff">testing</span>
+  <span style="color:#f92672">before_script</span>:
+    - <span style="color:#ae81ff">docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}</span>
+    - <span style="color:#ae81ff">BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F &#34;/&#34; &#39;{print $1}&#39;)</span>
+    - <span style="color:#ae81ff">TAG=$(echo $CI_COMMIT_REF_NAME | awk -F &#34;/&#34; &#39;{print $2}&#39;)</span>
+    - <span style="color:#ae81ff">CONTAINER_RELEASE_IMAGE=${CI_REGISTRY}/develop/ed/${BRANCH_NAME}.sources:${TAG:-latest}</span>
+  <span style="color:#f92672">script</span>:
+    - <span style="color:#ae81ff">docker build --squash -t ${CONTAINER_RELEASE_IMAGE} -f Dockerfile . --build-arg BRANCH_NAME=${BRANCH_NAME}</span>
+    - <span style="color:#ae81ff">docker push ${CONTAINER_RELEASE_IMAGE}</span>
+  <span style="color:#f92672">only</span>:
+    - <span style="color:#ae81ff">develop</span>
+    - <span style="color:#ae81ff">/^release\/.*$/</span>
 <span style="color:#75715e">#    - master</span>
  
-<span style="color:#66d9ef">deploy-to-review</span>:
-  <span style="color:#66d9ef">stage</span>: deploy
-  <span style="color:#66d9ef">before_script</span>:
-    - eval $(ssh-agent -s)
-    - ssh-add &lt;(echo <span style="color:#e6db74">&#34;${SSH_PRIVATE_KEY}&#34;</span>)
-    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $1}&#39;</span>)
-    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $2}&#39;</span>)
-  <span style="color:#66d9ef">script</span>:
-    - scp ./docker/${STAGING_ENV_FILE} ./docker/${STAGING_DC_STACK_FILE} provisioner@staging.lc:~/docker
-    - ssh provisioner@staging.lc VER=${CI_PIPELINE_ID} DC_FILE=${STAGING_DC_STACK_FILE} ENV_FILE=${STAGING_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} <span style="color:#e6db74">&#39;bash -s&#39;</span> &lt; ./docker/stack_deploy.sh
-  <span style="color:#66d9ef">environment</span>:
-    <span style="color:#66d9ef">name</span>: review/develop
-    <span style="color:#66d9ef">url</span>: https://www.develop-labs.cf
-  <span style="color:#66d9ef">only</span>:
-    - develop
-  <span style="color:#66d9ef">tags</span>:
-    - deploy
+<span style="color:#f92672">deploy-to-review</span>:
+  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">deploy</span>
+  <span style="color:#f92672">before_script</span>:
+    - <span style="color:#ae81ff">eval $(ssh-agent -s)</span>
+    - <span style="color:#ae81ff">ssh-add &lt;(echo &#34;${SSH_PRIVATE_KEY}&#34;)</span>
+    - <span style="color:#ae81ff">BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F &#34;/&#34; &#39;{print $1}&#39;)</span>
+    - <span style="color:#ae81ff">TAG=$(echo $CI_COMMIT_REF_NAME | awk -F &#34;/&#34; &#39;{print $2}&#39;)</span>
+  <span style="color:#f92672">script</span>:
+    - <span style="color:#ae81ff">scp ./docker/${STAGING_ENV_FILE} ./docker/${STAGING_DC_STACK_FILE} provisioner@staging.lc:~/docker</span>
+    - <span style="color:#ae81ff">ssh provisioner@staging.lc VER=${CI_PIPELINE_ID} DC_FILE=${STAGING_DC_STACK_FILE} ENV_FILE=${STAGING_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} &#39;bash -s&#39; &lt; ./docker/stack_deploy.sh</span>
+  <span style="color:#f92672">environment</span>:
+    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">review/develop</span>
+    <span style="color:#f92672">url</span>: <span style="color:#ae81ff">https://www.develop-labs.cf</span>
+  <span style="color:#f92672">only</span>:
+    - <span style="color:#ae81ff">develop</span>
+  <span style="color:#f92672">tags</span>:
+    - <span style="color:#ae81ff">deploy</span>
  
-<span style="color:#66d9ef">deploy-to-release</span>:
-  <span style="color:#66d9ef">stage</span>: deploy
-  <span style="color:#66d9ef">before_script</span>:
-    - eval $(ssh-agent -s)
-    - ssh-add &lt;(echo <span style="color:#e6db74">&#34;${SSH_PRIVATE_KEY}&#34;</span>)
-    - BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $1}&#39;</span>)
-    - TAG=$(echo $CI_COMMIT_REF_NAME | awk -F <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#39;{print $2}&#39;</span>)
-  <span style="color:#66d9ef">script</span>:
-    - scp ./docker/${RELEASE_ENV_FILE} ./docker/${RELEASE_DC_STACK_FILE} provisioner@release.lc:~/docker
-    - ssh provisioner@release.lc VER=${CI_PIPELINE_ID} DC_FILE=${RELEASE_DC_STACK_FILE} ENV_FILE=${RELEASE_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} <span style="color:#e6db74">&#39;bash -s&#39;</span> &lt; ./docker/stack_deploy.sh
-  <span style="color:#66d9ef">environment</span>:
-    <span style="color:#66d9ef">name</span>: review/release
-    <span style="color:#66d9ef">url</span>: https://release.eddev.cf/
-  <span style="color:#66d9ef">only</span>:
-    - /^release\/.<span style="color:#75715e">*$/</span>
-  <span style="color:#66d9ef">when</span>: manual
-  <span style="color:#66d9ef">tags</span>:
-    - deploy
+<span style="color:#f92672">deploy-to-release</span>:
+  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">deploy</span>
+  <span style="color:#f92672">before_script</span>:
+    - <span style="color:#ae81ff">eval $(ssh-agent -s)</span>
+    - <span style="color:#ae81ff">ssh-add &lt;(echo &#34;${SSH_PRIVATE_KEY}&#34;)</span>
+    - <span style="color:#ae81ff">BRANCH_NAME=$(echo $CI_COMMIT_REF_NAME | awk -F &#34;/&#34; &#39;{print $1}&#39;)</span>
+    - <span style="color:#ae81ff">TAG=$(echo $CI_COMMIT_REF_NAME | awk -F &#34;/&#34; &#39;{print $2}&#39;)</span>
+  <span style="color:#f92672">script</span>:
+    - <span style="color:#ae81ff">scp ./docker/${RELEASE_ENV_FILE} ./docker/${RELEASE_DC_STACK_FILE} provisioner@release.lc:~/docker</span>
+    - <span style="color:#ae81ff">ssh provisioner@release.lc VER=${CI_PIPELINE_ID} DC_FILE=${RELEASE_DC_STACK_FILE} ENV_FILE=${RELEASE_ENV_FILE} BRANCH_NAME=${BRANCH_NAME} TAG=${TAG:-latest} &#39;bash -s&#39; &lt; ./docker/stack_deploy.sh</span>
+  <span style="color:#f92672">environment</span>:
+    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">review/release</span>
+    <span style="color:#f92672">url</span>: <span style="color:#ae81ff">https://release.eddev.cf/</span>
+  <span style="color:#f92672">only</span>:
+    - <span style="color:#ae81ff">/^release\/.*$/</span>
+  <span style="color:#f92672">when</span>: <span style="color:#ae81ff">manual</span>
+  <span style="color:#f92672">tags</span>:
+    - <span style="color:#ae81ff">deploy</span>
  
-<span style="color:#66d9ef">deploy-to-prod</span>:
-  <span style="color:#66d9ef">stage</span>: deploy
-  <span style="color:#66d9ef">before_script</span>:
-    - mkdir -p ~/.ssh
-    - echo <span style="color:#e6db74">&#34;${SSH_PRIVATE_KEY}&#34;</span> | tr -d <span style="color:#e6db74">&#39;\r&#39;</span> &gt; ~/.ssh/id_rsa
-    - chmod <span style="color:#ae81ff">600</span> ~/.ssh/id_rsa
-    - ssh-keyscan -p <span style="color:#ae81ff">5022</span> -H <span style="color:#e6db74">&#39;example.com&#39;</span> &gt;&gt; ~/.ssh/known_hosts
-  <span style="color:#66d9ef">script</span>:
-    - git push ssh://git@example.com:/home/git/repo/ed.git HEAD:master
-  <span style="color:#66d9ef">environment</span>:
-    <span style="color:#66d9ef">name</span>: production
-    <span style="color:#66d9ef">url</span>: https://www.example.com/
-  <span style="color:#66d9ef">only</span>:
-    - master
-  <span style="color:#66d9ef">when</span>: manual
-  <span style="color:#66d9ef">tags</span>:
-    - deploy
+<span style="color:#f92672">deploy-to-prod</span>:
+  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">deploy</span>
+  <span style="color:#f92672">before_script</span>:
+    - <span style="color:#ae81ff">mkdir -p ~/.ssh</span>
+    - <span style="color:#ae81ff">echo &#34;${SSH_PRIVATE_KEY}&#34; | tr -d &#39;\r&#39; &gt; ~/.ssh/id_rsa</span>
+    - <span style="color:#ae81ff">chmod 600 ~/.ssh/id_rsa</span>
+    - <span style="color:#ae81ff">ssh-keyscan -p 5022 -H &#39;example.com&#39; &gt;&gt; ~/.ssh/known_hosts</span>
+  <span style="color:#f92672">script</span>:
+    - <span style="color:#ae81ff">git push ssh://git@example.com:/home/git/repo/ed.git HEAD:master</span>
+  <span style="color:#f92672">environment</span>:
+    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">production</span>
+    <span style="color:#f92672">url</span>: <span style="color:#ae81ff">https://www.example.com/</span>
+  <span style="color:#f92672">only</span>:
+    - <span style="color:#ae81ff">master</span>
+  <span style="color:#f92672">when</span>: <span style="color:#ae81ff">manual</span>
+  <span style="color:#f92672">tags</span>:
+    - <span style="color:#ae81ff">deploy</span>
 </code></pre></div><p>Итак, что же изменилось за 4 месяца:</p>
 <ul>
 <li>на ревью-окружении (задача <code>deploy-to-review</code>) docker теперь работает в режиме swarm, в связи с чем полностью изменился скрипт деплоя (об этом <a href="https://ealebed.github.io/posts/2017/gitlab-ci-deploy-%D0%BD%D0%B0-docker-swarm/">отдельная статья</a>);</li>
@@ -307,6 +307,10 @@
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -320,10 +324,6 @@
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

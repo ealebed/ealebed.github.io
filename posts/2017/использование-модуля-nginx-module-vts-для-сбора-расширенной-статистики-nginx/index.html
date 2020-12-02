@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Использование модуля nginx_module_vts для сбора расширенной статистики Nginx &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -156,26 +156,26 @@
 </code></pre></div><p>Через некоторое время можно перейти по адресу http://имя_сервера/vhost_status и посмотреть на собранные данные.</p>
 <p>Статистика успешно собирается, но она ведется с момента старта веб-сервера Nginx. Если же нужно вывести данные за какой-то промежуток времени (час/день/неделя и т.д.), то следует перенаправлять данные метрики в систему мониторинга (например, <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">Prometheus</a>) и на их основе строить дашборды/графики (например, в <a href="https://ealebed.github.io/posts/2016/grafana-%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE-%D1%83%D0%B4%D0%BE%D0%B1%D0%BD%D1%8B%D0%B9-%D0%B4%D0%B0%D1%88%D0%B1%D0%BE%D1%80%D0%B4/">Grafana</a>).</p>
 <p>Экспортер метрик конечно же будем запускать в docker-контейнере. Более того, если вы уже настраивали <a href="https://ealebed.github.io/posts/2017/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-docker-c-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-prometheus/">мониторинг docker c помощью Prometheus</a>, то советую добавить описание еще одного сервиса (контейнера) в существующий файл <code>docker-compose.yml</code>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
-<span style="color:#66d9ef">services</span>:
-  ...
-  <span style="color:#66d9ef">prodvtsexporter</span>:
-    <span style="color:#66d9ef">image</span>: sophos/nginx-vts-exporter
-    <span style="color:#66d9ef">container_name</span>: prodvtsexporter
-    <span style="color:#66d9ef">environment</span>:
-      - NGINX_HOST=http://my.example.com/vhost_status/format/json
-    <span style="color:#66d9ef">restart</span>: unless-stopped
-    <span style="color:#66d9ef">expose</span>:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+<span style="color:#f92672">services</span>:
+  <span style="color:#ae81ff">...</span>
+  <span style="color:#f92672">prodvtsexporter</span>:
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">sophos/nginx-vts-exporter</span>
+    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">prodvtsexporter</span>
+    <span style="color:#f92672">environment</span>:
+      - <span style="color:#ae81ff">NGINX_HOST=http://my.example.com/vhost_status/format/json</span>
+    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">unless-stopped</span>
+    <span style="color:#f92672">expose</span>:
       - <span style="color:#ae81ff">9913</span>
-    <span style="color:#66d9ef">ports</span>:
+    <span style="color:#f92672">ports</span>:
       - <span style="color:#ae81ff">9913</span>:<span style="color:#ae81ff">9913</span>
 ...
 </code></pre></div><p>Обновляем сервисы из файла с помощью команды:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
 </code></pre></div><p>В конфигурационный файл <code>prometheus.yml</code> (в debian-based дистрибутивах находится в каталоге <code>/etc/prometheus</code>) добавляем следующие строки:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">- <span style="color:#66d9ef">job_name</span>: <span style="color:#e6db74">&#39;prod_nginx_vts_exporter&#39;</span>
-  <span style="color:#66d9ef">static_configs</span>:
-    - <span style="color:#66d9ef">targets</span>: [<span style="color:#e6db74">&#39;prodvtsexporter:9913&#39;</span>]
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">- <span style="color:#f92672">job_name</span>: <span style="color:#e6db74">&#39;prod_nginx_vts_exporter&#39;</span>
+  <span style="color:#f92672">static_configs</span>:
+    - <span style="color:#f92672">targets</span>: [<span style="color:#e6db74">&#39;prodvtsexporter:9913&#39;</span>]
 </code></pre></div><p>и перезапускаем <strong>Prometheus</strong> для применения изменений.</p>
 <p>Больше информации об экспортере можно найти <a href="https://github.com/hnlq715/nginx-vts-exporter">тут</a>, а готовый дашборд для Grafana находится <a href="https://grafana.com/dashboards/2949">здесь</a> (конечно же его придется доработать и расширить под свои нужды).</p>
                 </section>
@@ -219,6 +219,10 @@
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -232,10 +236,6 @@
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

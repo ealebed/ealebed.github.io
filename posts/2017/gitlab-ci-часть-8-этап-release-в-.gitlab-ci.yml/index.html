@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>GitLab CI: Часть 8, этап release в .gitlab-ci.yml &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -93,20 +93,20 @@
 <p>Данный этап (stage) в конфигурационном файле проекта <code>.gitlab-ci.yml</code> я назвал <code>release</code> — давайте разберемся!</p>
 <p>Инструкции для этапа подготовки docker-образа выглядят следующим образом:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
-<span style="color:#66d9ef">release-image</span>:
-  <span style="color:#66d9ef">stage</span>: release
-  <span style="color:#66d9ef">dependencies</span>:
-  - compile
-  - testing
-  <span style="color:#66d9ef">before_script</span>:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-  <span style="color:#66d9ef">script</span>:
-    - docker build -t $CONTAINER_RELEASE_IMAGE -f Dockerfile . --build-arg BRANCH_NAME=$CI_COMMIT_REF_SLUG
-  <span style="color:#66d9ef">after_script</span>:
-    - docker push $CONTAINER_RELEASE_IMAGE
-  <span style="color:#66d9ef">only</span>:
-    - develop
-    - docker
+<span style="color:#f92672">release-image</span>:
+  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">release</span>
+  <span style="color:#f92672">dependencies</span>:
+  - <span style="color:#ae81ff">compile</span>
+  - <span style="color:#ae81ff">testing</span>
+  <span style="color:#f92672">before_script</span>:
+    - <span style="color:#ae81ff">docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY</span>
+  <span style="color:#f92672">script</span>:
+    - <span style="color:#ae81ff">docker build -t $CONTAINER_RELEASE_IMAGE -f Dockerfile . --build-arg BRANCH_NAME=$CI_COMMIT_REF_SLUG</span>
+  <span style="color:#f92672">after_script</span>:
+    - <span style="color:#ae81ff">docker push $CONTAINER_RELEASE_IMAGE</span>
+  <span style="color:#f92672">only</span>:
+    - <span style="color:#ae81ff">develop</span>
+    - <span style="color:#ae81ff">docker</span>
 ...
 </code></pre></div><p>Задача называется <code>release-image</code>, для корректного выполнения действий нам необходимы артефакты с этапов <code>compile</code> и <code>testing</code> (зависимости описаны в секции <code>dependencies</code>). Запускать данные действия будем только для веток develop и docker.</p>
 <p>Основная команда данного этапа уже привычно описана в секции <code>script</code> и выполняет сборку docker-образа из Dockerfile с аргументом <code>BRANCH_NAME</code> (для каждой из наших веток будет отличаться как имя образа, так и код). Имя docker-образа — значение переменной <code>$CONTAINER_RELEASE_IMAGE</code>, которая также описывается в конфигурационном файла <code>.gitlab-ci.yml</code>:</p>
@@ -331,6 +331,10 @@ Build succeeded
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -344,10 +348,6 @@ Build succeeded
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

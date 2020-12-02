@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.63.2" />
+		<meta name="generator" content="Hugo 0.78.2" />
 		<title>Знакомство с Kubernetes. Часть 14: Секреты (Secrets) &middot; Yevhen Lebid&#39;s website</title>
 		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
 		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
@@ -110,7 +110,7 @@ Annotations:     &lt;none&gt;
 Type:            Opaque
 
 Data
-<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>
+<span style="color:#f92672">====</span>
 password.txt:    <span style="color:#ae81ff">12</span> bytes
 username.txt:    <span style="color:#ae81ff">5</span> bytes
 </code></pre></div><p>Стоит отметить, что ни <code>get</code>, ни <code>describe</code> не отобразят содержимое данного секрета на экране пользователя - это сделано из соображений безопасности.</p>
@@ -120,14 +120,14 @@ YWRtaW4<span style="color:#f92672">=</span>
 echo -n <span style="color:#e6db74">&#39;B7wItYlHeRR1&#39;</span> | base64
 Qjd3SXRZbEhlUlIx
 </code></pre></div><p>Создаем yaml-файл со следующим содержимым:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Secret
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: mysecret
-<span style="color:#66d9ef">type</span>: Opaque
-<span style="color:#66d9ef">data</span>:
-  <span style="color:#66d9ef">username</span>: YWRtaW4=
-  <span style="color:#66d9ef">password</span>: Qjd3SXRZbEhlUlIx
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Secret</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">mysecret</span>
+<span style="color:#f92672">type</span>: <span style="color:#ae81ff">Opaque</span>
+<span style="color:#f92672">data</span>:
+  <span style="color:#f92672">username</span>: <span style="color:#ae81ff">YWRtaW4=</span>
+  <span style="color:#f92672">password</span>: <span style="color:#ae81ff">Qjd3SXRZbEhlUlIx</span>
 </code></pre></div><p>Здесь поле <code>data</code> это map, ключи которого могут содержать буквенно-цифровые последовательности и символы <code>-</code>, <code>_</code> и <code>.</code>, а значения - необходимые данные, закодированные в base64.</p>
 <p>Теперь можно создать секрет с использованием команды <code>kubectl create</code>:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f ./secret.yaml
@@ -146,65 +146,65 @@ type: Opaque
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">echo <span style="color:#e6db74">&#39;Qjd3SXRZbEhlUlIx&#39;</span> | base64 --decode
 B7wItYlHeRR1
 </code></pre></div><p>Секреты могут быть смонтированы как тома данных или определены в качестве <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-8-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5-%D0%BE%D0%BA%D1%80%D1%83%D0%B6%D0%B5%D0%BD%D0%B8%D1%8F/">переменных окружения</a> для использования в подах. Пример:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: mypod
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-  - <span style="color:#66d9ef">name</span>: mypod
-    <span style="color:#66d9ef">image</span>: redis
-    <span style="color:#66d9ef">volumeMounts</span>:
-    - <span style="color:#66d9ef">name</span>: foo
-      <span style="color:#66d9ef">mountPath</span>: <span style="color:#e6db74">&#34;/etc/foo&#34;</span>
-      <span style="color:#66d9ef">readOnly</span>: <span style="color:#66d9ef">true</span>
-  <span style="color:#66d9ef">volumes</span>:
-  - <span style="color:#66d9ef">name</span>: foo
-    <span style="color:#66d9ef">secret</span>:
-      <span style="color:#66d9ef">secretName</span>: mysecret
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">mypod</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">mypod</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis</span>
+    <span style="color:#f92672">volumeMounts</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">foo</span>
+      <span style="color:#f92672">mountPath</span>: <span style="color:#e6db74">&#34;/etc/foo&#34;</span>
+      <span style="color:#f92672">readOnly</span>: <span style="color:#66d9ef">true</span>
+  <span style="color:#f92672">volumes</span>:
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">foo</span>
+    <span style="color:#f92672">secret</span>:
+      <span style="color:#f92672">secretName</span>: <span style="color:#ae81ff">mysecret</span>
 </code></pre></div><p>Если в поде существует несколько контейнеров, которые должны использовать данный секрет, то секцию <code>volumeMounts:</code> следует добавить в описание каждого из них. Есть возможность указания конкретного пути монтирования внутрь контейнера  значения отдельного ключа из секрета:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: mypod
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-  - <span style="color:#66d9ef">name</span>: mypod
-    <span style="color:#66d9ef">image</span>: redis
-    <span style="color:#66d9ef">volumeMounts</span>:
-    - <span style="color:#66d9ef">name</span>: foo
-      <span style="color:#66d9ef">mountPath</span>: <span style="color:#e6db74">&#34;/etc/foo&#34;</span>
-      <span style="color:#66d9ef">readOnly</span>: <span style="color:#66d9ef">true</span>
-  <span style="color:#66d9ef">volumes</span>:
-  - <span style="color:#66d9ef">name</span>: foo
-    <span style="color:#66d9ef">secret</span>:
-      <span style="color:#66d9ef">secretName</span>: mysecret
-      <span style="color:#66d9ef">items</span>:
-      - <span style="color:#66d9ef">key</span>: username
-        <span style="color:#66d9ef">path</span>: my-group/my-username
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">mypod</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">mypod</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis</span>
+    <span style="color:#f92672">volumeMounts</span>:
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">foo</span>
+      <span style="color:#f92672">mountPath</span>: <span style="color:#e6db74">&#34;/etc/foo&#34;</span>
+      <span style="color:#f92672">readOnly</span>: <span style="color:#66d9ef">true</span>
+  <span style="color:#f92672">volumes</span>:
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">foo</span>
+    <span style="color:#f92672">secret</span>:
+      <span style="color:#f92672">secretName</span>: <span style="color:#ae81ff">mysecret</span>
+      <span style="color:#f92672">items</span>:
+      - <span style="color:#f92672">key</span>: <span style="color:#ae81ff">username</span>
+        <span style="color:#f92672">path</span>: <span style="color:#ae81ff">my-group/my-username</span>
 </code></pre></div><p>В этом примере значение <code>username</code> будет доступно по пути <code>/etc/foo/my-group/my-username</code> вместо <code>/etc/foo/username</code>, а <code>password</code> доступен не будет.</p>
 <p><strong>Примечание.</strong> Можно задавать права доступа к объектам типа секрет (и даже к отдельным ключам).</p>
 <p>Использование секретов как переменных окружения в описании подов выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">apiVersion</span>: v1
-<span style="color:#66d9ef">kind</span>: Pod
-<span style="color:#66d9ef">metadata</span>:
-  <span style="color:#66d9ef">name</span>: secret-env-pod
-<span style="color:#66d9ef">spec</span>:
-  <span style="color:#66d9ef">containers</span>:
-  - <span style="color:#66d9ef">name</span>: mycontainer
-    <span style="color:#66d9ef">image</span>: redis
-    <span style="color:#66d9ef">env</span>:
-      - <span style="color:#66d9ef">name</span>: SECRET_USERNAME
-        <span style="color:#66d9ef">valueFrom</span>:
-          <span style="color:#66d9ef">secretKeyRef</span>:
-            <span style="color:#66d9ef">name</span>: mysecret
-            <span style="color:#66d9ef">key</span>: username
-      - <span style="color:#66d9ef">name</span>: SECRET_PASSWORD
-        <span style="color:#66d9ef">valueFrom</span>:
-          <span style="color:#66d9ef">secretKeyRef</span>:
-            <span style="color:#66d9ef">name</span>: mysecret
-            <span style="color:#66d9ef">key</span>: password
-  <span style="color:#66d9ef">restartPolicy</span>: Never
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">secret-env-pod</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">containers</span>:
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">mycontainer</span>
+    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis</span>
+    <span style="color:#f92672">env</span>:
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">SECRET_USERNAME</span>
+        <span style="color:#f92672">valueFrom</span>:
+          <span style="color:#f92672">secretKeyRef</span>:
+            <span style="color:#f92672">name</span>: <span style="color:#ae81ff">mysecret</span>
+            <span style="color:#f92672">key</span>: <span style="color:#ae81ff">username</span>
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">SECRET_PASSWORD</span>
+        <span style="color:#f92672">valueFrom</span>:
+          <span style="color:#f92672">secretKeyRef</span>:
+            <span style="color:#f92672">name</span>: <span style="color:#ae81ff">mysecret</span>
+            <span style="color:#f92672">key</span>: <span style="color:#ae81ff">password</span>
+  <span style="color:#f92672">restartPolicy</span>: <span style="color:#ae81ff">Never</span>
 </code></pre></div><p>После запуска пода в контейнере с именем <code>mycontainer</code> проверим переменные окружения:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">echo $SECRET_USERNAME
 admin
@@ -253,6 +253,10 @@ B7wItYlHeRR1
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
         </li>
     
@@ -266,10 +270,6 @@ B7wItYlHeRR1
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/gradle-checkstyle-on-changed-files-only/">Gradle запуск checkstyle только на измененных файлах<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
 </ul>

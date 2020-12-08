@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Использование PostStart хука при запуске пода в Kubernetes-кластере"/>
+  <meta name="twitter:description" content="После написания статьи о вставке данных в redis при запуске контейнера в кластере Kubernetes Александр Косенко вполне резонно заметил, что для решения такой задачи можно использовать PostStart хук, который предоставляется &ldquo;из коробки&rdquo; для управления жизненным циклом контейнера. Давайте разберемся!"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.78.2" />
+		<title>Использование PostStart хука при запуске пода в Kubernetes-кластере &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Использование PostStart хука при запуске пода в Kubernetes-кластере
+                    </h1>
+                    <h2 class="headline">
+                    Dec 8, 2020 08:37
+                    · 774 words
+                    · 4 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                              <a href="https://ealebed.github.io/tags/k8s">k8s</a>
+                          
+                              <a href="https://ealebed.github.io/tags/redis">redis</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>После написания статьи о <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">вставке данных в redis при запуске контейнера в кластере Kubernetes</a> <a href="https://www.linkedin.com/in/alexander-kosenko-281a2581/">Александр Косенко</a> вполне резонно заметил, что для решения такой задачи можно использовать <code>PostStart</code> хук, который предоставляется &ldquo;из коробки&rdquo; для управления жизненным циклом контейнера. Давайте разберемся!</p>
+<p><a href="https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/">Хуки</a> дают возможность получать информацию о жизненном цикле управления контейнерами и выполнять код, реализованный в обработчике (handler), при срабатывании определенного хука.</p>
+<p>Для каждого контейнера в поде хуки определяются отдельно. Существуют два типа хуков - <code>PostStart</code> и <code>PreStop</code>. Первый является асинхронным и выполняется сразу же при создании контейнера, однако нет никакой гарантии, что данный хук будет выполнен до запуска инструкции <code>ENTRYPOINT</code> контейнера. Стоит отметить, что если выполнение <code>PostStart</code> хука занимает очень много времени (или зависает), то контейнер не может перейти в состояние <code>Running</code>.</p>
+<p>Хук <code>PreStop</code>, как видно из его названия, выполняется перед тем как контейнер будет остановлен (terminated) - будь то API-запрос или другое событие (например, неудачная liveness probe, <a href="https://ealebed.github.io/posts/2019/%D0%BF%D1%80%D0%B8%D0%BE%D1%80%D0%B8%D1%82%D0%B5%D1%82%D0%BD%D0%BE%D1%81%D1%82%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B2-%D0%B2-kubernetes/">&ldquo;выдавливание&rdquo; пода с узла кластера</a>, перебор используемых ресурсов). Этот вызов синхронный, а это значит, что он обязательно должен быть завершен до того, как будет отправлен сигнал остановки контейнера.</p>
+<p>Для хуков в жизненном цикле контейнеров предусмотрено два варианта обработчиков (handlers):</p>
+<ul>
+<li><code>Exec</code> - выполняет определенную команду (скрипт) в пространстве имен контейнера. Ресурсы, которые используются данной командой также учитываются в используемых ресурсах контейнера (важно при определении <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-memory/">памяти</a> и <a href="https://ealebed.github.io/posts/2019/%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D1%8B-%D0%B2-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-cpu/">CPU</a>);</li>
+<li><code>HTTP</code> - выполняет HTTP-запрос на определенный эндпоинт контейнера.</li>
+</ul>
+<p>Если какой-то из хуков <code>PostStart</code> или <code>PreStop</code> завершается с ошибкой, то контейнер также будет остановлен. Логи хуков недоступны при выполнении команды <code>kubectl logs &lt;pod_name&gt;</code>, но если по какой-то причине они выполнились неудачно, то происходит событие <code>FailedPostStartHook</code> или <code>FailedPreStopHook</code> соответственно. Эти события можно увидеть выполнив команду <code>kubectl describe pod &lt;pod_name&gt;</code>.</p>
+<p>Итак, мы вполне можем использовать <code>PostStart</code> хук для вставки данных в <code>Redis</code> при старте контейнера.</p>
+<p>Идея состоит в следующем: с помощью <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-13-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%BC%D0%B0%D0%BF%D1%8B-configmap/">ConfigMap</a> мы добавим файл(ы) внутрь контейнера, причем названием ключа в редисе будет имя, а значением - содержимое этого файла. Далее, используя <code>PostStart</code> хук, мы &ldquo;обработаем&rdquo; каждый из файлов и вставим соответствующие данные в БД <code>Redis</code>.</p>
+<p>Манифест, содержащий в себе все необходимые объекты <code>Kubernetes</code>, будет выглядеть так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Service</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">ads-redis-test</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">default</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">selector</span>:
+    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">ads-redis-test</span>
+  <span style="color:#f92672">ports</span>:
+  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">redis</span>
+    <span style="color:#f92672">port</span>: <span style="color:#ae81ff">6379</span>
+  <span style="color:#f92672">clusterIP</span>: <span style="color:#ae81ff">None</span>
+---
+<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ConfigMap</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">ads-redis-test</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">default</span>
+<span style="color:#f92672">data</span>:
+  <span style="color:#f92672">flow-rules-key</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">    [{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.grpc.ssp.v0.AdsTxtRecordService/GetAdsTxtRelationships&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 100.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.grpc.ssp.v0.PublisherAccountService/GetPublisherById&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 5.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.grpc.ssp.v1.PublisherAccountService/GetPublisherById&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 5.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.grpc.ssp.v0.BundleLegacyService/GetBundleByKey&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 20.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.lsm.ssp.v0.BundleService/GetBundleById&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 20.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.lsm.ssp.v0.BundleService/QueryBundle&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 20.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppById&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 10.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppIdByKey&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 10.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppIdByContainerKey&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 16.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppByContainerKey&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 10.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;ExchangeThrottleRateService/GetThrottleRatesByKeys&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 20.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;dsp-fetcher&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 25.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;exchange-fetcher&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 300.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;THREAD&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;kafka_dmp_ads_requests_info&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 500.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;QPS&#34;,
+</span><span style="color:#e6db74">      &#34;limit-app&#34;: &#34;default&#34;
+</span><span style="color:#e6db74">    }]</span>    
+  <span style="color:#f92672">degrade-rules-key</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">    [{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;analytics.AnalyticsApiService/AnalyzeCall&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 10.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;EXCEPTION_COUNT&#34;,
+</span><span style="color:#e6db74">      &#34;time-window&#34;: 10,
+</span><span style="color:#e6db74">      &#34;min-request-amount&#34;: 100,
+</span><span style="color:#e6db74">      &#34;stat-interval-ms&#34;: 20000,
+</span><span style="color:#e6db74">      &#34;slow-ratio-threshold&#34;: 0.6
+</span><span style="color:#e6db74">    },{
+</span><span style="color:#e6db74">      &#34;resource&#34;: &#34;analytics.AnalyticsApiService/AnalyzeCall&#34;,
+</span><span style="color:#e6db74">      &#34;count&#34;: 10.0,
+</span><span style="color:#e6db74">      &#34;grade&#34;: &#34;EXCEPTION_RATIO&#34;,
+</span><span style="color:#e6db74">      &#34;time-window&#34;: 10,
+</span><span style="color:#e6db74">      &#34;min-request-amount&#34;: 100,
+</span><span style="color:#e6db74">      &#34;stat-interval-ms&#34;: 20000,
+</span><span style="color:#e6db74">      &#34;slow-ratio-threshold&#34;: 0.6
+</span><span style="color:#e6db74">    }]</span>    
+---
+<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">apps/v1</span>
+<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Deployment</span>
+<span style="color:#f92672">metadata</span>:
+  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">ads-redis-test</span>
+  <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">default</span>
+<span style="color:#f92672">spec</span>:
+  <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">1</span>
+  <span style="color:#f92672">selector</span>:
+    <span style="color:#f92672">matchLabels</span>:
+      <span style="color:#f92672">app</span>: <span style="color:#ae81ff">ads-redis-test</span>
+  <span style="color:#f92672">template</span>:
+    <span style="color:#f92672">metadata</span>:
+      <span style="color:#f92672">labels</span>:
+        <span style="color:#f92672">app</span>: <span style="color:#ae81ff">ads-redis-test</span>
+    <span style="color:#f92672">spec</span>:
+      <span style="color:#f92672">containers</span>:
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">redis</span>
+        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis:6.0.9</span>
+        <span style="color:#f92672">ports</span>:
+        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">redis</span>
+          <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">6379</span>
+        <span style="color:#f92672">resources</span>:
+          <span style="color:#f92672">limits</span>:
+            <span style="color:#f92672">cpu</span>: <span style="color:#e6db74">&#34;0.5&#34;</span>
+            <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">1Gi</span>
+          <span style="color:#f92672">requests</span>:
+            <span style="color:#f92672">cpu</span>: <span style="color:#e6db74">&#34;0.5&#34;</span>
+            <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">1Gi</span>
+        <span style="color:#f92672">lifecycle</span>:
+          <span style="color:#f92672">postStart</span>:
+            <span style="color:#f92672">exec</span>:
+              <span style="color:#f92672">command</span>: [<span style="color:#e6db74">&#34;/bin/bash&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;cd /script/ &amp;&amp; for FILE in *key; do cat ${FILE} | redis-cli -n 2 -x set ${FILE}; done&#34;</span>]
+        <span style="color:#f92672">livenessProbe</span>:
+          <span style="color:#f92672">exec</span>:
+            <span style="color:#f92672">command</span>:
+            - <span style="color:#ae81ff">sh</span>
+            - -<span style="color:#ae81ff">c</span>
+            - <span style="color:#ae81ff">redis-cli -h $(hostname) ping</span>
+          <span style="color:#f92672">initialDelaySeconds</span>: <span style="color:#ae81ff">5</span>
+          <span style="color:#f92672">periodSeconds</span>: <span style="color:#ae81ff">3</span>
+        <span style="color:#f92672">readinessProbe</span>:
+          <span style="color:#f92672">exec</span>:
+            <span style="color:#f92672">command</span>:
+            - <span style="color:#ae81ff">sh</span>
+            - -<span style="color:#ae81ff">c</span>
+            - <span style="color:#ae81ff">redis-cli -h $(hostname) ping</span>
+          <span style="color:#f92672">initialDelaySeconds</span>: <span style="color:#ae81ff">5</span>
+          <span style="color:#f92672">timeoutSeconds</span>: <span style="color:#ae81ff">3</span>
+        <span style="color:#f92672">volumeMounts</span>:
+        - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/script</span>
+          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">script</span>
+      <span style="color:#f92672">volumes</span>:
+      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">script</span>
+        <span style="color:#f92672">configMap</span>:
+          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">ads-redis-test</span>
+</code></pre></div><p>Вся &ldquo;магия&rdquo; заключается в команде, которая определена в <code>postStart</code> хуке:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">command: [&#34;/bin/bash&#34;, &#34;-c&#34;, &#34;cd /script/ &amp;&amp; for FILE in *key; do cat ${FILE} | redis-cli -n 2 -x set ${FILE}; done&#34;]
+</code></pre></div><p>Здесь для каждого файла в каталоге <code>/script</code>, который заканчивается на <code>key</code> выполняется следующее:</p>
+<ul>
+<li>с помощью команды <code>cat</code> выводится содержимое файла в STDOUT;</li>
+<li>через конвейер <code>|</code> передаются следующей команде - консольной утилите <code>redis-cli</code> (здесь в STDIN попадает содержимое STDOUT из предыдущего шага);</li>
+<li><code>redis-cli</code> выполняет вставку данных во вторую БД (ключ <code>-n 2</code>) с помощью команды <a href="https://redis.io/commands/set">SET</a>.</li>
+</ul>
+<p><strong>Примечание</strong> Именем ключа будет значение переменной <code>${FILE}</code> (имя файла), а значением - данные из STDIN (об этом заботится ключ <code>-x</code>).</p>
+<p>На этом все, мы успешно вставили данные в <code>Redis</code> при запуске контейнера используя &ldquo;родной&rdquo; функционал <code>Kubernetes</code>, а именно <code>PostStart</code> хук управления жизненным циклом контейнера.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2020%2f%25D0%25B8%25D1%2581%25D0%25BF%25D0%25BE%25D0%25BB%25D1%258C%25D0%25B7%25D0%25BE%25D0%25B2%25D0%25B0%25D0%25BD%25D0%25B8%25D0%25B5-poststart-%25D1%2585%25D1%2583%25D0%25BA%25D0%25B0-%25D0%25BF%25D1%2580%25D0%25B8-%25D0%25B7%25D0%25B0%25D0%25BF%25D1%2583%25D1%2581%25D0%25BA%25D0%25B5-%25D0%25BF%25D0%25BE%25D0%25B4%25D0%25B0-%25D0%25B2-kubernetes%2f - %d0%98%d1%81%d0%bf%d0%be%d0%bb%d1%8c%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b5%20PostStart%20%d1%85%d1%83%d0%ba%d0%b0%20%d0%bf%d1%80%d0%b8%20%d0%b7%d0%b0%d0%bf%d1%83%d1%81%d0%ba%d0%b5%20%d0%bf%d0%be%d0%b4%d0%b0%20%d0%b2%20Kubernetes-%d0%ba%d0%bb%d0%b0%d1%81%d1%82%d0%b5%d1%80%d0%b5 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D0%B1%D0%B5%D0%B7-%D1%81%D0%BC%D1%81-%D0%B8-%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D0%B8/">Валидация flyway-миграций без СМС и регистрации<aside class="dates">Mar 27 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D1%81%D0%B1%D0%BE%D1%80-%D0%B8-%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-kubernetes-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B0-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-efk/">Сбор и анализ логов Kubernetes кластера с помощью EFK-стека<aside class="dates">Mar 15 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">Миграции и контроль версий БД с помощью Flyway<aside class="dates">Feb 21 2020</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2020 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+
+    </body>
+</html>

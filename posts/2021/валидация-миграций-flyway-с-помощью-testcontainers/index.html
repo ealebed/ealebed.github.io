@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Валидация миграций flyway c помощью testcontainers"/>
+  <meta name="twitter:description" content="Ранее мы уже упоминали о необходимости контроля версий БД и применения миграций с помощью инструмента Flyway и даже реализовали функционал валидации миграций в бесплатной (community edition) версии. Но мир не стоит на месте и с каждым днем появляются новые варианты решения проблем - в данной статье рассмотрим валидацию миграций flyway с помощью testcontainers. Давайте разберемся!"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.80.0" />
+		<title>Валидация миграций flyway c помощью testcontainers &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Валидация миграций flyway c помощью testcontainers
+                    </h1>
+                    <h2 class="headline">
+                    Feb 5, 2021 10:51
+                    · 361 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/flyway">flyway</a>
+                          
+                              <a href="https://ealebed.github.io/tags/postgres">postgres</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/testcontainers">testcontainers</a>
+                          
+                              <a href="https://ealebed.github.io/tags/gradle">gradle</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Ранее мы уже упоминали о необходимости <a href="https://ealebed.github.io/posts/2020/flyway-version-control-for-db/">контроля версий БД и применения миграций с помощью инструмента Flyway</a> и даже реализовали <a href="https://ealebed.github.io/posts/2020/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D0%B1%D0%B5%D0%B7-%D1%81%D0%BC%D1%81-%D0%B8-%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D0%B8/">функционал валидации миграций</a> в бесплатной (community edition) версии. Но мир не стоит на месте и с каждым днем появляются новые варианты решения проблем - в данной статье рассмотрим валидацию миграций flyway с помощью <a href="https://www.testcontainers.org/">testcontainers</a>. Давайте разберемся!</p>
+<p>Тestcontainers идеально подходят для выполнения интеграционных тестов, в том числе DAL (data access layer), следовательно ничего не мешает нам использовать их для проверки миграций flyway.</p>
+<p>Считаем, что у нас Java-проект, который собирается <strong>Gradle</strong>&lsquo;ом. Структура проекта для исходных кодов и ресурсов стандартная, включающая в себя каталоги:</p>
+<ul>
+<li>src/main/java</li>
+<li>src/main/resources</li>
+<li>src/test/java</li>
+<li>src/test/resources</li>
+</ul>
+<p>В данном примере нас интересуют только последние два, так как валидация flyway миграций будет выполняться на этапе тестов. Как и в предыдущей статье, мы будем использовать две базы данных, миграции к которым нуждаются в проверке.</p>
+<p>Файл конфигурации проекта написан на языке kotlin и выглядит следующим образом:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/494ad37566c0db949da9370939bd6282.js?file=build.gradle.kts"></script>
+
+<p>В каталоге с ресурсами находится init-скрипт:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/494ad37566c0db949da9370939bd6282.js?file=initdb.sql"></script>
+
+<p>И сами миграции, разложенные по каталогам соответствующим именам БД. Пример некоторых миграций:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/494ad37566c0db949da9370939bd6282.js?file=V20210203000000__Base_version.sql"></script>
+
+<script type="application/javascript" src="https://gist.github.com/ealebed/494ad37566c0db949da9370939bd6282.js?file=V20210205103852__grants_for_ro_user.sql"></script>
+
+<p>Основная &ldquo;магия&rdquo; происходит здесь:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/494ad37566c0db949da9370939bd6282.js?file=FlywayMigrationTest.java"></script>
+
+<p>Как видим, для начала создается PostgreSQL контейнер с заданными параметрами:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">...</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> PostgreSQLContainer container <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> PostgreSQLContainer<span style="color:#f92672">&lt;&gt;(</span>DOCKER_IMAGE<span style="color:#f92672">)</span>
+            <span style="color:#f92672">.</span><span style="color:#a6e22e">withDatabaseName</span><span style="color:#f92672">(</span>DB_NAME<span style="color:#f92672">)</span>
+            <span style="color:#f92672">.</span><span style="color:#a6e22e">withUsername</span><span style="color:#f92672">(</span>USERNAME<span style="color:#f92672">)</span>
+            <span style="color:#f92672">.</span><span style="color:#a6e22e">withPassword</span><span style="color:#f92672">(</span>PASSWORD<span style="color:#f92672">)</span>
+            <span style="color:#f92672">.</span><span style="color:#a6e22e">withInitScript</span><span style="color:#f92672">(</span>INIT_SCRIPT_PATH<span style="color:#f92672">);</span>
+<span style="color:#f92672">...</span>
+</code></pre></div><p>после чего он используется в двух тестах (валидации миграций на две БД):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">runDB1Migrations</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        container<span style="color:#f92672">.</span><span style="color:#a6e22e">withDatabaseName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;database_01&#34;</span><span style="color:#f92672">);</span>
+        var flyway <span style="color:#f92672">=</span> Flyway<span style="color:#f92672">.</span><span style="color:#a6e22e">configure</span><span style="color:#f92672">()</span>
+                <span style="color:#f92672">.</span><span style="color:#a6e22e">locations</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;migrations/database_01/&#34;</span><span style="color:#f92672">)</span>
+                <span style="color:#f92672">.</span><span style="color:#a6e22e">schemas</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;public&#34;</span><span style="color:#f92672">)</span>
+                <span style="color:#f92672">.</span><span style="color:#a6e22e">dataSource</span><span style="color:#f92672">(</span>container<span style="color:#f92672">.</span><span style="color:#a6e22e">getJdbcUrl</span><span style="color:#f92672">(),</span> container<span style="color:#f92672">.</span><span style="color:#a6e22e">getUsername</span><span style="color:#f92672">(),</span> container<span style="color:#f92672">.</span><span style="color:#a6e22e">getPassword</span><span style="color:#f92672">())</span>
+                <span style="color:#f92672">.</span><span style="color:#a6e22e">load</span><span style="color:#f92672">();</span>
+        flyway<span style="color:#f92672">.</span><span style="color:#a6e22e">info</span><span style="color:#f92672">();</span>
+        flyway<span style="color:#f92672">.</span><span style="color:#a6e22e">migrate</span><span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span>
+
+</code></pre></div><p>Тесты между собой отличаются только конфигураций flyway (путь к миграциям - <code>locations(&quot;migrations/database_01/&quot;)</code>) и переключением на нужную БД в контейнере - <code>container.withDatabaseName(&quot;database_01&quot;);</code></p>
+<p>Если все сделано правильно, то после запуска в консоли команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./gradlew test --info
+</code></pre></div><p>Можно увидеть примерно следующий результат:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/494ad37566c0db949da9370939bd6282.js?file=task_output"></script>
+
+<p>Далее можно <a href="https://docs.docker.com/engine/reference/commandline/commit/">&ldquo;закоммитить&rdquo;</a> контейнер с уже примененнными миграциями и использовать новый образ в других тестах - если миграций много и количество тестов исчисляется сотнями, можно существенно ускорить процесс тестирования - но об этом уже в отдельной статье.</p>
+<p>Еще, как вариант, после валидации и применения flyway миграций можно использовать <a href="https://www.jooq.org/">JOOQ</a> (Java Object Oriented Querying) - open source инструмент с кодогенерацией для работы с SQL в Java, который из коробки предоставляет удобный DSL для составления запросов, а также генератор классов на основе метаданных ДБ.</p>
+<p>На этом все, полный пример валидации миграций с помощью flyway и testcontainers можно посмотреть <a href="https://github.com/ealebed/flyway-validation-example">здесь</a>.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2021%2f%25D0%25B2%25D0%25B0%25D0%25BB%25D0%25B8%25D0%25B4%25D0%25B0%25D1%2586%25D0%25B8%25D1%258F-%25D0%25BC%25D0%25B8%25D0%25B3%25D1%2580%25D0%25B0%25D1%2586%25D0%25B8%25D0%25B9-flyway-%25D1%2581-%25D0%25BF%25D0%25BE%25D0%25BC%25D0%25BE%25D1%2589%25D1%258C%25D1%258E-testcontainers%2f - %d0%92%d0%b0%d0%bb%d0%b8%d0%b4%d0%b0%d1%86%d0%b8%d1%8f%20%d0%bc%d0%b8%d0%b3%d1%80%d0%b0%d1%86%d0%b8%d0%b9%20flyway%20c%20%d0%bf%d0%be%d0%bc%d0%be%d1%89%d1%8c%d1%8e%20testcontainers by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D0%B1%D0%B5%D0%B7-%D1%81%D0%BC%D1%81-%D0%B8-%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D0%B8/">Валидация flyway-миграций без СМС и регистрации<aside class="dates">Mar 27 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D1%81%D0%B1%D0%BE%D1%80-%D0%B8-%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-kubernetes-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B0-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-efk/">Сбор и анализ логов Kubernetes кластера с помощью EFK-стека<aside class="dates">Mar 15 2020</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+
+    </body>
+</html>

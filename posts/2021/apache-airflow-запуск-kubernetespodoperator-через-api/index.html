@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Apache Airflow: запуск Kubernetes Pod Operator через API"/>
+  <meta name="twitter:description" content="Ранее мы уже упоминали об Apache Airflow - инструменте для разработки, планирования и мониторинга batch-процессов обработки данных. В данной статье рассмотрим запуск Airflow-задач (Directed Acyclic Graph, далее DAG) и передачу параметров с помощью Airflow REST API - давайте разберемся!"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.83.1" />
+		<title>Apache Airflow: запуск Kubernetes Pod Operator через API &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Apache Airflow: запуск Kubernetes Pod Operator через API
+                    </h1>
+                    <h2 class="headline">
+                    May 22, 2021 06:33
+                    · 541 words
+                    · 3 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/airflow">airflow</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>Ранее мы уже упоминали об <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/"><code>Apache Airflow</code></a> - инструменте для разработки, планирования и мониторинга batch-процессов обработки данных. В данной статье рассмотрим запуск Airflow-задач (Directed Acyclic Graph, далее DAG) и передачу параметров с помощью Airflow REST API - давайте разберемся!</p>
+<p>Среди множества всевозможных операторов в <code>Apache Airflow</code> есть оператор под названием <a href="https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/_api/airflow/providers/cncf/kubernetes/operators/kubernetes_pod/index.html"><code>KubernetesPodOperator</code></a>, который используется для запуска задач в <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/">подах</a> кластера <code>Kubernetes</code>. Это позволяет нам запускать распределенные вычисления или длительные операции (терминология Google AIP - <a href="https://google.aip.dev/151">long-running operations</a>) в кластере и практически не заботясь о их масштабировании и расположении - <code>Kubernetes</code> сделает это за нас. Такой подход позволяет существенно сэкономить средства, ведь после выполнения задачи под может быть удален, а кластер, при правильно настроенном масштабировании, уменьшен в размерах.</p>
+<p>Некоторые параметры при настройке <code>KubernetesPodOperator</code> могут использоваться как шаблоны (<a href="https://github.com/apache/airflow/blob/03d3c7db931df34a724a3f254bf13197a9063576/airflow/providers/cncf/kubernetes/operators/kubernetes_pod.py#L165:L173">полный список</a>), другие же могут сравнительно легко быть &ldquo;шаблонизированы&rdquo; (пример для параметра &lsquo;namespace&rsquo; рассмотрим ниже) - именно эту возможность мы будем использовать для демонстрации <a href="https://airflow.apache.org/docs/apache-airflow/2.0.2/stable-rest-api-ref.html#operation/post_dag_run">запуска и передачи параметров в DAG с помощью HTTP-запроса</a>.</p>
+<p>Простейший пример, в котором будет использоваться в качестве шаблона параметр &lsquo;image&rsquo;, выглядит следующим образом:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/f69a8ee4c42fce55df84eb34418ff362.js?file=000_templated_task.py"></script>
+
+<p>Запустить DAG через HTTP и передать в качестве параметра тег образа можно с помощью следующего запроса (также приведен ответ от API):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -X POST <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	http://localhost:8080/api/v1/dags/000_templated_task/dagRuns <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Content-Type: application/json&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Cache-Control: no-cache&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-d <span style="color:#e6db74">&#39;{&#34;conf&#34;:{&#34;image_tag&#34;:&#34;15&#34;}}&#39;</span>
+<span style="color:#f92672">{</span>
+  <span style="color:#e6db74">&#34;conf&#34;</span>: <span style="color:#f92672">{</span>
+    <span style="color:#e6db74">&#34;image_tag&#34;</span>: <span style="color:#e6db74">&#34;15&#34;</span>
+  <span style="color:#f92672">}</span>,
+  <span style="color:#e6db74">&#34;dag_id&#34;</span>: <span style="color:#e6db74">&#34;000_templated_task&#34;</span>,
+  <span style="color:#e6db74">&#34;dag_run_id&#34;</span>: <span style="color:#e6db74">&#34;manual__2021-05-22T07:52:17.440555+00:00&#34;</span>,
+  <span style="color:#e6db74">&#34;end_date&#34;</span>: null,
+  <span style="color:#e6db74">&#34;execution_date&#34;</span>: <span style="color:#e6db74">&#34;2021-05-22T07:52:17.440555+00:00&#34;</span>,
+  <span style="color:#e6db74">&#34;external_trigger&#34;</span>: true,
+  <span style="color:#e6db74">&#34;start_date&#34;</span>: <span style="color:#e6db74">&#34;2021-05-22T07:52:17.443583+00:00&#34;</span>,
+  <span style="color:#e6db74">&#34;state&#34;</span>: <span style="color:#e6db74">&#34;running&#34;</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>после выполнения задачи в логе можно будет увидеть:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">openjdk 15.0.2 2021-01-19
+OpenJDK Runtime Environment (build 15.0.2+7-27)
+OpenJDK 64-Bit Server VM (build 15.0.2+7-27, mixed mode, sharing)
+</code></pre></div><p>Запустим тот же DAG, но с другим значением параметра (ответ от API о запущенной задаче опущен):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -X POST <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	http://localhost:8080/api/v1/dags/000_templated_task/dagRuns <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Content-Type: application/json&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Cache-Control: no-cache&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-d <span style="color:#e6db74">&#39;{&#34;conf&#34;:{&#34;image_tag&#34;:&#34;16&#34;}}&#39;</span>
+</code></pre></div><p>лог:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">openjdk 16.0.1 2021-04-20
+OpenJDK Runtime Environment (build 16.0.1+9-24)
+OpenJDK 64-Bit Server VM (build 16.0.1+9-24, mixed mode, sharing)
+</code></pre></div><p>Естесственно, <code>Apache Airflow</code> поддерживает <a href="https://airflow.apache.org/docs/apache-airflow/stable/security/api.html#">несколько вариантов аутентификации</a> и даже позволяет внедрять свои варианты. В следующем примере рассмотрим самый простой из предложенных - &lsquo;basic_auth&rsquo;. Проверить какой именно вариант используется на вашем инстансе <code>Airflow</code> можно с помощью команды:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ airflow config get-value api auth_backend
+airflow.api.auth.backend.basic_auth
+</code></pre></div><p>С включенной &lsquo;basic_auth&rsquo; запрос должен выглядеть так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -X POST <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	--user <span style="color:#e6db74">&#34;admin:admin&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	http://localhost:8080/api/v1/dags/000_templated_task/dagRuns <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Content-Type: application/json&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Cache-Control: no-cache&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-d <span style="color:#e6db74">&#39;{&#34;conf&#34;:{&#34;image_tag&#34;:&#34;16&#34;}}&#39;</span>
+</code></pre></div><p>или так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -X POST <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	http://localhost:8080/api/v1/dags/000_templated_task/dagRuns <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#34;Authorization: Basic YWRtaW46YWRtaW4=&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Content-Type: application/json&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Cache-Control: no-cache&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-d <span style="color:#e6db74">&#39;{&#34;conf&#34;:{&#34;image_tag&#34;:&#34;16&#34;}}&#39;</span>
+</code></pre></div><p>Более интересный пример из реальной жизни, в котором параметры используются для передачи переменых окружения внутрь запускаемого пода, выглядит так:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/f69a8ee4c42fce55df84eb34418ff362.js?file=manual_tracer.py"></script>
+
+<p>Запускаем его такой командой:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -X POST <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	http://localhost:8080/api/v1/dags/manual_tracer/dagRuns <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#34;Authorization: Basic YWRtaW46YWRtaW4=&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Content-Type: application/json&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-H <span style="color:#e6db74">&#39;Cache-Control: no-cache&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>	-d <span style="color:#e6db74">&#39;{&#34;conf&#34;:{&#34;count&#34;:&#34;10&#34;, &#34;url&#34;:&#34;http://ads-api-rtb.default.svc.cluster.local:8080/services/trace&#34;, &#34;json&#34;:&#34;{\&#34;factor\&#34;:4,\&#34;ssp\&#34;:\&#34;inneractive\&#34;,\&#34;duration\&#34;:10}&#34;}}&#39;</span>
+<span style="color:#f92672">{</span>
+  <span style="color:#e6db74">&#34;conf&#34;</span>: <span style="color:#f92672">{</span>
+    <span style="color:#e6db74">&#34;count&#34;</span>: <span style="color:#e6db74">&#34;10&#34;</span>,
+    <span style="color:#e6db74">&#34;json&#34;</span>: <span style="color:#e6db74">&#34;{\&#34;factor\&#34;:4,\&#34;ssp\&#34;:\&#34;inneractive\&#34;,\&#34;duration\&#34;:10}&#34;</span>,
+    <span style="color:#e6db74">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;http://ads-api-rtb.default.svc.cluster.local:8080/services/trace&#34;</span>
+  <span style="color:#f92672">}</span>,
+  <span style="color:#e6db74">&#34;dag_id&#34;</span>: <span style="color:#e6db74">&#34;manual_tracer&#34;</span>,
+  <span style="color:#e6db74">&#34;dag_run_id&#34;</span>: <span style="color:#e6db74">&#34;manual__2021-05-22T07:51:16.727115+00:00&#34;</span>,
+  <span style="color:#e6db74">&#34;end_date&#34;</span>: null,
+  <span style="color:#e6db74">&#34;execution_date&#34;</span>: <span style="color:#e6db74">&#34;2021-05-22T07:51:16.727115+00:00&#34;</span>,
+  <span style="color:#e6db74">&#34;external_trigger&#34;</span>: true,
+  <span style="color:#e6db74">&#34;start_date&#34;</span>: <span style="color:#e6db74">&#34;2021-05-22T07:51:16.730199+00:00&#34;</span>,
+  <span style="color:#e6db74">&#34;state&#34;</span>: <span style="color:#e6db74">&#34;running&#34;</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>Обещанный пример с &ldquo;шаблонизацией&rdquo; параметра &lsquo;namespace&rsquo; может выглядеть примерно так:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">...</span>
+<span style="color:#75715e"># Create my own operator with the same behavior that adds namespace to template_fields</span>
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MyKubernetesPodOperator</span>(KubernetesPodOperator):
+         template_fields <span style="color:#f92672">=</span> KubernetesPodOperator<span style="color:#f92672">.</span>template_fields <span style="color:#f92672">+</span>(<span style="color:#e6db74">&#39;namespace&#39;</span>,)
+<span style="color:#f92672">...</span>
+<span style="color:#75715e"># Use code as</span>
+<span style="color:#66d9ef">with</span> DAG(<span style="color:#e6db74">&#39;test_ns&#39;</span>, default_args<span style="color:#f92672">=</span>default_args, schedule_interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;@once&#39;</span>) <span style="color:#66d9ef">as</span> dag:
+    ns <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;&#34; {{ dag_run.conf.ns }} &#34;&#34;&#34;</span>
+    example_task <span style="color:#f92672">=</span> MyKubernetesPodOperator(namespace<span style="color:#f92672">=</span>ns,<span style="color:#f92672">...</span>)
+<span style="color:#f92672">...</span>
+</code></pre></div><p>На этом все, в следующей статье рассмотрим настройку SLA (Service Level Agreement) для задач в <code>Apache Airflow</code> и получение соответствующих уведомлений.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2021%2fapache-airflow-%25D0%25B7%25D0%25B0%25D0%25BF%25D1%2583%25D1%2581%25D0%25BA-kubernetespodoperator-%25D1%2587%25D0%25B5%25D1%2580%25D0%25B5%25D0%25B7-api%2f - Apache%20Airflow%3a%20%d0%b7%d0%b0%d0%bf%d1%83%d1%81%d0%ba%20Kubernetes%20Pod%20Operator%20%d1%87%d0%b5%d1%80%d0%b5%d0%b7%20API by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2021/%D0%B1%D0%B5%D0%B7%D0%BE%D0%BF%D0%B0%D1%81%D0%BD%D0%B0%D1%8F-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0-%D1%81-%D1%81%D0%B5%D0%BA%D1%80%D0%B5%D1%82%D0%B0%D0%BC%D0%B8-%D0%BF%D1%80%D0%B8-%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B5-docker-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%BE%D0%B2/">Безопасная работа с секретами при сборке docker-образов<aside class="dates">Apr 30 2021</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%BE%D1%82%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0-%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2-apache-airflow-%D0%B2-elasticsearch/">Отправка логов Apache Airflow в Elasticsearch<aside class="dates">Apr 9 2020</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-112453311-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+    </body>
+</html>

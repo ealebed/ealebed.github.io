@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -148,7 +148,7 @@ ALERT prometheus_eating_memory
       description = &quot;{{ $labels.name }} is eating up a LOT of memory. Memory consumption of {{ $labels.name }} is at {{ humanize $value}}.&quot;,
   }
 </code></pre><p>В новом варианте файл должен называться <code>containers.rules.yml</code>, а содержимое его будет следующим:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">groups</span>:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">groups</span>:
 - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">/var/www/monitor/prometheus/containers.rules</span>
   <span style="color:#f92672">rules</span>:
   - <span style="color:#f92672">alert</span>: <span style="color:#ae81ff">high_cpu_usage_on_container</span>
@@ -193,15 +193,15 @@ ALERT prometheus_eating_memory
       <span style="color:#f92672">summary: &#39;High memory usage</span>: <span style="color:#ae81ff">CONTAINER &#39;&#39;{{ $labels.name }}&#39;&#39; on &#39;&#39;{{ $labels.instance</span>
         }}<span style="color:#e6db74">&#39;&#39;</span><span style="color:#ae81ff">&#39;</span>
 </code></pre></div><p>Переписывать файл(ы) вручную — не вариант, поэтому воспользуемся утилитой <code>promtool</code> для автоматического обновления всех файлов правил. Сначала получим последнюю версию данной утилиты (2.0):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget https://github.com/prometheus/prometheus/releases/download/v2.0.0/prometheus-2.0.0.linux-amd64.tar.gz
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar zxvf prometheus-2.0.0.linux-amd64.tar.gz
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget https://github.com/prometheus/prometheus/releases/download/v2.0.0/prometheus-2.0.0.linux-amd64.tar.gz
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar zxvf prometheus-2.0.0.linux-amd64.tar.gz
 </code></pre></div><p>Переходим в каталог с утилитой и запускаем процесс обновления для всех <code>rules</code>-файлов:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd prometheus-2.0.0.linux-amd64/
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./promtool update rules /var/www/monitor/prometheus/host.rules 
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./promtool update rules /var/www/monitor/prometheus/targets.rules
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./promtool update rules /var/www/monitor/prometheus/containers.rules
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd prometheus-2.0.0.linux-amd64/
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./promtool update rules /var/www/monitor/prometheus/host.rules 
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./promtool update rules /var/www/monitor/prometheus/targets.rules
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./promtool update rules /var/www/monitor/prometheus/containers.rules
 </code></pre></div><p>После успешного обновления файлов изменятся также из имена, поэтому в конфигурационном файле <code>prometheus.yml</code> также меняем соответствующие строки на:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
 <span style="color:#f92672">rule_files</span>:
   - <span style="color:#e6db74">&#34;targets.rules.yml&#34;</span>
   - <span style="color:#e6db74">&#34;host.rules.yml&#34;</span>
@@ -249,6 +249,10 @@ ALERT prometheus_eating_memory
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -262,10 +266,6 @@ ALERT prometheus_eating_memory
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

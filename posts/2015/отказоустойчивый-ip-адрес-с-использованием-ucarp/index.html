@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,7 +102,7 @@
                 <section id="post-body">
                     <p>Одно из самых простых решений для обеспечения отказоустойчивости ip-адреса в debian — утилита <code>ucarp</code> (user-space реализация протокола отказоустойчивой маршрутизации CARP). Давайте разберемся с настройкой <strong>отказоустойчивого ip-адреса</strong> в ОС Debian Wheezy!</p>
 <p>В нашем примере для решения задачи будем использовать два сервера под управлением ОС Debian Wheezy. Настройки сети на первом:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /etc/network/interfaces
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /etc/network/interfaces
 auto eth0
 iface eth0 inet static
 	address 192.168.0.23
@@ -110,7 +110,7 @@ iface eth0 inet static
 	gateway 192.168.0.5
 	dns-nameservers 192.168.0.1 192.168.0.13
 </code></pre></div><p>на втором:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /etc/network/interfaces
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /etc/network/interfaces
 auto eth0
 iface eth0 inet static
 	address 192.168.0.11
@@ -118,9 +118,9 @@ iface eth0 inet static
 	gateway 192.168.0.5
 	dns-nameservers 192.168.0.1 192.168.0.13
 </code></pre></div><p>Прежде всего установим необходимый пакет <code>ucarp</code> на оба сервера:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install ucarp
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install ucarp
 </code></pre></div><p>Теперь приведем конфигурационный файл <code>/etc/network/interfaces</code> на первом сервере к следующему виду:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">auto eth0
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">auto eth0
 iface eth0 inet static
 	address 192.168.0.23
 	netmask 255.255.255.0
@@ -137,7 +137,7 @@ iface eth0:ucarp inet static
 	address 192.168.0.15
 	netmask 255.255.255.255
 </code></pre></div><p>На втором сервера конфигурационный файл <code>/etc/network/interfaces</code> должен выглядеть так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">auto eth0
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">auto eth0
 iface eth0 inet static
 	address 192.168.0.11
 	netmask 255.255.255.0
@@ -154,7 +154,7 @@ iface eth0:ucarp inet static
 	address 192.168.0.15
 	netmask 255.255.255.255
 </code></pre></div><p>И выполняем:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/networking restart
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/networking restart
 </code></pre></div><p>Подробнее об использованных параметрах:</p>
 <ul>
 <li><code>ucarp-vid</code> — номер группы (число от 1 до 255) одинаковый для всех серверов;</li>
@@ -172,15 +172,15 @@ iface eth0:ucarp inet static
 </ul>
 <p>Проверка правильности настройки отказоустойчивости ip-адреса.
 Убедиться, что на обоих серверах запущен экземпляр процесса <code>ucarp</code> можно с помощью команды:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps axww | grep ucarp
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps axww | grep ucarp
 </code></pre></div><p>Убедиться, что на первом сервере появился новый интерфейс можно с помощью команд:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ip a
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ip a
 </code></pre></div><p>или</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ifconfig
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ifconfig
 </code></pre></div><p>Далее на тестовом компьютере запускаем</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ping 192.168.0.15
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ping 192.168.0.15
 </code></pre></div><p>и при наличии доступа к физической консоли первого сервера выполняем на нем:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/networking stop
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/networking stop
 </code></pre></div><p>На тестовом компьютере пинг возобновится спустя пару секунд.</p>
 <p>На этом все, <strong>настройка отказоустойчивого ip-адреса с использованием <code>ucarp</code></strong> закончена.</p>
                 </section>
@@ -224,6 +224,10 @@ iface eth0:ucarp inet static
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -237,10 +241,6 @@ iface eth0:ucarp inet static
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

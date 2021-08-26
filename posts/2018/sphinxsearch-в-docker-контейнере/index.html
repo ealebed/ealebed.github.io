@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,7 +103,7 @@
                     <p>В данной статье рассмотрим процесс сборки docker-образа включающего в себя систему полнотекстового поиска Sphinxsearch с возможностью переиндексации - давайте разберемся!</p>
 <p>Несмотря на то, что в данный момент уже есть <a href="http://sphinxsearch.com/blog/2017/12/18/sphinx-3-0-1-released/">Sphinxsearch версии 3.0.1</a>, в данном примере мы будем использовать стабильную и &ldquo;обкатанную&rdquo; версию поискового движка - 2.2.11.</p>
 <p>За основу для нашего docker-образа возьмем ubuntu:16.04, и наш Dockerfile будет выглядеть следующим образом:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> ubuntu:16.04</span><span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> ubuntu:16.04</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> APP_ENV<span style="color:#f92672">=</span>dev
 <span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#ae81ff">\
@@ -136,12 +136,12 @@
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;/start.sh&#34;</span>]<span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>В зависимости от переданного при сборке docker-образа значения аргумента <code>APP_ENV</code> (по умолчанию это dev), в образ будет скопирован соответствующий конфигурационный файл <code>sphinx.conf.${APP_ENV}</code>.</p>
 <p>При старте docker-контейнера будет выполнен bash-скрипт <code>start.sh</code>, который выполняет переиндексацию и запуск поискового движка. Содержимое скрипта довольно простое:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env bash
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env bash
 </span><span style="color:#75715e"></span>
 indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
 searchd --config /etc/sphinxsearch/sphinx.conf --nodetach
 </code></pre></div><p>Пример конфигурационного файла <code>sphinx.conf</code>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">source parent_source
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">source parent_source
 {
     type			= mysql
 
@@ -208,15 +208,15 @@ searchd
     watchdog			= 1
 }
 </code></pre></div><p>Собираем docker-образ находясь в каталоге с Dockerfile с помощью следующей команды:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t sphinx:latest .
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t sphinx:latest .
 </code></pre></div><p>Запустить docker-контейнер из созданного нами образа можно так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d <span style="color:#ae81ff">\
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>	--name sphinxsearch <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>	-v <span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>/sphinx.conf:/etc/sphinxsearch/sphinx.conf <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>	-v <span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>/sphinxdata:/var/lib/sphinxsearch/data <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>sphinx:latest
 </code></pre></div><p>Или с помощью <code>docker-compose.yml</code> (для удобства редактирования конфиг sphinx монтируем с хост-машины в docker-контейнер):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
 <span style="color:#75715e">### Sphinxsearch Container ##################################</span>
   <span style="color:#f92672">sphinxsearch</span>:
     <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">sphinxsearch</span>
@@ -230,7 +230,7 @@ searchd
   <span style="color:#f92672">sphinx</span>:
     <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
 </code></pre></div><p>При необходимости можно запустить переиндексацию с помощью команды:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
 </code></pre></div>
                 </section>
             </article>
@@ -273,6 +273,10 @@ searchd
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -286,10 +290,6 @@ searchd
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

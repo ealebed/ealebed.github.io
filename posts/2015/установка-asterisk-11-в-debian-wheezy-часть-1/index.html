@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,52 +106,52 @@
 <ul>
 <li>готовим раздел для хранения записей звонков. В моем случае звонки будут храниться на логическом томе размером 300 GB (подробнее о Linux LVM в этой статье):</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lvcreate -L300G -n calls vg0
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lvcreate -L300G -n calls vg0
 mkfs.ext4 /dev/vg0/calls
 tune2fs -m <span style="color:#ae81ff">0</span> /dev/vg0/calls
 </code></pre></div><ul>
 <li>перед <strong>установкой Asterisk’а</strong> обновим все установленные пакеты:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude update
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude update
 aptitude safe-upgrade -y
 </code></pre></div><ul>
 <li>установим несколько новых пакетов/библиотек:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude update
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude update
 aptitude install linux-headers-<span style="color:#66d9ef">$(</span>uname -r<span style="color:#66d9ef">)</span>
 aptitude install libxml2 libxml2-dev openssl libssl-dev libncurses5 libncurses5-dev libnewt0.52 libnewt-dev mpg123 libmysqlclient-dev libsqlite3-dev build-essential
 </code></pre></div><ul>
 <li>создадим каталог для исходников:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /usr/src/asterisk-src
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /usr/src/asterisk-src
 </code></pre></div><ul>
 <li>переходим в созданный каталог:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /usr/src/asterisk-src
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /usr/src/asterisk-src
 </code></pre></div><ul>
 <li>скачиваем архив с исходным кодом <strong>Asterisk’а</strong>:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-11-current.tar.gz
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-11-current.tar.gz
 </code></pre></div><ul>
 <li>скачиваем исходный код (архив) PRI-библиотеки (<code>libpri</code>):</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://downloads.asterisk.org/pub/telephony/libpri/libpri-1.4-current.tar.gz
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://downloads.asterisk.org/pub/telephony/libpri/libpri-1.4-current.tar.gz
 </code></pre></div><p><strong>Примечание.</strong> Если вы не используете PRI-интерфейсы ISDN, такие как <code>T1/E1/J1/BRI</code>, то совершенно необязательно устанавливать данную библиотеку</p>
 <ul>
 <li>скачиваем архив с исходным кодом модуля канала <code>DAHDI</code>:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://downloads.asterisk.org/pub/telephony/dahdi-linux-complete/dahdi-linux-complete-current.tar.gz
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://downloads.asterisk.org/pub/telephony/dahdi-linux-complete/dahdi-linux-complete-current.tar.gz
 </code></pre></div><p><strong>Примечание.</strong> Модуль канала <code>DAHDI</code> служит для взаимодействия между интерфейсом <strong>Asterisk</strong> и аналоговым или цифровым оборудованием. Если вы не планируете использовать такое оборудование, этот шаг можно не выполнять</p>
 <ul>
 <li>с помощью архиватора <code>tar</code> распакуем скачанные архивы:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar -zxf asterisk-11-current.tar.gz
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar -zxf asterisk-11-current.tar.gz
 tar -zxf dahdi-linux-complete-current.tar.gz
 tar -zxf libpri-1.4-current.tar.gz
 </code></pre></div><ul>
 <li>если будут использоваться модуль канала <code>DAHDI</code> и PRI-библиотека <code>libpri</code>, то сначала устанавливаем <code>DAHDI</code>:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd dahdi-linux-complete-2.10.0.1+2.10.0.1/
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd dahdi-linux-complete-2.10.0.1+2.10.0.1/
 make
 make install
 make config
@@ -159,7 +159,7 @@ cd ..
 </code></pre></div><ul>
 <li>затем PRI-библиотеку <code>libpri</code>:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd libpri-1.4.15/
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd libpri-1.4.15/
 make
 make install
 cd ..
@@ -205,6 +205,10 @@ cd ..
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -218,10 +222,6 @@ cd ..
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,7 +103,7 @@
 <p>Выяснилось, что в веб-интерфейсе <strong>Gitlab</strong> на вкладке Registry при нажатии на кнопку «удалить» на самом деле происходит удаление только тэга образа, а сами данные никуда не деваются и продолжают занимать место на жестком диске.</p>
 <p>Аналогичная проблема наблюдается если docker-образ создается с одним и тем же тэгом (например, <code>latest</code>) — а это обычное дело для процесса CI. В этом случае, при сборке нового образа старый не удаляется (как ожидается), у него просто пропадает тэг (<code>latest</code>).</p>
 <p>Например, у образа <code>master/lebed/test:latest</code> на самом деле на жестком диске хранится 2 версии:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la /srv/gitlab/shared/registry/docker/registry/v2/repositories/master/lebed/test/_manifests/tags/latest/index/sha256
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la /srv/gitlab/shared/registry/docker/registry/v2/repositories/master/lebed/test/_manifests/tags/latest/index/sha256
 total <span style="color:#ae81ff">16</span>
 drwxr-xr-x <span style="color:#ae81ff">4</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 12:20 .
 drwxr-xr-x <span style="color:#ae81ff">3</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 09:25 ..
@@ -122,11 +122,11 @@ drwxr-xr-x <span style="color:#ae81ff">2</span> root root <span style="color:#ae
 <p>Смотрим содержимое каталога с ревизиями интересующего нас docker-образа <code>/srv/gitlab/shared/registry/docker/registry/v2/repositories/{имя_докер_образа}/_manifests/revisions/sha256</code>
 В нем должны также быть вложены директории с именами вида <code>e1f5741ced3f0280bd372baa6ca293d1033dfefc7db021cd81ca1527d2f1c08e</code> — точно такие же, как и в предыдущем шаге. Удаляем более старые (ориентируемся по дате создания), оставляя только один каталог.</p>
 <p>После удаления вышеуказанных файлов запускаем процесс «уборки мусора» командой:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it <span style="color:#f92672">{</span>имя_контейнера_c_registry<span style="color:#f92672">}</span> bin/registry garbage-collect <span style="color:#f92672">{</span>путь_к_конфигу_внутри_контейнера<span style="color:#f92672">}</span> 
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it <span style="color:#f92672">{</span>имя_контейнера_c_registry<span style="color:#f92672">}</span> bin/registry garbage-collect <span style="color:#f92672">{</span>путь_к_конфигу_внутри_контейнера<span style="color:#f92672">}</span> 
 </code></pre></div><p>В нашем случае команда выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
 </code></pre></div><p>Для чистки места также можно использовать скрипт <code>clean_docker_registry.sh</code> следующего содержания:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/sh
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/sh
 </span><span style="color:#75715e"></span>REPOPATH<span style="color:#f92672">=</span>/srv/gitlab/shared/registry/docker/registry/v2/repositories/
 echo Docker image name is $1
 echo Docker image tag is $2
@@ -141,7 +141,7 @@ REVPATH<span style="color:#f92672">=</span>$REPOPATH$1/_manifests/revisions/sha2
 <span style="color:#66d9ef">done</span>
 docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
 </code></pre></div><p>Запускаем скрипт с параметрами, первый из которых — имя docker-образа, второй — тэг docker-образа, например:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./clean_docker_registry.sh master/lebed/test latest
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./clean_docker_registry.sh master/lebed/test latest
 </code></pre></div><p>Не забывайте также освобождать место от неиспользуемых более docker-образов и томов, как описано <a href="https://ealebed.github.io/posts/2017/%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0-%D0%BC%D0%B5%D1%81%D1%82%D0%B0-%D0%BD%D0%B0-%D0%B4%D0%B8%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D1%81%D0%BB%D0%B5-docker/">здесь</a>.</p>
                 </section>
             </article>
@@ -184,6 +184,10 @@ docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registr
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -197,10 +201,6 @@ docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registr
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

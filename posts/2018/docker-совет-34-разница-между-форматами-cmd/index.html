@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,26 +100,26 @@
                 <section id="post-body">
                     <p>Инструкция <code>CMD</code> может быть определена в двух форматах, которые называются <code>exec</code> и <code>shell</code>. Оба выполняют практически идентичные вещи, но все же между ними есть существенно различие. Давайте разберемся!</p>
 <p>Заданная в <code>exec</code>-формате команда будет запущена &ldquo;как есть&rdquo;, вместе со всеми переданными ей аргументами. Пример команды в <code>exec</code>-формате:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;gunicorn&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;python:config.gunicorn&#34;</span>, <span style="color:#e6db74">&#34;hello.app:create_app()&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;gunicorn&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;python:config.gunicorn&#34;</span>, <span style="color:#e6db74">&#34;hello.app:create_app()&#34;</span>]<span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>Заданная в <code>shell</code>-формате команда запускается через shell-оболочку контейнера и позволяет использовать функционал самого shell (например, конвейер или <code>&amp;&amp;</code>). Пример такой команды:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">CMD</span> gunicorn -c <span style="color:#e6db74">&#34;python:config.gunicorn&#34;</span> <span style="color:#e6db74">&#34;hello.app:create_app()&#34;</span><span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">CMD</span> gunicorn -c <span style="color:#e6db74">&#34;python:config.gunicorn&#34;</span> <span style="color:#e6db74">&#34;hello.app:create_app()&#34;</span><span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>В теории, использование команд в <code>shell</code>-формате выглядит предпочтительнее, но могут возникнуть проблемы с корректной обработкой сигналов в docker-контейнере. Немного поясню: если вы запускаете команду в <code>exec</code>-формате, то выполнив внутри запущенного контейнера команду <code>ps</code> вы увидите:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">PID   USER     TIME   COMMAND
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">PID   USER     TIME   COMMAND
   <span style="color:#ae81ff">1</span>   root     0:00   <span style="color:#f92672">{</span>gunicorn<span style="color:#f92672">}</span> /usr/local/bin/python /usr/local/bin/gunicorn
  <span style="color:#ae81ff">15</span>   root     0:02   <span style="color:#f92672">{</span>gunicorn<span style="color:#f92672">}</span> /usr/local/bin/python /usr/local/bin/gunicorn
 <span style="color:#ae81ff">188</span>   root     0:00   ps
 </code></pre></div><p>Если же вы запускаете команду в <code>shell</code>-формате, то картина будет выглядеть иначе:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">PID   USER     TIME   COMMAND
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">PID   USER     TIME   COMMAND
   <span style="color:#ae81ff">1</span>   root     0:00   /bin/sh -c gunicorn -c python:config.gunicorn hello.app:create_app<span style="color:#f92672">()</span>
   <span style="color:#ae81ff">6</span>   root     0:00   <span style="color:#f92672">{</span>gunicorn<span style="color:#f92672">}</span> /usr/local/bin/python /usr/local/bin/gunicorn
  <span style="color:#ae81ff">16</span>   root     0:00   <span style="color:#f92672">{</span>gunicorn<span style="color:#f92672">}</span> /usr/local/bin/python /usr/local/bin/gunicorn
  <span style="color:#ae81ff">29</span>   root     0:00   ps
 </code></pre></div><p>Разработчики docker советуют использовать именно <code>exec</code>-формат для запуска команд, везде, где это возможно. Если же вам крайне необходимо выполнять какие-либо shell-сценарии при старте docker-контейнера, используйте для этих целей <code>ENTRYPOINT</code>.</p>
 <p>Что касается docker-compose, то есть возможность конвертации команд из <code>shell</code>-формата в <code>exec</code>-формат, и выглядеть это может так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">    <span style="color:#f92672">command</span>: &gt;<span style="color:#e6db74">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">    <span style="color:#f92672">command</span>: &gt;<span style="color:#e6db74">
 </span><span style="color:#e6db74">      </span>      <span style="color:#ae81ff">gunicorn -c &#34;python:config.gunicorn&#34; &#34;hello.app:create_app()&#34;</span>
 </code></pre></div><p>Или можно сразу задать команду в <code>exec</code>-формате:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">    <span style="color:#f92672">command</span>: [<span style="color:#e6db74">&#34;gunicorn&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;python:config.gunicorn&#34;</span>, <span style="color:#e6db74">&#34;hello.app:create_app()&#34;</span>]
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">    <span style="color:#f92672">command</span>: [<span style="color:#e6db74">&#34;gunicorn&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#e6db74">&#34;python:config.gunicorn&#34;</span>, <span style="color:#e6db74">&#34;hello.app:create_app()&#34;</span>]
 </code></pre></div>
                 </section>
             </article>
@@ -162,6 +162,10 @@
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -175,10 +179,6 @@
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -114,7 +114,7 @@
 <li>распаковываем полученный архив с помощью архиватора;</li>
 <li>в <code>atlassian-extras-decoder-v2-3.2.jar.src/com/atlassian/extras/decoder/v2/Version2LicenseDecoder.java</code> находим метод <code>loadLicenseConfiguration</code> (в моем случае выглядел так):</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#75715e">/*     */</span>   <span style="color:#66d9ef">private</span> Properties <span style="color:#a6e22e">loadLicenseConfiguration</span><span style="color:#f92672">(</span>Reader text<span style="color:#f92672">)</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#75715e">/*     */</span>   <span style="color:#66d9ef">private</span> Properties <span style="color:#a6e22e">loadLicenseConfiguration</span><span style="color:#f92672">(</span>Reader text<span style="color:#f92672">)</span>
 <span style="color:#75715e">/*     */</span>   <span style="color:#f92672">{</span>
 <span style="color:#75715e">/*     */</span>     <span style="color:#66d9ef">try</span>
 <span style="color:#75715e">/*     */</span>     <span style="color:#f92672">{</span>
@@ -128,7 +128,7 @@
 <span style="color:#75715e">/*     */</span>     <span style="color:#f92672">}</span>
 <span style="color:#75715e">/*     */</span>   <span style="color:#f92672">}</span>
 </code></pre></div><p>и добавляем в данный метод информацию о лицензии:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#75715e">/*     */</span>   <span style="color:#66d9ef">private</span> Properties <span style="color:#a6e22e">loadLicenseConfiguration</span><span style="color:#f92672">(</span>Reader text<span style="color:#f92672">)</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#75715e">/*     */</span>   <span style="color:#66d9ef">private</span> Properties <span style="color:#a6e22e">loadLicenseConfiguration</span><span style="color:#f92672">(</span>Reader text<span style="color:#f92672">)</span>
 <span style="color:#75715e">/*     */</span>   <span style="color:#f92672">{</span>
 <span style="color:#75715e">/*     */</span>     <span style="color:#66d9ef">try</span>
 <span style="color:#75715e">/*     */</span>     <span style="color:#f92672">{</span>
@@ -155,7 +155,7 @@
 <li>копируем файлы <code>atlassian-extras-common-3.2.jar</code>, <code>atlassian-extras-decoder-api-3.2.jar</code>, <code>atlassian-extras-api-3.2.jar</code> и <a href="https://www.dropbox.com/s/q922ucnr05hag63/commons-codec-1.9.jar?dl=0"><code>commons-codec-1.9.jar</code></a> в директорию с исходниками (<code>atlassian-extras-decoder-v2-3.2.jar.src</code>);</li>
 <li>переходим в каталог с исходниками (<code>atlassian-extras-3.2.jar.src</code>) и компилируем класс из java-файла, который мы правили с помощью следующей команды:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">javac -cp commons-codec-1.9.jar:atlassian-extras-common-3.2.jar:atlassian-extras-decoder-api-3.2.jar:atlassian-extras-api-3.2.jar -sourcepath ./ com/atlassian/extras/decoder/v2/Version2LicenseDecoder.java
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">javac -cp commons-codec-1.9.jar:atlassian-extras-common-3.2.jar:atlassian-extras-decoder-api-3.2.jar:atlassian-extras-api-3.2.jar -sourcepath ./ com/atlassian/extras/decoder/v2/Version2LicenseDecoder.java
 </code></pre></div><ul>
 <li>могут быть ошибки (вызваны “кривостью” декомпиляции исходников), устраняем их и еще раз компилируем класс;</li>
 <li>после успешного выполнения в каталоге <code>com/atlassian/extras/decoder/v2/</code> появится файл <code>Version2LicenseDecoder.class</code></li>
@@ -163,7 +163,7 @@
 <li>в общем случае “новый” архив <code>atlassian-extras-decoder-v2-3.2.jar</code> необходимо положить (с заменой) на сервере с Confluence в каталог <code>/opt/atlassian/confluence/confluence/WEB-INF/lib/</code>, удалить содержимое каталогов <code>${CONFLUENCE_HOME}/plugins-osgi-cache/transformed-plugins/</code> и <code>${CONFLUENCE_HOME}/plugins-osgi-cache/felix/</code> после чего перезапустить confluence. Если вы запускаете <strong>Atlassian Confluence 6.3.4 в docker-контейнере</strong>, то нужно пересобрать docker-образ согласно инструкциям в Dockerfile</li>
 </ul>
 <p>Инструкции по сборке docker-образа (Dockerfile) выглядят так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> cptactionhank/atlassian-confluence:6.3.4</span><span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> cptactionhank/atlassian-confluence:6.3.4</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> atlassian-extras-decoder-v2-3.2.jar <span style="color:#e6db74">${</span>CONF_INSTALL<span style="color:#e6db74">}</span>/confluence/WEB-INF/lib/atlassian-extras-decoder-v2-3.2.jar<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> atlassian-universal-plugin-manager-plugin-2.22.5.jar <span style="color:#e6db74">${</span>CONF_INSTALL<span style="color:#e6db74">}</span>/confluence/WEB-INF/atlassian-bundled-plugins/atlassian-universal-plugin-manager-plugin-2.22.5.jar<span style="color:#960050;background-color:#1e0010">
@@ -211,6 +211,10 @@
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -224,10 +228,6 @@
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		 
+			
+  
+    <meta name="twitter:card" content="summary"/>
+    
+      <meta name="twitter:image" content="https://ealebed.github.io/images/avatar.png" />
+    
+  
+  
+  <meta name="twitter:title" content="Healthcheck для Apache Airflow в Kubernetes кластере"/>
+  <meta name="twitter:description" content="В одной из предыдущих статей мы довольно подробно рассматривали процесс развертывания Apache Airflow в Kubernetes кластере, особенностью которого был запуск веб-сервера и планировщика в одном docker-контейнере. В такой реализации довольно скоро я столкнулся с необходимостью использования кастомного хелсчека для проверки работоспособности сервиса - давайте разберемся!"/>
+  
+    <meta name="twitter:site" content="@ealebed"/>
+  
+  
+  
+  
+    <meta name="twitter:creator" content="@Yevhen Lebid"/>
+  
+
+
+
+		
+		<meta name="author" content="Yevhen Lebid">
+		<meta name="description" content="Yevhen Lebid&#39;s website">
+		<meta name="generator" content="Hugo 0.87.0" />
+		
+  			
+			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
+			<script>
+			  window.dataLayer = window.dataLayer || [];
+			  function gtag(){dataLayer.push(arguments);}
+			  gtag('js', new Date());
+
+			  gtag('config', 'UA-112453311-1');
+			</script>
+		
+		<title>Healthcheck для Apache Airflow в Kubernetes кластере &middot; Yevhen Lebid&#39;s website</title>
+		<link rel="shortcut icon" href="https://ealebed.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ealebed.github.io/css/highlight.css">
+
+		
+		<link rel="stylesheet" href="https://ealebed.github.io/css/font-awesome.min.css">
+		
+
+		
+		<link href="https://ealebed.github.io/index.xml" rel="alternate" type="application/rss+xml" title="Yevhen Lebid&#39;s website" />
+		
+
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ealebed.github.io/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://ealebed.github.io/posts'>Archive</a>
+	<a href='https://ealebed.github.io/tags'>Tags</a>
+	<a href='https://ealebed.github.io/about'>About</a>
+
+	
+
+	
+		<a class="cta" href="https://ealebed.github.io/index.xml">RSS</a>
+	
+</nav>
+
+
+        <section id="wrapper" class="post">
+            <article>
+                <header>
+                    <h1>
+                        Healthcheck для Apache Airflow в Kubernetes кластере
+                    </h1>
+                    <h2 class="headline">
+                    Aug 26, 2021 13:07
+                    · 350 words
+                    · 2 minute read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://ealebed.github.io/tags/airflow">airflow</a>
+                          
+                              <a href="https://ealebed.github.io/tags/docker">docker</a>
+                          
+                              <a href="https://ealebed.github.io/tags/kubernetes">kubernetes</a>
+                          
+                              <a href="https://ealebed.github.io/tags/jq">jq</a>
+                          
+                              <a href="https://ealebed.github.io/tags/curl">curl</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                <section id="post-body">
+                    <p>В одной из предыдущих статей мы довольно подробно рассматривали процесс <a href="https://ealebed.github.io/posts/2020/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-apache-airflow-%D0%B2-kubernetes/">развертывания Apache Airflow в Kubernetes кластере</a>, особенностью которого был запуск веб-сервера и планировщика в одном docker-контейнере. В такой реализации довольно скоро я столкнулся с необходимостью использования кастомного хелсчека для проверки работоспособности сервиса - давайте разберемся!</p>
+<p>Прежде всего стоит признать, что текущая реализация отличается от рекомендуемого шаблона проектирования приложений в Docker-контейнерах, который гласит, что следует использовать один процесс на один контейнер. В нашем Docker-контейнере (если не менять инструкцию <code>CMD</code>) запускаются планировщик (scheduler), воркер (worker) и непосредственно веб-сервер (webserver) - как и описано в entrypoint-скрипте.</p>
+<p>В манифесте для запуска Apache Airflow в Kubernetes кластере указаны такие настройки для проверки liveness/readiness:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+  <span style="color:#f92672">livenessProbe</span>:
+    <span style="color:#f92672">failureThreshold</span>: <span style="color:#ae81ff">5</span>
+    <span style="color:#f92672">httpGet</span>:
+      <span style="color:#f92672">path</span>: <span style="color:#ae81ff">/health</span>
+      <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8080</span>
+    <span style="color:#f92672">initialDelaySeconds</span>: <span style="color:#ae81ff">60</span>
+    <span style="color:#f92672">timeoutSeconds</span>: <span style="color:#ae81ff">5</span>
+  <span style="color:#f92672">readinessProbe</span>:
+    <span style="color:#f92672">httpGet</span>:
+      <span style="color:#f92672">path</span>: <span style="color:#ae81ff">/health</span>
+      <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8080</span>
+    <span style="color:#f92672">initialDelaySeconds</span>: <span style="color:#ae81ff">60</span>
+    <span style="color:#f92672">periodSeconds</span>: <span style="color:#ae81ff">5</span>
+    <span style="color:#f92672">timeoutSeconds</span>: <span style="color:#ae81ff">5</span>
+...
+</code></pre></div><p>и <a href="https://kubernetes.io/docs/admin/kubelet/">kubelet</a> честно использует эти настройки чтобы определить когда контейнер должен быть перезапущен (liveness) и когда контейнер готов принимать входящий траффик (readiness). Беда лишь в том, что таким образом проверяется работоспособность веб-сервера, а не всей системы в целом - бывают случаи когда процесс планировщика &ldquo;зависает&rdquo; и задачи перестают запускаться.</p>
+<p><strong>Примечание.</strong> Иногда об этом можно узнать из UI, когда на домашней странице появляется сообщение:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">The scheduler does not appear to be running. Last heartbeat was received 1 day ago.
+The DAGs list may not update, and new tasks will not be scheduled.
+</code></pre></div><p>Решить эту задачу можно довольно просто и элегантно. Дело в том, что по пути <code>/health</code> Airflow также отображает статусы зависимых сервисов, в том числе и планировщика. Выглядит это примерно так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+	<span style="color:#f92672">&#34;metadatabase&#34;</span>: {
+		<span style="color:#f92672">&#34;status&#34;</span>: <span style="color:#e6db74">&#34;healthy&#34;</span>
+	},
+	<span style="color:#f92672">&#34;scheduler&#34;</span>: {
+		<span style="color:#f92672">&#34;status&#34;</span>: <span style="color:#e6db74">&#34;healthy&#34;</span>,
+		<span style="color:#f92672">&#34;latest_scheduler_heartbeat&#34;</span>: <span style="color:#e6db74">&#34;2021-08-26T10:39:08.143949+00:00&#34;</span>
+	}
+}
+</code></pre></div><p>Получать данную информацию будем с помощью утилиты <code>curl</code>, а обрабатывать утилитой <a href="https://stedolan.github.io/jq/"><code>jq</code></a> (ее нужно будет установить при сборке Docker-образа).
+Создадим простейший bash-скрипт следующего содержания:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/7a3f62320917a59f619b273880bf0af3.js?file=airflow-healthcheck.sh"></script>
+
+<p>Здесь мы получаем json c эндпоинта <code>/health</code>, сравниваем значение ключа <code>.scheduler.status</code> и возвращаем код завершения (exit status). Код завершения будет равен 0, если выражение <code>.scheduler.status == &quot;healthy&quot;</code> истинно.</p>
+<p>Нам придется несколько видоизменить наш Dockerfile:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/7a3f62320917a59f619b273880bf0af3.js?file=Dockerfile"></script>
+
+<p>и подправить yaml-манифест для деплоя Airflow в Kubernetes кластере:</p>
+<script type="application/javascript" src="https://gist.github.com/ealebed/7a3f62320917a59f619b273880bf0af3.js?file=airflow.yaml"></script>
+
+<p>Теперь <a href="https://kubernetes.io/docs/admin/kubelet/">kubelet</a> будет учитывать в своих проверках состояние планировщика и перезапускать его при необходимости.</p>
+                </section>
+            </article>
+
+            
+                <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2fealebed.github.io%2fposts%2f2021%2fhealthcheck-for-apache-airflow-in-k8s-cluster%2f - Healthcheck%20%d0%b4%d0%bb%d1%8f%20Apache%20Airflow%20%d0%b2%20Kubernetes%20%d0%ba%d0%bb%d0%b0%d1%81%d1%82%d0%b5%d1%80%d0%b5 by @ealebed"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+            
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'ealebed'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+            
+
+            
+                <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2021/apache-airflow-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA-kubernetespodoperator-%D1%87%D0%B5%D1%80%D0%B5%D0%B7-api/">Apache Airflow: запуск Kubernetes Pod Operator через API<aside class="dates">May 22 2021</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2021/%D0%B1%D0%B5%D0%B7%D0%BE%D0%BF%D0%B0%D1%81%D0%BD%D0%B0%D1%8F-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0-%D1%81-%D1%81%D0%B5%D0%BA%D1%80%D0%B5%D1%82%D0%B0%D0%BC%D0%B8-%D0%BF%D1%80%D0%B8-%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B5-docker-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%BE%D0%B2/">Безопасная работа с секретами при сборке docker-образов<aside class="dates">Apr 30 2021</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
+        </li>
+    
+        <li>
+            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
+        </li>
+    
+</ul>
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+	
+	
+    <a class="symbol" href="https://www.facebook.com/ealebed">
+        <i class="fa fa-facebook-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.github.com/ealebed">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.linkedin.com/in/ealebed/">
+        <i class="fa fa-linkedin-square"></i>
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/ealebed">
+        <i class="fa fa-twitter-square"></i>
+    </a>
+    
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+    
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://ealebed.github.io/js/jquery-2.2.4.min.js"></script>
+<script src="https://ealebed.github.io/js/main.js"></script>
+<script src="https://ealebed.github.io/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+    </body>
+</html>

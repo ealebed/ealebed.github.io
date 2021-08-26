@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,7 +100,7 @@
                 <section id="post-body">
                     <p>При сборке Docker-образов иногда необходимо использовать секреты (например, пароль к приватному репозиторию пакетов), которые не должны в конечном итоге оставаться в образе. В последних версиях Docker этого можно добиться благодаря <a href="https://docs.docker.com/develop/develop-images/build_enhancements/#new-docker-build-secret-information">BuildKit</a> - давайте разберемся!</p>
 <p>Самые очевидные варианты работы с секретами при сборке Docker-образа - копирование с последующим удалением, например, для <code>Dockerfile</code>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:14.16.1-alpine</span><span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:14.16.1-alpine</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">WORKDIR</span><span style="color:#e6db74"> /app</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
@@ -114,9 +114,9 @@
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;node&#34;</span>, <span style="color:#e6db74">&#34;server.js&#34;</span>]<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>При выполнении команды</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t ealebed/demo:dev .
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t ealebed/demo:dev .
 </code></pre></div><p>можно увидеть слой образа до удаления файла с секретом в логе сборки, который будет выглядеть примерно так (вывод сильно сокращен):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
 Step 6/8 : RUN npm install
  ---&gt; Running in be570142f74a
 Removing intermediate container be570142f74a
@@ -127,7 +127,7 @@ Removing intermediate container cf35e4e5e024
  ---&gt; 63759e72b83b
 ...
 </code></pre></div><p>или же можно воспользоваться командой <code>docker history</code> чтобы увидеть список слоев образа:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker image history ealebed/demo:dev
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker image history ealebed/demo:dev
 IMAGE          CREATED          CREATED BY                                      SIZE      COMMENT
 264465b2b53f   <span style="color:#ae81ff">5</span> seconds ago    /bin/sh -c <span style="color:#75715e">#(nop)  CMD [&#34;node&#34; &#34;server.js&#34;]     0B        </span>
 63759e72b83b   <span style="color:#ae81ff">5</span> seconds ago    /bin/sh -c rm -rf /root/.npmrc                  0B        
@@ -138,7 +138,7 @@ b90043498273   <span style="color:#ae81ff">10</span> seconds ago   /bin/sh -c <s
 53053044a91c   <span style="color:#ae81ff">10</span> seconds ago   /bin/sh -c <span style="color:#75715e">#(nop) WORKDIR /app                  0B        </span>
 ...
 </code></pre></div><p>Слой <code>77f58d40c15c</code> является полноценным docker-образом и может быть запущен в качестве контейнера, в котором будет находиться &ldquo;удаленный&rdquo; секрет (<code>.npmrc</code>):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm -it 77f58d40c15c ls -la /root
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm -it 77f58d40c15c ls -la /root
 total <span style="color:#ae81ff">24</span>
 drwx------    <span style="color:#ae81ff">1</span> root     root          <span style="color:#ae81ff">4096</span> Apr <span style="color:#ae81ff">30</span> 07:44 .
 drwxr-xr-x    <span style="color:#ae81ff">1</span> root     root          <span style="color:#ae81ff">4096</span> Apr <span style="color:#ae81ff">30</span> 08:12 ..
@@ -147,7 +147,7 @@ drwx------    <span style="color:#ae81ff">4</span> root     root          <span 
 drwxr-xr-x    <span style="color:#ae81ff">4</span> root     root          <span style="color:#ae81ff">4096</span> Apr <span style="color:#ae81ff">30</span> 07:44 .npm
 -rw-r--r--    <span style="color:#ae81ff">1</span> root     root           <span style="color:#ae81ff">328</span> Jan <span style="color:#ae81ff">27</span> 13:49 .npmrc
 </code></pre></div><p>Второй очевидный и также небезопасный вариант - передавать секреты при сборке образа с помощью аргументов. Для демонстрации изменяем наш <code>Dockerfile</code>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:14.16.1-alpine</span><span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:14.16.1-alpine</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">WORKDIR</span><span style="color:#e6db74"> /app</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
@@ -160,7 +160,7 @@ drwxr-xr-x    <span style="color:#ae81ff">4</span> root     root          <span 
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> npm install<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;node&#34;</span>, <span style="color:#e6db74">&#34;server.js&#34;</span>]<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build --build-arg SECRET<span style="color:#f92672">=</span>MyS3cr3t -t ealebed/demo:dev1 .
+</span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build --build-arg SECRET<span style="color:#f92672">=</span>MyS3cr3t -t ealebed/demo:dev1 .
 ...
 Step 5/7 : COPY docker/package.json package.json
  ---&gt; ea15d9a69360
@@ -171,7 +171,7 @@ Removing intermediate container 7a8dda5566ff
  ---&gt; 1002000560e2
 Step 7/7 : CMD <span style="color:#f92672">[</span><span style="color:#e6db74">&#34;node&#34;</span>, <span style="color:#e6db74">&#34;server.js&#34;</span><span style="color:#f92672">]</span>
 ...
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker history ealebed/demo:dev1                                          
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker history ealebed/demo:dev1                                          
 IMAGE          CREATED         CREATED BY                                      SIZE      COMMENT
 b2ae58f7e419   <span style="color:#ae81ff">4</span> seconds ago   /bin/sh -c <span style="color:#75715e">#(nop)  CMD [&#34;node&#34; &#34;server.js&#34;]     0B        </span>
 1002000560e2   <span style="color:#ae81ff">4</span> seconds ago   |<span style="color:#ae81ff">1</span> SECRET<span style="color:#f92672">=</span>MyS3cr3t /bin/sh -c echo <span style="color:#e6db74">${</span>SECRET<span style="color:#e6db74">}</span>    0B        
@@ -182,7 +182,7 @@ ea15d9a69360   <span style="color:#ae81ff">5</span> seconds ago   /bin/sh -c <sp
 </code></pre></div><p>Становится понятно, что использовать оба вышеприведенных варианта небезопасно. Как быть?</p>
 <p>Начиная с версии 18.09, в Docker есть поддержка флага <code>--secret</code> для команды <code>docker build</code>, которая позволяет передавать файлы с секретами в момент сборки образа и не оставлять их с каких-либо промежуточных слоях образа, а с версии 20.10 появилась дополнительная возможность подгружать секреты из переменных окружения, а не только из файлов.</p>
 <p>Рассмотрим пример (специально выводим содержимое секрета с помощью команды <code>cat</code>):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:14.16.1-alpine</span><span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:14.16.1-alpine</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">WORKDIR</span><span style="color:#e6db74"> /app</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
@@ -194,7 +194,7 @@ ea15d9a69360   <span style="color:#ae81ff">5</span> seconds ago   /bin/sh -c <sp
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#75715e">#RUN npm install</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;node&#34;</span>, <span style="color:#e6db74">&#34;server.js&#34;</span>]<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export DOCKER_BUILDKIT<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export DOCKER_BUILDKIT<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
 
 docker build --no-cache --progress<span style="color:#f92672">=</span>plain --secret id<span style="color:#f92672">=</span>mysecret,src<span style="color:#f92672">=</span>mytestsecret.txt -t ealebed/demo:dev2 .
 <span style="color:#75715e">#1 [internal] load build definition from Dockerfile</span>
@@ -215,7 +215,7 @@ docker build --no-cache --progress<span style="color:#f92672">=</span>plain --se
 <span style="color:#75715e">#10 naming to docker.io/ealebed/demo:dev2 done</span>
 <span style="color:#75715e">#10 DONE 0.0s</span>
 </code></pre></div><p>В истории нашего секрета не видно:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker history ealebed/demo:dev2
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker history ealebed/demo:dev2
 IMAGE          CREATED          CREATED BY                                      SIZE      COMMENT
 905609f1b759   <span style="color:#ae81ff">39</span> seconds ago   CMD <span style="color:#f92672">[</span><span style="color:#e6db74">&#34;node&#34;</span> <span style="color:#e6db74">&#34;server.js&#34;</span><span style="color:#f92672">]</span>                        0B        buildkit.dockerfile.v0
 &lt;missing&gt;      <span style="color:#ae81ff">39</span> seconds ago   COPY docker/package.json package.json <span style="color:#75715e"># buil…   313B      buildkit.dockerfile.v0</span>
@@ -224,7 +224,7 @@ IMAGE          CREATED          CREATED BY                                      
 &lt;missing&gt;      <span style="color:#ae81ff">2</span> days ago       WORKDIR /app                                    0B        buildkit.dockerfile.v0
 ...
 </code></pre></div><p>Аналогичную ситуацию наблюдаем при использовании секретов из переменных окружения (<code>Dockerfile</code> оставляем неизменным):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export MYSECRET<span style="color:#f92672">=</span>theverysecretpassword
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export MYSECRET<span style="color:#f92672">=</span>theverysecretpassword
 docker build --no-cache --progress<span style="color:#f92672">=</span>plain --secret id<span style="color:#f92672">=</span>mysecret,env<span style="color:#f92672">=</span>MYSECRET -t ealebed/demo:dev3 .
 <span style="color:#75715e">#1 [internal] load build definition from Dockerfile</span>
 <span style="color:#75715e">#1 sha256:9c36dd7edc2d1b2c9015ea42012361fe7bf1f4a080eb340a38bf648c86812a8e</span>
@@ -281,6 +281,10 @@ docker build --no-cache --progress<span style="color:#f92672">=</span>plain --se
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -294,10 +298,6 @@ docker build --no-cache --progress<span style="color:#f92672">=</span>plain --se
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
         </li>
     
 </ul>

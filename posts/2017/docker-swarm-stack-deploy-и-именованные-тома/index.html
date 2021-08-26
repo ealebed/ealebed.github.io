@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,7 +103,7 @@
                     <p>При переходе на 3.х версию файла <code>docker-compose.yml</code> (необходимое требование для работы Docker Swarm) пропадает возможность использовать Data-only контейнеры — специальные контейнеры-спутники, файловая система которых служит для хранения данных и подключается к остальным сервисам с помощью параметра <code>volumes-from</code>.</p>
 <p>Давайте разберемся с возможным решением данной проблемы на реальном примере!</p>
 <p>В примере используются сервисы [docker-контейнеры] <code>nginx</code> (в качестве фронтенда) и <code>php-fpm</code> (бэкенд), которым необходим доступ к одному и тому же каталогу с кодом. Используя <code>docker-compose.yml</code> второй версии, мы вправе были написать так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
 <span style="color:#f92672">services</span>:
 <span style="color:#75715e">### Applications Code Container #############################</span>
     <span style="color:#f92672">applications</span>:
@@ -129,7 +129,7 @@
             - <span style="color:#e6db74">&#34;80:80&#34;</span>
             - <span style="color:#e6db74">&#34;443:443&#34;</span>
 </code></pre></div><p>Dockerfile для сборки data-only контейнера (<code>application</code>) в процессе CI выглядит так (<code>BRANCH_NAME</code> — имя git-ветки, для которой выполняется CI):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> registry.gitlab.lc:5000/develop/ed/image_for_sources:latest</span><span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> registry.gitlab.lc:5000/develop/ed/image_for_sources:latest</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> BRANCH_NAME<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
@@ -149,10 +149,10 @@
 </span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span><span style="color:#e6db74"> /var/www/${BRANCH_NAME}</span><span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>При изменении data-only контейнера для обновления содержимого каталога <code>/var/www/${BRANCH_NAME}</code> в контейнерах <code>nginx</code> и <code>php-fpm</code> необходимо выполнить команды:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose down <span style="color:#f92672">&amp;&amp;</span> docker compose up -d
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose down <span style="color:#f92672">&amp;&amp;</span> docker compose up -d
 </code></pre></div><p>которые неизменно повлекут за собой простой (downtime) ~10-15 секунд (если контейнеров больше, чем в данном примере, то время простоя также возрастает).</p>
 <p>Первым этапом на пути к Docker Swarm стало изменение файла <code>docker-compose.yml</code> (перевод его на третью версию с использованием именованных томов):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3&#39;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3&#39;</span>
 <span style="color:#f92672">services</span>:
 <span style="color:#75715e">### Code from branch develop #################################</span>
   <span style="color:#f92672">applications</span>:
@@ -186,7 +186,7 @@
 <p>После множества вопросов заданных с docker-сообществах и переписках с признанными docker-капитанами (<a href="https://twitter.com/EltonStoneman">Elton Stoneman</a> и <a href="https://twitter.com/BretFisher">Bret Fisher</a>) мне предложили отказаться от использования томов, переделать процесс CI и сразу добавлять код в оба контейнера <code>nginx</code> и <code>php-fpm</code> — мол, это лучшие практики использования docker.</p>
 <p>Я уже почти согласился с данным предложением (хотя мне откровенно не нравилось добавлять 337MB «обвески» контейнерам <code>nginx</code> и <code>php-fpm</code> и пересобирать их по 15-25 раз в день) но решил попробовать реализовать еще один «велосипед» с использованием переменных в именах томов.</p>
 <p>Первая же попытка в таком виде:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3&#39;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3&#39;</span>
 <span style="color:#f92672">services</span>:
 <span style="color:#75715e">### Code from branch develop #################################</span>
   <span style="color:#f92672">applications</span>:
@@ -215,7 +215,7 @@ volumes value Additional properties are not allowed ('${VOLUME_NAME}' was unexpe
 ...
 </code></pre><p>Как оказалось, это нормальное поведение — docker-compose умеет работать в переменными в значениях, но не в ключах (<a href="https://github.com/docker/compose/pull/3108#issuecomment-248038373">подробности</a>). И вообще, как оказалось использование переменных в режиме роя (Swarm) с командой <code>stack deploy</code> это целая <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-env-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5/">эпопея</a>.</p>
 <p>Но ведь никто нам не запрещает использовать <a href="https://docs.docker.com/compose/compose-file/#external"><code>external</code></a> тома! Теперь наш <code>docker-compose.yml</code> полностью готов к развертыванию через <code>stack deploy</code> и выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3.1&#39;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3.1&#39;</span>
 <span style="color:#f92672">services</span>:
 <span style="color:#75715e">### Code from branch develop #################################</span>
   <span style="color:#f92672">applications</span>:
@@ -268,8 +268,8 @@ volumes value Additional properties are not allowed ('${VOLUME_NAME}' was unexpe
     <span style="color:#f92672">external</span>:
       <span style="color:#f92672">name</span>: <span style="color:#ae81ff">code-${VER}</span>
 </code></pre></div><p>Процесс деплоя сервисов усложнился на одну команду (создание именованного тома с определенным именем) и выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export VER<span style="color:#f92672">=</span>1.1 <span style="color:#f92672">&amp;&amp;</span> docker volume create --name code-$VER
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stack deploy --with-registry-auth --compose-file docker-compose.yml MY_STACK
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export VER<span style="color:#f92672">=</span>1.1 <span style="color:#f92672">&amp;&amp;</span> docker volume create --name code-$VER
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stack deploy --with-registry-auth --compose-file docker-compose.yml MY_STACK
 </code></pre></div><p>Стоит отметить, что данное решение пока не тестировалось на продакшене (да и вообще, кластер Docker Swarm в данном примере состоял из одной ноды) — это просто демонстрация возможности использования data-only контейнеров.</p>
                 </section>
             </article>
@@ -312,6 +312,10 @@ volumes value Additional properties are not allowed ('${VOLUME_NAME}' was unexpe
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -325,10 +329,6 @@ volumes value Additional properties are not allowed ('${VOLUME_NAME}' was unexpe
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -109,14 +109,14 @@
 <li>в рабочем окружении (workspace) <code>Slack</code> создано приложение и вебхук (подробнее в <a href="https://api.slack.com/messaging/webhooks">официальной документации</a>);</li>
 <li>в вашем экземпляре <code>Airflow</code>-сервера установлен пакет <em>slack</em>:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile">...<span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile">...<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span>pip3 install <span style="color:#e6db74">&#39;apache-airflow[slack]&#39;</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span>...<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><ul>
 <li>создано подключение (connection) к <code>Slack</code> в настройках <code>Airflow</code> - это может быть сделано как руками в web-интерфейсе, так и с помощью скрипта при старте <code>Airflow</code>:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
     airflow connections <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>      --add <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>      --conn_id slack <span style="color:#ae81ff">\
@@ -143,15 +143,15 @@
 <ul>
 <li>определяем SLA для нашей задачи в 30 секунд:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#e6db74">&#39;sla&#39;</span>: timedelta(seconds<span style="color:#f92672">=</span><span style="color:#ae81ff">30</span>),
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#e6db74">&#39;sla&#39;</span>: timedelta(seconds<span style="color:#f92672">=</span><span style="color:#ae81ff">30</span>),
 </code></pre></div><ul>
 <li>параметрах DAG указываем что делать при превышении указанного ранее SLA:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">sla_miss_callback<span style="color:#f92672">=</span>partial(task_sla_missed_slack_alert, usr<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ealebed&#34;</span>),
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">sla_miss_callback<span style="color:#f92672">=</span>partial(task_sla_missed_slack_alert, usr<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ealebed&#34;</span>),
 </code></pre></div><ul>
 <li>сама задача в данном примере будет выполняться не менее двух минут, о чем говорит следующая строка:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">cmds<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;sleep&#34;</span>, <span style="color:#e6db74">&#34;120&#34;</span>]
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">cmds<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;sleep&#34;</span>, <span style="color:#e6db74">&#34;120&#34;</span>]
 </code></pre></div><p><strong>Примечание.</strong> Также может оказаться довольно полезным закоментированный в данном примере параметр <code>dagrun_timeout</code> - по истечении указанного в данном параметре времени задача будет принудительно завершена с кодом завершения отличным от 0.</p>
 <p>На этом все, и побольше вам <code>on_success_callback</code> в <code>Airflow</code> задачах!</p>
                 </section>
@@ -195,6 +195,10 @@
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA-kubernetespodoperator-%D1%87%D0%B5%D1%80%D0%B5%D0%B7-api/">Apache Airflow: запуск Kubernetes Pod Operator через API<aside class="dates">May 22 2021</aside></a>
         </li>
     
@@ -208,10 +212,6 @@
     
         <li>
             <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B2%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D0%B2-redis-%D0%BD%D0%B0-%D1%81%D1%82%D0%B0%D1%80%D1%82%D0%B5-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0/">Вставка данных в Redis при запуске контейнера в Kubernetes кластере<aside class="dates">Dec 1 2020</aside></a>
         </li>
     
 </ul>

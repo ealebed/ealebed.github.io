@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -108,7 +108,7 @@
 <p><strong>Примечание.</strong> К слову, все эти компоненты можно устанавливать в docker-контейнерах и объединять весь стек с помощью <code>docker-compose</code>.</p>
 <p>Если с мониторингом docker-хоста все просто и понятно — как и на любом другом физическом сервере метрики собирает <code>node_exporter</code> и передает их в <strong>Prometheus</strong>, то для мониторинга docker-контейнеров придется воспользоваться инструментом <a href="https://github.com/google/cadvisor">cAdvisor</a> (Container Advisor) от google.</p>
 <p>Для запуска cAdvisor воспользуемся файлом <code>docker-compose.yml</code> следующего содержания:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
 <span style="color:#f92672">services</span>:
     <span style="color:#f92672">cadvisor-exporter</span>:
         <span style="color:#f92672">container_name</span>: <span style="color:#e6db74">&#34;cadvisor-exporter&#34;</span>
@@ -122,9 +122,9 @@
           - <span style="color:#e6db74">&#34;/var/lib/docker/:/var/lib/docker:ro&#34;</span>
         <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">unless-stopped</span>
 </code></pre></div><p>Запускаем контейнер с помощью команды:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
 </code></pre></div><p>Далее в уже хорошо известный нам конфигурационный файл <code>prometheus.yml</code> (в debian-based дистрибутивах находится в каталоге <code>/etc/prometheus</code>) нужно добавить следующие строки:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">- <span style="color:#f92672">job_name</span>: <span style="color:#e6db74">&#39;cadvisor-exporter&#39;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">- <span style="color:#f92672">job_name</span>: <span style="color:#e6db74">&#39;cadvisor-exporter&#39;</span>
   <span style="color:#f92672">scrape_interval</span>: <span style="color:#ae81ff">1s</span>
   <span style="color:#f92672">target_groups</span>:
       - <span style="color:#f92672">targets</span>: [<span style="color:#e6db74">&#39;cadvisor-exporter:9200&#39;</span>]
@@ -192,7 +192,7 @@ ALERT hight_storage_load
   }
 </code></pre><p>Alertmanager также умеет оправлять оповещения о проблемах с помощью e-mail, Pushover, Slack, HipChat. Пример интеграции alertmanager&rsquo;а и slack подробно расписан <a href="https://www.robustperception.io/using-slack-with-the-alertmanager/">здесь</a>, поэтому воспользуемся данным примером.</p>
 <p>Конфигурационный файл с настройками отправки уведомлений выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">route</span>:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">route</span>:
     <span style="color:#f92672">receiver</span>: <span style="color:#e6db74">&#39;slack&#39;</span>
 <span style="color:#f92672">receivers</span>:
     - <span style="color:#f92672">name</span>: <span style="color:#e6db74">&#39;slack&#39;</span>
@@ -243,6 +243,10 @@ ALERT hight_storage_load
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -256,10 +260,6 @@ ALERT hight_storage_load
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

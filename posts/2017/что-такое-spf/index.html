@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,7 +103,7 @@
 <p>Понятие <strong>SPF (Sender Policy Framework)</strong> неразрывно связано с противодействием спуфингу (англ. spoofing) — попыткой человека или программы представиться кем-то (чем-то) другим и получить незаконные преимущества. Например, информацию об отправителе письма (поле <code>From:</code>) можно легко подделать, и этот метод наиболее часто используется спамерами.</p>
 <p><strong>Sender Policy Framework</strong> — это расширение для протокола отправки почты (SMTP), с помощью которого можно проверить, не подделан ли домен отправителя почтового сообщения. Для корректной работы SPF владелец домена в соответствующей TXT-записи должен указать список серверов, имеющих право отправлять письма от имени e-mail адресов этого домена.</p>
 <p>Давайте рассмотрим конкретный пример:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig work.ua TXT | grep spf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig work.ua TXT | grep spf
 work.ua.                <span style="color:#ae81ff">57416</span>   IN      TXT     <span style="color:#e6db74">&#34;v=spf1 a mx ip4:89.184.80.167 ip4:89.184.66.189 ip4:89.184.66.22 ip4:89.184.66.23 ip4:89.184.80.160/28 -all&#34;</span>
 </code></pre></div><p>В данном примере:</p>
 <ul>
@@ -115,7 +115,7 @@ work.ua.                <span style="color:#ae81ff">57416</span>   IN      TXT  
 <li><code>-all</code> — письмо с сервера, который не входит в вышеперечисленный список, отвергается.</li>
 </ul>
 <p>Еще один пример:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig gmail.com TXT | grep spf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig gmail.com TXT | grep spf
 gmail.com.              <span style="color:#ae81ff">100</span>     IN      TXT     <span style="color:#e6db74">&#34;v=spf1 redirect=_spf.google.com&#34;</span>
 </code></pre></div><p>В данном примере:</p>
 <ul>
@@ -123,7 +123,7 @@ gmail.com.              <span style="color:#ae81ff">100</span>     IN      TXT  
 <li><code>redirect</code> — SPF-записи для данного домена определены в другом домене (<code>_spf.google.com</code>).
 Копнем глубже:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig _spf.google.com TXT | grep spf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig _spf.google.com TXT | grep spf
 ; &lt;&lt;&gt;&gt; DiG 9.9.5-9+deb8u9-Debian &lt;&lt;&gt;&gt; _spf.google.com TXT
 ;_spf.google.com.               IN      TXT
 _spf.google.com.        <span style="color:#ae81ff">33</span>      IN      TXT     <span style="color:#e6db74">&#34;v=spf1 include:_netblocks.google.com include:_netblocks2.google.com include:_netblocks3.google.com ~all&#34;</span>
@@ -134,7 +134,7 @@ _spf.google.com.        <span style="color:#ae81ff">33</span>      IN      TXT  
 <li><code>~all</code> — письмо с сервера, который не входит в вышеперечисленный список, стоит проанализировать более тщательно.</li>
 </ul>
 <p>Погрузимся еще на один уровень:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig _netblocks.google.com TXT | grep spf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dig _netblocks.google.com TXT | grep spf
 _netblocks.google.com.  <span style="color:#ae81ff">2251</span>    IN      TXT     <span style="color:#e6db74">&#34;v=spf1 ip4:64.18.0.0/20 ip4:64.233.160.0/19 ip4:66.102.0.0/20 ip4:66.249.80.0/20 ip4:72.14.192.0/18 ip4:74.125.0.0/16 ip4:108.177.8.0/21 ip4:173.194.0.0/16 ip4:207.126.144.0/20 ip4:209.85.128.0/17 ip4:216.58.192.0/19 ip4:216.239.32.0/19 ~all&#34;</span>
 </code></pre></div><p>В данной SPF-записи уже привычно указана версия (<code>v=spf1</code>), перечислен список «доверенных» диапазонов IP-адресов для отправки почты и требование проанализировать тщательнее почту, отправленную с остальных (не «доверенных») серверов.</p>
 <p>Согласно <a href="https://tools.ietf.org/html/rfc7208#page-33">спецификации</a> <strong>Sender Policy Framework</strong> существует четыре классификатора:</p>
@@ -186,6 +186,10 @@ _netblocks.google.com.  <span style="color:#ae81ff">2251</span>    IN      TXT  
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -199,10 +203,6 @@ _netblocks.google.com.  <span style="color:#ae81ff">2251</span>    IN      TXT  
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

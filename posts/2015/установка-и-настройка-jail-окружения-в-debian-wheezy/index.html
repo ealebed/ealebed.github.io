@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,20 +101,20 @@
                     <p>В целях безопасности иногда требуется запускать приложения в отдельном окружении либо ограничивать доступ пользователям.</p>
 <p>С этими задачами хорошо справляется технология <code>jail</code>, которая базируется на системном вызове <code>chroot</code>. В этой статье давайте разберемся как настроить jail-окружение в Debian Wheezy.</p>
 <p>Для начала установим требующиеся пакеты:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get install dchroot debootstrap
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get install dchroot debootstrap
 </code></pre></div><ul>
 <li>устанавливать jail-окружение будем в каталог <code>/home/jail</code>, создаем его командой:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /home/jail
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /home/jail
 </code></pre></div><p><strong>Примечание.</strong> Подключение к серверу будет осуществляться от имени пользователя test. Создать пользователя и добавить в необходимые группы можно утилитой <code>useradd</code>, установить пароль можно с помощью утилиты <code>passwd</code>.</p>
 <ul>
 <li>непосредственно установка jail-окружения в Debian Wheezy:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">debootstrap --variant<span style="color:#f92672">=</span>buildd --arch amd64 wheezy /home/jail http://ftp.uk.debian.org/debian
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">debootstrap --variant<span style="color:#f92672">=</span>buildd --arch amd64 wheezy /home/jail http://ftp.uk.debian.org/debian
 </code></pre></div><ul>
 <li>копируем конфигурационные файлы:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp /etc/resolv.conf /home/jail/etc/resolv.conf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp /etc/resolv.conf /home/jail/etc/resolv.conf
 cp /etc/apt/sources.list /home/jail/etc/apt/
 cp /etc/passwd /home/jail/etc/
 cp /etc/shadow /home/jail/etc/
@@ -123,9 +123,9 @@ cp /etc/hosts /home/jail/etc/
 </code></pre></div><ul>
 <li>копируем домашний каталог пользователя test:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -a /home/test/ /home/jail/home/test/
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -a /home/test/ /home/jail/home/test/
 </code></pre></div><p>в конце конфигурационного файла <code>/etc/ssh/sshd_config</code> добавляем следующие строки:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
 Match User test
     ChrootDirectory /home/jail
     AllowTCPForwarding no
@@ -133,37 +133,37 @@ Match User test
 </code></pre></div><ul>
 <li>в конце конфигурационного файла <code>/home/jail/home/test/.bashrc</code> добавляем строку:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
 cd /var/www/
 </code></pre></div><p><strong>Примечание.</strong> Последний пункт выполняем для того, чтобы при подключении пользователь test оказывался в директории <code>/var/www/</code></p>
 <ul>
 <li>создадим еще несколько директорий:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /home/jail/var/www
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /home/jail/var/www
 mkdir /home/jail/var/www/code
 mkdir /home/jail/var/www/static
 </code></pre></div><ul>
 <li>внесем правки в конфигурационный файл <code>/etc/fstab</code>, добавив:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
 192.168.0.16:/srv/www/static /home/jail/var/www/static nfs defaults,sync,ac,actimeo=60,noatime 0 0
 /var/www/code /home/jail/var/www/code none bind 0 0
 </code></pre></div><p><strong>Примечание.</strong> В данном примере статические файлы монтируются по nfs с соседнего сервера. Пользователь test может работать с кодом в директории <code>/home/jail/var/www/code</code> (для него будет видна как <code>/var/www/code</code>) без возможности сломать корневую систему.</p>
 <ul>
 <li>монтируем <code>/proc</code>, <code>/dev</code>, <code>/sys</code> и выполняем <code>chroot</code>:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mount -t proc none /home/jail/proc
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mount -t proc none /home/jail/proc
 mount -o bind /dev /home/jail/dev
 mount -o bind /sys /home/jail/sys
 chroot /home/jail/ /bin/bash
 </code></pre></div><ul>
 <li>теперь можно установить необходимые для работы пакеты (<code>aptitude</code>, <code>mc</code>, <code>wget</code>, <code>openssh</code>, <code>svn</code>, <code>vim</code> и т. д.):</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get install aptitude mc wget subversion vim
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get install aptitude mc wget subversion vim
 </code></pre></div><ul>
 <li>подключаемся под пользователем test и проверяем работу jail-окружения:</li>
 </ul>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ssh test@hostname
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ssh test@hostname
 </code></pre></div><p><strong>Примечание.</strong> Чтобы не вводить каждый раз пароль, можно <a href="https://ealebed.github.io/posts/2015/ssh-%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-%D0%BF%D0%BE-%D0%BA%D0%BB%D1%8E%D1%87%D1%83/">настроить ssh авторизацию по ключу</a>, но это уже совсем другая история.</p>
 <p>На этом <strong>установка и настройка jail-окружения в Debian Wheezy</strong> закончена.</p>
                 </section>
@@ -207,6 +207,10 @@ chroot /home/jail/ /bin/bash
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -220,10 +224,6 @@ chroot /home/jail/ /bin/bash
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

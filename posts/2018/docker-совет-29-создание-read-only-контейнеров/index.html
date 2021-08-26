@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,22 +100,22 @@
                 <section id="post-body">
                     <p>Возможно, вам захочется запускать docker-контейнеры в режиме только для чтения (read-only) - например, для повышения безопасности или из-за специфических требований вашего приложения. Давайте разберемся!</p>
 <p>У меня ни разу не возникало нужды запускать docker-контейнеры в режиме read-only, но интересно знать о подобном функционале. Сделать это очень легко, убедимся в этом с помощью простого теста:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm --read-only alpine:3.7 touch hello.txt
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm --read-only alpine:3.7 touch hello.txt
 &gt; touch: hello.txt: Read-only file system
 </code></pre></div><p>Как и ожидалось, на экране появилось сообщение о невозможности создать файл <code>hello.txt</code>. Если выполнить предложенную команду без параметра <code>--read-only</code>, то файл будет успешно создан.</p>
 <p>Стоит отметить, что не все docker-образы поддерживают использование ключа <code>--read-only</code> при старте контейнера - некоторые из них созданы так, что в обязательном порядке требуют возможности записывать служебные файлы в определенные каталоги (иначе контейнер просто не запустится).</p>
 <p>Например, флаг <code>--read-only</code> отлично сработает при запуске docker-контейнера с Redis:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm -it --read-only redis:alpine
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm -it --read-only redis:alpine
 1:C <span style="color:#ae81ff">31</span> May 11:16:40.533 <span style="color:#75715e"># oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo</span>
 1:C <span style="color:#ae81ff">31</span> May 11:16:40.533 <span style="color:#75715e"># Redis version=4.0.9, bits=64, commit=00000000, modified=0, pid=1, just started</span>
 ...
 1:M <span style="color:#ae81ff">31</span> May 11:16:40.534 * Ready to accept connections
 </code></pre></div><p>но не с Postgres:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -it --read-only postgres:10.3-alpine
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -it --read-only postgres:10.3-alpine
 chown: /var/run/postgresql: Read-only file system
 chown: /var/run/postgresql: Read-only file system
 </code></pre></div><p>Побороть данную проблему можно монтированием тома с хост-системы внутрь docker-контейнера (разрешая таким образом запись) или с помощью еще одного параметра <code>--tmpfs</code>. Например, если вы точно знаете, что приложение, упакованное в docker-контейнер, должно писать в каталоги <code>/var</code> и <code>/tmp</code> (как в случае с postgres), используйте следующую команду:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -it --read-only --tmpfs /var --tmpfs /tmp postgres:10.3-alpine
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -it --read-only --tmpfs /var --tmpfs /tmp postgres:10.3-alpine
 The files belonging to this database system will be owned by user <span style="color:#e6db74">&#34;postgres&#34;</span>.
 ...
 2018-05-31 11:30:11.256 UTC <span style="color:#f92672">[</span>1<span style="color:#f92672">]</span> LOG:  database system is ready to accept connections
@@ -161,6 +161,10 @@ The files belonging to this database system will be owned by user <span style="c
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -174,10 +178,6 @@ The files belonging to this database system will be owned by user <span style="c
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,20 +103,20 @@
                     <p>После прочтения <a href="https://prometheus.io/blog/2017/11/08/announcing-prometheus-2-0/">статьи с анонсом второй версии</a> <strong>Prometheus</strong> сразу решил: надо брать! Думал, достаточно будет обновить версию docker-контейнера и все заработает, но нет&hellip; Давайте разберемся!</p>
 <p><strong>Prometheus</strong> со всеми необходимыми компонентами давно успешно работал в docker-контейнерах, как кописано в <a href="https://ealebed.github.io/posts/2017/%D0%BC%D0%BE%D0%BD%D0%B8%D1%82%D0%BE%D1%80%D0%B8%D0%BD%D0%B3-docker-c-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-prometheus/">этой статье</a>.</p>
 <p>&ldquo;С наскоку&rdquo; меняю версию docker-образа в файле <code>docker-compose.yml</code>, было:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
     <span style="color:#f92672">image</span>: <span style="color:#ae81ff">prom/prometheus:v1.8.1</span>
 ...
 </code></pre></div><p>стало:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
     <span style="color:#f92672">image</span>: <span style="color:#ae81ff">prom/prometheus:v2.0.0</span>
 ...
 </code></pre></div><p>Обновляю контейнер с помощью команды:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
 </code></pre></div><p>и он не запускается:</p>
 <pre><code>CONTAINER ID     IMAGE                    COMMAND                  CREATED          STATUS              PORTS                    NAMES
 de3aa8198732     prom/prometheus:v2.0.0   &quot;/bin/prometheus -...&quot;   21 seconds ago   Restarting (1) 2 seconds ago                 prometheus
 </code></pre><p>Смотрим логи:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
 Error parsing commandline arguments: unknown short flag <span style="color:#e6db74">&#39;-c&#39;</span>
 prometheus: error: unknown short flag <span style="color:#e6db74">&#39;-c&#39;</span>
 Error parsing commandline arguments: unknown short flag <span style="color:#e6db74">&#39;-c&#39;</span>
@@ -124,23 +124,23 @@ prometheus: error: unknown short flag <span style="color:#e6db74">&#39;-c&#39;</
 </code></pre></div><p>С помощью гугла выясняем, что в <strong>Prometheus 2.0</strong> параметры командной строки нужно задавать через два дефиса, а не один, как было раньше:</p>
 <p><em>First, we moved to a new flag library, which uses the more common double-dash &ndash; prefix for flags instead of the single dash Prometheus used so far</em></p>
 <p>Правим <code>docker-compose.yml</code>, добавляя дефисы, запускаем контейнер — он опять не стартует! В логах:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
 Error parsing commandline arguments: unknown long flag <span style="color:#e6db74">&#39;--alertmanager.url&#39;</span>
 prometheus: error: unknown long flag <span style="color:#e6db74">&#39;--alertmanager.url&#39;</span>
 Error parsing commandline arguments: unknown long flag <span style="color:#e6db74">&#39;--alertmanager.url&#39;</span>
 prometheus: error: unknown long flag <span style="color:#e6db74">&#39;--alertmanager.url&#39;</span>
 </code></pre></div><p>Находим, что теперь URL для alertmanager&rsquo;а нельзя задавать как параметр командной строки, его следует указывать в самом конфигурационном файле <strong>Prometheus</strong> <a href="https://github.com/prometheus/prometheus/blob/3382f39046513d93742c02f39d9122f511d575ab/documentation/examples/prometheus.yml#L12-L17">вот так</a>.</p>
 <p>Исправляемся, пробуем запуститься — и снова неудача! Смотрим логи:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
 Error parsing commandline arguments: unknown long flag <span style="color:#e6db74">&#39;--storage.local.path&#39;</span>
 prometheus: error: unknown long flag <span style="color:#e6db74">&#39;--storage.local.path&#39;</span>
 Error parsing commandline arguments: unknown long flag <span style="color:#e6db74">&#39;--storage.local.path&#39;</span>
 </code></pre></div><p>В связи с новым хранилищем для метрик в <strong>Prometheus 2.0</strong> вместо <code>--storage.local.path=/prometheus</code> нужно использовать <code>--storage.tsdb.path=/prometheus</code>, а параметр <code>--storage.local.memory-chunks</code> вообще удалить, иначе в логах будут ошибки вида:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
 Error parsing commandline arguments: unknown long flag <span style="color:#e6db74">&#39;--storage.local.memory-chunks&#39;</span>
 prometheus: error: unknown long flag <span style="color:#e6db74">&#39;--storage.local.memory-chunks&#39;</span>
 </code></pre></div><p>Вновь запускаем docker-контейнер с новой версией <strong>Prometheus</strong>, результат тот же. В логах на этот раз:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs prometheus
 level<span style="color:#f92672">=</span>error ts<span style="color:#f92672">=</span>2017-11-10T09:31:06.058617408Z caller<span style="color:#f92672">=</span>main.go:413 msg<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Failed to apply configuration&#34;</span> err<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;error loading rules, previous rule set restored&#34;</span>
 level<span style="color:#f92672">=</span>error ts<span style="color:#f92672">=</span>2017-11-10T09:31:06.058628726Z caller<span style="color:#f92672">=</span>main.go:356 msg<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Error loading config&#34;</span> err<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;one or more errors occurred while applying the new configuration (--config.file=/etc/prometheus/prometheus.yml)&#34;</span>
 </code></pre></div><p>Оказывается, теперь в контейнере <code>prometheus</code> запускается от пользователя nobody, а не root. Правим права доступа на примонтированный том, в котором хранятся метрики и наконец-то <strong>Prometheus</strong> запускается!</p>
@@ -195,6 +195,10 @@ level<span style="color:#f92672">=</span>error ts<span style="color:#f92672">=</
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -208,10 +212,6 @@ level<span style="color:#f92672">=</span>error ts<span style="color:#f92672">=</
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

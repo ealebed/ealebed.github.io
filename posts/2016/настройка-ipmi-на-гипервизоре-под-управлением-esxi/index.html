@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,25 +106,25 @@
                 <section id="post-body">
                     <p>Ранее я уже писал о <a href="https://ealebed.github.io/posts/2016/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-ipmi-%D0%BD%D0%B0-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B5/">настройке IPMI из командной строки</a> сервера под управлением Debian Wheezy, но как быть с ОС ESXi, в которой отсутствует даже менеджер пакетов? Давайте разберемся!</p>
 <p>Вариант первый — самостоятельно собрать утилиту из исходников и скопировать ее на сервер. Скачиваем исходники:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -L -o ipmitool_1.8.14.tar.gz http://http.debian.net/debian/pool/main/i/ipmitool/ipmitool_1.8.14.orig.tar.gz
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -L -o ipmitool_1.8.14.tar.gz http://http.debian.net/debian/pool/main/i/ipmitool/ipmitool_1.8.14.orig.tar.gz
 </code></pre></div><p>Распаковываем скачанный архив:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar -xzf ipmitool_1.8.14.tar.gz
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar -xzf ipmitool_1.8.14.tar.gz
 </code></pre></div><p>Собираем:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd ipmitool-1.8.14
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CC<span style="color:#f92672">=</span>gcc4 CFLAGS<span style="color:#f92672">=</span>-m32 LDFLAGS<span style="color:#f92672">=</span>-static ./configure
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd ipmitool-1.8.14
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CC<span style="color:#f92672">=</span>gcc4 CFLAGS<span style="color:#f92672">=</span>-m32 LDFLAGS<span style="color:#f92672">=</span>-static ./configure
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make
 </code></pre></div><p><strong>Примечание.</strong> Подробно весь процесс с возможными проблемами и их решениями описан <a href="http://ewen.mcneill.gen.nz/blog/entry/2015-07-09-static-ipmitool-on-vmware-esxi/">здесь</a>.</p>
 <p>Копируем полученный результат на сервер с ESXi:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">scp -p ipmitool.static root@<span style="color:#e6db74">${</span>ESXHOST<span style="color:#e6db74">}</span>:/scratch
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">scp -p ipmitool.static root@<span style="color:#e6db74">${</span>ESXHOST<span style="color:#e6db74">}</span>:/scratch
 </code></pre></div><p>Вариант второй (для ленивых) — можно скачать уже готовую утилиту <a href="https://github.com/hobbsh/static-ipmitool.git">здесь</a>, после чего скопировать ее на сервер:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">scp -p ipmitool.static root@<span style="color:#e6db74">${</span>ESXHOST<span style="color:#e6db74">}</span>:/scratch
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">scp -p ipmitool.static root@<span style="color:#e6db74">${</span>ESXHOST<span style="color:#e6db74">}</span>:/scratch
 </code></pre></div><p>Далее логинимся на сервер по ssh:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ssh root@<span style="color:#e6db74">${</span>ESXHOST<span style="color:#e6db74">}</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ssh root@<span style="color:#e6db74">${</span>ESXHOST<span style="color:#e6db74">}</span>
 </code></pre></div><p>И выполняем необходимые команды для <strong>настройки IPMI</strong>. Например, для установки статического ip-адреса для первого канала <strong>IPMI</strong> выполняем:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/scratch/ipmitool.static lan set <span style="color:#ae81ff">1</span> ipsrc static
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/scratch/ipmitool.static lan set <span style="color:#ae81ff">1</span> ipaddr 10.10.10.110
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/scratch/ipmitool.static lan set <span style="color:#ae81ff">1</span> ipsrc static
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/scratch/ipmitool.static lan set <span style="color:#ae81ff">1</span> ipaddr 10.10.10.110
 </code></pre></div><p>Просмотреть результат выполнения предложенных команд можно так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/scratch/ipmitool.static lan print <span style="color:#ae81ff">1</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/scratch/ipmitool.static lan print <span style="color:#ae81ff">1</span>
 Set in Progress         : Set Complete
 Auth Type Support       : NONE MD2 MD5 PASSWORD
 Auth Type Enable        : Callback : NONE MD2 MD5 PASSWORD
@@ -195,6 +195,10 @@ Cipher Suite Priv Max   : aaaaXXaaaXXXXXX
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -208,10 +212,6 @@ Cipher Suite Priv Max   : aaaaXXaaaXXXXXX
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

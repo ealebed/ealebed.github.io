@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -108,7 +108,7 @@
 <code>PriorityClass</code> имеет два опциональных поля - <code>globalDefault</code> и <code>description</code>. Поле <code>globalDefault</code> со значением установленным в <code>true</code> указывает, что данный класс приоритета будет использоваться по умолчанию для всех подов кластера, в описании которых нет поля <code>priorityClassName</code>. В системе может существовать один и только один класс приоритета, в котором <code>globalDefault</code> установлено в <code>true</code>; если же во всех классах кластера это значение будет установлено в <code>false</code>, то по умолчанию приоритет всех подов в спецификации которых нет поля <code>priorityClassName</code> будет равен нулю (0).</p>
 <p><strong>Примечание.</strong> Если вы создаете объект(ы) <code>PriorityClass</code> в кластере <code>Kubernetes</code>, в котором уже запущены поды, то следует помнить, что для существующих подов приоритет будет равняться 0 (даже если вы добавили класс с иным значением и полем <code>globalDefault</code> равным <code>true</code>) - значения определенные в классе приоритетов будут применяться только к подам, которые были созданы после создания объекта(ов) <code>PriorityClass</code>.</p>
 <p>Пример объекта <code>PriorityClass</code> выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">scheduling.k8s.io/v1</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">scheduling.k8s.io/v1</span>
 <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PriorityClass</span>
 <span style="color:#f92672">metadata</span>:
   <span style="color:#f92672">name</span>: <span style="color:#ae81ff">high-priority</span>
@@ -117,7 +117,7 @@
 <span style="color:#f92672">description</span>: <span style="color:#e6db74">&#34;This priority class should be used for very important services/pods only&#34;</span>
 </code></pre></div><p>В версии <code>Kubernetes</code> 1.15 (в качестве альфа-фичи) в объект <code>PriorityClass</code> добавлено поле <code>PreemptionPolicy</code>, в котором по умолчанию установлено значение <code>PreemptLowerPriority</code>, что позволяет подам данного класса приоритета &ldquo;вытеснять&rdquo; поды с более низким классом приоритета для освобождения ресурсов. В поле <code>PreemptionPolicy</code> также можно установить значение <code>Never</code> - в данном случае поды будут размещены в очереди планировщика перед подами с более низким приоритетом, но не смогут вытеснять другие поды, ожидая &ldquo;естественного&rdquo; освобождения ресурсов.</p>
 <p>Пример объекта <code>PriorityClass</code> с отключенным вытеснением будет таким:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">scheduling.k8s.io/v1</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">scheduling.k8s.io/v1</span>
 <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PriorityClass</span>
 <span style="color:#f92672">metadata</span>:
   <span style="color:#f92672">name</span>: <span style="color:#ae81ff">high-priority-nonpreempting</span>
@@ -126,7 +126,7 @@
 <span style="color:#f92672">globalDefault</span>: <span style="color:#66d9ef">false</span>
 <span style="color:#f92672">description</span>: <span style="color:#e6db74">&#34;This priority class will not cause other pods to be preempted&#34;</span>
 </code></pre></div><p>После создания одного или нескольких классов приоритета необходимо добавить поле <code>priorityClassName</code> с именем соответствующего класса в спецификацию пода (или <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-4-replicaset/"><code>ReplicaSet</code></a>, или <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/"><code>Deployments</code></a>), например:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
 <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
 <span style="color:#f92672">metadata</span>:
   <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-pod</span>
@@ -184,6 +184,10 @@
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -197,10 +201,6 @@
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

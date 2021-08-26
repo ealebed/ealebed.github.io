@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,7 +103,7 @@
                     <p>Как мы уже упоминали <a href="https://ealebed.github.io/posts/2018/docker-%D1%81%D0%BE%D0%B2%D0%B5%D1%82-14-%D0%BA%D0%B0%D0%BA-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B0%D1%82%D1%8C-%D0%B7%D0%B0%D0%B4%D0%B0%D1%87%D0%B8-%D0%BF%D0%BE-%D0%BA%D1%80%D0%BE%D0%BD%D1%83-%D0%B2-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B5-%D0%B8%D0%BB%D0%B8-%D0%BD%D0%B0-%D1%85%D0%BE%D1%81%D1%82-%D0%BC%D0%B0%D1%88%D0%B8%D0%BD%D0%B5/">ранее</a>, иногда есть смысл собрать отдельный docker-контейнер для запуска периодических задач. Давайте разберемся!</p>
 <p>В моем случае создаваемый контейнер с cron&rsquo;ом должен уметь запускать периодические задачи не только в отдельных контейнерах на docker-хостах, но и в сервисах, запущенных в кластере docker swarm. Отдельным требованием было перенаправление всех результатов работы кронтасок в централизованное хранилище логов под управлением graylog2.</p>
 <p>Начнем с Dockerfile, который выглядит следующим образом:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> library/docker:stable</span><span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> library/docker:stable</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> APP_ENV<span style="color:#f92672">=</span>dev
 <span style="color:#66d9ef">ENV</span> HOME_DIR<span style="color:#f92672">=</span>/opt/crontab<span style="color:#960050;background-color:#1e0010">
@@ -122,7 +122,7 @@
 </span></code></pre></div><p>Из особенностей - при сборке docker-образа я передаю дополнительный аргумент, указывающий окружение, на котором будет запускаться контейнер, например <code>--build-arg APP_ENV=prod</code> (по умолчанию значение установлено на окружение разработчика - <code>APP_ENV=dev</code>). В зависимости от данного значения в образ будет скопирован соответствующий файл <code>config.json.${APP_ENV}</code>, из которого позже будет сформирован <code>crontab</code>.</p>
 <p>В процессе тестирования выяснилось, что на некоторых docker-хостах у группы docker id=999 (номер группы ping внутри контейнера), из-за чего контейнер не мог запуститься (сваливался на шаге <code># Create docker group using correct gid from host</code> в entrypoint-скрипте). Для устранения данной ошибки в Dockerfile пришлось добавить строку <code>sed -i &quot;s/999/99/&quot; /etc/group</code>.</p>
 <p>Последняя особенность - добавление в контейнер скрипта <code>graylogger.sh</code>, который и перенаправляет результаты работы периодических задач в graylog2. Сам скрипт выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/sh
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/sh
 </span><span style="color:#75715e"></span><span style="color:#75715e"># Первый аргумент для скрипта graylogger.sh - команда, которая запустилась, например (docker exec nginx pwd)</span>
 COMMAND<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span>
 <span style="color:#75715e"># Тэг, с которым вывод команды будет записан в лог это команда (см. выше) без пробелов/спецсимволов, например dockerexecnginxpwd</span>
@@ -139,7 +139,7 @@ GRAYLOG_PORT<span style="color:#f92672">=</span><span style="color:#e6db74">${</
 echo -e <span style="color:#f92672">{</span><span style="color:#ae81ff">\&#34;</span>application_name<span style="color:#ae81ff">\&#34;</span>:<span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">${</span>TAG<span style="color:#e6db74">}</span><span style="color:#ae81ff">\&#34;</span>, <span style="color:#ae81ff">\&#34;</span>facility<span style="color:#ae81ff">\&#34;</span>:<span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">${</span>FACILITY<span style="color:#e6db74">}</span><span style="color:#ae81ff">\&#34;</span>, <span style="color:#ae81ff">\&#34;</span>host<span style="color:#ae81ff">\&#34;</span>:<span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">${</span>SOURCE<span style="color:#e6db74">}</span><span style="color:#ae81ff">\&#34;</span>, <span style="color:#ae81ff">\&#34;</span>short_message<span style="color:#ae81ff">\&#34;</span>:<span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">${</span>MESSAGE<span style="color:#e6db74">}</span><span style="color:#ae81ff">\&#34;</span>, <span style="color:#ae81ff">\&#34;</span>full_message<span style="color:#ae81ff">\&#34;</span>:<span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">${</span>MESSAGE<span style="color:#e6db74">}</span><span style="color:#ae81ff">\&#34;</span>, <span style="color:#ae81ff">\&#34;</span>level<span style="color:#ae81ff">\&#34;</span>:5 <span style="color:#f92672">}</span><span style="color:#e6db74">&#39;\&#39;</span><span style="color:#ae81ff">0</span> | nc -w <span style="color:#ae81ff">1</span> <span style="color:#e6db74">${</span>GRAYLOG_ADDR<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>GRAYLOG_PORT<span style="color:#e6db74">}</span>
 </code></pre></div><p>Здесь, думаю, пояснения излишни, но если возникнут вопросы - буду рад ответить на них в комментариях.</p>
 <p>Основной, самый важный скрипт - <code>docker-entrypoint.sh</code> - который и формирует корректный <code>crontab</code> из файла <code>config.json</code>, выставляет все необходимые права, а также меняет id группе docker внутри контейнера выглядит следующим образом:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env bash
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env bash
 </span><span style="color:#75715e"></span>set -e
 
 <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$DOCKER_HOST<span style="color:#e6db74">&#34;</span> -a <span style="color:#e6db74">&#34;</span>$DOCKER_PORT_2375_TCP<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
@@ -350,7 +350,7 @@ cat <span style="color:#e6db74">&lt;&lt; EOF &gt; ${HOME_DIR}/jobs/${SCRIPT_NAME
 echo <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
 exec <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
 </code></pre></div><p>Пример файла <code>config.json</code>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">[{
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">[{
   <span style="color:#f92672">&#34;comment&#34;</span>:<span style="color:#e6db74">&#34;DISABLED&#34;</span>,
   <span style="color:#f92672">&#34;schedule&#34;</span>:<span style="color:#e6db74">&#34;# */5 * * * *&#34;</span>,
   <span style="color:#f92672">&#34;command&#34;</span>:<span style="color:#e6db74">&#34;hostname -f&#34;</span>
@@ -368,9 +368,9 @@ exec <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;
   <span style="color:#f92672">&#34;container&#34;</span>:<span style="color:#e6db74">&#34;sphinxsearch&#34;</span>
 }]
 </code></pre></div><p>Находясь в каталоге с Dockerfile запускаем сборку docker-образа командой:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t crontab:latest .
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t crontab:latest .
 </code></pre></div><p>Запустить docker-контейнер из собранного docker-образа можно так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d <span style="color:#ae81ff">\
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    --env HOST_SOURCE<span style="color:#f92672">=</span>crontab_container <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    --env GRAYLOG_HOST<span style="color:#f92672">=</span>graylog.lc <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>    --env GRAYLOG_PORT<span style="color:#f92672">=</span><span style="color:#ae81ff">12202</span> <span style="color:#ae81ff">\
@@ -378,7 +378,7 @@ exec <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;
 </span><span style="color:#ae81ff"></span>    -v <span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>/config.json:/opt/crontab/config.json:rw <span style="color:#ae81ff">\
 </span><span style="color:#ae81ff"></span>crontab:latest
 </code></pre></div><p>Или добавить новый сервис в файл <code>docker-compose.yml</code>, например так (вариант с монтированием <code>config.json</code> в docker-контейнер с машины разработчика):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
 <span style="color:#75715e">### Crontab Container #######################################</span>
   <span style="color:#f92672">crond</span>:
     <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">crond</span>
@@ -438,6 +438,10 @@ exec <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -451,10 +455,6 @@ exec <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

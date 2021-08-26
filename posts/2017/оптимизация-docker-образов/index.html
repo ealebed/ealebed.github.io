@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.85.0" />
+		<meta name="generator" content="Hugo 0.87.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,14 +101,14 @@
                     <p>Как известно, docker-контейнеры создаются и запускаются из образов, которые можно загрузить из общедоступных репозиториев (например, <a href="https://hub.docker.com/">Docker Hub</a>) или собрать самостоятельно с помощью инструкций в Dockerfile.</p>
 <p>Самостоятельная сборка образов, на мой взгляд, обладает целым рядом преимуществ, однако в результате можно получить образ неприлично большого размера. Давайте разберемся, <strong>как оптимизировать docker-образы</strong>, не жертвуя при этом их функциональностью!</p>
 <p>Действия производятся на:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
 No LSB modules are available.
 Distributor ID:    Ubuntu
 Description:    Ubuntu 16.04.2 LTS
 Release:    16.04
 Codename:    xenial
 </code></pre></div><p>Используемая версия docker-engine:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version
 Client:
  Version:      17.03.0-ce
  API version:  1.26
@@ -127,7 +127,7 @@ Server:
  Experimental: false
 </code></pre></div><p>В примере рассмотрим сборку docker-образа для контейнера с Nginx (как полагается, с <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">поддержкой Brotli</a> и свеженьким <a href="https://ealebed.github.io/posts/2016/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-openssl-1.0.2-%D0%B4%D0%BB%D1%8F-http2.0/">OpenSSL для HTTP2.0</a>). Кроме этого, при запуске контейнера из шаблонов будут генерироваться конфигурационные файлы сайтов (в зависимости от параметров из <code>.env</code>-файла).</p>
 <p>Dockerfile (инструкции по сборке образа) выглядит так:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> debian:jessie</span><span style="color:#960050;background-color:#1e0010">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> debian:jessie</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> NGINX_VERSION<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>.11.10<span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> OPENSSL_VERSION<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>.0.2g<span style="color:#960050;background-color:#1e0010">
@@ -237,17 +237,17 @@ Server:
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 80 443</span><span style="color:#960050;background-color:#1e0010">
 </span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> dockerize -template /opt/nginx/conf.d/main.tmpl:/opt/nginx/conf.d/main-gen.conf -template /opt/nginx/conf.d/landing.tmpl:/opt/nginx/conf.d/landing-gen.conf nginx<span style="color:#960050;background-color:#1e0010">
 </span></code></pre></div><p>Для сборки образа, находясь в каталоге с Dockerfile, запускаем команду:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t nginx-test:latest .
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t nginx-test:latest .
 </code></pre></div><p>Проверим наличие нового образа после сборки:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images nginx-test 
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images nginx-test 
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
 nginx-test          latest              43bf91aeb416        <span style="color:#ae81ff">3</span> minutes ago       <span style="color:#ae81ff">732</span> MB
 </code></pre></div><p>Размер образа составляет целых 732 MB! Размер, конечно, не столь важен, если мы говорим про образы использующиеся только на локальной машине. Но это становится проблемой, когда нужно постоянно скачивать/отправлять эти образы через интернет.</p>
 <p>Для оптимизации docker-образов можно воспользоваться утилитой <a href="https://github.com/goldmann/docker-squash"><code>docker-squash</code></a>. Установить ее довольно просто:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pip install docker-squash
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pip install docker-squash
 </code></pre></div><p>Данная утилита позволяет объединять слои docker-образов (не забываем о том, что каждая инструкция в Dockerfile создает новый слой, и в нашем образе содержится аж 16 слоев). Слои можно объединять частично (например, N последних или с X по Y) или полностью (как мы и поступим).</p>
 <p>Запускаем команду:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-squash -t nginx-test:squashed nginx-test:latest
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-squash -t nginx-test:squashed nginx-test:latest
 2017-03-20 13:42:39,562 root         INFO     docker-squash version 1.0.5, Docker 60ccb22, API 1.26...
 2017-03-20 13:42:39,562 root         INFO     Using v2 image format
 2017-03-20 13:42:39,582 root         INFO     Old image has <span style="color:#ae81ff">16</span> layers
@@ -270,13 +270,13 @@ nginx-test          latest              43bf91aeb416        <span style="color:#
 2017-03-20 13:43:45,236 root         INFO     Image registered in Docker daemon as nginx-test:squashed
 2017-03-20 13:43:45,297 root         INFO     Done
 </code></pre></div><p>Проверим информацию о docker-образах с именем nginx-test (теперь их станет 2):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images nginx-test 
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images nginx-test 
 REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
 nginx-test          squashed            3c1cfae6f24c        About a minute ago   <span style="color:#ae81ff">399</span> MB
 nginx-test          latest              43bf91aeb416        <span style="color:#ae81ff">9</span> minutes ago        <span style="color:#ae81ff">732</span> MB
 </code></pre></div><p>Как видим, последний образ с тегом <code>squashed</code> уменьшился на 46%.</p>
 <p>Следует отметить, что docker-engine начиная с версии 1.13 в <strong>экспериментальном режиме</strong> содержит возможность сборки уже сжатых образов. Для этого в команду сборки необходимо добавить параметр <code>--squash</code>, например:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build --squash -t nginx-test:late .
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build --squash -t nginx-test:late .
 Error response from daemon: squash is only supported with experimental mode
 </code></pre></div><p>Чтобы <strong>включить експериментальный режим docker-engine в Ubuntu 16.04</strong> необходимо в конфигурационном файле <code>/lib/systemd/system/docker.service</code> добавить параметр <code>--experimental=true</code>.</p>
 <p>В моем случае это выглядит так:</p>
@@ -310,10 +310,10 @@ KillMode=process
 [Install]
 WantedBy=multi-user.target
 </code></pre><p>После изменения конфигурационного файла выполняем:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo systemctl daemon-reload
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo systemctl restart docker
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo systemctl daemon-reload
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo systemctl restart docker
 </code></pre></div><p>Проверим информацию о версии docker-engine (следует обратить внимание на последнюю строку):</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version
 Client:
  Version:      17.03.0-ce
  API version:  1.26
@@ -331,7 +331,7 @@ Server:
  OS/Arch:      linux/amd64
  Experimental: true
 </code></pre></div><p>Теперь можно сразу собирать сжатые docker-образы командой:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build --squash -t nginx-test:late .
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build --squash -t nginx-test:late .
 </code></pre></div>
                 </section>
             </article>
@@ -374,6 +374,10 @@ Server:
     
     
         <li>
+            <a href="https://ealebed.github.io/posts/2021/healthcheck-for-apache-airflow-in-k8s-cluster/">Healthcheck для Apache Airflow в Kubernetes кластере<aside class="dates">Aug 26 2021</aside></a>
+        </li>
+    
+        <li>
             <a href="https://ealebed.github.io/posts/2021/apache-airflow-and-slack-integration/">Интеграция Apache Airflow и Slack для отправки уведомлений<aside class="dates">Jul 12 2021</aside></a>
         </li>
     
@@ -387,10 +391,6 @@ Server:
     
         <li>
             <a href="https://ealebed.github.io/posts/2021/%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%B0%D1%86%D0%B8%D1%8F-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B9-flyway-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-testcontainers/">Валидация миграций flyway c помощью testcontainers<aside class="dates">Feb 5 2021</aside></a>
-        </li>
-    
-        <li>
-            <a href="https://ealebed.github.io/posts/2020/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-poststart-%D1%85%D1%83%D0%BA%D0%B0-%D0%BF%D1%80%D0%B8-%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D0%B4%D0%B0-%D0%B2-kubernetes/">Использование PostStart хука при запуске пода в Kubernetes-кластере<aside class="dates">Dec 8 2020</aside></a>
         </li>
     
 </ul>

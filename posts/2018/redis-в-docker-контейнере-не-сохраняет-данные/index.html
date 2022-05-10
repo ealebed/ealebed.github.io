@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,96 +103,96 @@
                     <p>Случайно заметил, что при остановке docker-контейнера redis не сохраняет данные из памяти в файл <code>dump.rdb</code>, и, следовательно, при следующем запуске данных в redis&rsquo;е не окажется.</p>
 <p>Давайте разберемся!</p>
 <p>Версия docker:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version 
-Client:
- Version:      17.09.1-ce
- API version:  1.32
- Go version:   go1.8.3
- Git commit:   19e2cf6
- Built:        Thu Dec  <span style="color:#ae81ff">7</span> 22:24:23 <span style="color:#ae81ff">2017</span>
- OS/Arch:      linux/amd64
-
-Server:
- Version:      17.09.1-ce
- API version:  1.32 <span style="color:#f92672">(</span>minimum version 1.12<span style="color:#f92672">)</span>
- Go version:   go1.8.3
- Git commit:   19e2cf6
- Built:        Thu Dec  <span style="color:#ae81ff">7</span> 22:23:00 <span style="color:#ae81ff">2017</span>
- OS/Arch:      linux/amd64
- Experimental: true
-</code></pre></div><p>Используемый в примере образ — redis:4.0-alpine (ed8544cc83de).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker version 
+</span></span><span style="display:flex;"><span>Client:
+</span></span><span style="display:flex;"><span> Version:      17.09.1-ce
+</span></span><span style="display:flex;"><span> API version:  1.32
+</span></span><span style="display:flex;"><span> Go version:   go1.8.3
+</span></span><span style="display:flex;"><span> Git commit:   19e2cf6
+</span></span><span style="display:flex;"><span> Built:        Thu Dec  <span style="color:#ae81ff">7</span> 22:24:23 <span style="color:#ae81ff">2017</span>
+</span></span><span style="display:flex;"><span> OS/Arch:      linux/amd64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Server:
+</span></span><span style="display:flex;"><span> Version:      17.09.1-ce
+</span></span><span style="display:flex;"><span> API version:  1.32 <span style="color:#f92672">(</span>minimum version 1.12<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> Go version:   go1.8.3
+</span></span><span style="display:flex;"><span> Git commit:   19e2cf6
+</span></span><span style="display:flex;"><span> Built:        Thu Dec  <span style="color:#ae81ff">7</span> 22:23:00 <span style="color:#ae81ff">2017</span>
+</span></span><span style="display:flex;"><span> OS/Arch:      linux/amd64
+</span></span><span style="display:flex;"><span> Experimental: true
+</span></span></code></pre></div><p>Используемый в примере образ — redis:4.0-alpine (ed8544cc83de).</p>
 <p>Скачиваем docker-образ командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker pull redis:4.0-alpine
-4.0-alpine: Pulling from library/redis
-Digest: sha256:0153c5db97e5852b25c5c4715cf88cff9d9dfd8fef5c4c81df8b4dd1a984abc7
-Status: Image is up to date <span style="color:#66d9ef">for</span> redis:4.0-alpine
-</code></pre></div><p>В моем случае контейнер с redis запускается в связке с другими контейнерами, описанными в файле <code>docker-compose.yml</code>. Описание интересующего нас сервиса выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
-  <span style="color:#f92672">redis</span>:
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis:4.0-alpine</span>
-    <span style="color:#f92672">command</span>:
-      - <span style="color:#e6db74">&#39;redis-server&#39;</span>
-      - <span style="color:#e6db74">&#39;--loglevel ${REDIS_LOGLEVEL:-warning}&#39;</span>
-      - <span style="color:#e6db74">&#39;--databases 2&#39;</span>
-      - <span style="color:#e6db74">&#39;--maxmemory ${REDIS_MAXMEM:-50mb}&#39;</span>
-      - <span style="color:#e6db74">&#39;--maxmemory-policy ${REDIS_POLICY:-noeviction}&#39;</span>
-      - <span style="color:#e6db74">&#39;--requirepass ${REDIS_PASS}&#39;</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">redis:/data</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#e6db74">&#34;6379:6379&#34;</span>
-...
-</code></pre></div><p>Как описано здесь, для персистентности данных можно использовать RDB (наш случай) или AOF стратегии. Для работы RDB в конфиге redis должны быть определены значения параметра <code>save</code>, например в настройках по умолчанию это выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
-save <span style="color:#ae81ff">900</span> <span style="color:#ae81ff">1</span>
-save <span style="color:#ae81ff">300</span> <span style="color:#ae81ff">10</span>
-save <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">10000</span>
-...
-</code></pre></div><p>Проверим значения данного параметра в нашем случае (контейнер должен быть запущен):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it redis redis-cli -a password config get save
-1<span style="color:#f92672">)</span> <span style="color:#e6db74">&#34;save&#34;</span>
-2<span style="color:#f92672">)</span> <span style="color:#e6db74">&#34;&#34;</span>
-</code></pre></div><p>Приводим описание сервиса redis в файле <code>docker-compose.yml</code> к следующему виду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
-  <span style="color:#f92672">redis</span>:
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis:4.0-alpine</span>
-    <span style="color:#f92672">command</span>:
-      - <span style="color:#e6db74">&#39;redis-server&#39;</span>
-      - <span style="color:#e6db74">&#39;--loglevel ${REDIS_LOGLEVEL:-warning}&#39;</span>
-      - <span style="color:#e6db74">&#39;--databases 2&#39;</span>
-      - <span style="color:#e6db74">&#39;--save 900 1&#39;</span>
-      - <span style="color:#e6db74">&#39;--save 300 10&#39;</span>
-      - <span style="color:#e6db74">&#39;--save 60 10000&#39;</span>
-      - <span style="color:#e6db74">&#39;--maxmemory ${REDIS_MAXMEM:-50mb}&#39;</span>
-      - <span style="color:#e6db74">&#39;--maxmemory-policy ${REDIS_POLICY:-noeviction}&#39;</span>
-      - <span style="color:#e6db74">&#39;--requirepass ${REDIS_PASS}&#39;</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">redis:/data</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#e6db74">&#34;6379:6379&#34;</span>
-...
-</code></pre></div><p>Перезапускаем контейнеры командой (контейнер redis будет пересоздан с новыми настройками):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
-</code></pre></div><p>Проверяем значение параметра save:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it redis redis-cli -a password config get save
-1<span style="color:#f92672">)</span> <span style="color:#e6db74">&#34;save&#34;</span>
-2<span style="color:#f92672">)</span> <span style="color:#e6db74">&#34;900 1 300 10 60 10000&#34;</span>
-</code></pre></div><p>Теперь согласно установленным значениям данные из памяти сбрасываются в файл <code>dump.rdb</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker pull redis:4.0-alpine
+</span></span><span style="display:flex;"><span>4.0-alpine: Pulling from library/redis
+</span></span><span style="display:flex;"><span>Digest: sha256:0153c5db97e5852b25c5c4715cf88cff9d9dfd8fef5c4c81df8b4dd1a984abc7
+</span></span><span style="display:flex;"><span>Status: Image is up to date <span style="color:#66d9ef">for</span> redis:4.0-alpine
+</span></span></code></pre></div><p>В моем случае контейнер с redis запускается в связке с другими контейнерами, описанными в файле <code>docker-compose.yml</code>. Описание интересующего нас сервиса выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yml" data-lang="yml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis:4.0-alpine</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">command</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;redis-server&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--loglevel ${REDIS_LOGLEVEL:-warning}&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--databases 2&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--maxmemory ${REDIS_MAXMEM:-50mb}&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--maxmemory-policy ${REDIS_POLICY:-noeviction}&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--requirepass ${REDIS_PASS}&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">redis:/data</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;6379:6379&#34;</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Как описано здесь, для персистентности данных можно использовать RDB (наш случай) или AOF стратегии. Для работы RDB в конфиге redis должны быть определены значения параметра <code>save</code>, например в настройках по умолчанию это выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>save <span style="color:#ae81ff">900</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>save <span style="color:#ae81ff">300</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>save <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">10000</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Проверим значения данного параметра в нашем случае (контейнер должен быть запущен):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker exec -it redis redis-cli -a password config get save
+</span></span><span style="display:flex;"><span>1<span style="color:#f92672">)</span> <span style="color:#e6db74">&#34;save&#34;</span>
+</span></span><span style="display:flex;"><span>2<span style="color:#f92672">)</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span></code></pre></div><p>Приводим описание сервиса redis в файле <code>docker-compose.yml</code> к следующему виду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yml" data-lang="yml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis:4.0-alpine</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">command</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;redis-server&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--loglevel ${REDIS_LOGLEVEL:-warning}&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--databases 2&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--save 900 1&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--save 300 10&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--save 60 10000&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--maxmemory ${REDIS_MAXMEM:-50mb}&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--maxmemory-policy ${REDIS_POLICY:-noeviction}&#39;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#39;--requirepass ${REDIS_PASS}&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">redis:/data</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;6379:6379&#34;</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Перезапускаем контейнеры командой (контейнер redis будет пересоздан с новыми настройками):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose up -d
+</span></span></code></pre></div><p>Проверяем значение параметра save:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker exec -it redis redis-cli -a password config get save
+</span></span><span style="display:flex;"><span>1<span style="color:#f92672">)</span> <span style="color:#e6db74">&#34;save&#34;</span>
+</span></span><span style="display:flex;"><span>2<span style="color:#f92672">)</span> <span style="color:#e6db74">&#34;900 1 300 10 60 10000&#34;</span>
+</span></span></code></pre></div><p>Теперь согласно установленным значениям данные из памяти сбрасываются в файл <code>dump.rdb</code>:</p>
 <ul>
 <li>каждые 15 минут, если изменилось одно значение;</li>
 <li>каждые 5 минут, если изменилось 10 значений;</li>
 <li>каждую минуту, если изменилось 10000 значений.</li>
 </ul>
 <p>Кроме того, при остановке docker-контейнера данные также сохраняются — в этом можно убедиться просматривая логи:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
-1:signal-handler <span style="color:#f92672">(</span>1513773035<span style="color:#f92672">)</span> Received SIGTERM scheduling shutdown...
-1:M <span style="color:#ae81ff">20</span> Dec 12:30:35.439 <span style="color:#75715e"># User requested shutdown...</span>
-1:M <span style="color:#ae81ff">20</span> Dec 12:30:35.439 * Saving the final RDB snapshot before exiting.
-1:M <span style="color:#ae81ff">20</span> Dec 12:30:35.445 * DB saved on disk
-1:M <span style="color:#ae81ff">20</span> Dec 12:30:35.445 <span style="color:#75715e"># Redis is now ready to exit, bye bye...</span>
-</code></pre></div><p>Подобный <a href="https://github.com/docker-library/redis/issues/87">баг</a> был оформлен почти год назад, оставил в нем свой комментарий.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>1:signal-handler <span style="color:#f92672">(</span>1513773035<span style="color:#f92672">)</span> Received SIGTERM scheduling shutdown...
+</span></span><span style="display:flex;"><span>1:M <span style="color:#ae81ff">20</span> Dec 12:30:35.439 <span style="color:#75715e"># User requested shutdown...</span>
+</span></span><span style="display:flex;"><span>1:M <span style="color:#ae81ff">20</span> Dec 12:30:35.439 * Saving the final RDB snapshot before exiting.
+</span></span><span style="display:flex;"><span>1:M <span style="color:#ae81ff">20</span> Dec 12:30:35.445 * DB saved on disk
+</span></span><span style="display:flex;"><span>1:M <span style="color:#ae81ff">20</span> Dec 12:30:35.445 <span style="color:#75715e"># Redis is now ready to exit, bye bye...</span>
+</span></span></code></pre></div><p>Подобный <a href="https://github.com/docker-library/redis/issues/87">баг</a> был оформлен почти год назад, оставил в нем свой комментарий.</p>
                 </section>
             </article>
 
@@ -284,7 +284,7 @@ save <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">10000</sp
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,57 +101,57 @@
                     <p>Команда <code>cp</code> — одна из базовых для Unix, и вы наверняка знаете как скопировать файл (или несколько файлов, или даже каталог) из одного места в другое.</p>
 <p>Давайте разберемся с несколькими <strong>практическими примерами использования команды <code>cp</code></strong>!</p>
 <p>Синтаксис команды следующий:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp <span style="color:#f92672">[</span>параметры<span style="color:#f92672">]</span> источник приемник
-</code></pre></div><p>Скопировать файл из одного каталога в другой без изменения имени можно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp ~/ansible/hosts ~/backup/
-</code></pre></div><p>Изменить имя файла при копировании довольно просто:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp ~/ansible/hosts ~/backup/hosts.old
-</code></pre></div><p>Скопировать каталог со всем его содержимым можно с помощью опции <code>-r</code>, например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -r ~/ansible/ ~/backup/
-</code></pre></div><p>Скопировать несколько файлов, соответствующих некоторому шаблону тоже довольно просто:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp *.yml ~/ansible/playbooks/ ~/backup/playbooks/
-</code></pre></div><p>Используя опцию <code>--backup</code> при копировании вы не затрете существующий в каталоге-приемнике файл. Если файл с таким именем уже существует, то к его имени будет добавлен символ <code>~</code>.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp --backup ~/ansible/hosts ~/backup/
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -l ~/backup/
--rw-r--r-- <span style="color:#ae81ff">1</span> admin staff <span style="color:#ae81ff">1020</span> Oct  <span style="color:#ae81ff">8</span> 13:36 hosts
--rw-r--r-- <span style="color:#ae81ff">1</span> admin staff <span style="color:#ae81ff">1038</span> Oct  <span style="color:#ae81ff">8</span> 13:15 hosts~
-</code></pre></div><p>Конечно, можно такие файлы просто не копировать из источника в приемник, для этого следует использовать опцию <code>-n</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -n ~/ansible/hosts ~/backup/hosts
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -l ~/backup/
--rw-r--r-- <span style="color:#ae81ff">1</span> admin staff <span style="color:#ae81ff">1020</span> Oct  <span style="color:#ae81ff">8</span> 13:15 hosts
-</code></pre></div><p>А еще разумнее использовать &lsquo;интерактивный&rsquo; режим — за это отвечает опция <code>-i</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -i ~/ansible/hosts ~/backup/
-cp: overwrite <span style="color:#e6db74">`</span>/home/admin/backup/hosts<span style="color:#960050;background-color:#1e0010">&#39;</span>? y
-</code></pre></div><p>Если вы попробуете с помощью команды <code>cp</code> скопировать ссылку, указывающую на файл, то в результате будет скопирован сам файл. Чтобы копировать именно ссылки на файлы, следует воспользоваться опцией <code>-d</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -d ~/speedtest ~/backup/
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -l ~/backup/
-lrwxrwxrwx <span style="color:#ae81ff">1</span> root    root      <span style="color:#ae81ff">27</span> Oct  <span style="color:#ae81ff">3</span> 14:56 speedtest -&gt; /usr/local/bin/speedtest.sh
-</code></pre></div><p>Также можно вместо копирования файла создавать &lsquo;жесткую&rsquo; ссылку на него с помощью <code>-l</code>. Делается это так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -l convert.sh backup/
-
-ls -li backup/convert.sh
-<span style="color:#ae81ff">2503465</span> -rwxr-xr-x <span style="color:#ae81ff">2</span> admin staff <span style="color:#ae81ff">246</span> Oct <span style="color:#ae81ff">10</span>  <span style="color:#ae81ff">2014</span> backup/convert.sh
-</code></pre></div><p>А создание &lsquo;мягкой&rsquo; ссылки с использованием опции <code>-s</code> выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la libsvn_ra_serf-1.so.1.0.0
--rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">196608</span> Apr <span style="color:#ae81ff">26</span> 15:34 libsvn_ra_serf-1.so.1.0.0
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -s libsvn_ra_serf-1.so.1.0.0 libsvn.so
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la libsvn.so
-lrwxrwxrwx <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">25</span> Oct  <span style="color:#ae81ff">3</span> 16:58 libsvn.so -&gt; libsvn_ra_serf-1.so.1.0.0
-</code></pre></div><p>Сохранить атрибуты файла при копировании можно благодаря опции <code>-p</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la hosts
--rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 16:42 hosts
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -p ~/ansible/hosts ~/backup/
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la backup/hosts
--rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 16:42 backup/hosts
-</code></pre></div><p>Иногда требуется скопировать только файлы, версия которых в источнике более новая, чем в приемнике. Для этого используется опция <code>-u</code> (еще можно добавить опцию <code>-v</code>, чтобы видеть имена обновляемых файлов):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la backup/hosts
--rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 16:42 backup/hosts
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -u -v ansible/* backup/
-<span style="color:#e6db74">&#39;ansible/hosts.bak&#39;</span> -&gt; <span style="color:#e6db74">&#39;backup/hosts.bak&#39;</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la backup/hosts*
--rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 16:42 backup/hosts
--rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 17:09 backup/hosts.bak
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp <span style="color:#f92672">[</span>параметры<span style="color:#f92672">]</span> источник приемник
+</span></span></code></pre></div><p>Скопировать файл из одного каталога в другой без изменения имени можно так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp ~/ansible/hosts ~/backup/
+</span></span></code></pre></div><p>Изменить имя файла при копировании довольно просто:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp ~/ansible/hosts ~/backup/hosts.old
+</span></span></code></pre></div><p>Скопировать каталог со всем его содержимым можно с помощью опции <code>-r</code>, например:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -r ~/ansible/ ~/backup/
+</span></span></code></pre></div><p>Скопировать несколько файлов, соответствующих некоторому шаблону тоже довольно просто:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp *.yml ~/ansible/playbooks/ ~/backup/playbooks/
+</span></span></code></pre></div><p>Используя опцию <code>--backup</code> при копировании вы не затрете существующий в каталоге-приемнике файл. Если файл с таким именем уже существует, то к его имени будет добавлен символ <code>~</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp --backup ~/ansible/hosts ~/backup/
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -l ~/backup/
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> admin staff <span style="color:#ae81ff">1020</span> Oct  <span style="color:#ae81ff">8</span> 13:36 hosts
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> admin staff <span style="color:#ae81ff">1038</span> Oct  <span style="color:#ae81ff">8</span> 13:15 hosts~
+</span></span></code></pre></div><p>Конечно, можно такие файлы просто не копировать из источника в приемник, для этого следует использовать опцию <code>-n</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -n ~/ansible/hosts ~/backup/hosts
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -l ~/backup/
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> admin staff <span style="color:#ae81ff">1020</span> Oct  <span style="color:#ae81ff">8</span> 13:15 hosts
+</span></span></code></pre></div><p>А еще разумнее использовать &lsquo;интерактивный&rsquo; режим — за это отвечает опция <code>-i</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -i ~/ansible/hosts ~/backup/
+</span></span><span style="display:flex;"><span>cp: overwrite <span style="color:#e6db74">`</span>/home/admin/backup/hosts<span style="color:#960050;background-color:#1e0010">&#39;</span>? y
+</span></span></code></pre></div><p>Если вы попробуете с помощью команды <code>cp</code> скопировать ссылку, указывающую на файл, то в результате будет скопирован сам файл. Чтобы копировать именно ссылки на файлы, следует воспользоваться опцией <code>-d</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -d ~/speedtest ~/backup/
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -l ~/backup/
+</span></span><span style="display:flex;"><span>lrwxrwxrwx <span style="color:#ae81ff">1</span> root    root      <span style="color:#ae81ff">27</span> Oct  <span style="color:#ae81ff">3</span> 14:56 speedtest -&gt; /usr/local/bin/speedtest.sh
+</span></span></code></pre></div><p>Также можно вместо копирования файла создавать &lsquo;жесткую&rsquo; ссылку на него с помощью <code>-l</code>. Делается это так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -l convert.sh backup/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ls -li backup/convert.sh
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2503465</span> -rwxr-xr-x <span style="color:#ae81ff">2</span> admin staff <span style="color:#ae81ff">246</span> Oct <span style="color:#ae81ff">10</span>  <span style="color:#ae81ff">2014</span> backup/convert.sh
+</span></span></code></pre></div><p>А создание &lsquo;мягкой&rsquo; ссылки с использованием опции <code>-s</code> выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -la libsvn_ra_serf-1.so.1.0.0
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">196608</span> Apr <span style="color:#ae81ff">26</span> 15:34 libsvn_ra_serf-1.so.1.0.0
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -s libsvn_ra_serf-1.so.1.0.0 libsvn.so
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -la libsvn.so
+</span></span><span style="display:flex;"><span>lrwxrwxrwx <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">25</span> Oct  <span style="color:#ae81ff">3</span> 16:58 libsvn.so -&gt; libsvn_ra_serf-1.so.1.0.0
+</span></span></code></pre></div><p>Сохранить атрибуты файла при копировании можно благодаря опции <code>-p</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -la hosts
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 16:42 hosts
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -p ~/ansible/hosts ~/backup/
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -la backup/hosts
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 16:42 backup/hosts
+</span></span></code></pre></div><p>Иногда требуется скопировать только файлы, версия которых в источнике более новая, чем в приемнике. Для этого используется опция <code>-u</code> (еще можно добавить опцию <code>-v</code>, чтобы видеть имена обновляемых файлов):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -la backup/hosts
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 16:42 backup/hosts
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -u -v ansible/* backup/
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#39;ansible/hosts.bak&#39;</span> -&gt; <span style="color:#e6db74">&#39;backup/hosts.bak&#39;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -la backup/hosts*
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 16:42 backup/hosts
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">28</span> Oct  <span style="color:#ae81ff">3</span> 17:09 backup/hosts.bak
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -243,7 +243,7 @@ lrwxrwxrwx <span style="color:#ae81ff">1</span> root root <span style="color:#ae
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

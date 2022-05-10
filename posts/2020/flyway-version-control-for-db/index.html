@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -116,26 +116,26 @@
 <p><strong>Повторяемые</strong> миграции имеют <em>описание</em> и <em>контрольную сумму</em>, но у них нет <em>версии</em>. Таким образом, вместо того, чтобы применяться единожды, эти миграции будут переприменяться каждый раз, когда меняется их контрольная сумма. В процессе применения миграций, повторяемые миграции будут выполняться ПОСЛЕ всех версионированных и в алфавитном порядке их описания.</p>
 <p>По умолчанию, миграции могут быть написаны на Java или SQL (наш случай) и содержать в себе несколько утверждений. Для контроля работы с миграциями (какие миграции уже применены, кем и когда), утилита <code>flyway</code> добавляет в базу данных таблицу <code>flyway_schema_history</code>.</p>
 <p>Пример версионированной миграции:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> hero_data.hero
-(
-    id BIGSERIAL <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    name VARCHAR(<span style="color:#ae81ff">250</span>) <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    description TEXT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    debut_year INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    appearances INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    special_powers INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    cunning INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    strength INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    technology INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    created_at TIMESTAMPTZ <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
-    updated_at TIMESTAMPTZ <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>
-);
-
-<span style="color:#66d9ef">ALTER</span> <span style="color:#66d9ef">TABLE</span> hero_data.hero <span style="color:#66d9ef">ADD</span> <span style="color:#66d9ef">CONSTRAINT</span> pk_hero_id <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> (id);
-</code></pre></div><p>Пример повторяемой миграции:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">OR</span> <span style="color:#66d9ef">REPLACE</span> <span style="color:#66d9ef">VIEW</span> blue_cars <span style="color:#66d9ef">AS</span> 
-    <span style="color:#66d9ef">SELECT</span> id, license_plate <span style="color:#66d9ef">FROM</span> cars <span style="color:#66d9ef">WHERE</span> color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blue&#39;</span>;
-</code></pre></div><p>Как правило, миграции проще всего писать в формате SQL - так легче начать работу, использовать существующие скрипты/навыки/инструменты. Опять же, такой подход сразу дает доступ ко всем возможностям используемой базы данных и не требует понимания &ldquo;промежуточных&rdquo; уровней транслирования sql-выражений. SQL-миграции хорошо подходят для:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> hero_data.hero
+</span></span><span style="display:flex;"><span>(
+</span></span><span style="display:flex;"><span>    id BIGSERIAL <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    name VARCHAR(<span style="color:#ae81ff">250</span>) <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    description TEXT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    debut_year INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    appearances INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    special_powers INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    cunning INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    strength INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    technology INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    created_at TIMESTAMPTZ <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    updated_at TIMESTAMPTZ <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">ALTER</span> <span style="color:#66d9ef">TABLE</span> hero_data.hero <span style="color:#66d9ef">ADD</span> <span style="color:#66d9ef">CONSTRAINT</span> pk_hero_id <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> (id);
+</span></span></code></pre></div><p>Пример повторяемой миграции:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">OR</span> <span style="color:#66d9ef">REPLACE</span> <span style="color:#66d9ef">VIEW</span> blue_cars <span style="color:#66d9ef">AS</span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">SELECT</span> id, license_plate <span style="color:#66d9ef">FROM</span> cars <span style="color:#66d9ef">WHERE</span> color<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;blue&#39;</span>;
+</span></span></code></pre></div><p>Как правило, миграции проще всего писать в формате SQL - так легче начать работу, использовать существующие скрипты/навыки/инструменты. Опять же, такой подход сразу дает доступ ко всем возможностям используемой базы данных и не требует понимания &ldquo;промежуточных&rdquo; уровней транслирования sql-выражений. SQL-миграции хорошо подходят для:</p>
 <ul>
 <li>DDL-изменений (CREATE/ALTER/DROP утверждения для TABLES,VIEWS,TRIGGERS,SEQUENCES,…);</li>
 <li>Несложные изменения справочных данных (CRUD in reference data tables);</li>
@@ -152,61 +152,61 @@
 <p>Пример правильно названного файла с миграциями - <code>V20200214141830__Create_hero_schema.sql</code>.</p>
 <p>Миграции могут быть применены ко всем необходимым базам данных, но для простоты рассмотрим пример работы только с одной БД.</p>
 <p>Все взаимодействие утилиты <code>flyway</code> с БД будет осуществляться из docker-контейнера, дабы не захламлять систему. Для сборки образа воспользуемся следующим <code>Dockerfile</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> adoptopenjdk/openjdk13:jdk-13.0.2_8-ubuntu-slim</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">LABEL</span> maintainer<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Yevhen Lebid &lt;ealebed@gmail.com&gt;&#34;</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">WORKDIR</span><span style="color:#e6db74"> /flyway</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> FLYWAY_VERSION<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> FLYWAY_VERSION<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    apt-get install -y <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>      curl <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    apt-get -y autoremove <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    apt-get -y clean <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    rm -rf /var/lib/apt/lists/*<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>/flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz -o flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> tar -xzf flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz --strip-components<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> rm flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> ln -s /flyway/flyway /usr/local/bin/flyway<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>Соберем образ <code>flyway</code> следующей командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -f Dockerfile <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --build-arg FLYWAY_VERSION<span style="color:#f92672">=</span>6.2.4 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -t ealebed/flyway:1.0.0 .
-</code></pre></div><p>Предположим, что у нас уже существует БД. Чтобы начать с ней работать используя миграции, необходимо:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> adoptopenjdk/openjdk13:jdk-13.0.2_8-ubuntu-slim</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">LABEL</span> maintainer<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Yevhen Lebid &lt;ealebed@gmail.com&gt;&#34;</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">WORKDIR</span><span style="color:#e6db74"> /flyway</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> FLYWAY_VERSION<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> FLYWAY_VERSION<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    apt-get install -y <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      curl <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    apt-get -y autoremove <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    apt-get -y clean <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    rm -rf /var/lib/apt/lists/*<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>/flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz -o flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> tar -xzf flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz --strip-components<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> rm flyway-commandline-<span style="color:#e6db74">${</span>FLYWAY_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> ln -s /flyway/flyway /usr/local/bin/flyway<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>Соберем образ <code>flyway</code> следующей командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker build <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -f Dockerfile <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --build-arg FLYWAY_VERSION<span style="color:#f92672">=</span>6.2.4 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -t ealebed/flyway:1.0.0 .
+</span></span></code></pre></div><p>Предположим, что у нас уже существует БД. Чтобы начать с ней работать используя миграции, необходимо:</p>
 <ul>
 <li>создать sql-скрипт, содержащий текущее состоянии БД (DDL, Data Definition Language) со всеми индексами, триггерами, процедурами и т.д. (например, используя <code>pg_dump -s ...</code>);</li>
 <li>создать версионированную миграцию из данного скрипта, используя корректную версию и описание (например, V20190814141830__Base_version.sql);</li>
 <li>назначить (зафиксировать) базе данных базовую версию, используя версию и описание с предыдущего шага. Чтобы выполнить данную операцию в docker-контейнере запустите:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --rm
-  -e FLYWAY_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_USER<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -e FLYWAY_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_PASSWORD<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -e FLYWAY_URL<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_URL<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  ealebed/flyway:1.0.0 flyway baseline -baselineVersion<span style="color:#f92672">=</span><span style="color:#ae81ff">20190814141830</span> -baselineDescription<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Base version&#34;</span>
-</code></pre></div><p>Здесь <code>${FLYWAY_USER}</code>, <code>${FLYWAY_PASSWORD}</code> и <code>${FLYWAY_URL}</code> - необходимые параметры для авторизованного подключения к интересующей вас БД. Полный список параметров можно найти <a href="https://flywaydb.org/documentation/envvars">здесь</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --rm
+</span></span><span style="display:flex;"><span>  -e FLYWAY_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_USER<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e FLYWAY_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_PASSWORD<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e FLYWAY_URL<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_URL<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  ealebed/flyway:1.0.0 flyway baseline -baselineVersion<span style="color:#f92672">=</span><span style="color:#ae81ff">20190814141830</span> -baselineDescription<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Base version&#34;</span>
+</span></span></code></pre></div><p>Здесь <code>${FLYWAY_USER}</code>, <code>${FLYWAY_PASSWORD}</code> и <code>${FLYWAY_URL}</code> - необходимые параметры для авторизованного подключения к интересующей вас БД. Полный список параметров можно найти <a href="https://flywaydb.org/documentation/envvars">здесь</a>.</p>
 <p>Теперь можно приступать к написанию миграций. Если вы работаете в IntelliJ IDEA, то рекомендую использовать плагин <a href="https://plugins.jetbrains.com/plugin/8597-flyway-migration-creation">Flyway Migration Creation</a>.</p>
 <p>Для того, чтобы применить одну или несколько миграций (помним о версионировании), необходимо смонтировать внутрь docker-контейнера каталог с sql-миграциями и выполнить команду <code>migrate</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --rm <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -v &lt;path_to_database_directory&gt;:/flyway/sql <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -e FLYWAY_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_USER<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -e FLYWAY_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_PASSWORD<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -e FLYWAY_URL<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_URL<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  ealebed/flyway:1.0.0 flyway migrate
-</code></pre></div><p>Просмотреть детальную информацию и статус всех миграций можно с помощью команды <code>info</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --rm <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -e FLYWAY_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_USER<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -e FLYWAY_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_PASSWORD<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -e FLYWAY_URL<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_URL<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  ealebed/flyway:1.0.0 flyway info
-</code></pre></div><p>Стоит отметить, что в платной версии <code>flyway</code> есть возможность выполнять проверку применения миграций с помощью так называемых <a href="https://flywaydb.org/documentation/dryruns">Dry Runs</a> - вещь очень полезная (иногда и жизненно необходимая). В одной из следующих статей я расскажу как можно организовать аналогичные проверки и валидацию миграций еще до их применения к БД, причем совершенно бесплатно, без смс и регистрации!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --rm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -v &lt;path_to_database_directory&gt;:/flyway/sql <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e FLYWAY_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_USER<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e FLYWAY_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_PASSWORD<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e FLYWAY_URL<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_URL<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  ealebed/flyway:1.0.0 flyway migrate
+</span></span></code></pre></div><p>Просмотреть детальную информацию и статус всех миграций можно с помощью команды <code>info</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --rm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e FLYWAY_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_USER<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e FLYWAY_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_PASSWORD<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e FLYWAY_URL<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FLYWAY_URL<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  ealebed/flyway:1.0.0 flyway info
+</span></span></code></pre></div><p>Стоит отметить, что в платной версии <code>flyway</code> есть возможность выполнять проверку применения миграций с помощью так называемых <a href="https://flywaydb.org/documentation/dryruns">Dry Runs</a> - вещь очень полезная (иногда и жизненно необходимая). В одной из следующих статей я расскажу как можно организовать аналогичные проверки и валидацию миграций еще до их применения к БД, причем совершенно бесплатно, без смс и регистрации!</p>
                 </section>
             </article>
 
@@ -298,7 +298,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

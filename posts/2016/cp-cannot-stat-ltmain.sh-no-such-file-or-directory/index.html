@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,37 +102,37 @@
                 <section id="post-body">
                     <p>После обновления дистрибутива с Debian Wheezy до Debian Jessie при установке php-расширения <code>twig</code> столкнулся с проблемой <code>cp: cannot stat 'ltmain.sh': No such file or directory</code>. Давайте разберемся!</p>
 <p>Действия выполнялись на:</p>
-<pre><code>lsb_release -a
+<pre tabindex="0"><code>lsb_release -a
 No LSB modules are available.
 Distributor ID:	Debian
 Description:	Debian GNU/Linux 8.6 (jessie)
 Release:	8.6
 Codename:	jessie
 </code></pre><p>Установка необходимого php-расширения (шаблонизатора) <code>twig</code>:</p>
-<pre><code>git clone git://github.com/fabpot/Twig.git
-</code></pre><pre><code>cd Twig/ext/twig/
-</code></pre><pre><code>phpize
+<pre tabindex="0"><code>git clone git://github.com/fabpot/Twig.git
+</code></pre><pre tabindex="0"><code>cd Twig/ext/twig/
+</code></pre><pre tabindex="0"><code>phpize
 Configuring for:
 PHP Api Version:         20131106
 Zend Module Api No:      20131226
 Zend Extension Api No:   220131226
-cp: cannot stat 'ltmain.sh': No such file or directory
+cp: cannot stat &#39;ltmain.sh&#39;: No such file or directory
 </code></pre><p>Как оказалось — это баг. Дело в том, что в каталоге <code>/usr/lib/php5/build/</code> находится <code>ltmain.sh</code> в виде ссылки на <code>../../../../share/libtool/confg/ltmain.sh</code>. Но, как оказалось, в действительности такого файла не существует, и при выполнении <code>phpize</code> получаем ошибку.</p>
 <p>Для исправления этой досадной ситуации необходимо исправить ссылку, делаем это так:</p>
-<pre><code>cd /usr/lib/php5/build/
-</code></pre><pre><code>sudo rm ltmain.sh
-</code></pre><pre><code>ln -s ../../../share/libtool/build-aux/ltmain.sh
+<pre tabindex="0"><code>cd /usr/lib/php5/build/
+</code></pre><pre tabindex="0"><code>sudo rm ltmain.sh
+</code></pre><pre tabindex="0"><code>ln -s ../../../share/libtool/build-aux/ltmain.sh
 </code></pre><p>или то же самое, но одной строкой:</p>
-<pre><code>sudo rm /usr/lib/php5/build/ltmain.sh &amp;&amp; sudo ln -s /usr/share/libtool/build-aux/ltmain.sh /usr/lib/php5/build/ltmain.sh
+<pre tabindex="0"><code>sudo rm /usr/lib/php5/build/ltmain.sh &amp;&amp; sudo ln -s /usr/share/libtool/build-aux/ltmain.sh /usr/lib/php5/build/ltmain.sh
 </code></pre><p>Пытаемся еще раз установить расширение:</p>
-<pre><code>cd ~/Twig/ext/twig/
-</code></pre><pre><code>phpize
+<pre tabindex="0"><code>cd ~/Twig/ext/twig/
+</code></pre><pre tabindex="0"><code>phpize
 Configuring for:
 PHP Api Version:         20131106
 Zend Module Api No:      20131226
 Zend Extension Api No:   220131226
-</code></pre><pre><code>./configure
-</code></pre><pre><code>make &amp;&amp; make install
+</code></pre><pre tabindex="0"><code>./configure
+</code></pre><pre tabindex="0"><code>make &amp;&amp; make install
 </code></pre><p>На этот раз все сработало без ошибок!</p>
                 </section>
             </article>
@@ -225,7 +225,7 @@ Zend Extension Api No:   220131226
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,14 +104,14 @@
                 <section id="post-body">
                     <p>Найти и исправить медленные запросы к MySQL-серверу можно с помощью <code>pt-query-digest</code> — утилиты из пакета <a href="https://ealebed.github.io/posts/2016/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-percona-toolkit-%D0%B2-debian-wheezy/">Percona-toolkit</a>. Давайте разберемся как это сделать на примере ОС Debian Wheezy и Percona Server 5.5!</p>
 <p>Для начала необходимо включить логирование медленных запросов (и запросов, которые не используют индексы) в конфигурационном файле <code>/etc/mysql/my.cnf</code>, для этого необходимо добавить следующие строки:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 slow-query-log = 1
 slow-query-log-file = /var/log/mysql/mysql-slow.log
 long_query_time = 1
 log-queries-not-using-indexes
 ...
 </code></pre><p>или:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 slow-query-log = 1
 log-output = TABLE
 long_query_time = 1
@@ -119,12 +119,12 @@ log-queries-not-using-indexes
 ...
 </code></pre><p><strong>Примечание.</strong> Во втором случае медленные запросы будут записываться в таблицу slow_log базы данных mysql.</p>
 <p>После того, как накопится достаточное для анализа количество запросов, можно использовать утилиту <code>pt-query-digest</code>. Синтаксис довольно прост:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pt-query-digest /var/log/mysql/mysql-slow.log
-</code></pre></div><p>Лучше результат анализа сразу сохранять в файл для последующего разбора:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pt-query-digest /var/log/mysql/mysql-slow.log &gt; slowlog.txt
-</code></pre></div><p>Если в вашем случае медленные запросы записываются не в файл, а в таблицу в базе данных, то сначала используйте следующий запрос:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mysql -u &lt;ПОЛЬЗОВАТЕЛЬ&gt; -p&lt;ПАРОЛЬ&gt; -D mysql -s -r -e <span style="color:#e6db74">&#34;SELECT CONCAT( &#39;# Time: &#39;, DATE_FORMAT(start_time, &#39;%y%m%d %H%i%s&#39;), &#39;\n&#39;, &#39;# User@Host: &#39;, user_host, &#39;\n&#39;, &#39;# Query_time: &#39;, TIME_TO_SEC(query_time),  &#39;  Lock_time: &#39;, TIME_TO_SEC(lock_time), &#39;  Rows_sent: &#39;, rows_sent, &#39;  Rows_examined: &#39;, rows_examined, &#39;\n&#39;, sql_text, &#39;;&#39; ) FROM mysql.slow_log&#34;</span> &gt; mysql-slow.log
-</code></pre></div><p>Ознакомиться со всеми опциями утилиты <code>pt-query-digest</code> и рассмотреть пример анализа запросов, которые попали в <code>mysql-slow.log</code> можно <a href="https://www.percona.com/doc/percona-toolkit/2.2/pt-query-digest.html">здесь</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pt-query-digest /var/log/mysql/mysql-slow.log
+</span></span></code></pre></div><p>Лучше результат анализа сразу сохранять в файл для последующего разбора:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pt-query-digest /var/log/mysql/mysql-slow.log &gt; slowlog.txt
+</span></span></code></pre></div><p>Если в вашем случае медленные запросы записываются не в файл, а в таблицу в базе данных, то сначала используйте следующий запрос:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mysql -u &lt;ПОЛЬЗОВАТЕЛЬ&gt; -p&lt;ПАРОЛЬ&gt; -D mysql -s -r -e <span style="color:#e6db74">&#34;SELECT CONCAT( &#39;# Time: &#39;, DATE_FORMAT(start_time, &#39;%y%m%d %H%i%s&#39;), &#39;\n&#39;, &#39;# User@Host: &#39;, user_host, &#39;\n&#39;, &#39;# Query_time: &#39;, TIME_TO_SEC(query_time),  &#39;  Lock_time: &#39;, TIME_TO_SEC(lock_time), &#39;  Rows_sent: &#39;, rows_sent, &#39;  Rows_examined: &#39;, rows_examined, &#39;\n&#39;, sql_text, &#39;;&#39; ) FROM mysql.slow_log&#34;</span> &gt; mysql-slow.log
+</span></span></code></pre></div><p>Ознакомиться со всеми опциями утилиты <code>pt-query-digest</code> и рассмотреть пример анализа запросов, которые попали в <code>mysql-slow.log</code> можно <a href="https://www.percona.com/doc/percona-toolkit/2.2/pt-query-digest.html">здесь</a>.</p>
                 </section>
             </article>
 
@@ -216,7 +216,7 @@ log-queries-not-using-indexes
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

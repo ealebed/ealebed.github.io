@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,73 +104,73 @@
 <p>Еще раз отмечу: нет необходимости использовать разные неймспейсы для разделения нескольких разных ресурсов, например, разных версий одного и того же ПО - здесь лучше воспользоваться метками и селекторами (для выделения ресурсов) в одном и том же пространстве имен.</p>
 <p>По умолчанию в кластере <code>Kubernetes</code> будет создан неймспейс <strong>default</strong>, в котором и будут размещаться запускаемые объекты (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/">поды</a>, <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-11-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B-services/">сервисы</a>, <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-5-deployments/">развертывания</a> и т.д.). Неймспейсы <strong>kube-public</strong> и <strong>kube-system</strong> используются для запуска служебных объектов <code>Kubernetes</code>, необходимых для корректной работы кластера.</p>
 <p>Посмотреть список неймспейсов в вашем кластере можно с помощью такой команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get namespaces
-NAME          STATUS    AGE
-default       Active    46d
-kube-public   Active    46d
-kube-system   Active    46d
-</code></pre></div><p>Чтобы создать отдельный неймспейс, создадим файл <code>namespace-dev.json</code> (да, для разнообразия используем <code>.json</code>, а не <code>.yaml</code>) следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
-  <span style="color:#f92672">&#34;kind&#34;</span>: <span style="color:#e6db74">&#34;Namespace&#34;</span>,
-  <span style="color:#f92672">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;v1&#34;</span>,
-  <span style="color:#f92672">&#34;metadata&#34;</span>: {
-    <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;development&#34;</span>,
-    <span style="color:#f92672">&#34;labels&#34;</span>: {
-      <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;development&#34;</span>
-    }
-  }
-}
-</code></pre></div><p>и выполним команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl apply -f namespace-dev.json
-</code></pre></div><p>Для второго неймспейса создадим файл с тем же содержимым, но заменим слова &ldquo;development&rdquo; на &ldquo;production&rdquo; и применим его:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl apply -f namespace-prod.json
-</code></pre></div><p>Убедимся, что неймспейсы успешно создались:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get namespaces --show-labels
-NAME          STATUS    AGE       LABELS
-default       Active    46d       &lt;none&gt;
-development   Active    2m        name<span style="color:#f92672">=</span>development
-kube-public   Active    46d       &lt;none&gt;
-kube-system   Active    46d       &lt;none&gt;
-production    Active    2m        name<span style="color:#f92672">=</span>production
-</code></pre></div><p>Далее, для удобства, для каждого из созданных неймспейсов сделаем отдельный контекст. Для начала, посмотрим текущие настройки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl config view
-apiVersion: v1
-clusters:
-- cluster:
-    insecure-skip-tls-verify: true
-    server: https://localhost:6443
-  name: docker-for-desktop-cluster
-contexts:
-- context:
-    cluster: docker-for-desktop-cluster
-    user: docker-for-desktop
-  name: docker-for-desktop
-current-context: docker-for-desktop
-kind: Config
-preferences: <span style="color:#f92672">{}</span>
-users:
-- name: docker-for-desktop
-  user:
-    client-certificate-data: REDACTED
-    client-key-data: REDACTED
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl config current-context
-docker-for-desktop
-</code></pre></div><p>Создаем два отдельных контекста (они будут отличаться неймспейсами, а значения полей <code>cluster</code> и <code>user</code> будут скопированы с текущего контекста):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl config set-context dev --namespace<span style="color:#f92672">=</span>development <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --cluster<span style="color:#f92672">=</span>docker-for-desktop-cluster <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --user<span style="color:#f92672">=</span>docker-for-desktop
-kubectl config set-context prod --namespace<span style="color:#f92672">=</span>production <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --cluster<span style="color:#f92672">=</span>docker-for-desktop-cluster <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --user<span style="color:#f92672">=</span>docker-for-desktop
-</code></pre></div><p>После выполнения этих двух команд к конфигурационном файле <code>~/.kube/config</code> будут созданы дополнительные контексты. Теперь можно с легкостью переключаться между ними используя команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl config use-context dev
-</code></pre></div><p>и</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl config use-context prod
-</code></pre></div><p>Кроме того, выполнять команды с конкретным неймспейсом можно даже не переключая контекст - достаточно использовать дополнительный параметр <code>--namespace=</code>, например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl --namespace<span style="color:#f92672">=</span>dev run nginx --image<span style="color:#f92672">=</span>nginx
-</code></pre></div><p>или</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl --namespace<span style="color:#f92672">=</span>prod get pods
-</code></pre></div><p>Напоследок стоит сказать, что при создании сервиса (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-11-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B-services/"><code>service</code></a>) в кластере <code>Kubernetes</code> создается соответствующая DNS-запись. Запись создается в формате <code>&lt;service-name&gt;.&lt;namespace-name&gt;.svc.cluster.local</code>, а это означает, что если вы используете только часть <code>&lt;service-name&gt;</code> то это позволит &ldquo;достучаться&rdquo; до сервиса <strong>только</strong> в пределах неймспейса. Если вам необходимо взаимодействовать с сервисом, запущенным в другом неймспейсе, следует использовать полное доменное имя (FQDN).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get namespaces
+</span></span><span style="display:flex;"><span>NAME          STATUS    AGE
+</span></span><span style="display:flex;"><span>default       Active    46d
+</span></span><span style="display:flex;"><span>kube-public   Active    46d
+</span></span><span style="display:flex;"><span>kube-system   Active    46d
+</span></span></code></pre></div><p>Чтобы создать отдельный неймспейс, создадим файл <code>namespace-dev.json</code> (да, для разнообразия используем <code>.json</code>, а не <code>.yaml</code>) следующего содержания:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;kind&#34;</span>: <span style="color:#e6db74">&#34;Namespace&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;v1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;metadata&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;development&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;labels&#34;</span>: {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;development&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>и выполним команду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl apply -f namespace-dev.json
+</span></span></code></pre></div><p>Для второго неймспейса создадим файл с тем же содержимым, но заменим слова &ldquo;development&rdquo; на &ldquo;production&rdquo; и применим его:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl apply -f namespace-prod.json
+</span></span></code></pre></div><p>Убедимся, что неймспейсы успешно создались:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get namespaces --show-labels
+</span></span><span style="display:flex;"><span>NAME          STATUS    AGE       LABELS
+</span></span><span style="display:flex;"><span>default       Active    46d       &lt;none&gt;
+</span></span><span style="display:flex;"><span>development   Active    2m        name<span style="color:#f92672">=</span>development
+</span></span><span style="display:flex;"><span>kube-public   Active    46d       &lt;none&gt;
+</span></span><span style="display:flex;"><span>kube-system   Active    46d       &lt;none&gt;
+</span></span><span style="display:flex;"><span>production    Active    2m        name<span style="color:#f92672">=</span>production
+</span></span></code></pre></div><p>Далее, для удобства, для каждого из созданных неймспейсов сделаем отдельный контекст. Для начала, посмотрим текущие настройки:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl config view
+</span></span><span style="display:flex;"><span>apiVersion: v1
+</span></span><span style="display:flex;"><span>clusters:
+</span></span><span style="display:flex;"><span>- cluster:
+</span></span><span style="display:flex;"><span>    insecure-skip-tls-verify: true
+</span></span><span style="display:flex;"><span>    server: https://localhost:6443
+</span></span><span style="display:flex;"><span>  name: docker-for-desktop-cluster
+</span></span><span style="display:flex;"><span>contexts:
+</span></span><span style="display:flex;"><span>- context:
+</span></span><span style="display:flex;"><span>    cluster: docker-for-desktop-cluster
+</span></span><span style="display:flex;"><span>    user: docker-for-desktop
+</span></span><span style="display:flex;"><span>  name: docker-for-desktop
+</span></span><span style="display:flex;"><span>current-context: docker-for-desktop
+</span></span><span style="display:flex;"><span>kind: Config
+</span></span><span style="display:flex;"><span>preferences: <span style="color:#f92672">{}</span>
+</span></span><span style="display:flex;"><span>users:
+</span></span><span style="display:flex;"><span>- name: docker-for-desktop
+</span></span><span style="display:flex;"><span>  user:
+</span></span><span style="display:flex;"><span>    client-certificate-data: REDACTED
+</span></span><span style="display:flex;"><span>    client-key-data: REDACTED
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl config current-context
+</span></span><span style="display:flex;"><span>docker-for-desktop
+</span></span></code></pre></div><p>Создаем два отдельных контекста (они будут отличаться неймспейсами, а значения полей <code>cluster</code> и <code>user</code> будут скопированы с текущего контекста):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl config set-context dev --namespace<span style="color:#f92672">=</span>development <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --cluster<span style="color:#f92672">=</span>docker-for-desktop-cluster <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --user<span style="color:#f92672">=</span>docker-for-desktop
+</span></span><span style="display:flex;"><span>kubectl config set-context prod --namespace<span style="color:#f92672">=</span>production <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --cluster<span style="color:#f92672">=</span>docker-for-desktop-cluster <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --user<span style="color:#f92672">=</span>docker-for-desktop
+</span></span></code></pre></div><p>После выполнения этих двух команд к конфигурационном файле <code>~/.kube/config</code> будут созданы дополнительные контексты. Теперь можно с легкостью переключаться между ними используя команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl config use-context dev
+</span></span></code></pre></div><p>и</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl config use-context prod
+</span></span></code></pre></div><p>Кроме того, выполнять команды с конкретным неймспейсом можно даже не переключая контекст - достаточно использовать дополнительный параметр <code>--namespace=</code>, например:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl --namespace<span style="color:#f92672">=</span>dev run nginx --image<span style="color:#f92672">=</span>nginx
+</span></span></code></pre></div><p>или</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl --namespace<span style="color:#f92672">=</span>prod get pods
+</span></span></code></pre></div><p>Напоследок стоит сказать, что при создании сервиса (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-11-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D1%8B-services/"><code>service</code></a>) в кластере <code>Kubernetes</code> создается соответствующая DNS-запись. Запись создается в формате <code>&lt;service-name&gt;.&lt;namespace-name&gt;.svc.cluster.local</code>, а это означает, что если вы используете только часть <code>&lt;service-name&gt;</code> то это позволит &ldquo;достучаться&rdquo; до сервиса <strong>только</strong> в пределах неймспейса. Если вам необходимо взаимодействовать с сервисом, запущенным в другом неймспейсе, следует использовать полное доменное имя (FQDN).</p>
                 </section>
             </article>
 
@@ -262,7 +262,7 @@ kubectl config set-context prod --namespace<span style="color:#f92672">=</span>p
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

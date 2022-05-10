@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,39 +100,39 @@
                 <section id="post-body">
                     <p>Давайте разберемся с известнейшей проблемой, часто возникающей при подключении по протоколу ssh!</p>
 <p>По умолчанию, для большей безопасности, в настройках ssh значение параметра <code>StrictHostKeyChecking</code> установлено в &lsquo;yes&rsquo;. Именно поэтому при первом подключении к удаленному хосту можно увидеть следующее:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">The authenticity of host <span style="color:#e6db74">&#39;192.168.0.166 (192.168.0.166)&#39;</span> can<span style="color:#e6db74">&#39;t be established.
-</span><span style="color:#e6db74">ECDSA key fingerprint is f0:74:54:33:93:bd:73:d1:ef:d6:fe:47:d3:93:e0:7f.
-</span><span style="color:#e6db74">Are you sure you want to continue connecting (yes/no)? yes
-</span><span style="color:#e6db74">Warning: Permanently added &#39;</span>192.168.0.166<span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span> to the list of known hosts.
-</code></pre></div><p>Введя в консоли &lsquo;yes&rsquo;, мы подтверждаем, что действительно хотим подключиться к этому хосту и отпечаток его ssh-ключа добавляется в файл <code>~/.ssh/known_hosts</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>The authenticity of host <span style="color:#e6db74">&#39;192.168.0.166 (192.168.0.166)&#39;</span> can<span style="color:#e6db74">&#39;t be established.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ECDSA key fingerprint is f0:74:54:33:93:bd:73:d1:ef:d6:fe:47:d3:93:e0:7f.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Are you sure you want to continue connecting (yes/no)? yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Warning: Permanently added &#39;</span>192.168.0.166<span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span> to the list of known hosts.
+</span></span></code></pre></div><p>Введя в консоли &lsquo;yes&rsquo;, мы подтверждаем, что действительно хотим подключиться к этому хосту и отпечаток его ssh-ключа добавляется в файл <code>~/.ssh/known_hosts</code>.</p>
 <p>При повторной попытке подключения к хосту после изменения ключа на удаленном сервере (как правило, он меняется если была переустановлена операционная система или sshd), появляется сообщение с ошибкой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
-Someone could be eavesdropping on you right now <span style="color:#f92672">(</span>man-in-the-middle attack<span style="color:#f92672">)</span>!
-It is also possible that a host key has just been changed.
-The fingerprint <span style="color:#66d9ef">for</span> the ECDSA key sent by the remote host is
-ae:a6:0b:8d:14:e4:3c:67:f0:a3:ec:a9:9e:2a:26:72.
-Please contact your system administrator.
-Add correct host key in /root/.ssh/known_hosts to get rid of this message.
-Offending ECDSA key in /root/.ssh/known_hosts:75
-  remove with: ssh-keygen -f <span style="color:#e6db74">&#34;/root/.ssh/known_hosts&#34;</span> -R 192.168.0.166
-ECDSA host key <span style="color:#66d9ef">for</span> 192.168.0.166 has changed and you have requested strict checking.
-Host key verification failed.
-lost connection
-</code></pre></div><p>Для устранения данной проблемы необходимо удалить строку с указанным ssh-ключом из файла <code>/root/.ssh/known_hosts</code>. Сделать это можно несколькими способами.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+</span></span><span style="display:flex;"><span>@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+</span></span><span style="display:flex;"><span>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+</span></span><span style="display:flex;"><span>IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+</span></span><span style="display:flex;"><span>Someone could be eavesdropping on you right now <span style="color:#f92672">(</span>man-in-the-middle attack<span style="color:#f92672">)</span>!
+</span></span><span style="display:flex;"><span>It is also possible that a host key has just been changed.
+</span></span><span style="display:flex;"><span>The fingerprint <span style="color:#66d9ef">for</span> the ECDSA key sent by the remote host is
+</span></span><span style="display:flex;"><span>ae:a6:0b:8d:14:e4:3c:67:f0:a3:ec:a9:9e:2a:26:72.
+</span></span><span style="display:flex;"><span>Please contact your system administrator.
+</span></span><span style="display:flex;"><span>Add correct host key in /root/.ssh/known_hosts to get rid of this message.
+</span></span><span style="display:flex;"><span>Offending ECDSA key in /root/.ssh/known_hosts:75
+</span></span><span style="display:flex;"><span>  remove with: ssh-keygen -f <span style="color:#e6db74">&#34;/root/.ssh/known_hosts&#34;</span> -R 192.168.0.166
+</span></span><span style="display:flex;"><span>ECDSA host key <span style="color:#66d9ef">for</span> 192.168.0.166 has changed and you have requested strict checking.
+</span></span><span style="display:flex;"><span>Host key verification failed.
+</span></span><span style="display:flex;"><span>lost connection
+</span></span></code></pre></div><p>Для устранения данной проблемы необходимо удалить строку с указанным ssh-ключом из файла <code>/root/.ssh/known_hosts</code>. Сделать это можно несколькими способами.</p>
 <p>Первый (указан в самом сообщении с ошибкой):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ssh-keygen -f <span style="color:#e6db74">&#34;/root/.ssh/known_hosts&#34;</span> -R 192.168.0.166
-<span style="color:#75715e"># Host 192.168.0.166 found: line 75 type ECDSA</span>
-/root/.ssh/known_hosts updated.
-Original contents retained as /root/.ssh/known_hosts.old
-</code></pre></div><p>Второй вариант удаления ключа:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sed -i <span style="color:#e6db74">&#39;75d&#39;</span> /root/.ssh/known_hosts
-</code></pre></div><p><strong>Примечание.</strong> Номер строки с ssh-ключем, который нужно удалить, указывается с помощью &lsquo;75d&rsquo;.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ssh-keygen -f <span style="color:#e6db74">&#34;/root/.ssh/known_hosts&#34;</span> -R 192.168.0.166
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Host 192.168.0.166 found: line 75 type ECDSA</span>
+</span></span><span style="display:flex;"><span>/root/.ssh/known_hosts updated.
+</span></span><span style="display:flex;"><span>Original contents retained as /root/.ssh/known_hosts.old
+</span></span></code></pre></div><p>Второй вариант удаления ключа:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;75d&#39;</span> /root/.ssh/known_hosts
+</span></span></code></pre></div><p><strong>Примечание.</strong> Номер строки с ssh-ключем, который нужно удалить, указывается с помощью &lsquo;75d&rsquo;.</p>
 <p>Третий вариант удаления ключа (с использованием <code>perl</code>):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">perl -pi -e <span style="color:#e6db74">&#39;s/\Q$_// if ($. == 75);&#39;</span> /root/.ssh/known_hosts
-</code></pre></div><p>После проделанных действий пробуем подключиться по ssh к удаленному хосту — проблема должна исчезнуть.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>perl -pi -e <span style="color:#e6db74">&#39;s/\Q$_// if ($. == 75);&#39;</span> /root/.ssh/known_hosts
+</span></span></code></pre></div><p>После проделанных действий пробуем подключиться по ssh к удаленному хосту — проблема должна исчезнуть.</p>
                 </section>
             </article>
 
@@ -224,7 +224,7 @@ Original contents retained as /root/.ssh/known_hosts.old
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

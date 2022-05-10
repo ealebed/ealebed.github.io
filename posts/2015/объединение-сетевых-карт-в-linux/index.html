@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,15 +102,15 @@
 <p>Чаще всего сетевые интерфейсы работают в режиме горячего резерва или балансировки нагрузки — все зависит от выбранной политики. Давайте разберемся с объединением сетевых карт в ОС Debian Wheezy!</p>
 <p>В нашем примере используется одноранговая сеть (peer-to-peer) между двумя серверами, по которой синхронизируются drbd-разделы. Необходимо использовать <strong>объединение сетевых карт</strong> в режиме <code>balance-rr</code> (round-robin) на случай выхода из строя одного из сетевых интерфейсов.</p>
 <p>Настройки будут проводиться на серверах:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
-Distributor ID:	Debian
-Description:	Debian GNU/Linux 7.8 <span style="color:#f92672">(</span>wheezy<span style="color:#f92672">)</span>
-Release:	7.8
-Codename:	wheezy
-</code></pre></div><p>Устанавливаем необходимый пакет <code>ifenslave</code> на оба сервера:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install ifenslave-2.6
-</code></pre></div><p>Правим <code>/etc/network/interfaces</code> на первом сервере, добавляем следующие строки:</p>
-<pre><code>auto bond0
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsb_release -a
+</span></span><span style="display:flex;"><span>Distributor ID:	Debian
+</span></span><span style="display:flex;"><span>Description:	Debian GNU/Linux 7.8 <span style="color:#f92672">(</span>wheezy<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Release:	7.8
+</span></span><span style="display:flex;"><span>Codename:	wheezy
+</span></span></code></pre></div><p>Устанавливаем необходимый пакет <code>ifenslave</code> на оба сервера:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>aptitude install ifenslave-2.6
+</span></span></code></pre></div><p>Правим <code>/etc/network/interfaces</code> на первом сервере, добавляем следующие строки:</p>
+<pre tabindex="0"><code>auto bond0
 iface bond0 inet static
         address 172.16.0.1
         netmask 255.255.255.0
@@ -121,7 +121,7 @@ iface bond0 inet static
         bond_updelay 200
         slaves eth2 eth3
 </code></pre><p>На втором сервере в <code>/etc/network/interfaces</code> добавляем:</p>
-<pre><code>auto bond0
+<pre tabindex="0"><code>auto bond0
 iface bond0 inet static
         address 172.16.0.2
         netmask 255.255.255.0
@@ -140,34 +140,34 @@ iface bond0 inet static
 <li><code>slaves eth2 eth3</code> — при такой конфигурации описывать интерфейсы <code>eth2</code> и <code>eth3</code> в <code>/etc/network/interfaces</code> не нужно.</li>
 </ul>
 <p>Далее на обоих серверах выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">modprobe bonding
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">echo <span style="color:#e6db74">&#39;bonding&#39;</span> &gt;&gt; /etc/modules
-</code></pre></div><p><strong>Примечание.</strong> Проверить, загружен модуль или нет можно с помощью команды <code>lsmod | grep bonding</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>modprobe bonding
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;bonding&#39;</span> &gt;&gt; /etc/modules
+</span></span></code></pre></div><p><strong>Примечание.</strong> Проверить, загружен модуль или нет можно с помощью команды <code>lsmod | grep bonding</code>.</p>
 <p>Опять же, на обоих серверах:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ifdown eth2 eth3 <span style="color:#f92672">&amp;&amp;</span> ifup bond0
-</code></pre></div><p>После проделанных действий проверим, что новые сетевые интерфейсы действительно добавились. Первый сервер:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ifconfig
-bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:4f:6a
-          inet addr:172.16.0.1  Bcast:172.16.0.255  Mask:255.255.255.0
-          inet6 addr: fe80::6a05:caff:fe20:4f6a/64 Scope:Link
-          UP BROADCAST RUNNING MASTER MULTICAST  MTU:1500  Metric:1
-          RX packets:5091884726 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:16029676320 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:0
-          RX bytes:424211603599 <span style="color:#f92672">(</span>395.0 GiB<span style="color:#f92672">)</span>  TX bytes:22123967678480 <span style="color:#f92672">(</span>20.1 TiB<span style="color:#f92672">)</span>
-...
-</code></pre></div><p>Второй сервер:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ifconfig
-bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:51:ec
-          inet addr:172.16.0.2  Bcast:172.16.0.255  Mask:255.255.255.0
-          inet6 addr: fe80::6a05:caff:fe20:51ec/64 Scope:Link
-          UP BROADCAST RUNNING MASTER MULTICAST  MTU:1500  Metric:1
-          RX packets:16029826998 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:5091930656 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:0
-          RX bytes:22124111859139 <span style="color:#f92672">(</span>20.1 TiB<span style="color:#f92672">)</span>  TX bytes:424213993831 <span style="color:#f92672">(</span>395.0 GiB<span style="color:#f92672">)</span>
-...
-</code></pre></div><p>При <strong>объединении сетевых карт в Linux</strong> можно использовать следующие режимы (<code>mode</code>) поведения сетевых интерфейсов:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ifdown eth2 eth3 <span style="color:#f92672">&amp;&amp;</span> ifup bond0
+</span></span></code></pre></div><p>После проделанных действий проверим, что новые сетевые интерфейсы действительно добавились. Первый сервер:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ifconfig
+</span></span><span style="display:flex;"><span>bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:4f:6a
+</span></span><span style="display:flex;"><span>          inet addr:172.16.0.1  Bcast:172.16.0.255  Mask:255.255.255.0
+</span></span><span style="display:flex;"><span>          inet6 addr: fe80::6a05:caff:fe20:4f6a/64 Scope:Link
+</span></span><span style="display:flex;"><span>          UP BROADCAST RUNNING MASTER MULTICAST  MTU:1500  Metric:1
+</span></span><span style="display:flex;"><span>          RX packets:5091884726 errors:0 dropped:0 overruns:0 frame:0
+</span></span><span style="display:flex;"><span>          TX packets:16029676320 errors:0 dropped:0 overruns:0 carrier:0
+</span></span><span style="display:flex;"><span>          collisions:0 txqueuelen:0
+</span></span><span style="display:flex;"><span>          RX bytes:424211603599 <span style="color:#f92672">(</span>395.0 GiB<span style="color:#f92672">)</span>  TX bytes:22123967678480 <span style="color:#f92672">(</span>20.1 TiB<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Второй сервер:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ifconfig
+</span></span><span style="display:flex;"><span>bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:51:ec
+</span></span><span style="display:flex;"><span>          inet addr:172.16.0.2  Bcast:172.16.0.255  Mask:255.255.255.0
+</span></span><span style="display:flex;"><span>          inet6 addr: fe80::6a05:caff:fe20:51ec/64 Scope:Link
+</span></span><span style="display:flex;"><span>          UP BROADCAST RUNNING MASTER MULTICAST  MTU:1500  Metric:1
+</span></span><span style="display:flex;"><span>          RX packets:16029826998 errors:0 dropped:0 overruns:0 frame:0
+</span></span><span style="display:flex;"><span>          TX packets:5091930656 errors:0 dropped:0 overruns:0 carrier:0
+</span></span><span style="display:flex;"><span>          collisions:0 txqueuelen:0
+</span></span><span style="display:flex;"><span>          RX bytes:22124111859139 <span style="color:#f92672">(</span>20.1 TiB<span style="color:#f92672">)</span>  TX bytes:424213993831 <span style="color:#f92672">(</span>395.0 GiB<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>При <strong>объединении сетевых карт в Linux</strong> можно использовать следующие режимы (<code>mode</code>) поведения сетевых интерфейсов:</p>
 <ul>
 <li><code>balance-rr</code>, или <code>mode=0</code> — режим round-robin, последовательная отправка пакетов с первого по последний доступный интерфейс. Такая политика применяется для балансировки нагрузки и отказоустойчивости;</li>
 <li><code>active-backup</code>, или <code>mode=1</code> — режим активный-резервный, работает только один сетевой интерфейс. Второй интерфейс становится активным, когда «падает» текущий активный интерфейс. Такая политика применяется для обеспечения отказоустойчивости;</li>
@@ -268,7 +268,7 @@ bond0     Link encap:Ethernet  HWaddr 68:05:ca:20:51:ec
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -108,137 +108,137 @@
 <p>Устанавливать Spinnaker будем в Kubernetes кластер с помощью утилиты Halyard (рекомендуемый способ установки). Для начала установим Halyard на локальный компьютер или VM (с Ubuntu 14.04/16.04, Debian, или macOS).</p>
 <p><strong>Примечание.</strong> Это также может быть docker-контейнер, но данный вариант установки рассматривать не будем.</p>
 <p>В моем случае используется macOS (10.14.2 Mojave). Скачиваем последнюю версию установщика Halyard с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/macos/InstallHalyard.sh
-</code></pre></div><p>Устанавливаем утилиту:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo bash InstallHalyard.sh
-</code></pre></div><p>Проверить корректность установки можно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal -v
-1.14.0-20190117020510
-</code></pre></div><p><strong>Примечание.</strong> Если команда завершается с ошибкой, убедитесь, что путь к исполняемому файлу <code>hal</code> присутствует в переменной <code>$PATH</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -O https://raw.githubusercontent.com/spinnaker/halyard/master/install/macos/InstallHalyard.sh
+</span></span></code></pre></div><p>Устанавливаем утилиту:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo bash InstallHalyard.sh
+</span></span></code></pre></div><p>Проверить корректность установки можно так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal -v
+</span></span><span style="display:flex;"><span>1.14.0-20190117020510
+</span></span></code></pre></div><p><strong>Примечание.</strong> Если команда завершается с ошибкой, убедитесь, что путь к исполняемому файлу <code>hal</code> присутствует в переменной <code>$PATH</code>.</p>
 <p>Обновление Halyard можно вызвать командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo update-halyard
-</code></pre></div><p>При необходимости удалить Halyard можно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo ~/.hal/uninstall.sh
-</code></pre></div><p>Для установки Spinnaker далее следует определиться с облачным провайдером - все доступные варианты можно посмотреть <a href="https://www.spinnaker.io/setup/install/providers/">тут</a>, в моем случае будет использоваться вторая версия Kubernetes (Kubernetes Provider V2 (Manifest Based)). Сам Kubernetes кластер запущен на GKE (Google Kubernetes Engine).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo update-halyard
+</span></span></code></pre></div><p>При необходимости удалить Halyard можно так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo ~/.hal/uninstall.sh
+</span></span></code></pre></div><p>Для установки Spinnaker далее следует определиться с облачным провайдером - все доступные варианты можно посмотреть <a href="https://www.spinnaker.io/setup/install/providers/">тут</a>, в моем случае будет использоваться вторая версия Kubernetes (Kubernetes Provider V2 (Manifest Based)). Сам Kubernetes кластер запущен на GKE (Google Kubernetes Engine).</p>
 <p>Если у вас нет кластера на GKE, его необходимо создать с помощью консольной утилиты <a href="https://cloud.google.com/sdk/downloads"><code>gcloud</code></a> или <a href="https://console.cloud.google.com/">Cloud Console</a> как описано в <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster#creating_a_cluster">официальной документации</a>. Также для этих целей можно использовать сторонние инструменты, например <code>Terraform</code>.</p>
 <p>Далее необходимо загрузить учетные данные для доступа к кластеру Kubernetes, например, как написано <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl#generate_kubeconfig_entry">здесь</a>.</p>
 <p>Создаем отдельный сервис-аккаунт для Spinnaker и сгенерируем ему токен для доступа к кластеру Kubernetes:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CONTEXT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl config current-context<span style="color:#66d9ef">)</span>
-
-<span style="color:#75715e"># This service account uses the ClusterAdmin role -- this is not necessary, </span>
-<span style="color:#75715e"># more restrictive roles can by applied.</span>
-kubectl apply --context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    -f https://spinnaker.io/downloads/kubernetes/service-account.yml
-
-TOKEN<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl get secret --context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>   <span style="color:#66d9ef">$(</span>kubectl get serviceaccount spinnaker-service-account <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>       --context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>       -n spinnaker <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>       -o jsonpath<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{.secrets[0].name}&#39;</span><span style="color:#66d9ef">)</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>   -n spinnaker <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>   -o jsonpath<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{.data.token}&#39;</span> | base64 --decode<span style="color:#66d9ef">)</span>
-
-kubectl config set-credentials <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span>-token-user --token <span style="color:#e6db74">${</span>TOKEN<span style="color:#e6db74">}</span>
-
-kubectl config set-context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> --user <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span>-token-user
-</code></pre></div><p>По желанию также можно настроить RBAC (Role-Based Access Control) для сервис-аккаунта Spinnaker, например, создав файл <code>spinnaker-role.yaml</code> с таким содержимым:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">rbac.authorization.k8s.io/v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ClusterRole</span>
-<span style="color:#f92672">metadata</span>:
- <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-role</span>
-<span style="color:#f92672">rules</span>:
-- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
-  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;namespaces&#34;</span>, <span style="color:#e6db74">&#34;configmaps&#34;</span>, <span style="color:#e6db74">&#34;events&#34;</span>, <span style="color:#e6db74">&#34;replicationcontrollers&#34;</span>, <span style="color:#e6db74">&#34;serviceaccounts&#34;</span>, <span style="color:#e6db74">&#34;pods/log&#34;</span>]
-  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>]
-- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
-  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;pods&#34;</span>, <span style="color:#e6db74">&#34;services&#34;</span>, <span style="color:#e6db74">&#34;secrets&#34;</span>]
-  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
-- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;autoscaling&#34;</span>]
-  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;horizontalpodautoscalers&#34;</span>]
-  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>]
-- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;apps&#34;</span>]
-  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;controllerrevisions&#34;</span>, <span style="color:#e6db74">&#34;statefulsets&#34;</span>]
-  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;list&#34;</span>]
-- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;extensions&#34;</span>, <span style="color:#e6db74">&#34;apps&#34;</span>]
-  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;deployments&#34;</span>, <span style="color:#e6db74">&#34;replicasets&#34;</span>, <span style="color:#e6db74">&#34;ingresses&#34;</span>]
-  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
-<span style="color:#75715e"># These permissions are necessary for halyard to operate. We use this role also to deploy Spinnaker itself.</span>
-- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
-  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;services/proxy&#34;</span>, <span style="color:#e6db74">&#34;pods/portforward&#34;</span>]
-  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
----
-
-<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">rbac.authorization.k8s.io/v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ClusterRoleBinding</span>
-<span style="color:#f92672">metadata</span>:
- <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-role-binding</span>
-<span style="color:#f92672">roleRef</span>:
- <span style="color:#f92672">apiGroup</span>: <span style="color:#ae81ff">rbac.authorization.k8s.io</span>
- <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ClusterRole</span>
- <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-role</span>
-<span style="color:#f92672">subjects</span>:
-- <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">spinnaker</span>
-  <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ServiceAccount</span>
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-service-account</span>
----
-
-<span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ServiceAccount</span>
-<span style="color:#f92672">metadata</span>:
- <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-service-account</span>
- <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">spinnaker</span>
-</code></pre></div><p>и применив его с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl apply -f spinnaker-role.yaml
-</code></pre></div><p>Теперь можем в настройках Spinnaker’а включить поддержку Kubernetes V2 провайдера и добавить аккаунт(ы):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal config provider kubernetes enable
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CONTEXT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl config current-context<span style="color:#66d9ef">)</span>
-
-hal config provider kubernetes account add k8s-account <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --namespaces default <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --provider-version v2 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span>
-</code></pre></div><p><strong>Примечание.</strong> В терминологии Spinnaker аккаунт (account) соответствует контексту (context) Kubernetes кластера; имя аккаунта может отличаться от имени контекста.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>CONTEXT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl config current-context<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># This service account uses the ClusterAdmin role -- this is not necessary, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># more restrictive roles can by applied.</span>
+</span></span><span style="display:flex;"><span>kubectl apply --context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -f https://spinnaker.io/downloads/kubernetes/service-account.yml
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TOKEN<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl get secret --context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>   <span style="color:#66d9ef">$(</span>kubectl get serviceaccount spinnaker-service-account <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       -n spinnaker <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       -o jsonpath<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{.secrets[0].name}&#39;</span><span style="color:#66d9ef">)</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>   -n spinnaker <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>   -o jsonpath<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{.data.token}&#39;</span> | base64 --decode<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>kubectl config set-credentials <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span>-token-user --token <span style="color:#e6db74">${</span>TOKEN<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>kubectl config set-context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span> --user <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span>-token-user
+</span></span></code></pre></div><p>По желанию также можно настроить RBAC (Role-Based Access Control) для сервис-аккаунта Spinnaker, например, создав файл <code>spinnaker-role.yaml</code> с таким содержимым:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">rbac.authorization.k8s.io/v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ClusterRole</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-role</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">rules</span>:
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;namespaces&#34;</span>, <span style="color:#e6db74">&#34;configmaps&#34;</span>, <span style="color:#e6db74">&#34;events&#34;</span>, <span style="color:#e6db74">&#34;replicationcontrollers&#34;</span>, <span style="color:#e6db74">&#34;serviceaccounts&#34;</span>, <span style="color:#e6db74">&#34;pods/log&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>]
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;pods&#34;</span>, <span style="color:#e6db74">&#34;services&#34;</span>, <span style="color:#e6db74">&#34;secrets&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;autoscaling&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;horizontalpodautoscalers&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>]
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;apps&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;controllerrevisions&#34;</span>, <span style="color:#e6db74">&#34;statefulsets&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;list&#34;</span>]
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;extensions&#34;</span>, <span style="color:#e6db74">&#34;apps&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;deployments&#34;</span>, <span style="color:#e6db74">&#34;replicasets&#34;</span>, <span style="color:#e6db74">&#34;ingresses&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># These permissions are necessary for halyard to operate. We use this role also to deploy Spinnaker itself.</span>
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">apiGroups</span>: [<span style="color:#e6db74">&#34;&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">resources</span>: [<span style="color:#e6db74">&#34;services/proxy&#34;</span>, <span style="color:#e6db74">&#34;pods/portforward&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">verbs</span>: [<span style="color:#e6db74">&#34;create&#34;</span>, <span style="color:#e6db74">&#34;delete&#34;</span>, <span style="color:#e6db74">&#34;deletecollection&#34;</span>, <span style="color:#e6db74">&#34;get&#34;</span>, <span style="color:#e6db74">&#34;list&#34;</span>, <span style="color:#e6db74">&#34;patch&#34;</span>, <span style="color:#e6db74">&#34;update&#34;</span>, <span style="color:#e6db74">&#34;watch&#34;</span>]
+</span></span><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">rbac.authorization.k8s.io/v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ClusterRoleBinding</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-role-binding</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">roleRef</span>:
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">apiGroup</span>: <span style="color:#ae81ff">rbac.authorization.k8s.io</span>
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ClusterRole</span>
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-role</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">subjects</span>:
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">spinnaker</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ServiceAccount</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-service-account</span>
+</span></span><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ServiceAccount</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">name</span>: <span style="color:#ae81ff">spinnaker-service-account</span>
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">namespace</span>: <span style="color:#ae81ff">spinnaker</span>
+</span></span></code></pre></div><p>и применив его с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl apply -f spinnaker-role.yaml
+</span></span></code></pre></div><p>Теперь можем в настройках Spinnaker’а включить поддержку Kubernetes V2 провайдера и добавить аккаунт(ы):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal config provider kubernetes enable
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>CONTEXT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kubectl config current-context<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>hal config provider kubernetes account add k8s-account <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --namespaces default <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --provider-version v2 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --context <span style="color:#e6db74">${</span>CONTEXT<span style="color:#e6db74">}</span>
+</span></span></code></pre></div><p><strong>Примечание.</strong> В терминологии Spinnaker аккаунт (account) соответствует контексту (context) Kubernetes кластера; имя аккаунта может отличаться от имени контекста.</p>
 <p>В примере выше для взаимодействия с Kubernetes кластерами будет использоваться дефолтный <a href="https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/">kubeconfig</a> - <code>~/.kube/config</code>. Можно явно указать путь к <code>kubeconfig</code> с помощью параметра <code>--kubeconfig-file</code>.</p>
 <p>Также нужно включить поддержку артефактов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal config features edit --artifacts true
-</code></pre></div><p>Особенно нас интересует возможность использования артефактов с GitHub (в моем примере артефакт - это манифест для k8s в формате <code>.yaml</code>). Для доступа к репозиториям на GitHub Spinnaker’у понадобится токен, который можно сгенерировать <a href="https://github.com/settings/tokens">здесь</a>. Токену необходимы права доступа <strong>repo scope</strong>.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal config artifact github enable
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">TOKEN<span style="color:#f92672">=</span>b82c0b5201e5........8d3f1288cb
-echo <span style="color:#e6db74">${</span>TOKEN<span style="color:#e6db74">}</span> | hal config artifact github account add spinnaker-github-token --token
-</code></pre></div><p>Для хранения персистентных данных (настройки пайплайнов / приложений) Spinnaker’у требуется внешнее хранилище. Доступные варианты хранилищ можно посмотреть <a href="https://www.spinnaker.io/setup/install/storage/">здесь</a>, в моем же случае будет использоваться GCS (Google Cloud Storage).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal config features edit --artifacts true
+</span></span></code></pre></div><p>Особенно нас интересует возможность использования артефактов с GitHub (в моем примере артефакт - это манифест для k8s в формате <code>.yaml</code>). Для доступа к репозиториям на GitHub Spinnaker’у понадобится токен, который можно сгенерировать <a href="https://github.com/settings/tokens">здесь</a>. Токену необходимы права доступа <strong>repo scope</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal config artifact github enable
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>TOKEN<span style="color:#f92672">=</span>b82c0b5201e5........8d3f1288cb
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">${</span>TOKEN<span style="color:#e6db74">}</span> | hal config artifact github account add spinnaker-github-token --token
+</span></span></code></pre></div><p>Для хранения персистентных данных (настройки пайплайнов / приложений) Spinnaker’у требуется внешнее хранилище. Доступные варианты хранилищ можно посмотреть <a href="https://www.spinnaker.io/setup/install/storage/">здесь</a>, в моем же случае будет использоваться GCS (Google Cloud Storage).</p>
 <p>Считаем, что у вас уже <a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects">создан проект</a> на GCP (Google Cloud Platform) и установлена утилита <a href="https://cloud.google.com/sdk/downloads"><code>gcloud</code></a>.</p>
 <p>Для аутентификации Spinnaker’а на GCP создадим сервис-аккаунт с включенной ролью <code>roles/storage.admin</code> с помощью следующих команд:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">SERVICE_ACCOUNT_NAME<span style="color:#f92672">=</span>spinnaker-gcs-account
-SERVICE_ACCOUNT_DEST<span style="color:#f92672">=</span>~/.gcp/gcs-account.json
-
-gcloud iam service-accounts create <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_NAME<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --display-name <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_NAME<span style="color:#e6db74">}</span>
-
-SA_EMAIL<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>gcloud iam service-accounts list <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;displayName:</span><span style="color:#e6db74">${</span>SERVICE_ACCOUNT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --format<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;value(email)&#39;</span><span style="color:#66d9ef">)</span>
-
-PROJECT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>gcloud info --format<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;value(config.project)&#39;</span><span style="color:#66d9ef">)</span>
-
-gcloud projects add-iam-policy-binding <span style="color:#e6db74">${</span>PROJECT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --role roles/storage.admin --member serviceAccount:<span style="color:#e6db74">${</span>SA_EMAIL<span style="color:#e6db74">}</span>
-
-mkdir -p <span style="color:#66d9ef">$(</span>dirname <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_DEST<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>
-
-gcloud iam service-accounts keys create <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_DEST<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --iam-account <span style="color:#e6db74">${</span>SA_EMAIL<span style="color:#e6db74">}</span>
-</code></pre></div><p>Настраиваем внешнее хранилище для Spinnaker:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">BUCKET_LOCATION<span style="color:#f92672">=</span>europe-west1
-
-hal config storage gcs edit <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --project <span style="color:#e6db74">${</span>PROJECT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --bucket-location <span style="color:#e6db74">${</span>BUCKET_LOCATION<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --bucket my-spinnaker-bucket <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --json-path <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_DEST<span style="color:#e6db74">}</span>
-</code></pre></div><p>Включим и настроим поддержку docker-registry (необязательный шаг). В моем случае будут использоваться приватные docker-репозитории организации (Docker Private Organization Repository), и мне необходимо настроить триггер, который бы запускал пайплайн при появлении нового docker-образа в репозитории:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal config provider docker-registry enable
-</code></pre></div><pre><code class="language-nash" data-lang="nash">PASS=Very$tr0ngPaS$
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>SERVICE_ACCOUNT_NAME<span style="color:#f92672">=</span>spinnaker-gcs-account
+</span></span><span style="display:flex;"><span>SERVICE_ACCOUNT_DEST<span style="color:#f92672">=</span>~/.gcp/gcs-account.json
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gcloud iam service-accounts create <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_NAME<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --display-name <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_NAME<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>SA_EMAIL<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>gcloud iam service-accounts list <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;displayName:</span><span style="color:#e6db74">${</span>SERVICE_ACCOUNT_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --format<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;value(email)&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PROJECT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>gcloud info --format<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;value(config.project)&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gcloud projects add-iam-policy-binding <span style="color:#e6db74">${</span>PROJECT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --role roles/storage.admin --member serviceAccount:<span style="color:#e6db74">${</span>SA_EMAIL<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#66d9ef">$(</span>dirname <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_DEST<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gcloud iam service-accounts keys create <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_DEST<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --iam-account <span style="color:#e6db74">${</span>SA_EMAIL<span style="color:#e6db74">}</span>
+</span></span></code></pre></div><p>Настраиваем внешнее хранилище для Spinnaker:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>BUCKET_LOCATION<span style="color:#f92672">=</span>europe-west1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>hal config storage gcs edit <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --project <span style="color:#e6db74">${</span>PROJECT<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --bucket-location <span style="color:#e6db74">${</span>BUCKET_LOCATION<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --bucket my-spinnaker-bucket <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --json-path <span style="color:#e6db74">${</span>SERVICE_ACCOUNT_DEST<span style="color:#e6db74">}</span>
+</span></span></code></pre></div><p>Включим и настроим поддержку docker-registry (необязательный шаг). В моем случае будут использоваться приватные docker-репозитории организации (Docker Private Organization Repository), и мне необходимо настроить триггер, который бы запускал пайплайн при появлении нового docker-образа в репозитории:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal config provider docker-registry enable
+</span></span></code></pre></div><pre tabindex="0"><code class="language-nash" data-lang="nash">PASS=Very$tr0ngPaS$
 echo ${PASS} | hal config provider docker-registry account add private-dockerhub \
     --provider-version v2 \
     --address index.docker.io \
@@ -248,35 +248,35 @@ echo ${PASS} | hal config provider docker-registry account add private-dockerhub
 </code></pre><p><strong>Примечание.</strong> Так как Docker Hub не предоставляет ендпоинта <a href="https://docs.docker.com/registry/spec/api/#listing-repositories">catalog</a> для автоматического получения списка docker репозиториев, их необходимо вручную указать с помощью параметра <code>--repositories</code>.</p>
 <p>Больше опций для более тонкой настройки docker registry можно найти <a href="https://www.spinnaker.io/reference/halyard/commands/#hal-config-provider-docker-registry-account-add">здесь</a>.</p>
 <p>Стоит отметить, что при большом количестве тэгов в репозиториях docker registry (&gt;1000) можно столкнуться с проблемой - микросервис <code>igor</code> (подробнее о архитектуре Spinnaker можно узнать <a href="https://www.spinnaker.io/reference/architecture/">здесь</a>) не будет видеть новые тэги и не сможет тригеррить пайплайны. В логах это будет выглядеть примерно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-2019-01-22 12:59:55.923  INFO 1 --- [RxIoScheduler-3] c.n.s.i.d.service.ClouddriverService     : ---&gt; HTTP GET http://spin-clouddriver.spinnaker:7002/dockerRegistry/images/find?account=private-dockerhub
-2019-01-22 12:59:55.992  INFO 1 --- [RxIoScheduler-3] c.n.s.i.d.service.ClouddriverService     : &lt;--- HTTP 200 http://spin-clouddriver.spinnaker:7002/dockerRegistry/images/find?account=private-dockerhub (68ms)
-2019-01-22 12:59:56.034  INFO 1 --- [RxIoScheduler-3] c.n.spinnaker.igor.docker.DockerMonitor  : Found 5546 new images for private-dockerhub
-2019-01-22 12:59:56.034 ERROR 1 --- [RxIoScheduler-3] c.n.spinnaker.igor.docker.DockerMonitor  : Number of items (5546) to cache exceeds upper threshold (1000) in monitor=DockerMonitor partition=private-dockerhub
-...
-</code></pre></div><p>Исправить ситуацию можно создав файл <code>~/.hal/default/profiles/igor-local.yml</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">dockerRegistry</span>:
-  <span style="color:#f92672">itemUpperThreshold</span>: <span style="color:#ae81ff">10000</span>
-</code></pre></div><p>Двигаемся дальше. Указываем тип установки для Spinnaker (в моем примере это будет distributed) и ранее созданный Kubernetes-аккаунт (в какой кластер устанавливать):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal config deploy edit --type distributed --account-name k8s-account
-</code></pre></div><p>Далее следует выбрать версию Spinnaker для установки. Список доступных версий можно просмотреть командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal version list
-</code></pre></div><p>Указываем нужную версию:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal config version edit --version 1.10.12
-</code></pre></div><p>Деплой (или обновление настроек) Spinnaker’а выполняется командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal deploy apply
-</code></pre></div><p>Далее можно выполнить команду (по сути, port-forward):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal deploy connect
-</code></pre></div><p>После чего перейти по адресу <a href="localhost:9000">localhost:9000</a> для дальнейшей настройки (создания приложений / пайплайнов) Spinnaker - для теста вполне сойдет. Но если вы планируете полноценно использовать Spinnaker для деплоя / управления приложениями, то необходимо настроить субдомены для Spinnaker API и UI серверов (считаем, что домен существует):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">DOMAIN<span style="color:#f92672">=</span>example.org
-hal config security ui edit <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --override-base-url http://spinnaker.<span style="color:#e6db74">${</span>DOMAIN<span style="color:#e6db74">}</span>
-
-hal config security api edit <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --override-base-url http://spinnaker-api.<span style="color:#e6db74">${</span>DOMAIN<span style="color:#e6db74">}</span>
-</code></pre></div><p>После чего обновить настройки Spinnaker:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hal deploy apply
-</code></pre></div><p>Также весьма полезно будет настроить авторизацию/аутентификацию, пример с использованием OAuth2.0 можно увидеть <a href="https://www.spinnaker.io/setup/quickstart/halyard-gke-public/">здесь</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>2019-01-22 12:59:55.923  INFO 1 --- [RxIoScheduler-3] c.n.s.i.d.service.ClouddriverService     : ---&gt; HTTP GET http://spin-clouddriver.spinnaker:7002/dockerRegistry/images/find?account=private-dockerhub
+</span></span><span style="display:flex;"><span>2019-01-22 12:59:55.992  INFO 1 --- [RxIoScheduler-3] c.n.s.i.d.service.ClouddriverService     : &lt;--- HTTP 200 http://spin-clouddriver.spinnaker:7002/dockerRegistry/images/find?account=private-dockerhub (68ms)
+</span></span><span style="display:flex;"><span>2019-01-22 12:59:56.034  INFO 1 --- [RxIoScheduler-3] c.n.spinnaker.igor.docker.DockerMonitor  : Found 5546 new images for private-dockerhub
+</span></span><span style="display:flex;"><span>2019-01-22 12:59:56.034 ERROR 1 --- [RxIoScheduler-3] c.n.spinnaker.igor.docker.DockerMonitor  : Number of items (5546) to cache exceeds upper threshold (1000) in monitor=DockerMonitor partition=private-dockerhub
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Исправить ситуацию можно создав файл <code>~/.hal/default/profiles/igor-local.yml</code> следующего содержания:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">dockerRegistry</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">itemUpperThreshold</span>: <span style="color:#ae81ff">10000</span>
+</span></span></code></pre></div><p>Двигаемся дальше. Указываем тип установки для Spinnaker (в моем примере это будет distributed) и ранее созданный Kubernetes-аккаунт (в какой кластер устанавливать):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal config deploy edit --type distributed --account-name k8s-account
+</span></span></code></pre></div><p>Далее следует выбрать версию Spinnaker для установки. Список доступных версий можно просмотреть командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal version list
+</span></span></code></pre></div><p>Указываем нужную версию:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal config version edit --version 1.10.12
+</span></span></code></pre></div><p>Деплой (или обновление настроек) Spinnaker’а выполняется командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal deploy apply
+</span></span></code></pre></div><p>Далее можно выполнить команду (по сути, port-forward):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal deploy connect
+</span></span></code></pre></div><p>После чего перейти по адресу <a href="localhost:9000">localhost:9000</a> для дальнейшей настройки (создания приложений / пайплайнов) Spinnaker - для теста вполне сойдет. Но если вы планируете полноценно использовать Spinnaker для деплоя / управления приложениями, то необходимо настроить субдомены для Spinnaker API и UI серверов (считаем, что домен существует):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>DOMAIN<span style="color:#f92672">=</span>example.org
+</span></span><span style="display:flex;"><span>hal config security ui edit <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --override-base-url http://spinnaker.<span style="color:#e6db74">${</span>DOMAIN<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>hal config security api edit <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --override-base-url http://spinnaker-api.<span style="color:#e6db74">${</span>DOMAIN<span style="color:#e6db74">}</span>
+</span></span></code></pre></div><p>После чего обновить настройки Spinnaker:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hal deploy apply
+</span></span></code></pre></div><p>Также весьма полезно будет настроить авторизацию/аутентификацию, пример с использованием OAuth2.0 можно увидеть <a href="https://www.spinnaker.io/setup/quickstart/halyard-gke-public/">здесь</a>.</p>
                 </section>
             </article>
 
@@ -368,7 +368,7 @@ hal config security api edit <span style="color:#ae81ff">\
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,50 +100,50 @@
                 <section id="post-body">
                     <p>Порой необходимо быстро узнать подробности (версию или имя ядра, разрядность, имя хоста) используемого дистрибутива Linux. Давайте разберемся с практическим применением утилиты <code>uname</code>!</p>
 <p>Синтаксис команды <code>uname</code> прост:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span>
-</code></pre></div><p>Результат использования команды <code>uname</code> без параметров:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname
-Linux
-</code></pre></div><p>Точно такой результат можно получить используя опцию <code>-s</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -s
-Linux
-</code></pre></div><p>Для получения имени хоста нужно использовать опцию <code>-n</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -n
-db1
-</code></pre></div><p>Чтобы получить информацию о релизе ядра используем опцию <code>-r</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -r
-3.16.0-4-amd64
-</code></pre></div><p>Информацию о версии ядра можно увидеть с помощью опции <code>-v</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -v
-<span style="color:#75715e">#1 SMP Debian 3.16.7-ckt25-2 (2016-04-08)</span>
-</code></pre></div><p>Тип (класс) используемого железа, (он же machine hardware name) <code>-m</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -m
-x86_64
-</code></pre></div><p>Получить информацию о типе процессора можно с помощью опции <code>-p</code>. Если утилита не может прочесть эти данные, то возвращается «unknown»:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -p
-unknown
-</code></pre></div><p>Информацию о типе платформы можно получить используя опцию <code>-i</code>. Как и в предыдущем случае, если данные не получится прочесть, то будет выведено «unknown»:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -i
-unknown
-</code></pre></div><p>Для получения имени операционной системы используется опция <code>-o</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -o
-GNU/Linux
-</code></pre></div><p>Вывести «все и сразу» можно с опцией <code>-a</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -a
-Linux db1 3.16.0-4-amd64 <span style="color:#75715e">#1 SMP Debian 3.16.7-ckt25-2 (2016-04-08) x86_64 GNU/Linux</span>
-</code></pre></div><p>В примерах выше утилита <code>uname</code> вернула «unknown» вместо информации о типе процессора и типе платформы. Одно из объяснений такого поведения может быть в том, что <code>uname</code> читает всю информацию из следующей структуры:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">struct utsname <span style="color:#f92672">{</span>
-               char sysname<span style="color:#f92672">[]</span>;    /* Operating system name <span style="color:#f92672">(</span>e.g., <span style="color:#e6db74">&#34;Linux&#34;</span><span style="color:#f92672">)</span> */
-               char nodename<span style="color:#f92672">[]</span>;   /* Name within <span style="color:#e6db74">&#34;some implementation-defined
-</span><span style="color:#e6db74">                                     network&#34;</span> */
-               char release<span style="color:#f92672">[]</span>;    /* OS release <span style="color:#f92672">(</span>e.g., <span style="color:#e6db74">&#34;2.6.28&#34;</span><span style="color:#f92672">)</span> */
-               char version<span style="color:#f92672">[]</span>;    /* OS version */
-               char machine<span style="color:#f92672">[]</span>;    /* Hardware identifier */
-           <span style="color:#75715e">#ifdef _GNU_SOURCE</span>
-               char domainname<span style="color:#f92672">[]</span>; /* NIS or YP domain name */
-           <span style="color:#75715e">#endif</span>
-           <span style="color:#f92672">}</span>;
-</code></pre></div><p>Как видим, в этой структуре действительно отсутствует информация о типе процессора и типе платформы, поэтому утилита <code>uname</code> и возвращает «unknown».</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>Результат использования команды <code>uname</code> без параметров:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname
+</span></span><span style="display:flex;"><span>Linux
+</span></span></code></pre></div><p>Точно такой результат можно получить используя опцию <code>-s</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -s
+</span></span><span style="display:flex;"><span>Linux
+</span></span></code></pre></div><p>Для получения имени хоста нужно использовать опцию <code>-n</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -n
+</span></span><span style="display:flex;"><span>db1
+</span></span></code></pre></div><p>Чтобы получить информацию о релизе ядра используем опцию <code>-r</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -r
+</span></span><span style="display:flex;"><span>3.16.0-4-amd64
+</span></span></code></pre></div><p>Информацию о версии ядра можно увидеть с помощью опции <code>-v</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -v
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#1 SMP Debian 3.16.7-ckt25-2 (2016-04-08)</span>
+</span></span></code></pre></div><p>Тип (класс) используемого железа, (он же machine hardware name) <code>-m</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -m
+</span></span><span style="display:flex;"><span>x86_64
+</span></span></code></pre></div><p>Получить информацию о типе процессора можно с помощью опции <code>-p</code>. Если утилита не может прочесть эти данные, то возвращается «unknown»:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -p
+</span></span><span style="display:flex;"><span>unknown
+</span></span></code></pre></div><p>Информацию о типе платформы можно получить используя опцию <code>-i</code>. Как и в предыдущем случае, если данные не получится прочесть, то будет выведено «unknown»:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -i
+</span></span><span style="display:flex;"><span>unknown
+</span></span></code></pre></div><p>Для получения имени операционной системы используется опция <code>-o</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -o
+</span></span><span style="display:flex;"><span>GNU/Linux
+</span></span></code></pre></div><p>Вывести «все и сразу» можно с опцией <code>-a</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -a
+</span></span><span style="display:flex;"><span>Linux db1 3.16.0-4-amd64 <span style="color:#75715e">#1 SMP Debian 3.16.7-ckt25-2 (2016-04-08) x86_64 GNU/Linux</span>
+</span></span></code></pre></div><p>В примерах выше утилита <code>uname</code> вернула «unknown» вместо информации о типе процессора и типе платформы. Одно из объяснений такого поведения может быть в том, что <code>uname</code> читает всю информацию из следующей структуры:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>struct utsname <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>               char sysname<span style="color:#f92672">[]</span>;    /* Operating system name <span style="color:#f92672">(</span>e.g., <span style="color:#e6db74">&#34;Linux&#34;</span><span style="color:#f92672">)</span> */
+</span></span><span style="display:flex;"><span>               char nodename<span style="color:#f92672">[]</span>;   /* Name within <span style="color:#e6db74">&#34;some implementation-defined
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                                     network&#34;</span> */
+</span></span><span style="display:flex;"><span>               char release<span style="color:#f92672">[]</span>;    /* OS release <span style="color:#f92672">(</span>e.g., <span style="color:#e6db74">&#34;2.6.28&#34;</span><span style="color:#f92672">)</span> */
+</span></span><span style="display:flex;"><span>               char version<span style="color:#f92672">[]</span>;    /* OS version */
+</span></span><span style="display:flex;"><span>               char machine<span style="color:#f92672">[]</span>;    /* Hardware identifier */
+</span></span><span style="display:flex;"><span>           <span style="color:#75715e">#ifdef _GNU_SOURCE</span>
+</span></span><span style="display:flex;"><span>               char domainname<span style="color:#f92672">[]</span>; /* NIS or YP domain name */
+</span></span><span style="display:flex;"><span>           <span style="color:#75715e">#endif</span>
+</span></span><span style="display:flex;"><span>           <span style="color:#f92672">}</span>;
+</span></span></code></pre></div><p>Как видим, в этой структуре действительно отсутствует информация о типе процессора и типе платформы, поэтому утилита <code>uname</code> и возвращает «unknown».</p>
                 </section>
             </article>
 
@@ -235,7 +235,7 @@ Linux db1 3.16.0-4-amd64 <span style="color:#75715e">#1 SMP Debian 3.16.7-ckt25-
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

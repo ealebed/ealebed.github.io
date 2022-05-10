@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -122,11 +122,11 @@
 <li>Slow requests.</li>
 </ul>
 <p>Страница статуса <code>php-fpm</code> должна быть включена — сделать это можно в конфигурационном файле пула (<code>/etc/php-fpm.d/www.conf</code>) добавлением параметра:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 pm.status_path = /status_phpfpm
 ...
 </code></pre><p>Не забудьте также включить доступ к странице статуса <code>php-fpm</code> в конфигах web-сервера Nginx, например:</p>
-<pre><code>server {
+<pre tabindex="0"><code>server {
     listen 127.0.0.1:8080;
     server_name localhost;
     location /status_phpfpm {
@@ -138,35 +138,35 @@ pm.status_path = /status_phpfpm
     }
 }
 </code></pre><p>Проверить корректность настройки страницы статуса можно <code>php-fpm</code> так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget -qO- http://127.0.0.1:8080/status_phpfpm?json
-</code></pre></div><p>Далее необходимо настроить плагин Nixstats — открываем конфигурационный файл <code>/etc/nixstats.ini</code> и добавляем в него следующие строки:</p>
-<pre><code>[phpfpm] 
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget -qO- http://127.0.0.1:8080/status_phpfpm?json
+</span></span></code></pre></div><p>Далее необходимо настроить плагин Nixstats — открываем конфигурационный файл <code>/etc/nixstats.ini</code> и добавляем в него следующие строки:</p>
+<pre tabindex="0"><code>[phpfpm] 
 enabled = yes
 status_page_url = http://127.0.0.1:8080/status_phpfpm?json
 </code></pre><p>Тестируем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nixstatsagent --test phpfpm
-</code></pre></div><p>Результат должен быть примерно следующим:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">phpfpm:
-<span style="color:#f92672">{</span>
-    <span style="color:#e6db74">&#34;accepted_conn&#34;</span>: 3015,
-    <span style="color:#e6db74">&#34;accepted_conn_per_second&#34;</span>: 0.0,
-    <span style="color:#e6db74">&#34;active_processes&#34;</span>: 1,
-    <span style="color:#e6db74">&#34;idle_processes&#34;</span>: 0,
-    <span style="color:#e6db74">&#34;listen_queue&#34;</span>: 0,
-    <span style="color:#e6db74">&#34;listen_queue_len&#34;</span>: 128,
-    <span style="color:#e6db74">&#34;max_active_processes&#34;</span>: 1,
-    <span style="color:#e6db74">&#34;max_children_reached&#34;</span>: 0,
-    <span style="color:#e6db74">&#34;max_listen_queue&#34;</span>: 1,
-    <span style="color:#e6db74">&#34;pool&#34;</span>: <span style="color:#e6db74">&#34;www&#34;</span>,
-    <span style="color:#e6db74">&#34;process_manager&#34;</span>: <span style="color:#e6db74">&#34;ondemand&#34;</span>,
-    <span style="color:#e6db74">&#34;slow_requests&#34;</span>: 0,
-    <span style="color:#e6db74">&#34;start_since&#34;</span>: 294686,
-    <span style="color:#e6db74">&#34;start_time&#34;</span>: 1492504250,
-    <span style="color:#e6db74">&#34;total_processes&#34;</span>: <span style="color:#ae81ff">1</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Теперь перезапускаем агент мониторинга:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service nixstatsagent restart
-</code></pre></div><p>И ждем появления метрик в веб-интерфейсе сервиса мониторинга.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nixstatsagent --test phpfpm
+</span></span></code></pre></div><p>Результат должен быть примерно следующим:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>phpfpm:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;accepted_conn&#34;</span>: 3015,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;accepted_conn_per_second&#34;</span>: 0.0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;active_processes&#34;</span>: 1,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;idle_processes&#34;</span>: 0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;listen_queue&#34;</span>: 0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;listen_queue_len&#34;</span>: 128,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;max_active_processes&#34;</span>: 1,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;max_children_reached&#34;</span>: 0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;max_listen_queue&#34;</span>: 1,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;pool&#34;</span>: <span style="color:#e6db74">&#34;www&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;process_manager&#34;</span>: <span style="color:#e6db74">&#34;ondemand&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;slow_requests&#34;</span>: 0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;start_since&#34;</span>: 294686,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;start_time&#34;</span>: 1492504250,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;total_processes&#34;</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Теперь перезапускаем агент мониторинга:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>service nixstatsagent restart
+</span></span></code></pre></div><p>И ждем появления метрик в веб-интерфейсе сервиса мониторинга.</p>
                 </section>
             </article>
 
@@ -258,7 +258,7 @@ status_page_url = http://127.0.0.1:8080/status_phpfpm?json
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

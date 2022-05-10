@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,152 +100,152 @@
                 <section id="post-body">
                     <p>В Ubuntu сеть для LXC-контейнеров работает «из коробки» благодаря инит-скрипту <code>lxc-net</code> и набору необходимых правил для <code>iptables</code>, но в Debian Jessie, CentOS 7 и Fedora 21 по умолчанию сеть не настроена. Давайте разберемся!</p>
 <p>Для <strong>настройки сети и корректной работы LXC-контейнеров в Debian 8</strong> (Jessie) следует выполнить ряд простых шагов. Во-первых, установить необходимые пакеты:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install lxc dnsmasq-base bridge-utils
-</code></pre></div><p>Создать конфигурационный файл <code>/etc/default/lxc</code> с таким содержимым:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">USE_LXC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>
-</code></pre></div><p>Создать инит-скрипт в каталоге <code>/etc/init.d/</code> (и сделать его исполняемым):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch /etc/init.d/lxc-net
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod +x /etc/init.d/lxc-net
-</code></pre></div><p>Содержимое инит-скрипта должно быть таким:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/sh
-</span><span style="color:#75715e"></span><span style="color:#75715e">### BEGIN INIT INFO</span>
-<span style="color:#75715e"># Provides:             lxc-net</span>
-<span style="color:#75715e"># Required-Start:       $syslog $remote_fs</span>
-<span style="color:#75715e"># Required-Stop:        $syslog $remote_fs</span>
-<span style="color:#75715e"># Should-Start:</span>
-<span style="color:#75715e"># Should-Stop:</span>
-<span style="color:#75715e"># Default-Start:        2 3 4 5</span>
-<span style="color:#75715e"># Default-Stop:         0 1 6</span>
-<span style="color:#75715e"># Short-Description:    Linux Containers Network Configuration</span>
-<span style="color:#75715e"># Description:          Linux Containers Network Configuration</span>
-<span style="color:#75715e"># X-Start-Before:</span>
-<span style="color:#75715e"># X-Stop-After:</span>
-<span style="color:#75715e"># X-Interactive:        </span>
-<span style="color:#75715e">### END INIT INFO</span>
- 
-<span style="color:#75715e"># Ubuntu&#39;s lxc-net upstart config adopted for Debian by Flockport.com</span>
-<span style="color:#75715e"># original author: Serge Hallyn &lt;serge.hallyn@canonical.com&gt;</span>
- 
-USE_LXC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;false&#34;</span>
-LXC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;lxcbr0&#34;</span>
-LXC_ADDR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10.0.3.1&#34;</span>
-LXC_NETMASK<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;255.255.255.0&#34;</span>
-LXC_NETWORK<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10.0.3.0/24&#34;</span>
-LXC_DHCP_RANGE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10.0.3.2,10.0.3.254&#34;</span>
-LXC_DHCP_MAX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;253&#34;</span>
-LXC_DHCP_CONFILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/etc/lxc/dnsmasq.conf&#34;</span>
-varrun<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/run/lxc&#34;</span>
-LXC_DOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;lxc&#34;</span>
- 
-. /lib/lsb/init-functions
- 
-start<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-    <span style="color:#f92672">[</span> -f /etc/default/lxc <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> . /etc/default/lxc
- 
-    <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;x</span>$USE_LXC_BRIDGE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;xtrue&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> exit 0; <span style="color:#f92672">}</span>
- 
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -d /sys/class/net/<span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/network_up <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-            <span style="color:#75715e"># bridge exists, but we didn&#39;t start it</span>
-            exit 0;
-        <span style="color:#66d9ef">fi</span>
-        exit 0;
-    <span style="color:#66d9ef">fi</span>
- 
-    cleanup<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-        <span style="color:#75715e"># dnsmasq failed to start, clean up the bridge</span>
-        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
-        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
-        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
-        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
-        iptables -D FORWARD -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
-        iptables -D FORWARD -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
-        iptables -t nat -D POSTROUTING -s <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> ! -d <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> -j MASQUERADE <span style="color:#f92672">||</span> true
-        iptables -t mangle -D POSTROUTING -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp -m udp --dport <span style="color:#ae81ff">68</span> -j CHECKSUM --checksum-fill
-        ifconfig <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> down <span style="color:#f92672">||</span> true
-        brctl delbr <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#f92672">||</span> true
-    <span style="color:#f92672">}</span>
- 
-    <span style="color:#75715e"># set up the lxc network</span>
-    brctl addbr <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;Missing bridge support in kernel&#34;</span>; exit 0; <span style="color:#f92672">}</span>
-    echo <span style="color:#ae81ff">1</span> &gt; /proc/sys/net/ipv4/ip_forward
-    mkdir -p <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>
-    ifconfig <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>LXC_ADDR<span style="color:#e6db74">}</span> netmask <span style="color:#e6db74">${</span>LXC_NETMASK<span style="color:#e6db74">}</span> up
-    iptables -I INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
-    iptables -I INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
-    iptables -I INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
-    iptables -I INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
-    iptables -I FORWARD -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
-    iptables -I FORWARD -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
-    iptables -t nat -A POSTROUTING -s <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> ! -d <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> -j MASQUERADE
-    iptables -t mangle -A POSTROUTING -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp -m udp --dport <span style="color:#ae81ff">68</span> -j CHECKSUM --checksum-fill
- 
-    LXC_DOMAIN_ARG<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$LXC_DOMAIN<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-        LXC_DOMAIN_ARG<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-s </span>$LXC_DOMAIN<span style="color:#e6db74">&#34;</span>
-    <span style="color:#66d9ef">fi</span>
-    dnsmasq $LXC_DOMAIN_ARG -u dnsmasq --strict-order --bind-interfaces --pid-file<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/dnsmasq.pid --conf-file<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>LXC_DHCP_CONFILE<span style="color:#e6db74">}</span> --listen-address <span style="color:#e6db74">${</span>LXC_ADDR<span style="color:#e6db74">}</span> --dhcp-range <span style="color:#e6db74">${</span>LXC_DHCP_RANGE<span style="color:#e6db74">}</span> --dhcp-lease-max<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>LXC_DHCP_MAX<span style="color:#e6db74">}</span> --dhcp-no-override --except-interface<span style="color:#f92672">=</span>lo --interface<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> --dhcp-leasefile<span style="color:#f92672">=</span>/var/lib/misc/dnsmasq.<span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span>.leases --dhcp-authoritative <span style="color:#f92672">||</span> cleanup
-    touch <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/network_up
-<span style="color:#f92672">}</span>
- 
-stop<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-    <span style="color:#f92672">[</span> -f /etc/default/lxc <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> . /etc/default/lxc
-    <span style="color:#f92672">[</span> -f <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span><span style="color:#e6db74">/network_up&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> exit 0;
-    <span style="color:#75715e"># if $LXC_BRIDGE has attached interfaces, don&#39;t shut it down</span>
-    ls /sys/class/net/<span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span>/brif/* &gt; /dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> exit 0;
- 
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -d /sys/class/net/<span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-        ifconfig <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> down
-        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
-        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
-        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
-        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
-        iptables -D FORWARD -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
-        iptables -D FORWARD -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
-        iptables -t nat -D POSTROUTING -s <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> ! -d <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> -j MASQUERADE <span style="color:#f92672">||</span> true
-        iptables -t mangle -D POSTROUTING -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp -m udp --dport <span style="color:#ae81ff">68</span> -j CHECKSUM --checksum-fill
-  pid<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>cat <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/dnsmasq.pid 2&gt;/dev/null<span style="color:#e6db74">`</span> <span style="color:#f92672">&amp;&amp;</span> kill -9 $pid <span style="color:#f92672">||</span> true
-        rm -f <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/dnsmasq.pid
-        brctl delbr <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span>
-    <span style="color:#66d9ef">fi</span>
-    rm -f <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/network_up
-<span style="color:#f92672">}</span>
- 
-<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> in
-    start<span style="color:#f92672">)</span>
-        log_daemon_msg <span style="color:#e6db74">&#34;Starting Linux Containers&#34;</span>
- 
-        start
-        ;;
- 
-    stop<span style="color:#f92672">)</span>
-        log_daemon_msg <span style="color:#e6db74">&#34;Stopping Linux Containers&#34;</span>
- 
-        stop
-        ;;
- 
-    restart|force-reload<span style="color:#f92672">)</span>
-        log_daemon_msg <span style="color:#e6db74">&#34;Restarting Linux Containers&#34;</span>
- 
-        stop
-        start
-        ;;
-<span style="color:#66d9ef">esac</span>
-</code></pre></div><p>Запускаем <code>lxc-net</code> и добавляем в автозагрузку:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl enable lxc-net
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl start lxc-net
-</code></pre></div><p>Для того, чтобы созданные LXC-контейнеры по умолчанию получали в настройках сети сетевой мост <code>lxcbr0</code>, добавляем в конфигурационный файл <code>/etc/lxc/default.conf</code> следующие строки:</p>
-<pre><code>lxc.network.type = veth
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>aptitude install lxc dnsmasq-base bridge-utils
+</span></span></code></pre></div><p>Создать конфигурационный файл <code>/etc/default/lxc</code> с таким содержимым:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>USE_LXC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>
+</span></span></code></pre></div><p>Создать инит-скрипт в каталоге <code>/etc/init.d/</code> (и сделать его исполняемым):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>touch /etc/init.d/lxc-net
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x /etc/init.d/lxc-net
+</span></span></code></pre></div><p>Содержимое инит-скрипта должно быть таким:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">### BEGIN INIT INFO</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Provides:             lxc-net</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Required-Start:       $syslog $remote_fs</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Required-Stop:        $syslog $remote_fs</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Should-Start:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Should-Stop:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Default-Start:        2 3 4 5</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Default-Stop:         0 1 6</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Short-Description:    Linux Containers Network Configuration</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Description:          Linux Containers Network Configuration</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># X-Start-Before:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># X-Stop-After:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># X-Interactive:        </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### END INIT INFO</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ubuntu&#39;s lxc-net upstart config adopted for Debian by Flockport.com</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># original author: Serge Hallyn &lt;serge.hallyn@canonical.com&gt;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>USE_LXC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;false&#34;</span>
+</span></span><span style="display:flex;"><span>LXC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;lxcbr0&#34;</span>
+</span></span><span style="display:flex;"><span>LXC_ADDR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10.0.3.1&#34;</span>
+</span></span><span style="display:flex;"><span>LXC_NETMASK<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;255.255.255.0&#34;</span>
+</span></span><span style="display:flex;"><span>LXC_NETWORK<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10.0.3.0/24&#34;</span>
+</span></span><span style="display:flex;"><span>LXC_DHCP_RANGE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10.0.3.2,10.0.3.254&#34;</span>
+</span></span><span style="display:flex;"><span>LXC_DHCP_MAX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;253&#34;</span>
+</span></span><span style="display:flex;"><span>LXC_DHCP_CONFILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/etc/lxc/dnsmasq.conf&#34;</span>
+</span></span><span style="display:flex;"><span>varrun<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/run/lxc&#34;</span>
+</span></span><span style="display:flex;"><span>LXC_DOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;lxc&#34;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>. /lib/lsb/init-functions
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>start<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -f /etc/default/lxc <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> . /etc/default/lxc
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;x</span>$USE_LXC_BRIDGE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;xtrue&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> exit 0; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -d /sys/class/net/<span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/network_up <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># bridge exists, but we didn&#39;t start it</span>
+</span></span><span style="display:flex;"><span>            exit 0;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        exit 0;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    cleanup<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># dnsmasq failed to start, clean up the bridge</span>
+</span></span><span style="display:flex;"><span>        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D FORWARD -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D FORWARD -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -t nat -D POSTROUTING -s <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> ! -d <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> -j MASQUERADE <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>        iptables -t mangle -D POSTROUTING -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp -m udp --dport <span style="color:#ae81ff">68</span> -j CHECKSUM --checksum-fill
+</span></span><span style="display:flex;"><span>        ifconfig <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> down <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>        brctl delbr <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># set up the lxc network</span>
+</span></span><span style="display:flex;"><span>    brctl addbr <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;Missing bridge support in kernel&#34;</span>; exit 0; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#ae81ff">1</span> &gt; /proc/sys/net/ipv4/ip_forward
+</span></span><span style="display:flex;"><span>    mkdir -p <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    ifconfig <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>LXC_ADDR<span style="color:#e6db74">}</span> netmask <span style="color:#e6db74">${</span>LXC_NETMASK<span style="color:#e6db74">}</span> up
+</span></span><span style="display:flex;"><span>    iptables -I INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>    iptables -I INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>    iptables -I INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>    iptables -I INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>    iptables -I FORWARD -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>    iptables -I FORWARD -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>    iptables -t nat -A POSTROUTING -s <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> ! -d <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> -j MASQUERADE
+</span></span><span style="display:flex;"><span>    iptables -t mangle -A POSTROUTING -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp -m udp --dport <span style="color:#ae81ff">68</span> -j CHECKSUM --checksum-fill
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    LXC_DOMAIN_ARG<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$LXC_DOMAIN<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        LXC_DOMAIN_ARG<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-s </span>$LXC_DOMAIN<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    dnsmasq $LXC_DOMAIN_ARG -u dnsmasq --strict-order --bind-interfaces --pid-file<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/dnsmasq.pid --conf-file<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>LXC_DHCP_CONFILE<span style="color:#e6db74">}</span> --listen-address <span style="color:#e6db74">${</span>LXC_ADDR<span style="color:#e6db74">}</span> --dhcp-range <span style="color:#e6db74">${</span>LXC_DHCP_RANGE<span style="color:#e6db74">}</span> --dhcp-lease-max<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>LXC_DHCP_MAX<span style="color:#e6db74">}</span> --dhcp-no-override --except-interface<span style="color:#f92672">=</span>lo --interface<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> --dhcp-leasefile<span style="color:#f92672">=</span>/var/lib/misc/dnsmasq.<span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span>.leases --dhcp-authoritative <span style="color:#f92672">||</span> cleanup
+</span></span><span style="display:flex;"><span>    touch <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/network_up
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>stop<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -f /etc/default/lxc <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> . /etc/default/lxc
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -f <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span><span style="color:#e6db74">/network_up&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> exit 0;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># if $LXC_BRIDGE has attached interfaces, don&#39;t shut it down</span>
+</span></span><span style="display:flex;"><span>    ls /sys/class/net/<span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span>/brif/* &gt; /dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> exit 0;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -d /sys/class/net/<span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        ifconfig <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> down
+</span></span><span style="display:flex;"><span>        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D INPUT -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p tcp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D FORWARD -i <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -D FORWARD -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>        iptables -t nat -D POSTROUTING -s <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> ! -d <span style="color:#e6db74">${</span>LXC_NETWORK<span style="color:#e6db74">}</span> -j MASQUERADE <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>        iptables -t mangle -D POSTROUTING -o <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span> -p udp -m udp --dport <span style="color:#ae81ff">68</span> -j CHECKSUM --checksum-fill
+</span></span><span style="display:flex;"><span>  pid<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>cat <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/dnsmasq.pid 2&gt;/dev/null<span style="color:#e6db74">`</span> <span style="color:#f92672">&amp;&amp;</span> kill -9 $pid <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>        rm -f <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/dnsmasq.pid
+</span></span><span style="display:flex;"><span>        brctl delbr <span style="color:#e6db74">${</span>LXC_BRIDGE<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    rm -f <span style="color:#e6db74">${</span>varrun<span style="color:#e6db74">}</span>/network_up
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    start<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        log_daemon_msg <span style="color:#e6db74">&#34;Starting Linux Containers&#34;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>        start
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    stop<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        log_daemon_msg <span style="color:#e6db74">&#34;Stopping Linux Containers&#34;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>        stop
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    restart|force-reload<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        log_daemon_msg <span style="color:#e6db74">&#34;Restarting Linux Containers&#34;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>        stop
+</span></span><span style="display:flex;"><span>        start
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span></code></pre></div><p>Запускаем <code>lxc-net</code> и добавляем в автозагрузку:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable lxc-net
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl start lxc-net
+</span></span></code></pre></div><p>Для того, чтобы созданные LXC-контейнеры по умолчанию получали в настройках сети сетевой мост <code>lxcbr0</code>, добавляем в конфигурационный файл <code>/etc/lxc/default.conf</code> следующие строки:</p>
+<pre tabindex="0"><code>lxc.network.type = veth
 lxc.network.link = lxcbr0
 lxc.network.flags = up
 lxc.network.hwaddr = 00:16:3e:xx:xx:xx
 </code></pre><p>В CentOS 7 и Fedora 21 настройка сети для LXC-контейнеров выглядит несколько иначе — функциональность сетевого моста обеспечивается пакетом <code>libvirt</code>, но вполне можно обойтись и без него. Для этого установим необходимые пакеты:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">yum -y install lxc lxc-templates lxc-extras dnsmasq bridge-utils iptables-services
-</code></pre></div><p>Далее создаем два <code>systemd</code>-юнита — <code>lxc-net.service</code> и <code>lxc-dhcp.service</code> в каталоге <code>/etc/systemd/system/</code>, которые обеспечат функциональность, аналогичную <code>lxc-net</code> в дистрибутивах Ubuntu и Debian:</p>
-<pre><code class="language-bahs" data-lang="bahs">touch /etc/systemd/system/lxc-net.service
-</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch /etc/systemd/system/lxc-dhcp.service
-</code></pre></div><p>Содержимое первого юнита выглядит так:</p>
-<pre><code>[Unit]
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>yum -y install lxc lxc-templates lxc-extras dnsmasq bridge-utils iptables-services
+</span></span></code></pre></div><p>Далее создаем два <code>systemd</code>-юнита — <code>lxc-net.service</code> и <code>lxc-dhcp.service</code> в каталоге <code>/etc/systemd/system/</code>, которые обеспечат функциональность, аналогичную <code>lxc-net</code> в дистрибутивах Ubuntu и Debian:</p>
+<pre tabindex="0"><code class="language-bahs" data-lang="bahs">touch /etc/systemd/system/lxc-net.service
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>touch /etc/systemd/system/lxc-dhcp.service
+</span></span></code></pre></div><p>Содержимое первого юнита выглядит так:</p>
+<pre tabindex="0"><code>[Unit]
 Description=Bridge interface for LXC Containers
  
 [Service]
@@ -262,7 +262,7 @@ RemainAfterExit=yes
 ExecStop=/sbin/ip link set lxcbr0 down
 ExecStop=/sbin/brctl delbr lxcbr0
 </code></pre><p>Содержимое второго созданного юнита следующее:</p>
-<pre><code>[Unit]
+<pre tabindex="0"><code>[Unit]
 Requires=lxc-net.service
 Requires=sys-devices-virtual-net-lxcbr0.device
 After=sys-devices-virtual-net-lxcbr0.device
@@ -282,31 +282,31 @@ ExecStart=/sbin/dnsmasq \
 [Install]
 WantedBy=default.target
 </code></pre><p>Далее запускаем службы и добавляем их в автозагрузку:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl enable lxc-net.service
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl enable lxc-dhcp.service
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl start lxc-net.service
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl start lxc-dhcp.service
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl enable iptables
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl start iptables
-</code></pre></div><p>Также нам необходимо создать несколько правил для <code>iptables</code> (и убедиться, что они останутся после перезагрузки). Для этого создаем файл <code>lxc-net</code> с такими правилами:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">iptables -I INPUT -i lxcbr0 -p udp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
-iptables -I INPUT -i lxcbr0 -p tcp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
-iptables -I INPUT -i lxcbr0 -p tcp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
-iptables -I INPUT -i lxcbr0 -p udp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
-iptables -I FORWARD -i lxcbr0 -j ACCEPT
-iptables -I FORWARD -o lxcbr0 -j ACCEPT
-iptables -t nat -A POSTROUTING -s 10.0.3.0/24 ! -d 10.0.3.0/24 -j MASQUERADE
-iptables -t mangle -A POSTROUTING -o lxcbr0 -p udp -m udp --dport <span style="color:#ae81ff">68</span> -j CHECKSUM --checksum-fill
-</code></pre></div><p>Делаем его исполняемым и запускаем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod +x lxc-net <span style="color:#f92672">&amp;&amp;</span> ./lxc-net
-</code></pre></div><p>Сохраняем текущие правила <code>iptables</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/sbin/service iptables save
-</code></pre></div><p>Включаем форвардинг пакетов — добавляем в файл <code>/etc/sysctl.conf</code> следующую строку:</p>
-<pre><code>...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable lxc-net.service
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable lxc-dhcp.service
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl start lxc-net.service
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl start lxc-dhcp.service
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable iptables
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl start iptables
+</span></span></code></pre></div><p>Также нам необходимо создать несколько правил для <code>iptables</code> (и убедиться, что они останутся после перезагрузки). Для этого создаем файл <code>lxc-net</code> с такими правилами:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>iptables -I INPUT -i lxcbr0 -p udp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>iptables -I INPUT -i lxcbr0 -p tcp --dport <span style="color:#ae81ff">67</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>iptables -I INPUT -i lxcbr0 -p tcp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>iptables -I INPUT -i lxcbr0 -p udp --dport <span style="color:#ae81ff">53</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>iptables -I FORWARD -i lxcbr0 -j ACCEPT
+</span></span><span style="display:flex;"><span>iptables -I FORWARD -o lxcbr0 -j ACCEPT
+</span></span><span style="display:flex;"><span>iptables -t nat -A POSTROUTING -s 10.0.3.0/24 ! -d 10.0.3.0/24 -j MASQUERADE
+</span></span><span style="display:flex;"><span>iptables -t mangle -A POSTROUTING -o lxcbr0 -p udp -m udp --dport <span style="color:#ae81ff">68</span> -j CHECKSUM --checksum-fill
+</span></span></code></pre></div><p>Делаем его исполняемым и запускаем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x lxc-net <span style="color:#f92672">&amp;&amp;</span> ./lxc-net
+</span></span></code></pre></div><p>Сохраняем текущие правила <code>iptables</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/sbin/service iptables save
+</span></span></code></pre></div><p>Включаем форвардинг пакетов — добавляем в файл <code>/etc/sysctl.conf</code> следующую строку:</p>
+<pre tabindex="0"><code>...
 net.ipv4.ip_forward = 1
 </code></pre><p>Применяем внесенное изменение:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -p
-</code></pre></div><p>После всех проделанных действий можно приступать к созданию контейнеров.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sysctl -p
+</span></span></code></pre></div><p>После всех проделанных действий можно приступать к созданию контейнеров.</p>
                 </section>
             </article>
 
@@ -398,7 +398,7 @@ net.ipv4.ip_forward = 1
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

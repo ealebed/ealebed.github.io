@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -113,42 +113,42 @@
 <p>Хотя пакет <code>cache</code> предоставляет необходимые нам инструменты, его инициализация и использование могут быть избыточными и несколько обременительными, когда речь идет о получении простых обновлений от Kubernetes API. Практически все статьи по использованию <code>k8s.io/client-go/tools/cache</code>, которые мне удалось найти, предлагают использовать этот пакет &ldquo;как есть&rdquo;.</p>
 <p>Однако существует еще один пакет, который объединяет концепции, которые предоставленные пакетом <code>cache</code>, в один: <code>k8s.io/client-go/informers</code>. Он поставляется с простой фабрикой для всех ресурсов <code>Kubernetes</code> - то, что нам нужно!</p>
 <p>Инициализация фабрики выглядит примерно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">...</span>
-	<span style="color:#a6e22e">kubeInformerFactory</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">informers</span>.<span style="color:#a6e22e">NewSharedInformerFactoryWithOptions</span>(<span style="color:#a6e22e">clientset</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span><span style="color:#f92672">*</span><span style="color:#ae81ff">30</span>,
-		<span style="color:#a6e22e">informers</span>.<span style="color:#a6e22e">WithNamespace</span>(<span style="color:#e6db74">&#34;default&#34;</span>),
-		<span style="color:#a6e22e">informers</span>.<span style="color:#a6e22e">WithTweakListOptions</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">options</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">v1</span>.<span style="color:#a6e22e">ListOptions</span>) {
-			<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">LabelSelector</span> = <span style="color:#e6db74">&#34;app=ads-redis-statistic&#34;</span>
-		}))
-<span style="color:#f92672">...</span>
-</code></pre></div><p>Так мы получаем новый экземпляр <a href="https://pkg.go.dev/k8s.io/client-go/informers#SharedInformerFactory"><code>SharedInformerFactory</code></a> с дополнительными опциями (неймспейс <code>default</code> и <code>LabelSelector</code> &ldquo;app=ads-redis-statistic&rdquo;). Первым агрументом является наш клиент, который подключается и взаимодействует с Kubernetes API, а вторым - периодичность, с которой информер будет синхронизировать данные.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">kubeInformerFactory</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">informers</span>.<span style="color:#a6e22e">NewSharedInformerFactoryWithOptions</span>(<span style="color:#a6e22e">clientset</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span><span style="color:#f92672">*</span><span style="color:#ae81ff">30</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">informers</span>.<span style="color:#a6e22e">WithNamespace</span>(<span style="color:#e6db74">&#34;default&#34;</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">informers</span>.<span style="color:#a6e22e">WithTweakListOptions</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">options</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">v1</span>.<span style="color:#a6e22e">ListOptions</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">LabelSelector</span> = <span style="color:#e6db74">&#34;app=ads-redis-statistic&#34;</span>
+</span></span><span style="display:flex;"><span>		}))
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span></code></pre></div><p>Так мы получаем новый экземпляр <a href="https://pkg.go.dev/k8s.io/client-go/informers#SharedInformerFactory"><code>SharedInformerFactory</code></a> с дополнительными опциями (неймспейс <code>default</code> и <code>LabelSelector</code> &ldquo;app=ads-redis-statistic&rdquo;). Первым агрументом является наш клиент, который подключается и взаимодействует с Kubernetes API, а вторым - периодичность, с которой информер будет синхронизировать данные.</p>
 <p>Теперь мы можем с легкостью начать получать необходимые нам события о интересующем нас ресурсе - новом поде в кластере <code>Kubernetes</code>. Выглядеть это будет примерно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">...</span>
-	<span style="color:#a6e22e">podInformer</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">kubeInformerFactory</span>.<span style="color:#a6e22e">Core</span>().<span style="color:#a6e22e">V1</span>().<span style="color:#a6e22e">Pods</span>().<span style="color:#a6e22e">Informer</span>()
-
-	<span style="color:#a6e22e">podInformer</span>.<span style="color:#a6e22e">AddEventHandler</span>(<span style="color:#a6e22e">cache</span>.<span style="color:#a6e22e">ResourceEventHandlerFuncs</span>{
-		<span style="color:#a6e22e">AddFunc</span>: <span style="color:#a6e22e">onAdd</span>,
-	})
-<span style="color:#f92672">...</span>
-</code></pre></div><p>Первая строка инициализирует информер, который настроен на получение событий о подах групы Core/v1 API (фильтрация по неймспейсу/селектору у нас указана еще на этапе создания фабрики).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">podInformer</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">kubeInformerFactory</span>.<span style="color:#a6e22e">Core</span>().<span style="color:#a6e22e">V1</span>().<span style="color:#a6e22e">Pods</span>().<span style="color:#a6e22e">Informer</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">podInformer</span>.<span style="color:#a6e22e">AddEventHandler</span>(<span style="color:#a6e22e">cache</span>.<span style="color:#a6e22e">ResourceEventHandlerFuncs</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">AddFunc</span>: <span style="color:#a6e22e">onAdd</span>,
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span></code></pre></div><p>Первая строка инициализирует информер, который настроен на получение событий о подах групы Core/v1 API (фильтрация по неймспейсу/селектору у нас указана еще на этапе создания фабрики).</p>
 <p>Вторая строка добавляет функцию-обработчик (handler), которая будет вызываться каждый раз, когда информет получает от Kubernetes API интересующее нас событие (а именно, добавление в неймспейсе <code>default</code> нового пода с селектором <code>app: ads-redis-statistic</code>).</p>
 <p>Сама функция <code>onAdd</code> выглядит следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">...</span>
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">onAdd</span>(<span style="color:#a6e22e">obj</span> <span style="color:#66d9ef">interface</span>{}) {
-	<span style="color:#a6e22e">rc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">redis</span>.<span style="color:#a6e22e">InitRedisClient</span>(
-		<span style="color:#a6e22e">helpers</span>.<span style="color:#a6e22e">GetEnvironmentVariableAsString</span>(<span style="color:#e6db74">&#34;REDIS_HOST&#34;</span>, <span style="color:#e6db74">&#34;127.0.0.1:6379&#34;</span>),
-		<span style="color:#a6e22e">helpers</span>.<span style="color:#a6e22e">GetEnvironmentVariableAsString</span>(<span style="color:#e6db74">&#34;REDIS_PASSWORD&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>),
-		<span style="color:#a6e22e">helpers</span>.<span style="color:#a6e22e">GetEnvironmentVariableAsInteger</span>(<span style="color:#e6db74">&#34;REDIS_DB&#34;</span>, <span style="color:#ae81ff">4</span>))
-
-	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">Connect</span>()
-	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">SetValue</span>(
-		<span style="color:#e6db74">&#34;flow-rules-key&#34;</span>,
-		<span style="color:#e6db74">&#34;[{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AdsTxtRecordService/GetAdsTxtRelationships\&#34;,\&#34;count\&#34;:100.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.PublisherAccountService/GetPublisherById\&#34;,\&#34;count\&#34;:5.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v1.PublisherAccountService/GetPublisherById\&#34;,\&#34;count\&#34;:5.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.BundleLegacyService/GetBundleByKey\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.lsm.ssp.v0.BundleService/GetBundleById\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.lsm.ssp.v0.BundleService/QueryBundle\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppById\&#34;,\&#34;count\&#34;:10.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppIdByKey\&#34;,\&#34;count\&#34;:10.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppIdByContainerKey\&#34;,\&#34;count\&#34;:16.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppByContainerKey\&#34;,\&#34;count\&#34;:10.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;ExchangeThrottleRateService/GetThrottleRatesByKeys\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;dsp-fetcher\&#34;,\&#34;count\&#34;:25.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;exchange-fetcher\&#34;,\&#34;count\&#34;:300.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;kafka_dmp_ads_requests_info\&#34;,\&#34;count\&#34;:500.0,\&#34;grade\&#34;:\&#34;QPS\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;}]&#34;</span>)
-
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">QueryValue</span>(<span style="color:#e6db74">&#34;flow-rules-key&#34;</span>))
-	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">Disconnect</span>()
-<span style="color:#f92672">...</span>
-}
-</code></pre></div><p>Функция инициализирует redis-клиент с заданными параметрами, выполняет подключение к сервису, вставляет данные в БД, для проверки получает значение для указанного ключа и отключается от данного экземпляра <code>Redis</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">onAdd</span>(<span style="color:#a6e22e">obj</span> <span style="color:#66d9ef">interface</span>{}) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">redis</span>.<span style="color:#a6e22e">InitRedisClient</span>(
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">helpers</span>.<span style="color:#a6e22e">GetEnvironmentVariableAsString</span>(<span style="color:#e6db74">&#34;REDIS_HOST&#34;</span>, <span style="color:#e6db74">&#34;127.0.0.1:6379&#34;</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">helpers</span>.<span style="color:#a6e22e">GetEnvironmentVariableAsString</span>(<span style="color:#e6db74">&#34;REDIS_PASSWORD&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">helpers</span>.<span style="color:#a6e22e">GetEnvironmentVariableAsInteger</span>(<span style="color:#e6db74">&#34;REDIS_DB&#34;</span>, <span style="color:#ae81ff">4</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">Connect</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">SetValue</span>(
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;flow-rules-key&#34;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;[{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AdsTxtRecordService/GetAdsTxtRelationships\&#34;,\&#34;count\&#34;:100.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.PublisherAccountService/GetPublisherById\&#34;,\&#34;count\&#34;:5.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v1.PublisherAccountService/GetPublisherById\&#34;,\&#34;count\&#34;:5.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.BundleLegacyService/GetBundleByKey\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.lsm.ssp.v0.BundleService/GetBundleById\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.lsm.ssp.v0.BundleService/QueryBundle\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppById\&#34;,\&#34;count\&#34;:10.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppIdByKey\&#34;,\&#34;count\&#34;:10.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppIdByContainerKey\&#34;,\&#34;count\&#34;:16.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;loopme.grpc.ssp.v0.AppLegacyService/GetAppByContainerKey\&#34;,\&#34;count\&#34;:10.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;ExchangeThrottleRateService/GetThrottleRatesByKeys\&#34;,\&#34;count\&#34;:20.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;dsp-fetcher\&#34;,\&#34;count\&#34;:25.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;exchange-fetcher\&#34;,\&#34;count\&#34;:300.0,\&#34;grade\&#34;:\&#34;THREAD\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;},{\&#34;resource\&#34;:\&#34;kafka_dmp_ads_requests_info\&#34;,\&#34;count\&#34;:500.0,\&#34;grade\&#34;:\&#34;QPS\&#34;,\&#34;limit-app\&#34;:\&#34;default\&#34;}]&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">QueryValue</span>(<span style="color:#e6db74">&#34;flow-rules-key&#34;</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">Disconnect</span>()
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Функция инициализирует redis-клиент с заданными параметрами, выполняет подключение к сервису, вставляет данные в БД, для проверки получает значение для указанного ключа и отключается от данного экземпляра <code>Redis</code>.</p>
 <p>Полный пример кода (а также пример деплоймента для данного контроллера) доступен <a href="https://github.com/ealebed/redins">здесь</a>.</p>
                 </section>
             </article>
@@ -241,7 +241,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

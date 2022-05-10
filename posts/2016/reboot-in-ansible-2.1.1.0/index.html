@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,20 +100,20 @@
                 <section id="post-body">
                     <p>После обновления <code>Ansible</code> до версии 2.1.1.0 перестал работать довольно простой набор инструкций для удаленной перезагрузки хостов, который успешно работал в <code>Ansible</code> версии 1.9. Давайте разберемся!</p>
 <p>Работавший ранее плейбук <code>reboot.yml</code> выглядел так:</p>
-<pre><code>---
+<pre tabindex="0"><code>---
 - hosts: test
   sudo: yes
   tasks:
  
   - name: Reboot host
-    command: shutdown -r now &quot;Ansible system reboot&quot;
+    command: shutdown -r now &#34;Ansible system reboot&#34;
     async: 0
     poll: 0
   - name: Wait for the host to finish rebooting
     local_action: wait_for host={{ inventory_hostname }} state=started
     sudo: false
 </code></pre><p>После обновления версии <code>Ansible</code> выполнение данного набора инструкций завершается следующим образом:</p>
-<pre><code>ansible-playbook playbooks/reboot.yml
+<pre tabindex="0"><code>ansible-playbook playbooks/reboot.yml
 
 PLAY [test] ********************************************************************
 
@@ -121,20 +121,20 @@ TASK [setup] *******************************************************************
 ok: [test]
 
 TASK [Reboot host] *************************************************************
-fatal: [test]: UNREACHABLE! =&gt; {&quot;changed&quot;: false, &quot;msg&quot;: &quot;Failed to connect to the host via ssh.&quot;, &quot;unreachable&quot;: true}
+fatal: [test]: UNREACHABLE! =&gt; {&#34;changed&#34;: false, &#34;msg&#34;: &#34;Failed to connect to the host via ssh.&#34;, &#34;unreachable&#34;: true}
 	to retry, use: --limit @playbooks/reboot.retry
 
 PLAY RECAP *********************************************************************
 test                   : ok=1    changed=0    unreachable=1    failed=0
 </code></pre><p><strong>Примечание.</strong> При этом удаленный хост перезагружается — можем в этом убедиться с помощью пинга в соседней консоли (или просто проверить <code>uptime</code> удаленной машины).</p>
 <p>Для корректного выполнения данного набора инструкций (перезагрузки и ожидания пока удаленный хост вновь появится онлайн) в текущей версии <code>Ansible</code> необходимо привести плейбук к следующему виду:</p>
-<pre><code>---
+<pre tabindex="0"><code>---
 - hosts: test
   become: yes
   tasks:
  
   - name: Reboot host
-    shell: sleep 2 &amp;&amp; /sbin/shutdown -r now &quot;Ansible system reboot&quot;
+    shell: sleep 2 &amp;&amp; /sbin/shutdown -r now &#34;Ansible system reboot&#34;
     async: 1
     poll: 0
   - name: Wait for the host to finish rebooting
@@ -142,7 +142,7 @@ test                   : ok=1    changed=0    unreachable=1    failed=0
     become: false
     delegate_to: localhost
 </code></pre><p>Теперь плейбук выполнится с ожидаемым результатом:</p>
-<pre><code>ansible-playbook playbooks/reboot.yml
+<pre tabindex="0"><code>ansible-playbook playbooks/reboot.yml
 
 PLAY [test] ********************************************************************
 
@@ -249,7 +249,7 @@ test                   : ok=3    changed=0    unreachable=0    failed=0
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

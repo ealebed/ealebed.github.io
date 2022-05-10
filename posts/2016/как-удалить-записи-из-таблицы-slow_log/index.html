@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,21 +102,21 @@
                 <section id="post-body">
                     <p>В нашем примере используется операционная система Debian Wheezy, версия MySQL-сервера 5.5. Давайте разберемся, <strong>как удалить записи из таблицы mysql.slow_log</strong>!</p>
 <p>При попытке удалить записи из таблицы <code>slow_log</code> базы <code>mysql</code> получаем сообщение об ошибке:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">#1556 - You can&#39;t use locks with log tables
-</code></pre></div><p>Для решения это проблемы подключаемся к MySQL с привилегиями суперпользователя, отключаем лог медленных запросов, переименовываем таблицу, удаляем из нее записи, переименовываем обратно и включаем лог:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mysql -uroot -p&lt;СЛОЖНЫЙ_ПАРОЛЬ&gt;
-</code></pre></div><p>и выполняем следующие запросы:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql">use mysql;
-<span style="color:#66d9ef">SET</span> <span style="color:#66d9ef">GLOBAL</span> slow_log<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;OFF&#39;</span>;
-<span style="color:#66d9ef">RENAME</span> <span style="color:#66d9ef">TABLE</span> slow_log <span style="color:#66d9ef">TO</span> slow_log_temp;
-<span style="color:#66d9ef">DELETE</span> <span style="color:#66d9ef">FROM</span> <span style="color:#f92672">`</span>slow_log_temp<span style="color:#f92672">`</span> <span style="color:#66d9ef">WHERE</span> <span style="color:#f92672">`</span>start_time<span style="color:#f92672">`</span> <span style="color:#f92672">&lt;</span> DATE(NOW());;
-<span style="color:#66d9ef">RENAME</span> <span style="color:#66d9ef">TABLE</span> slow_log_temp <span style="color:#66d9ef">TO</span> slow_log;
-<span style="color:#66d9ef">SET</span> <span style="color:#66d9ef">GLOBAL</span> slow_log<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;ON&#39;</span>;
-</code></pre></div><p><strong>Примечание.</strong> Данное решение справедливо и для таблицы <code>general_log</code> базы <code>mysql</code>, только вместо <code>SET GLOBAL slow_log='OFF'/'ON'</code> используйте <code>SET GLOBAL general_log='OFF'/'ON'</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>#1556 - You can&#39;t use locks with log tables
+</span></span></code></pre></div><p>Для решения это проблемы подключаемся к MySQL с привилегиями суперпользователя, отключаем лог медленных запросов, переименовываем таблицу, удаляем из нее записи, переименовываем обратно и включаем лог:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mysql -uroot -p&lt;СЛОЖНЫЙ_ПАРОЛЬ&gt;
+</span></span></code></pre></div><p>и выполняем следующие запросы:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span>use mysql;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SET</span> <span style="color:#66d9ef">GLOBAL</span> slow_log<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;OFF&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">RENAME</span> <span style="color:#66d9ef">TABLE</span> slow_log <span style="color:#66d9ef">TO</span> slow_log_temp;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">DELETE</span> <span style="color:#66d9ef">FROM</span> <span style="color:#f92672">`</span>slow_log_temp<span style="color:#f92672">`</span> <span style="color:#66d9ef">WHERE</span> <span style="color:#f92672">`</span>start_time<span style="color:#f92672">`</span> <span style="color:#f92672">&lt;</span> DATE(NOW());;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">RENAME</span> <span style="color:#66d9ef">TABLE</span> slow_log_temp <span style="color:#66d9ef">TO</span> slow_log;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SET</span> <span style="color:#66d9ef">GLOBAL</span> slow_log<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;ON&#39;</span>;
+</span></span></code></pre></div><p><strong>Примечание.</strong> Данное решение справедливо и для таблицы <code>general_log</code> базы <code>mysql</code>, только вместо <code>SET GLOBAL slow_log='OFF'/'ON'</code> используйте <code>SET GLOBAL general_log='OFF'/'ON'</code>.</p>
 <p>Если же вы используете Amazon rds, то удалить записи из таблицы <code>mysql.slow_log</code> значительно проще — достаточно воспользоваться встроенной процедурой <code>rotate</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CALL</span> mysql.rds_rotate_slow_log;
-<span style="color:#66d9ef">DELETE</span> <span style="color:#66d9ef">FROM</span> mysql.slow_log_backup;
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CALL</span> mysql.rds_rotate_slow_log;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">DELETE</span> <span style="color:#66d9ef">FROM</span> mysql.slow_log_backup;
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -208,7 +208,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

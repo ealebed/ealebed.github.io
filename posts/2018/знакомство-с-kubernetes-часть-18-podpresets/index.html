@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -116,175 +116,175 @@
 <li>создать объект <code>PodPreset</code> в соответствующем неймспейсе.</li>
 </ul>
 <p>Рассмотрим конкретный пример. Создадим файл <code>preset.yaml</code> следующего содержимого:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">settings.k8s.io/v1alpha1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PodPreset</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">allow-database</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">selector</span>:
-    <span style="color:#f92672">matchLabels</span>:
-      <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
-  <span style="color:#f92672">env</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">DB_PORT</span>
-      <span style="color:#f92672">value</span>: <span style="color:#e6db74">&#34;6379&#34;</span>
-  <span style="color:#f92672">volumeMounts</span>:
-    - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/cache</span>
-      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
-  <span style="color:#f92672">volumes</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
-      <span style="color:#f92672">emptyDir</span>: {}
-</code></pre></div><p>Создадим данный объект в кластере <code>Kubernetes</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f preset.yaml
-</code></pre></div><p>Проверим наличие объекта:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get podpreset
-NAME             AGE
-allow-database   1m
-</code></pre></div><p>Теперь при создании подов с меткой <code>role: frontend</code> к ним будет добавляться информация из данного <code>PodPreset</code>. Проверим данное утверждение - создаем файл <code>pod.yaml</code> с таким содержимым:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
-  <span style="color:#f92672">labels</span>:
-    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">website</span>
-    <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">containers</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
-      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">nginx</span>
-      <span style="color:#f92672">ports</span>:
-        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">80</span>
-</code></pre></div><p>Создаем под:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f pod.yaml
-</code></pre></div><p>Убедимся, что под создан и запущен:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get pods
-NAME      READY     STATUS    RESTARTS   AGE
-website   1/1       Running   <span style="color:#ae81ff">0</span>          4m
-</code></pre></div><p>Получим подробное описание пода с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get pod website -o yaml
-
-apiVersion: v1
-kind: Pod
-metadata:
-  name: website
-  labels:
-    app: website
-    role: frontend
-  annotations:
-    podpreset.admission.kubernetes.io/podpreset-allow-database: <span style="color:#e6db74">&#34;resource version&#34;</span>
-spec:
-  containers:
-    - name: website
-      image: nginx
-      volumeMounts:
-        - mountPath: /cache
-          name: cache-volume
-      ports:
-        - containerPort: <span style="color:#ae81ff">80</span>
-      env:
-        - name: DB_PORT
-          value: <span style="color:#e6db74">&#34;6379&#34;</span>
-  volumes:
-    - name: cache-volume
-      emptyDir: <span style="color:#f92672">{}</span>
-</code></pre></div><p>Как и ожидалось, к поду была добавлена информация из <code>PodPreset</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">settings.k8s.io/v1alpha1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PodPreset</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">allow-database</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">selector</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">matchLabels</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">env</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">DB_PORT</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">value</span>: <span style="color:#e6db74">&#34;6379&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">volumeMounts</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/cache</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">emptyDir</span>: {}
+</span></span></code></pre></div><p>Создадим данный объект в кластере <code>Kubernetes</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl create -f preset.yaml
+</span></span></code></pre></div><p>Проверим наличие объекта:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get podpreset
+</span></span><span style="display:flex;"><span>NAME             AGE
+</span></span><span style="display:flex;"><span>allow-database   1m
+</span></span></code></pre></div><p>Теперь при создании подов с меткой <code>role: frontend</code> к ним будет добавляться информация из данного <code>PodPreset</code>. Проверим данное утверждение - создаем файл <code>pod.yaml</code> с таким содержимым:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">labels</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">website</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">containers</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">nginx</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">80</span>
+</span></span></code></pre></div><p>Создаем под:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl create -f pod.yaml
+</span></span></code></pre></div><p>Убедимся, что под создан и запущен:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get pods
+</span></span><span style="display:flex;"><span>NAME      READY     STATUS    RESTARTS   AGE
+</span></span><span style="display:flex;"><span>website   1/1       Running   <span style="color:#ae81ff">0</span>          4m
+</span></span></code></pre></div><p>Получим подробное описание пода с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get pod website -o yaml
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>apiVersion: v1
+</span></span><span style="display:flex;"><span>kind: Pod
+</span></span><span style="display:flex;"><span>metadata:
+</span></span><span style="display:flex;"><span>  name: website
+</span></span><span style="display:flex;"><span>  labels:
+</span></span><span style="display:flex;"><span>    app: website
+</span></span><span style="display:flex;"><span>    role: frontend
+</span></span><span style="display:flex;"><span>  annotations:
+</span></span><span style="display:flex;"><span>    podpreset.admission.kubernetes.io/podpreset-allow-database: <span style="color:#e6db74">&#34;resource version&#34;</span>
+</span></span><span style="display:flex;"><span>spec:
+</span></span><span style="display:flex;"><span>  containers:
+</span></span><span style="display:flex;"><span>    - name: website
+</span></span><span style="display:flex;"><span>      image: nginx
+</span></span><span style="display:flex;"><span>      volumeMounts:
+</span></span><span style="display:flex;"><span>        - mountPath: /cache
+</span></span><span style="display:flex;"><span>          name: cache-volume
+</span></span><span style="display:flex;"><span>      ports:
+</span></span><span style="display:flex;"><span>        - containerPort: <span style="color:#ae81ff">80</span>
+</span></span><span style="display:flex;"><span>      env:
+</span></span><span style="display:flex;"><span>        - name: DB_PORT
+</span></span><span style="display:flex;"><span>          value: <span style="color:#e6db74">&#34;6379&#34;</span>
+</span></span><span style="display:flex;"><span>  volumes:
+</span></span><span style="display:flex;"><span>    - name: cache-volume
+</span></span><span style="display:flex;"><span>      emptyDir: <span style="color:#f92672">{}</span>
+</span></span></code></pre></div><p>Как и ожидалось, к поду была добавлена информация из <code>PodPreset</code>.</p>
 <p>Более сложный пример (с использованием <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-13-%D0%BA%D0%BE%D0%BD%D1%84%D0%B8%D0%B3%D0%BC%D0%B0%D0%BF%D1%8B-configmap/"><code>ConfigMap</code></a>). Описание пода выглядит следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
-  <span style="color:#f92672">labels</span>:
-    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">website</span>
-    <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">containers</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
-      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">nginx</span>
-      <span style="color:#f92672">ports</span>:
-        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">80</span>
-</code></pre></div><p>Описание конфигмапа (<code>ConfigMap</code>) выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ConfigMap</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">etcd-env-config</span>
-<span style="color:#f92672">data</span>:
-  <span style="color:#f92672">number_of_members</span>: <span style="color:#e6db74">&#34;1&#34;</span>
-  <span style="color:#f92672">initial_cluster_state</span>: <span style="color:#ae81ff">new</span>
-  <span style="color:#f92672">initial_cluster_token</span>: <span style="color:#ae81ff">DUMMY_ETCD_INITIAL_CLUSTER_TOKEN</span>
-  <span style="color:#f92672">discovery_token</span>: <span style="color:#ae81ff">DUMMY_ETCD_DISCOVERY_TOKEN</span>
-  <span style="color:#f92672">discovery_url</span>: <span style="color:#ae81ff">http://etcd_discovery:2379</span>
-  <span style="color:#f92672">etcdctl_peers</span>: <span style="color:#ae81ff">http://etcd:2379</span>
-  <span style="color:#f92672">duplicate_key</span>: <span style="color:#ae81ff">FROM_CONFIG_MAP</span>
-  <span style="color:#f92672">REPLACE_ME</span>: <span style="color:#e6db74">&#34;a value&#34;</span>
-</code></pre></div><p>Содержимое файла с описанием <code>PodPreset</code> будет теперь таким:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">settings.k8s.io/v1alpha1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PodPreset</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">allow-database</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">selector</span>:
-    <span style="color:#f92672">matchLabels</span>:
-      <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
-  <span style="color:#f92672">env</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">DB_PORT</span>
-      <span style="color:#f92672">value</span>: <span style="color:#e6db74">&#34;6379&#34;</span>
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">duplicate_key</span>
-      <span style="color:#f92672">value</span>: <span style="color:#ae81ff">FROM_ENV</span>
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">expansion</span>
-      <span style="color:#f92672">value</span>: <span style="color:#ae81ff">$(REPLACE_ME)</span>
-  <span style="color:#f92672">envFrom</span>:
-    - <span style="color:#f92672">configMapRef</span>:
-        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">etcd-env-config</span>
-  <span style="color:#f92672">volumeMounts</span>:
-    - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/cache</span>
-      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
-    - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/etc/app/config.json</span>
-      <span style="color:#f92672">readOnly</span>: <span style="color:#66d9ef">true</span>
-      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">secret-volume</span>
-  <span style="color:#f92672">volumes</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
-      <span style="color:#f92672">emptyDir</span>: {}
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">secret-volume</span>
-      <span style="color:#f92672">secret</span>:
-         <span style="color:#f92672">secretName</span>: <span style="color:#ae81ff">config-details</span>
-</code></pre></div><p>После создания пода и добавления к его спецификации информации с <code>PodPreset</code> он будет выглядеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
-  <span style="color:#f92672">labels</span>:
-    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">website</span>
-    <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
-  <span style="color:#f92672">annotations</span>:
-    <span style="color:#f92672">podpreset.admission.kubernetes.io/podpreset-allow-database</span>: <span style="color:#e6db74">&#34;resource version&#34;</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">containers</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
-      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">nginx</span>
-      <span style="color:#f92672">volumeMounts</span>:
-        - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/cache</span>
-          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
-        - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/etc/app/config.json</span>
-          <span style="color:#f92672">readOnly</span>: <span style="color:#66d9ef">true</span>
-          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">secret-volume</span>
-      <span style="color:#f92672">ports</span>:
-        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">80</span>
-      <span style="color:#f92672">env</span>:
-        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">DB_PORT</span>
-          <span style="color:#f92672">value</span>: <span style="color:#e6db74">&#34;6379&#34;</span>
-        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">duplicate_key</span>
-          <span style="color:#f92672">value</span>: <span style="color:#ae81ff">FROM_ENV</span>
-        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">expansion</span>
-          <span style="color:#f92672">value</span>: <span style="color:#ae81ff">$(REPLACE_ME)</span>
-      <span style="color:#f92672">envFrom</span>:
-        - <span style="color:#f92672">configMapRef</span>:
-            <span style="color:#f92672">name</span>: <span style="color:#ae81ff">etcd-env-config</span>
-  <span style="color:#f92672">volumes</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
-      <span style="color:#f92672">emptyDir</span>: {}
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">secret-volume</span>
-      <span style="color:#f92672">secret</span>:
-         <span style="color:#f92672">secretName</span>: <span style="color:#ae81ff">config-details</span>
-</code></pre></div><p>Чуть больше информации об использовании <code>PodPreset</code> можно найти <a href="https://kubernetes.io/docs/tasks/inject-data-application/podpreset/">тут</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">labels</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">website</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">containers</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">nginx</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">80</span>
+</span></span></code></pre></div><p>Описание конфигмапа (<code>ConfigMap</code>) выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ConfigMap</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">etcd-env-config</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">data</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">number_of_members</span>: <span style="color:#e6db74">&#34;1&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">initial_cluster_state</span>: <span style="color:#ae81ff">new</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">initial_cluster_token</span>: <span style="color:#ae81ff">DUMMY_ETCD_INITIAL_CLUSTER_TOKEN</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">discovery_token</span>: <span style="color:#ae81ff">DUMMY_ETCD_DISCOVERY_TOKEN</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">discovery_url</span>: <span style="color:#ae81ff">http://etcd_discovery:2379</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">etcdctl_peers</span>: <span style="color:#ae81ff">http://etcd:2379</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">duplicate_key</span>: <span style="color:#ae81ff">FROM_CONFIG_MAP</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">REPLACE_ME</span>: <span style="color:#e6db74">&#34;a value&#34;</span>
+</span></span></code></pre></div><p>Содержимое файла с описанием <code>PodPreset</code> будет теперь таким:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">settings.k8s.io/v1alpha1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">PodPreset</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">allow-database</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">selector</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">matchLabels</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">env</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">DB_PORT</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">value</span>: <span style="color:#e6db74">&#34;6379&#34;</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">duplicate_key</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">value</span>: <span style="color:#ae81ff">FROM_ENV</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">expansion</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">value</span>: <span style="color:#ae81ff">$(REPLACE_ME)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">envFrom</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">configMapRef</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">etcd-env-config</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">volumeMounts</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/cache</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/etc/app/config.json</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">readOnly</span>: <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">secret-volume</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">emptyDir</span>: {}
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">secret-volume</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">secret</span>:
+</span></span><span style="display:flex;"><span>         <span style="color:#f92672">secretName</span>: <span style="color:#ae81ff">config-details</span>
+</span></span></code></pre></div><p>После создания пода и добавления к его спецификации информации с <code>PodPreset</code> он будет выглядеть так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Pod</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">labels</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">website</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">role</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">annotations</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">podpreset.admission.kubernetes.io/podpreset-allow-database</span>: <span style="color:#e6db74">&#34;resource version&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">containers</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">website</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">image</span>: <span style="color:#ae81ff">nginx</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">volumeMounts</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/cache</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/etc/app/config.json</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">readOnly</span>: <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">secret-volume</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">80</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">env</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">DB_PORT</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">value</span>: <span style="color:#e6db74">&#34;6379&#34;</span>
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">duplicate_key</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">value</span>: <span style="color:#ae81ff">FROM_ENV</span>
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">expansion</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">value</span>: <span style="color:#ae81ff">$(REPLACE_ME)</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">envFrom</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">configMapRef</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">name</span>: <span style="color:#ae81ff">etcd-env-config</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cache-volume</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">emptyDir</span>: {}
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">secret-volume</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">secret</span>:
+</span></span><span style="display:flex;"><span>         <span style="color:#f92672">secretName</span>: <span style="color:#ae81ff">config-details</span>
+</span></span></code></pre></div><p>Чуть больше информации об использовании <code>PodPreset</code> можно найти <a href="https://kubernetes.io/docs/tasks/inject-data-application/podpreset/">тут</a>.</p>
                 </section>
             </article>
 
@@ -376,7 +376,7 @@ spec:
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

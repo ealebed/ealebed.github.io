@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,31 +106,31 @@
 <ul>
 <li>открываем на редактирование конфиг <code>/etc/asterisk/logger.conf</code>:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano /etc/asterisk/logger.conf
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano /etc/asterisk/logger.conf
+</span></span></code></pre></div><ul>
 <li>добавляем в секцию <code>[general]</code> строку:</li>
 </ul>
-<pre><code>...
+<pre tabindex="0"><code>...
 dateformat=%F %T
 ...
 </code></pre><ul>
 <li>и в секцию <code>[logfiles]</code>:</li>
 </ul>
-<pre><code>...
+<pre tabindex="0"><code>...
 security =&gt; security
 ...
 </code></pre><ul>
 <li>перечитываем конфиг Asterisk’а:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/asterisk reload
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/asterisk reload
+</span></span></code></pre></div><ul>
 <li>открываем на редактирование конфиг <code>/etc/fail2ban/jail.conf</code>:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano /etc/fail2ban/jail.conf
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano /etc/fail2ban/jail.conf
+</span></span></code></pre></div><ul>
 <li>и добавляем в конец файла следующие строки:</li>
 </ul>
-<pre><code>[asterisk-iptables]
+<pre tabindex="0"><code>[asterisk-iptables]
 enabled  = true
 filter   = asterisk
 action   = iptables-allports[name=ASTERISK, protocol=all]
@@ -142,7 +142,7 @@ ignoreip = 127.0.0.0/8 192.168.0.0/16
 </code></pre><ul>
 <li>создаем файл <code>/etc/fail2ban/filter.d/asterisk.conf</code> со следующим содержимым:</li>
 </ul>
-<pre><code># Fail2Ban configuration file
+<pre tabindex="0"><code># Fail2Ban configuration file
  
 [INCLUDES]
  
@@ -155,16 +155,16 @@ ignoreip = 127.0.0.0/8 192.168.0.0/16
  
 # Option:  failregex
 # Notes.:  regex to match the password failures messages in the logfile. The
-#          host must be matched by a group named &quot;host&quot;. The tag &quot;&quot; can
+#          host must be matched by a group named &#34;host&#34;. The tag &#34;&#34; can
 #          be used for standard IP/hostname matching and is only an alias for
 #          (?:::f{4,6}:)?(?P\S+)
 # Values:  TEXT
 #
  
-failregex = SECURITY.* SecurityEvent=&quot;FailedACL&quot;.*RemoteAddress=&quot;.+?/.+?/&lt;HOST&gt;/.+?&quot;.*
-            SECURITY.* SecurityEvent=&quot;InvalidAccountID&quot;.*RemoteAddress=&quot;.+?/.+?/&lt;HOST&gt;/.+?&quot;.*
-            SECURITY.* SecurityEvent=&quot;ChallengeResponseFailed&quot;.*RemoteAddress=&quot;.+?/.+?/&lt;HOST&gt;/.+?&quot;.*
-      SECURITY.* SecurityEvent=&quot;InvalidPassword&quot;.*RemoteAddress=&quot;.+?/.+?/&lt;HOST&gt;/.+?&quot;.*
+failregex = SECURITY.* SecurityEvent=&#34;FailedACL&#34;.*RemoteAddress=&#34;.+?/.+?/&lt;HOST&gt;/.+?&#34;.*
+            SECURITY.* SecurityEvent=&#34;InvalidAccountID&#34;.*RemoteAddress=&#34;.+?/.+?/&lt;HOST&gt;/.+?&#34;.*
+            SECURITY.* SecurityEvent=&#34;ChallengeResponseFailed&#34;.*RemoteAddress=&#34;.+?/.+?/&lt;HOST&gt;/.+?&#34;.*
+      SECURITY.* SecurityEvent=&#34;InvalidPassword&#34;.*RemoteAddress=&#34;.+?/.+?/&lt;HOST&gt;/.+?&#34;.*
  
 # Option:  ignoreregex
 # Notes.:  regex to ignore. If this regex matches, the line is ignored.
@@ -174,8 +174,8 @@ ignoreregex =
 </code></pre><ul>
 <li>перезапускаем <strong>Fail2Ban</strong> командой:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/fail2ban restart
-</code></pre></div><p>После проделанных действий <strong>Fail2Ban</strong> будет проверять <code>/var/log/asterisk/security</code> на наличие регулярных выражений, описанных в <code>/etc/fail2ban/filter.d/asterisk.conf</code>. При 5 попытках подбора SIP пароля ip-адрес атакующего будет заблокирован на 72 часа (259200 секунд) и будет отправлено письмо о данном событии на почтовый адрес noc@domain.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/fail2ban restart
+</span></span></code></pre></div><p>После проделанных действий <strong>Fail2Ban</strong> будет проверять <code>/var/log/asterisk/security</code> на наличие регулярных выражений, описанных в <code>/etc/fail2ban/filter.d/asterisk.conf</code>. При 5 попытках подбора SIP пароля ip-адрес атакующего будет заблокирован на 72 часа (259200 секунд) и будет отправлено письмо о данном событии на почтовый адрес noc@domain.</p>
 <p>Готово! Так быстро была организована <strong>защита Asterisk 11 от подбора паролей с помощью Fail2Ban</strong>.</p>
                 </section>
             </article>
@@ -268,7 +268,7 @@ ignoreregex =
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -119,29 +119,29 @@
 <li><code>-collect.info_schema.userstats=true</code></li>
 </ul>
 <p>С помощью следующих запросов выставляем необходимые права пользователю, который определен в переменной <code>DATA_SOURCE_NAME</code> компонента <code>mysqld_exporter</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">GRANT</span> REPLICATION CLIENT, PROCESS, SUPER, <span style="color:#66d9ef">SELECT</span> <span style="color:#66d9ef">ON</span> <span style="color:#f92672">*</span>.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> <span style="color:#e6db74">&#39;prometheus&#39;</span><span style="color:#f92672">@</span><span style="color:#e6db74">&#39;localhost&#39;</span> IDENTIFIED <span style="color:#66d9ef">BY</span> <span style="color:#e6db74">&#39;ПАРОЛЬ&#39;</span>;
-<span style="color:#66d9ef">GRANT</span> <span style="color:#66d9ef">SELECT</span>, <span style="color:#66d9ef">UPDATE</span>, <span style="color:#66d9ef">DELETE</span>, <span style="color:#66d9ef">DROP</span> <span style="color:#66d9ef">ON</span> performance_schema.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> <span style="color:#e6db74">&#39;prometheus&#39;</span><span style="color:#f92672">@</span><span style="color:#e6db74">&#39;localhost&#39;</span>;
-</code></pre></div><p>Предустановленные дашборды в своих настройках используют метку <code>alias</code> для работы с несколькими хостами. Убедитесь, что в конфигурационном файле <code>/etc/prometheus/prometheus.yml</code> вы тоже ее используете, например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
- - <span style="color:#f92672">job_name</span>: <span style="color:#e6db74">&#39;mysql&#39;</span>
-    <span style="color:#f92672">scrape_interval</span>: <span style="color:#e6db74">&#34;5s&#34;</span>
-    <span style="color:#f92672">honor_labels</span>: <span style="color:#66d9ef">true</span>
-    <span style="color:#f92672">target_groups</span>:
-      - <span style="color:#f92672">targets</span>: [<span style="color:#e6db74">&#39;localhost:9104&#39;</span>]
-        <span style="color:#f92672">labels</span>:
-          <span style="color:#f92672">alias</span>: <span style="color:#e6db74">&#39;db1&#39;</span>
-...
-</code></pre></div><p>В конце конфигурационного файла <code>/etc/grafana/grafana.ini</code> необходимо раскомментировать следующие строки:</p>
-<pre><code>...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">GRANT</span> REPLICATION CLIENT, PROCESS, SUPER, <span style="color:#66d9ef">SELECT</span> <span style="color:#66d9ef">ON</span> <span style="color:#f92672">*</span>.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> <span style="color:#e6db74">&#39;prometheus&#39;</span><span style="color:#f92672">@</span><span style="color:#e6db74">&#39;localhost&#39;</span> IDENTIFIED <span style="color:#66d9ef">BY</span> <span style="color:#e6db74">&#39;ПАРОЛЬ&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">GRANT</span> <span style="color:#66d9ef">SELECT</span>, <span style="color:#66d9ef">UPDATE</span>, <span style="color:#66d9ef">DELETE</span>, <span style="color:#66d9ef">DROP</span> <span style="color:#66d9ef">ON</span> performance_schema.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> <span style="color:#e6db74">&#39;prometheus&#39;</span><span style="color:#f92672">@</span><span style="color:#e6db74">&#39;localhost&#39;</span>;
+</span></span></code></pre></div><p>Предустановленные дашборды в своих настройках используют метку <code>alias</code> для работы с несколькими хостами. Убедитесь, что в конфигурационном файле <code>/etc/prometheus/prometheus.yml</code> вы тоже ее используете, например:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span> - <span style="color:#f92672">job_name</span>: <span style="color:#e6db74">&#39;mysql&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">scrape_interval</span>: <span style="color:#e6db74">&#34;5s&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">honor_labels</span>: <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">target_groups</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">targets</span>: [<span style="color:#e6db74">&#39;localhost:9104&#39;</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">labels</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">alias</span>: <span style="color:#e6db74">&#39;db1&#39;</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>В конце конфигурационного файла <code>/etc/grafana/grafana.ini</code> необходимо раскомментировать следующие строки:</p>
+<pre tabindex="0"><code>...
 [dashboards.json]
 enabled = false
 path = /var/lib/grafana/dashboards
 </code></pre><p>Устанавливаем дашборды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/percona/grafana-dashboards.git
-cp -r grafana-dashboards/dashboards /var/lib/grafana/
-</code></pre></div><p>Перезапускаем Grafana:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service grafana-server restart
-</code></pre></div><p>В репозитории Percon’ы существуют также <a href="https://hub.docker.com/r/percona/pmm-server/">готовые docker-образы</a> с настроенной связкой Prometheus и Grafana.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/percona/grafana-dashboards.git
+</span></span><span style="display:flex;"><span>cp -r grafana-dashboards/dashboards /var/lib/grafana/
+</span></span></code></pre></div><p>Перезапускаем Grafana:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>service grafana-server restart
+</span></span></code></pre></div><p>В репозитории Percon’ы существуют также <a href="https://hub.docker.com/r/percona/pmm-server/">готовые docker-образы</a> с настроенной связкой Prometheus и Grafana.</p>
                 </section>
             </article>
 
@@ -233,7 +233,7 @@ cp -r grafana-dashboards/dashboards /var/lib/grafana/
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

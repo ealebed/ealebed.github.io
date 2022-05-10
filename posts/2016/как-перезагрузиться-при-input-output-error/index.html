@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,29 +100,29 @@
                 <section id="post-body">
                     <p>Что делать, если при попытке запустить команду в консоли Linux выводится <code>Input/Output Error</code>? Давайте разберемся!</p>
 <p>В общем случае ситуация выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">du
--bash: /usr/bin/du: Input/output error
-</code></pre></div><p>или так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dmesg
--bash: /bin/dmesg: Input/output error
-</code></pre></div><p>или:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsof
--bash: /usr/bin/lsof: Input/output error
-</code></pre></div><p>Чаще всего проблема связана с неполадками системного диска (в конкретном случае используется SATA DOM). Первым делом нужно воспользоваться утилитой <code>fsck</code>, но увы:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">fsck
--bash: /sbin/fsck: Input/output error
-</code></pre></div><p>Либо диск совсем умер, либо проблема с физическим подключением накопителя (можно, например, попробовать заменить шлейф).
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>du
+</span></span><span style="display:flex;"><span>-bash: /usr/bin/du: Input/output error
+</span></span></code></pre></div><p>или так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dmesg
+</span></span><span style="display:flex;"><span>-bash: /bin/dmesg: Input/output error
+</span></span></code></pre></div><p>или:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsof
+</span></span><span style="display:flex;"><span>-bash: /usr/bin/lsof: Input/output error
+</span></span></code></pre></div><p>Чаще всего проблема связана с неполадками системного диска (в конкретном случае используется SATA DOM). Первым делом нужно воспользоваться утилитой <code>fsck</code>, но увы:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>fsck
+</span></span><span style="display:flex;"><span>-bash: /sbin/fsck: Input/output error
+</span></span></code></pre></div><p>Либо диск совсем умер, либо проблема с физическим подключением накопителя (можно, например, попробовать заменить шлейф).
 В любом случае, пытаемся загрузиться с rescue disk и выполнить <code>fsck</code> или <code>badblocks</code>.</p>
 <p>Пытаемся перезагрузиться:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">reboot
--bash: /sbin/reboot: Input/output error
-</code></pre></div><p>еще разок:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">shutdown -r now
--bash: /sbin/shutdown: Input/output error
-</code></pre></div><p>Если есть физический доступ к серверу, то можно подойти и перезагрузить его с кнопки. В противном случае может помочь следующая комбинация:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">echo <span style="color:#ae81ff">1</span> &gt; /proc/sys/kernel/sysrq
-echo b &gt; /proc/sysrq-trigger
-</code></pre></div><p>После загрузки с rescue disk’а и выполнения <code>fsck</code> все заработало, однако на production-серверах для системы лучше использовать RAID-массив. И даже в этом случае помнить: <strong>RAID is not backup!</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>reboot
+</span></span><span style="display:flex;"><span>-bash: /sbin/reboot: Input/output error
+</span></span></code></pre></div><p>еще разок:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>shutdown -r now
+</span></span><span style="display:flex;"><span>-bash: /sbin/shutdown: Input/output error
+</span></span></code></pre></div><p>Если есть физический доступ к серверу, то можно подойти и перезагрузить его с кнопки. В противном случае может помочь следующая комбинация:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#ae81ff">1</span> &gt; /proc/sys/kernel/sysrq
+</span></span><span style="display:flex;"><span>echo b &gt; /proc/sysrq-trigger
+</span></span></code></pre></div><p>После загрузки с rescue disk’а и выполнения <code>fsck</code> все заработало, однако на production-серверах для системы лучше использовать RAID-массив. И даже в этом случае помнить: <strong>RAID is not backup!</strong>.</p>
                 </section>
             </article>
 
@@ -214,7 +214,7 @@ echo b &gt; /proc/sysrq-trigger
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,26 +101,26 @@
                     <p>Довольно часто при обращении к сайту используются <strong>редиректы на уровне вебсервера Nginx</strong>. Чаще всего редиректы применяют для изменения имени домена (без www на домен с www) или протокола (с HTTP на HTTPS).</p>
 <p>Настройку на редиректов в NGINX можно сделать двумя способами — давайте разберемся!</p>
 <p>Пример настройки редиректа с домена без www на домен с www:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">server {
-        server_name example.com;
-        # Вариант 1
-        return 301 $scheme://www.$host$request_uri;
- 
-        # Вариант 2
-        rewrite ^ http://www.$host$request_uri? permanent;
-}
-</code></pre></div><p>Пример редиректа с HTTP на HTTPS:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">server {
-        server_name example.com;
-        # Вариант 1
-        return 301 https://$server_name$request_uri;
- 
-        # Вариант 2
-        rewrite ^ https://$server_name$request_uri? permanent;
-}
-</code></pre></div><p>Рассмотрим подробнее вариант с использованием директивы <code>rewrite</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">rewrite ^ http://$host$request_uri? &lt;флаг&gt;; 
-</code></pre></div><p>Здесь:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>server {
+</span></span><span style="display:flex;"><span>        server_name example.com;
+</span></span><span style="display:flex;"><span>        # Вариант 1
+</span></span><span style="display:flex;"><span>        return 301 $scheme://www.$host$request_uri;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>        # Вариант 2
+</span></span><span style="display:flex;"><span>        rewrite ^ http://www.$host$request_uri? permanent;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Пример редиректа с HTTP на HTTPS:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>server {
+</span></span><span style="display:flex;"><span>        server_name example.com;
+</span></span><span style="display:flex;"><span>        # Вариант 1
+</span></span><span style="display:flex;"><span>        return 301 https://$server_name$request_uri;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>        # Вариант 2
+</span></span><span style="display:flex;"><span>        rewrite ^ https://$server_name$request_uri? permanent;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Рассмотрим подробнее вариант с использованием директивы <code>rewrite</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>rewrite ^ http://$host$request_uri? &lt;флаг&gt;; 
+</span></span></code></pre></div><p>Здесь:</p>
 <ul>
 <li><code>$host</code> — имя хоста из запроса, если отсутствует — имя в поле «Host» заголовка, если тоже отсутствует — имя сервера;</li>
 <li><code>$request_uri</code> — первоначальный запрос с аргументами (все, что идет после доменного имени).</li>
@@ -133,8 +133,8 @@
 <li><code>break</code> — закончить обработку и остаться в текущем <code>location</code>.</li>
 </ul>
 <p>В вариант с использованием директивы <code>return</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">return &lt;код&gt; https://$host$request_uri;
-</code></pre></div><p>коды могут использоваться любые, но чаще всего — 301, 302, 404.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>return &lt;код&gt; https://$host$request_uri;
+</span></span></code></pre></div><p>коды могут использоваться любые, но чаще всего — 301, 302, 404.</p>
 <p>Для обычного посетителя сайта разницы между кодами 301 и 302 нет. А вот для поискового робота разница огромная — 301-й редирект говорит о «склеивании» страниц. Это означает для поисковика то, что старая и новая страницы — это одно и тоже. Таким образом результаты ранжирования необходимо сохранить для новой страницы. 302-й редирект просто говорит о том, что нужно перейти по другому адресу. Поисковый робот не сохраняет результат выдачи для новой страницы, индексируя его с нуля.</p>
 <p>Ключевые особенности обоих вариантов:</p>
 <p><strong>REWRITE</strong></p>
@@ -243,7 +243,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

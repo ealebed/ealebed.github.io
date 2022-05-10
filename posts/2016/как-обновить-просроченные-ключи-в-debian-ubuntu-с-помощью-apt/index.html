@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,52 +100,52 @@
                 <section id="post-body">
                     <p>Обновление программного обеспечения и управление пакетами в Debian-based операционных системах обычно не вызывает вопросов, однако вы можете столкнуться с сообщением <code>KEYEXPIRED</code>. Давайте разберемся, как обновить просроченные ключи!</p>
 <p>Симптомы примерно следующие:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get update
-Hit http://packages.dotdeb.org jessie InRelease
-Ign http://ftp.debian.org jessie InRelease
-Hit http://security.debian.org jessie/updates InRelease
-Ign http://nginx.org jessie InRelease
-Get:1 http://nginx.org jessie Release.gpg <span style="color:#f92672">[</span><span style="color:#ae81ff">287</span> B<span style="color:#f92672">]</span>
-Hit http://ftp.debian.org jessie Release.gpg
-Get:2 http://nginx.org jessie Release <span style="color:#f92672">[</span>2,331 B<span style="color:#f92672">]</span>
-Hit http://ftp.debian.org jessie Release
-Get:3 http://packages.dotdeb.org jessie/all amd64 Packages <span style="color:#f92672">[</span>86.5 kB<span style="color:#f92672">]</span>
-Err http://nginx.org jessie Release
-
-Hit http://security.debian.org jessie/updates/main amd64 Packages
-Hit http://security.debian.org jessie/updates/main Translation-en
-Ign http://packages.dotdeb.org jessie/all Translation-en_US
-Ign http://packages.dotdeb.org jessie/all Translation-en
-Hit http://ftp.debian.org jessie/main amd64 Packages
-Hit http://ftp.debian.org jessie/main Translation-en
-Fetched 89.1 kB in 1s <span style="color:#f92672">(</span>67.2 kB/s<span style="color:#f92672">)</span>
-Reading package lists... Done
-W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: http://nginx.org jessie Release: The following signatures were invalid: KEYEXPIRED <span style="color:#ae81ff">1471427554</span>
-
-W: Failed to fetch http://nginx.org/packages/mainline/debian/dists/jessie/Release
-
-W: Some index files failed to download. They have been ignored, or old ones used instead.
-</code></pre></div><p>Как видим, устарел ключ для репозитория <code>nginx</code> — нужно его обновить. Проверить все имеющиеся ключи в системе можно командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-key list
-...
-
-pub   2048R/7BD9BF62 2011-08-19 <span style="color:#f92672">[</span>expired: 2016-08-17<span style="color:#f92672">]</span>
-uid                  nginx signing key &lt; signing-key@nginx.com &gt;
-
-...
-</code></pre></div><p>Вывести только просроченные ключи:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-key list | grep expired:
-pub   2048R/7BD9BF62 2011-08-19 <span style="color:#f92672">[</span>expired: 2016-08-17<span style="color:#f92672">]</span>
-</code></pre></div><p>Теперь обновим ключ, полученный на предыдущем этапе:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-key adv --recv-keys --keyserver keys.gnupg.net 7BD9BF62
-Executing: gpg --ignore-time-conflict --no-options --no-default-keyring --homedir /tmp/tmp.Y4AY2GAbZO --no-auto-check-trustdb --trust-model always --keyring /etc/apt/trusted.gpg --primary-keyring /etc/apt/trusted.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-jessie-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-jessie-security-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-jessie-stable.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-squeeze-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-squeeze-stable.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-wheezy-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-wheezy-stable.gpg --recv-keys --keyserver keys.gnupg.net 7BD9BF62
-gpg: requesting key 7BD9BF62 from hkp server keys.gnupg.net
-gpg: key 7BD9BF62: <span style="color:#e6db74">&#34;nginx signing key &lt; signing-key@nginx.com &gt;&#34;</span> <span style="color:#ae81ff">6</span> new signatures
-gpg: Total number processed: <span style="color:#ae81ff">1</span>
-gpg:         new signatures: <span style="color:#ae81ff">6</span>
-</code></pre></div><p>Теперь можно вернуться к обновлению пакетов в системе — ошибка должна исчезнуть:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get update <span style="color:#f92672">&amp;&amp;</span> apt-get upgrade
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apt-get update
+</span></span><span style="display:flex;"><span>Hit http://packages.dotdeb.org jessie InRelease
+</span></span><span style="display:flex;"><span>Ign http://ftp.debian.org jessie InRelease
+</span></span><span style="display:flex;"><span>Hit http://security.debian.org jessie/updates InRelease
+</span></span><span style="display:flex;"><span>Ign http://nginx.org jessie InRelease
+</span></span><span style="display:flex;"><span>Get:1 http://nginx.org jessie Release.gpg <span style="color:#f92672">[</span><span style="color:#ae81ff">287</span> B<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Hit http://ftp.debian.org jessie Release.gpg
+</span></span><span style="display:flex;"><span>Get:2 http://nginx.org jessie Release <span style="color:#f92672">[</span>2,331 B<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Hit http://ftp.debian.org jessie Release
+</span></span><span style="display:flex;"><span>Get:3 http://packages.dotdeb.org jessie/all amd64 Packages <span style="color:#f92672">[</span>86.5 kB<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Err http://nginx.org jessie Release
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hit http://security.debian.org jessie/updates/main amd64 Packages
+</span></span><span style="display:flex;"><span>Hit http://security.debian.org jessie/updates/main Translation-en
+</span></span><span style="display:flex;"><span>Ign http://packages.dotdeb.org jessie/all Translation-en_US
+</span></span><span style="display:flex;"><span>Ign http://packages.dotdeb.org jessie/all Translation-en
+</span></span><span style="display:flex;"><span>Hit http://ftp.debian.org jessie/main amd64 Packages
+</span></span><span style="display:flex;"><span>Hit http://ftp.debian.org jessie/main Translation-en
+</span></span><span style="display:flex;"><span>Fetched 89.1 kB in 1s <span style="color:#f92672">(</span>67.2 kB/s<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Reading package lists... Done
+</span></span><span style="display:flex;"><span>W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: http://nginx.org jessie Release: The following signatures were invalid: KEYEXPIRED <span style="color:#ae81ff">1471427554</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>W: Failed to fetch http://nginx.org/packages/mainline/debian/dists/jessie/Release
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>W: Some index files failed to download. They have been ignored, or old ones used instead.
+</span></span></code></pre></div><p>Как видим, устарел ключ для репозитория <code>nginx</code> — нужно его обновить. Проверить все имеющиеся ключи в системе можно командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apt-key list
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pub   2048R/7BD9BF62 2011-08-19 <span style="color:#f92672">[</span>expired: 2016-08-17<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>uid                  nginx signing key &lt; signing-key@nginx.com &gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Вывести только просроченные ключи:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apt-key list | grep expired:
+</span></span><span style="display:flex;"><span>pub   2048R/7BD9BF62 2011-08-19 <span style="color:#f92672">[</span>expired: 2016-08-17<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>Теперь обновим ключ, полученный на предыдущем этапе:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apt-key adv --recv-keys --keyserver keys.gnupg.net 7BD9BF62
+</span></span><span style="display:flex;"><span>Executing: gpg --ignore-time-conflict --no-options --no-default-keyring --homedir /tmp/tmp.Y4AY2GAbZO --no-auto-check-trustdb --trust-model always --keyring /etc/apt/trusted.gpg --primary-keyring /etc/apt/trusted.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-jessie-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-jessie-security-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-jessie-stable.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-squeeze-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-squeeze-stable.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-wheezy-automatic.gpg --keyring /etc/apt/trusted.gpg.d/debian-archive-wheezy-stable.gpg --recv-keys --keyserver keys.gnupg.net 7BD9BF62
+</span></span><span style="display:flex;"><span>gpg: requesting key 7BD9BF62 from hkp server keys.gnupg.net
+</span></span><span style="display:flex;"><span>gpg: key 7BD9BF62: <span style="color:#e6db74">&#34;nginx signing key &lt; signing-key@nginx.com &gt;&#34;</span> <span style="color:#ae81ff">6</span> new signatures
+</span></span><span style="display:flex;"><span>gpg: Total number processed: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>gpg:         new signatures: <span style="color:#ae81ff">6</span>
+</span></span></code></pre></div><p>Теперь можно вернуться к обновлению пакетов в системе — ошибка должна исчезнуть:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apt-get update <span style="color:#f92672">&amp;&amp;</span> apt-get upgrade
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -237,7 +237,7 @@ gpg:         new signatures: <span style="color:#ae81ff">6</span>
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

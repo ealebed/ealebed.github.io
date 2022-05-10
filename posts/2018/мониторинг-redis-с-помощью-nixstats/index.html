@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,171 +106,171 @@
 <p>Давайте разберемся с настройкой <strong>мониторинга Redis с помощью Nixstats</strong>!</p>
 <p>К моему удивлению, в системе мониторинга Nixstats не оказалось плагина для мониторинга Redis — не беда, напишем его самостоятельно! В блоге разработчика есть <a href="https://blog.nixstats.com/creating-a-custom-monitor-plugin/">пример</a> с созданием кастомного (custom) плагина на python.</p>
 <p>В системе должен быть установлен Redis Python Client, сделать это можно с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pip install redis
-</code></pre></div><p>Чтобы узнать, где расположен каталог с плагинами Nixstats выполняем команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nixstatsagent info
-</code></pre></div><p>Результат команды выглядит примерно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Version: 1.1.32
-Plugins enabled: mysql, cpu, ping, diskusage, system, memory, swap, loadavg, process, iostat, network, phpfpm, nginx
-Plugins directory: /usr/local/lib/python2.7/dist-packages/nixstatsagent/plugins
-Server: 59e9ee3b3a2bbd639a670f43
-</code></pre></div><p>В каталоге с плагинами создаем файл <code>redis_stat.py</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#!/usr/bin/env python</span>
-
-<span style="color:#960050;background-color:#1e0010">——</span> coding: utf<span style="color:#f92672">-</span><span style="color:#ae81ff">8</span> <span style="color:#960050;background-color:#1e0010">——</span>
-<span style="color:#f92672">import</span> plugins
-<span style="color:#f92672">import</span> redis
-
-Uncomment<span style="color:#f92672">/</span>Comment the Attribute Names to be monitored
-METRICS <span style="color:#f92672">=</span> {
-
-<span style="color:#75715e">###Server section</span>
-<span style="color:#75715e">#&#34;redis_version&#34;: &#34;redis version&#34;,</span>
-<span style="color:#75715e">#&#34;redis_git_sha1&#34;: &#34;redis git sha1&#34;,</span>
-<span style="color:#75715e">#&#34;redis_git_dirty&#34;: &#34;redis git dirty&#34;,</span>
-<span style="color:#75715e">#&#34;redis_build_id&#34;: &#34;redis build id&#34;,</span>
-<span style="color:#75715e">#&#34;redis_mode&#34;: &#34;redis mode&#34;,</span>
-<span style="color:#75715e">#&#34;os&#34;: &#34;os&#34;,</span>
-<span style="color:#75715e">#&#34;arch_bits&#34;: &#34;arch bits&#34;,</span>
-<span style="color:#75715e">#&#34;multiplexing_api&#34;: &#34;multiplexing api&#34;,</span>
-<span style="color:#75715e">#&#34;gcc_version&#34;: &#34;gcc version&#34;,</span>
-<span style="color:#75715e">#&#34;process_id&#34;: &#34;process id&#34;,</span>
-<span style="color:#75715e">#&#34;run_id&#34;: &#34;run id&#34;,</span>
-<span style="color:#75715e">#&#34;tcp_port&#34;: &#34;tcp port&#34;,</span>
-<span style="color:#e6db74">&#34;uptime_in_seconds&#34;</span>: <span style="color:#e6db74">&#34;uptime&#34;</span>,
-<span style="color:#75715e">#&#34;uptime_in_days&#34;: &#34;uptime in days&#34;,</span>
-<span style="color:#75715e">#&#34;hz&#34;: &#34;hz&#34;,</span>
-<span style="color:#75715e">#&#34;lru_clock&#34;: &#34;lru clock&#34;,</span>
-<span style="color:#75715e">#&#34;executable&#34;: &#34;redis path&#34;,</span>
-<span style="color:#75715e">#&#34;config_file&#34;: &#34;config file&#34;,</span>
-
-<span style="color:#75715e">###Clients section</span>
-<span style="color:#e6db74">&#34;connected_clients&#34;</span>: <span style="color:#e6db74">&#34;connected clients&#34;</span>,
-<span style="color:#75715e">#&#34;client_longest_output_list&#34;: &#34;client longest output list&#34;,</span>
-<span style="color:#75715e">#&#34;client_biggest_input_buf&#34;: &#34;client biggest input buf&#34;,</span>
-<span style="color:#75715e">#&#34;blocked_clients&#34;: &#34;blocked clients&#34;,</span>
-
-<span style="color:#75715e">###Memory section</span>
-<span style="color:#e6db74">&#34;used_memory&#34;</span>: <span style="color:#e6db74">&#34;used memory&#34;</span>,
-<span style="color:#e6db74">&#34;used_memory_human&#34;</span>: <span style="color:#e6db74">&#34;used memory human&#34;</span>,
-<span style="color:#75715e">#&#34;used_memory_rss&#34;: &#34;used memory rss&#34;,</span>
-<span style="color:#75715e">#&#34;used_memory_rss_human&#34;: &#34;used memory rss human&#34;,</span>
-<span style="color:#75715e">#&#34;used_memory_peak&#34;: &#34;used memory peak&#34;,</span>
-<span style="color:#e6db74">&#34;used_memory_peak_human&#34;</span>: <span style="color:#e6db74">&#34;used memory peak human&#34;</span>,
-<span style="color:#75715e">#&#34;total_system_memory&#34;: &#34;total system memory&#34;,</span>
-<span style="color:#75715e">#&#34;total_system_memory_human&#34;: &#34;total system memory human&#34;,</span>
-<span style="color:#75715e">#&#34;used_memory_lua&#34;: &#34;used memory lua&#34;,</span>
-<span style="color:#75715e">#&#34;used_memory_lua_human&#34;: &#34;used memory lua human&#34;,</span>
-<span style="color:#e6db74">&#34;maxmemory&#34;</span>: <span style="color:#e6db74">&#34;maxmemory&#34;</span>,
-<span style="color:#75715e">#&#34;maxmemory_human&#34;: &#34;maxmemory human&#34;,</span>
-<span style="color:#e6db74">&#34;maxmemory_policy&#34;</span>: <span style="color:#e6db74">&#34;maxmemory policy&#34;</span>,
-<span style="color:#75715e">#&#34;mem_fragmentation_ratio&#34;: &#34;mem fragmentation ratio&#34;,</span>
-<span style="color:#75715e">#&#34;mem_allocator&#34;: &#34;mem allocator&#34;,</span>
-
-<span style="color:#75715e">###Persistence section</span>
-<span style="color:#75715e">#&#34;loading&#34;: &#34;loading&#34;,</span>
-<span style="color:#75715e">#&#34;rdb_changes_since_last_save&#34;: &#34;rdb changes since last save&#34;,</span>
-<span style="color:#75715e">#&#34;rdb_bgsave_in_progress&#34;: &#34;rdb bgsave in progress&#34;,</span>
-<span style="color:#75715e">#&#34;rdb_last_save_time&#34;: &#34;rdb last save time&#34;,</span>
-<span style="color:#75715e">#&#34;rdb_last_bgsave_status&#34;: &#34;rdb last bgsave status&#34;,</span>
-<span style="color:#75715e">#&#34;rdb_last_bgsave_time_sec&#34;: &#34;rdb last bgsave time sec&#34;,</span>
-<span style="color:#75715e">#&#34;rdb_current_bgsave_time_sec&#34;: &#34;rdb current bgsave time sec&#34;,</span>
-<span style="color:#75715e">#&#34;aof_enabled&#34;: &#34;aof enabled&#34;,</span>
-<span style="color:#75715e">#&#34;aof_rewrite_in_progress&#34;: &#34;aof rewrite in progress&#34;,</span>
-<span style="color:#75715e">#&#34;aof_rewrite_scheduled&#34;: &#34;aof rewrite scheduled&#34;,</span>
-<span style="color:#75715e">#&#34;aof_last_rewrite_time_sec&#34;: &#34;aof last rewrite time&#34;,</span>
-<span style="color:#75715e">#&#34;aof_current_rewrite_time_sec&#34;: &#34;aof current rewrite time&#34;,</span>
-<span style="color:#75715e">#&#34;aof_last_bgrewrite_status&#34;: &#34;aof last bgrewrite status&#34;,</span>
-<span style="color:#75715e">#&#34;aof_last_write_status&#34;: &#34;aof last write status&#34;,</span>
-<span style="color:#75715e">#&#34;aof_current_size&#34;: &#34;aof current size&#34;,</span>
-<span style="color:#75715e">#&#34;aof_base_size&#34;: &#34;aof base size&#34;,</span>
-<span style="color:#75715e">#&#34;aof_pending_rewrite&#34;: &#34;aof pending rewrite&#34;,</span>
-<span style="color:#75715e">#&#34;aof_buffer_length&#34;: &#34;aof buffer length&#34;,</span>
-<span style="color:#75715e">#&#34;aof_rewrite_buffer_length&#34;: &#34;aof rewrite buffer length&#34;,</span>
-<span style="color:#75715e">#&#34;aof_pending_bio_fsync&#34;: &#34;aof pending bio fsync&#34;,</span>
-<span style="color:#75715e">#&#34;aof_delayed_fsync&#34;: &#34;aof delayed fsync&#34;,</span>
-
-<span style="color:#75715e">###Stats section</span>
-<span style="color:#75715e">#&#34;total_connections_received&#34;: &#34;total connections received&#34;,</span>
-<span style="color:#e6db74">&#34;total_commands_processed&#34;</span>: <span style="color:#e6db74">&#34;total commands processed&#34;</span>,
-<span style="color:#75715e">#&#34;instantaneous_ops_per_sec&#34;: &#34;instantaneous ops per sec&#34;,</span>
-<span style="color:#e6db74">&#34;total_net_input_bytes&#34;</span>: <span style="color:#e6db74">&#34;total net input bytes&#34;</span>,
-<span style="color:#e6db74">&#34;total_net_output_bytes&#34;</span>: <span style="color:#e6db74">&#34;total net output bytes&#34;</span>,
-<span style="color:#75715e">#&#34;instantaneous_input_kbps&#34;: &#34;instantaneous input kbps&#34;,</span>
-<span style="color:#75715e">#&#34;instantaneous_output_kbps&#34;: &#34;instantaneous output kbps&#34;,</span>
-<span style="color:#75715e">#&#34;rejected_connections&#34;: &#34;rejected connections&#34;,</span>
-<span style="color:#75715e">#&#34;sync_full&#34;: &#34;sync full&#34;,</span>
-<span style="color:#75715e">#&#34;sync_partial_ok&#34;: &#34;sync partial ok&#34;,</span>
-<span style="color:#75715e">#&#34;sync_partial_err&#34;: &#34;sync partial err&#34;,</span>
-<span style="color:#e6db74">&#34;expired_keys&#34;</span>: <span style="color:#e6db74">&#34;expired keys&#34;</span>,
-<span style="color:#e6db74">&#34;evicted_keys&#34;</span>: <span style="color:#e6db74">&#34;evicted keys&#34;</span>,
-<span style="color:#e6db74">&#34;keyspace_hits&#34;</span>: <span style="color:#e6db74">&#34;keyspace hits&#34;</span>,
-<span style="color:#e6db74">&#34;keyspace_misses&#34;</span>: <span style="color:#e6db74">&#34;keyspace misses&#34;</span>,
-<span style="color:#75715e">#&#34;pubsub_channels&#34;: &#34;pubsub channels&#34;,</span>
-<span style="color:#75715e">#&#34;pubsub_patterns&#34;: &#34;pubsub patterns&#34;,</span>
-<span style="color:#75715e">#&#34;latest_fork_usec&#34;: &#34;latest fork usec&#34;,</span>
-<span style="color:#75715e">#&#34;migrate_cached_sockets&#34;: &#34;migrate cached sockets&#34;,</span>
-
-<span style="color:#75715e">###Replication section</span>
-<span style="color:#75715e">#&#34;role&#34;: &#34;role&#34;,</span>
-<span style="color:#75715e">#&#34;connected_slaves&#34;: &#34;connected slaves&#34;,</span>
-<span style="color:#75715e">#&#34;master_repl_offset&#34;: &#34;master repl offset&#34;,</span>
-<span style="color:#75715e">#&#34;repl_backlog_active&#34;: &#34;repl backlog active&#34;,</span>
-<span style="color:#75715e">#&#34;repl_backlog_size&#34;: &#34;repl backlog size&#34;,</span>
-<span style="color:#75715e">#&#34;repl_backlog_first_byte_offset&#34;: &#34;repl backlog first byte offset&#34;,</span>
-<span style="color:#75715e">#&#34;repl_backlog_histlen&#34;: &#34;repl backlog histlen&#34;,</span>
-
-<span style="color:#75715e">###CPU section</span>
-<span style="color:#75715e">#&#34;used_cpu_sys&#34;: &#34;used cpu sys&#34;,</span>
-<span style="color:#75715e">#&#34;used_cpu_user&#34;: &#34;used cpu user&#34;,</span>
-<span style="color:#75715e">#&#34;used_cpu_sys_children&#34;: &#34;used cpu sys children&#34;,</span>
-<span style="color:#75715e">#&#34;used_cpu_user_children&#34;: &#34;used cpu user children&#34;,</span>
-
-<span style="color:#75715e">###Cluster section</span>
-<span style="color:#e6db74">&#34;cluster_enabled&#34;</span>: <span style="color:#e6db74">&#34;cluster enabled&#34;</span>
-}
-
-<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Plugin</span>(plugins<span style="color:#f92672">.</span>BasePlugin):
-name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;redis_stat&#39;</span>
-
-<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run</span>(self, config):
-    data <span style="color:#f92672">=</span> {}
-    stats <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
-    <span style="color:#66d9ef">try</span>:
-        redis_host <span style="color:#f92672">=</span> (config<span style="color:#f92672">.</span>get(__name__, <span style="color:#e6db74">&#39;host&#39;</span>))
-    <span style="color:#66d9ef">except</span>:
-        redis_host <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;127.0.0.1&#39;</span>
-    <span style="color:#66d9ef">try</span>:
-        redis_port <span style="color:#f92672">=</span> (config<span style="color:#f92672">.</span>get(__name__, <span style="color:#e6db74">&#39;port&#39;</span>))
-    <span style="color:#66d9ef">except</span>:
-        redis_port <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;6379&#39;</span>
-    <span style="color:#66d9ef">try</span>:
-        redis_db <span style="color:#f92672">=</span> (config<span style="color:#f92672">.</span>get(__name__, <span style="color:#e6db74">&#39;db&#39;</span>))
-    <span style="color:#66d9ef">except</span>:
-        redis_db <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;0&#39;</span>
-    <span style="color:#66d9ef">try</span>:
-        redis_password <span style="color:#f92672">=</span> (config<span style="color:#f92672">.</span>get(__name__, <span style="color:#e6db74">&#39;password&#39;</span>))
-    <span style="color:#66d9ef">except</span>:
-        redis_password <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>
-
-    <span style="color:#66d9ef">try</span>:
-        redis_connection <span style="color:#f92672">=</span> redis<span style="color:#f92672">.</span>StrictRedis(host<span style="color:#f92672">=</span>redis_host,port<span style="color:#f92672">=</span>redis_port,db<span style="color:#f92672">=</span>redis_db,password<span style="color:#f92672">=</span>redis_password)
-        stats <span style="color:#f92672">=</span> redis_connection<span style="color:#f92672">.</span>info()
-    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
-        data[<span style="color:#e6db74">&#39;status&#39;</span>]<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-        data[<span style="color:#e6db74">&#39;msg&#39;</span>]<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;Connection Error&#39;</span>
-        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> stats:
-            <span style="color:#66d9ef">return</span> data
-
-    <span style="color:#66d9ef">for</span> name, value <span style="color:#f92672">in</span> stats<span style="color:#f92672">.</span>iteritems():
-        <span style="color:#66d9ef">if</span> name <span style="color:#f92672">in</span> METRICS<span style="color:#f92672">.</span>keys() :
-            data[METRICS[name]] <span style="color:#f92672">=</span> value
-    <span style="color:#66d9ef">return</span> data
-<span style="color:#66d9ef">if</span> name <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;main&#39;</span>:
-Plugin()<span style="color:#f92672">.</span>execute()
-</code></pre></div><p><strong>Примечание.</strong> В массиве <code>METRICS</code> можете раскомментировать те параметры, которые хотите мониторить.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install redis
+</span></span></code></pre></div><p>Чтобы узнать, где расположен каталог с плагинами Nixstats выполняем команду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nixstatsagent info
+</span></span></code></pre></div><p>Результат команды выглядит примерно так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Version: 1.1.32
+</span></span><span style="display:flex;"><span>Plugins enabled: mysql, cpu, ping, diskusage, system, memory, swap, loadavg, process, iostat, network, phpfpm, nginx
+</span></span><span style="display:flex;"><span>Plugins directory: /usr/local/lib/python2.7/dist-packages/nixstatsagent/plugins
+</span></span><span style="display:flex;"><span>Server: 59e9ee3b3a2bbd639a670f43
+</span></span></code></pre></div><p>В каталоге с плагинами создаем файл <code>redis_stat.py</code> следующего содержания:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env python</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">——</span> coding: utf<span style="color:#f92672">-</span><span style="color:#ae81ff">8</span> <span style="color:#960050;background-color:#1e0010">——</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> plugins
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> redis
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Uncomment<span style="color:#f92672">/</span>Comment the Attribute Names to be monitored
+</span></span><span style="display:flex;"><span>METRICS <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">###Server section</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;redis_version&#34;: &#34;redis version&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;redis_git_sha1&#34;: &#34;redis git sha1&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;redis_git_dirty&#34;: &#34;redis git dirty&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;redis_build_id&#34;: &#34;redis build id&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;redis_mode&#34;: &#34;redis mode&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;os&#34;: &#34;os&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;arch_bits&#34;: &#34;arch bits&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;multiplexing_api&#34;: &#34;multiplexing api&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;gcc_version&#34;: &#34;gcc version&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;process_id&#34;: &#34;process id&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;run_id&#34;: &#34;run id&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;tcp_port&#34;: &#34;tcp port&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;uptime_in_seconds&#34;</span>: <span style="color:#e6db74">&#34;uptime&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;uptime_in_days&#34;: &#34;uptime in days&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;hz&#34;: &#34;hz&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;lru_clock&#34;: &#34;lru clock&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;executable&#34;: &#34;redis path&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;config_file&#34;: &#34;config file&#34;,</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">###Clients section</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;connected_clients&#34;</span>: <span style="color:#e6db74">&#34;connected clients&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;client_longest_output_list&#34;: &#34;client longest output list&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;client_biggest_input_buf&#34;: &#34;client biggest input buf&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;blocked_clients&#34;: &#34;blocked clients&#34;,</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">###Memory section</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;used_memory&#34;</span>: <span style="color:#e6db74">&#34;used memory&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;used_memory_human&#34;</span>: <span style="color:#e6db74">&#34;used memory human&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;used_memory_rss&#34;: &#34;used memory rss&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;used_memory_rss_human&#34;: &#34;used memory rss human&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;used_memory_peak&#34;: &#34;used memory peak&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;used_memory_peak_human&#34;</span>: <span style="color:#e6db74">&#34;used memory peak human&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;total_system_memory&#34;: &#34;total system memory&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;total_system_memory_human&#34;: &#34;total system memory human&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;used_memory_lua&#34;: &#34;used memory lua&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;used_memory_lua_human&#34;: &#34;used memory lua human&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;maxmemory&#34;</span>: <span style="color:#e6db74">&#34;maxmemory&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;maxmemory_human&#34;: &#34;maxmemory human&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;maxmemory_policy&#34;</span>: <span style="color:#e6db74">&#34;maxmemory policy&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;mem_fragmentation_ratio&#34;: &#34;mem fragmentation ratio&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;mem_allocator&#34;: &#34;mem allocator&#34;,</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">###Persistence section</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;loading&#34;: &#34;loading&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;rdb_changes_since_last_save&#34;: &#34;rdb changes since last save&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;rdb_bgsave_in_progress&#34;: &#34;rdb bgsave in progress&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;rdb_last_save_time&#34;: &#34;rdb last save time&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;rdb_last_bgsave_status&#34;: &#34;rdb last bgsave status&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;rdb_last_bgsave_time_sec&#34;: &#34;rdb last bgsave time sec&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;rdb_current_bgsave_time_sec&#34;: &#34;rdb current bgsave time sec&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_enabled&#34;: &#34;aof enabled&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_rewrite_in_progress&#34;: &#34;aof rewrite in progress&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_rewrite_scheduled&#34;: &#34;aof rewrite scheduled&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_last_rewrite_time_sec&#34;: &#34;aof last rewrite time&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_current_rewrite_time_sec&#34;: &#34;aof current rewrite time&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_last_bgrewrite_status&#34;: &#34;aof last bgrewrite status&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_last_write_status&#34;: &#34;aof last write status&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_current_size&#34;: &#34;aof current size&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_base_size&#34;: &#34;aof base size&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_pending_rewrite&#34;: &#34;aof pending rewrite&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_buffer_length&#34;: &#34;aof buffer length&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_rewrite_buffer_length&#34;: &#34;aof rewrite buffer length&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_pending_bio_fsync&#34;: &#34;aof pending bio fsync&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;aof_delayed_fsync&#34;: &#34;aof delayed fsync&#34;,</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">###Stats section</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;total_connections_received&#34;: &#34;total connections received&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;total_commands_processed&#34;</span>: <span style="color:#e6db74">&#34;total commands processed&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;instantaneous_ops_per_sec&#34;: &#34;instantaneous ops per sec&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;total_net_input_bytes&#34;</span>: <span style="color:#e6db74">&#34;total net input bytes&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;total_net_output_bytes&#34;</span>: <span style="color:#e6db74">&#34;total net output bytes&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;instantaneous_input_kbps&#34;: &#34;instantaneous input kbps&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;instantaneous_output_kbps&#34;: &#34;instantaneous output kbps&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;rejected_connections&#34;: &#34;rejected connections&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;sync_full&#34;: &#34;sync full&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;sync_partial_ok&#34;: &#34;sync partial ok&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;sync_partial_err&#34;: &#34;sync partial err&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;expired_keys&#34;</span>: <span style="color:#e6db74">&#34;expired keys&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;evicted_keys&#34;</span>: <span style="color:#e6db74">&#34;evicted keys&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;keyspace_hits&#34;</span>: <span style="color:#e6db74">&#34;keyspace hits&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;keyspace_misses&#34;</span>: <span style="color:#e6db74">&#34;keyspace misses&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;pubsub_channels&#34;: &#34;pubsub channels&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;pubsub_patterns&#34;: &#34;pubsub patterns&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;latest_fork_usec&#34;: &#34;latest fork usec&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;migrate_cached_sockets&#34;: &#34;migrate cached sockets&#34;,</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">###Replication section</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;role&#34;: &#34;role&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;connected_slaves&#34;: &#34;connected slaves&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;master_repl_offset&#34;: &#34;master repl offset&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;repl_backlog_active&#34;: &#34;repl backlog active&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;repl_backlog_size&#34;: &#34;repl backlog size&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;repl_backlog_first_byte_offset&#34;: &#34;repl backlog first byte offset&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;repl_backlog_histlen&#34;: &#34;repl backlog histlen&#34;,</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">###CPU section</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;used_cpu_sys&#34;: &#34;used cpu sys&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;used_cpu_user&#34;: &#34;used cpu user&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;used_cpu_sys_children&#34;: &#34;used cpu sys children&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#&#34;used_cpu_user_children&#34;: &#34;used cpu user children&#34;,</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">###Cluster section</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;cluster_enabled&#34;</span>: <span style="color:#e6db74">&#34;cluster enabled&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Plugin</span>(plugins<span style="color:#f92672">.</span>BasePlugin):
+</span></span><span style="display:flex;"><span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;redis_stat&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run</span>(self, config):
+</span></span><span style="display:flex;"><span>    data <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span>    stats <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        redis_host <span style="color:#f92672">=</span> (config<span style="color:#f92672">.</span>get(__name__, <span style="color:#e6db74">&#39;host&#39;</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span>:
+</span></span><span style="display:flex;"><span>        redis_host <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;127.0.0.1&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        redis_port <span style="color:#f92672">=</span> (config<span style="color:#f92672">.</span>get(__name__, <span style="color:#e6db74">&#39;port&#39;</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span>:
+</span></span><span style="display:flex;"><span>        redis_port <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;6379&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        redis_db <span style="color:#f92672">=</span> (config<span style="color:#f92672">.</span>get(__name__, <span style="color:#e6db74">&#39;db&#39;</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span>:
+</span></span><span style="display:flex;"><span>        redis_db <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;0&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        redis_password <span style="color:#f92672">=</span> (config<span style="color:#f92672">.</span>get(__name__, <span style="color:#e6db74">&#39;password&#39;</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span>:
+</span></span><span style="display:flex;"><span>        redis_password <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        redis_connection <span style="color:#f92672">=</span> redis<span style="color:#f92672">.</span>StrictRedis(host<span style="color:#f92672">=</span>redis_host,port<span style="color:#f92672">=</span>redis_port,db<span style="color:#f92672">=</span>redis_db,password<span style="color:#f92672">=</span>redis_password)
+</span></span><span style="display:flex;"><span>        stats <span style="color:#f92672">=</span> redis_connection<span style="color:#f92672">.</span>info()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>        data[<span style="color:#e6db74">&#39;status&#39;</span>]<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        data[<span style="color:#e6db74">&#39;msg&#39;</span>]<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;Connection Error&#39;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> stats:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> name, value <span style="color:#f92672">in</span> stats<span style="color:#f92672">.</span>iteritems():
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> name <span style="color:#f92672">in</span> METRICS<span style="color:#f92672">.</span>keys() :
+</span></span><span style="display:flex;"><span>            data[METRICS[name]] <span style="color:#f92672">=</span> value
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> data
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> name <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;main&#39;</span>:
+</span></span><span style="display:flex;"><span>Plugin()<span style="color:#f92672">.</span>execute()
+</span></span></code></pre></div><p><strong>Примечание.</strong> В массиве <code>METRICS</code> можете раскомментировать те параметры, которые хотите мониторить.</p>
 <p>В файле с настройками агента мониторинга (<code>/etc/nixstats.ini</code>) добавляем следующие строки:</p>
-<pre><code>[redis_stat]
+<pre tabindex="0"><code>[redis_stat]
 enabled = yes
 ;host = 127.0.0.1
 ;port = 6379
@@ -278,25 +278,25 @@ enabled = yes
 ;password =
 </code></pre><p>Если какое-либо значение параметров <code>host</code>, <code>port</code>, <code>db</code> или <code>password</code> в вашем случае отличается от значения по умолчанию, то нужно раскомментировать соответствующую строку и внести в нее свои данные.</p>
 <p>Теперь в командной строке можно проверить работоспособность плагина (выводятся только раскомментированные параметры из массива <code>METRICS</code>):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nixstatsagent test redis_stat
-redis_stat:
-<span style="color:#f92672">{</span>
-    <span style="color:#e6db74">&#34;cluster enabled&#34;</span>: 0,
-    <span style="color:#e6db74">&#34;connected clients&#34;</span>: 4,
-    <span style="color:#e6db74">&#34;evicted keys&#34;</span>: 0,
-    <span style="color:#e6db74">&#34;expired keys&#34;</span>: 6520359,
-    <span style="color:#e6db74">&#34;keyspace hits&#34;</span>: 113145616,
-    <span style="color:#e6db74">&#34;keyspace misses&#34;</span>: 6530433,
-    <span style="color:#e6db74">&#34;maxmemory&#34;</span>: 0,
-    <span style="color:#e6db74">&#34;maxmemory policy&#34;</span>: <span style="color:#e6db74">&#34;noeviction&#34;</span>,
-    <span style="color:#e6db74">&#34;total commands processed&#34;</span>: 238914916,
-    <span style="color:#e6db74">&#34;total net input bytes&#34;</span>: 105817223644,
-    <span style="color:#e6db74">&#34;total net output bytes&#34;</span>: 24410554097312,
-    <span style="color:#e6db74">&#34;uptime&#34;</span>: 4313615,
-    <span style="color:#e6db74">&#34;used memory&#34;</span>: 404803016,
-    <span style="color:#e6db74">&#34;used memory peak human&#34;</span>: <span style="color:#e6db74">&#34;958.50M&#34;</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Через некоторое время метрики будут доступны в <strong>системе мониторинга Nixstats</strong>. В будущих релизах <code>nixstatsagent</code> данный плагин для мониторинга Redis будет присутствовать по умолчанию, так как разработчик принял <a href="https://github.com/NIXStats/nixstatsagent/pull/24">предложенный мной Pull request</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nixstatsagent test redis_stat
+</span></span><span style="display:flex;"><span>redis_stat:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;cluster enabled&#34;</span>: 0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;connected clients&#34;</span>: 4,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;evicted keys&#34;</span>: 0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;expired keys&#34;</span>: 6520359,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;keyspace hits&#34;</span>: 113145616,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;keyspace misses&#34;</span>: 6530433,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;maxmemory&#34;</span>: 0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;maxmemory policy&#34;</span>: <span style="color:#e6db74">&#34;noeviction&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;total commands processed&#34;</span>: 238914916,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;total net input bytes&#34;</span>: 105817223644,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;total net output bytes&#34;</span>: 24410554097312,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;uptime&#34;</span>: 4313615,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;used memory&#34;</span>: 404803016,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;used memory peak human&#34;</span>: <span style="color:#e6db74">&#34;958.50M&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Через некоторое время метрики будут доступны в <strong>системе мониторинга Nixstats</strong>. В будущих релизах <code>nixstatsagent</code> данный плагин для мониторинга Redis будет присутствовать по умолчанию, так как разработчик принял <a href="https://github.com/NIXStats/nixstatsagent/pull/24">предложенный мной Pull request</a>.</p>
                 </section>
             </article>
 
@@ -388,7 +388,7 @@ redis_stat:
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

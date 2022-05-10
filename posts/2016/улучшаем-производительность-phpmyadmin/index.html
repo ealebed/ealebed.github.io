@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,38 +102,38 @@
                 <section id="post-body">
                     <p>Залогиниться и увидеть список баз данных в <code>phpMyAdmin</code> можно довольно быстро, однако возникает дискомфорт при просмотре списка таблиц в выбранной базе данных — страница может загружаться до 30 секунд. Давайте разберемся!</p>
 <p>Исходные данные:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
-Distributor ID:	Debian
-Description:	Debian GNU/Linux 7.8 <span style="color:#f92672">(</span>wheezy<span style="color:#f92672">)</span>
-Release:	7.8
-Codename:	wheezy
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/mysql status
-<span style="color:#f92672">[</span>info<span style="color:#f92672">]</span> /usr/bin/mysqladmin  Ver 8.42 Distrib 5.5.41-37.0, <span style="color:#66d9ef">for</span> debian-linux-gnu on x86_64
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">php -v
-PHP 5.4.36-0+deb7u3 <span style="color:#f92672">(</span>cli<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>built: Jan  <span style="color:#ae81ff">9</span> <span style="color:#ae81ff">2015</span> 08:07:06<span style="color:#f92672">)</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dpkg -l | grep phpmyadmin
-ii  phpmyadmin                         4:3.4.11.1-2+deb7u1           all          MySQL web administration tool
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql">mysql<span style="color:#f92672">&gt;</span> <span style="color:#66d9ef">show</span> variables <span style="color:#66d9ef">like</span> <span style="color:#e6db74">&#39;storage_engine&#39;</span><span style="color:#960050;background-color:#1e0010">\</span><span style="color:#66d9ef">G</span>;
-<span style="color:#f92672">***************************</span> <span style="color:#ae81ff">1</span>. <span style="color:#66d9ef">row</span> <span style="color:#f92672">***************************</span>
-Variable_name: storage_engine
-        Value: InnoDB
-<span style="color:#ae81ff">1</span> <span style="color:#66d9ef">row</span> <span style="color:#66d9ef">in</span> <span style="color:#66d9ef">set</span> (<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">00</span> sec)
-</code></pre></div><p>Вся проблема наличии больших таблиц InnoDB и в запросе:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#e6db74">&#34;SHOW TABLE STATUS FROM &#39;DATABASE&#39;&#34;</span>
-</code></pre></div><p>, который <code>phpMyAdmin</code> выполняет <a href="http://blog.cppse.nl/fix-slow-phpmyadmin">дважды</a>(!): для колонки навигации слева (список таблиц в БД) и для более детального вывода информации справа (Строки, Тип, Сравнение, Размер, Фрагментировано).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsb_release -a
+</span></span><span style="display:flex;"><span>Distributor ID:	Debian
+</span></span><span style="display:flex;"><span>Description:	Debian GNU/Linux 7.8 <span style="color:#f92672">(</span>wheezy<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Release:	7.8
+</span></span><span style="display:flex;"><span>Codename:	wheezy
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/mysql status
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>info<span style="color:#f92672">]</span> /usr/bin/mysqladmin  Ver 8.42 Distrib 5.5.41-37.0, <span style="color:#66d9ef">for</span> debian-linux-gnu on x86_64
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>php -v
+</span></span><span style="display:flex;"><span>PHP 5.4.36-0+deb7u3 <span style="color:#f92672">(</span>cli<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>built: Jan  <span style="color:#ae81ff">9</span> <span style="color:#ae81ff">2015</span> 08:07:06<span style="color:#f92672">)</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dpkg -l | grep phpmyadmin
+</span></span><span style="display:flex;"><span>ii  phpmyadmin                         4:3.4.11.1-2+deb7u1           all          MySQL web administration tool
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span>mysql<span style="color:#f92672">&gt;</span> <span style="color:#66d9ef">show</span> variables <span style="color:#66d9ef">like</span> <span style="color:#e6db74">&#39;storage_engine&#39;</span><span style="color:#960050;background-color:#1e0010">\</span><span style="color:#66d9ef">G</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">***************************</span> <span style="color:#ae81ff">1</span>. <span style="color:#66d9ef">row</span> <span style="color:#f92672">***************************</span>
+</span></span><span style="display:flex;"><span>Variable_name: storage_engine
+</span></span><span style="display:flex;"><span>        Value: InnoDB
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span> <span style="color:#66d9ef">row</span> <span style="color:#66d9ef">in</span> <span style="color:#66d9ef">set</span> (<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">00</span> sec)
+</span></span></code></pre></div><p>Вся проблема наличии больших таблиц InnoDB и в запросе:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#e6db74">&#34;SHOW TABLE STATUS FROM &#39;DATABASE&#39;&#34;</span>
+</span></span></code></pre></div><p>, который <code>phpMyAdmin</code> выполняет <a href="http://blog.cppse.nl/fix-slow-phpmyadmin">дважды</a>(!): для колонки навигации слева (список таблиц в БД) и для более детального вывода информации справа (Строки, Тип, Сравнение, Размер, Фрагментировано).</p>
 <p>В этом случае нам поможет установка параметра <code>$cfg['MaxExactCount'] = 0</code>, который можно указать/отредактировать в конфигурационном файле <code>config.inc.php</code>.</p>
 <p>Параметр <code>$cfg['MaxExactCount']</code> — для InnoDB таблиц, определяет максимальное число записей таблиц, при котором <code>phpMyAdmin</code> отображает количество строк в таблице с помощью <code>SELECT COUNT</code>. Если количество строк меньше чем это значение, то будет использоваться <code>SELECT COUNT</code>, если больше — значение будет только возвращено через <code>SHOW TABLE STATUS</code>.</p>
 <p><strong>Примечание.</strong> Если в вашей базе данных есть представления (<code>views</code>) с большим количеством записей, то следует проверить значение параметра <code>$cfg['MaxExactCountViews']</code> оно тоже должно быть равным нулю, если нет — установить в 0.</p>
 <p>Параметр <code>$cfg['MaxExactCountViews']</code> — для представлений, это значение будет максимумом строк, при которых количество строк будет выведено запросом</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">SELECT</span> <span style="color:#66d9ef">COUNT</span> ... <span style="color:#66d9ef">LIMIT</span>
-</code></pre></div><p>По умолчанию выставляется значение 0, которое блокирует подсчет записей, т.к. при работе с таблицами очень больших размеров, получение точного числа записей может крайне негативно сказаться на производительности.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#66d9ef">COUNT</span> ... <span style="color:#66d9ef">LIMIT</span>
+</span></span></code></pre></div><p>По умолчанию выставляется значение 0, которое блокирует подсчет записей, т.к. при работе с таблицами очень больших размеров, получение точного числа записей может крайне негативно сказаться на производительности.</p>
 <p>После внесенных изменений в столбце «Строки» детального вывода информации будет выводиться не точное количество строк в таблице, а примерное (estimated) и перед цифрой будет стоять знак <code>~</code>.</p>
 <p>Приблизительный подсчет строк в таблицах InnoDB вместо точного несколько улучшит производительность <code>phpMyAdmin</code>, однако для комфортной работы рекомендуется обновить MySQL-сервер до версии 5.6. Дело в том, что в версии 5.6 <code>&quot;SHOW TABLE STATUS FROM 'DATABASE'&quot;</code> работает быстрее, вот что об этом пишут на форуме разработчиков:</p>
 <p>MySQL 5.6 finally speeds up SHOW TABLE STATUS in cases where it used to perform miserably.
 Example for one of our databases containing 112 InnoDB tables, some of which have millions of rows:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">MySQL 5.5.30: <span style="color:#ae81ff">32</span> seconds
-MySQL 5.6.16: 0.3 seconds
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>MySQL 5.5.30: <span style="color:#ae81ff">32</span> seconds
+</span></span><span style="display:flex;"><span>MySQL 5.6.16: 0.3 seconds
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -225,7 +225,7 @@ MySQL 5.6.16: 0.3 seconds
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

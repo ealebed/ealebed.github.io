@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,13 +101,13 @@
                     <p>Для добавления произвольных, неидентифицирующиих метаданных к создаваемым в кластере <code>Kubernetes</code> объектам можно использовать аннотации. Клиенты (в том числе инструменты и библиотеки) могут получать и использовать эти данные. Давайте разберемся!</p>
 <p>В <code>Kubernetes</code> для добавления метаданных к объектам используются <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-9-%D0%BC%D0%B5%D1%82%D0%BA%D0%B8-%D0%B8-%D1%81%D0%B5%D0%BB%D0%B5%D0%BA%D1%82%D0%BE%D1%80%D1%8B/">метки</a> и аннотации. Метки обычно используются для выбора объектов селекторами или для поиска наборов объектов, которые соответствуют определенным условиям. Аннотации же, напротив, не используются для выбора или идентификации объектов. В аннотациях можно использовать символы, запрещенные для использования в метках, аннотации могут быть структурированными или нет, а также отличаться размером (количеством символов).</p>
 <p>Как и метки, аннотации представляют собой пары ключ/значение, и в общем виде могут выглядеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json"><span style="color:#e6db74">&#34;metadata&#34;</span><span style="color:#960050;background-color:#1e0010">:</span> {
-  <span style="color:#f92672">&#34;annotations&#34;</span>: {
-    <span style="color:#f92672">&#34;key1&#34;</span> : <span style="color:#e6db74">&#34;value1&#34;</span>,
-    <span style="color:#f92672">&#34;key2&#34;</span> : <span style="color:#e6db74">&#34;value2&#34;</span>
-  }
-}
-</code></pre></div><p>Конечно, вместо использования аннотаций, все эти дополнительные данные могут храниться во внешней базе данных, но это не так удобно и требует дополнительных ресурсов на поддержание базы данных в актуальном состоянии.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#e6db74">&#34;metadata&#34;</span><span style="color:#960050;background-color:#1e0010">:</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;annotations&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;key1&#34;</span> : <span style="color:#e6db74">&#34;value1&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;key2&#34;</span> : <span style="color:#e6db74">&#34;value2&#34;</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Конечно, вместо использования аннотаций, все эти дополнительные данные могут храниться во внешней базе данных, но это не так удобно и требует дополнительных ресурсов на поддержание базы данных в актуальном состоянии.</p>
 <p>Несколько примеров информации, которую можно (а иногда и нужно) добавлять в аннотации:</p>
 <ul>
 <li>поля, создаваемые декларативной конфигурацией (declarative configuration layer). Такие поля, прикрепленные в виде аннотаций, позволяют отличать их от значений по умолчанию или от автоматически генерируемых полей;</li>
@@ -120,43 +120,43 @@
 </ul>
 <p>Стоит отметить, что при создании объектов в кластере <code>Kubernetes</code> с помощью команды <code>kubectl apply -а &lt;имя_файла&gt;</code>, в аннотации к объекту автоматически создастся ключ <code>kubectl.kubernetes.io/last-applied-configuration:</code>, содержащий, как можно догадаться, последнюю успешно примененную конфигурацию (в json-формате).</p>
 <p>Например, если сервис описан в файле <code>auth0-svc.yaml</code> следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Service</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">auth0-proxy</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">clusterIP</span>: <span style="color:#ae81ff">None</span>
-  <span style="color:#f92672">ports</span>:
-  - <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8080</span>
-  <span style="color:#f92672">selector</span>:
-    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">auth0-proxy</span>
-</code></pre></div><p>и создаем его командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl apply -f auth0-svc.yaml
-</code></pre></div><p>то с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get svc auth0-proxy -o yaml --export<span style="color:#f92672">=</span>true
-</code></pre></div><p>можно получить не только описание сервиса (в том числе, с полями по умолчанию), но и последнюю удачно развернутую версию из аннотации:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Service</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">annotations</span>:
-    <span style="color:#f92672">kubectl.kubernetes.io/last-applied-configuration</span>: |<span style="color:#e6db74">
-</span><span style="color:#e6db74">      </span>      {<span style="color:#e6db74">&#34;apiVersion&#34;</span>:<span style="color:#e6db74">&#34;v1&#34;</span>,<span style="color:#e6db74">&#34;kind&#34;</span>:<span style="color:#e6db74">&#34;Service&#34;</span>,<span style="color:#e6db74">&#34;metadata&#34;</span>:{<span style="color:#e6db74">&#34;annotations&#34;</span>:{},<span style="color:#e6db74">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;auth0-proxy&#34;</span>,<span style="color:#e6db74">&#34;namespace&#34;</span>:<span style="color:#e6db74">&#34;default&#34;</span>},<span style="color:#e6db74">&#34;spec&#34;</span>:{<span style="color:#e6db74">&#34;clusterIP&#34;</span>:<span style="color:#e6db74">&#34;None&#34;</span>,<span style="color:#e6db74">&#34;ports&#34;</span>:[{<span style="color:#e6db74">&#34;port&#34;</span>:<span style="color:#ae81ff">8080</span>}],<span style="color:#e6db74">&#34;selector&#34;</span>:{<span style="color:#e6db74">&#34;app&#34;</span>:<span style="color:#e6db74">&#34;auth0-proxy&#34;</span>}}}
-  <span style="color:#f92672">creationTimestamp</span>: <span style="color:#66d9ef">null</span>
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">auth0-proxy</span>
-  <span style="color:#f92672">selfLink</span>: <span style="color:#ae81ff">/api/v1/namespaces/default/services/auth0-proxy</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">clusterIP</span>: <span style="color:#ae81ff">None</span>
-  <span style="color:#f92672">ports</span>:
-  - <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8080</span>
-    <span style="color:#f92672">protocol</span>: <span style="color:#ae81ff">TCP</span>
-    <span style="color:#f92672">targetPort</span>: <span style="color:#ae81ff">8080</span>
-  <span style="color:#f92672">selector</span>:
-    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">auth0-proxy</span>
-  <span style="color:#f92672">sessionAffinity</span>: <span style="color:#ae81ff">None</span>
-  <span style="color:#f92672">type</span>: <span style="color:#ae81ff">ClusterIP</span>
-<span style="color:#f92672">status</span>:
-  <span style="color:#f92672">loadBalancer</span>: {}
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Service</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">auth0-proxy</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">clusterIP</span>: <span style="color:#ae81ff">None</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8080</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">selector</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">auth0-proxy</span>
+</span></span></code></pre></div><p>и создаем его командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl apply -f auth0-svc.yaml
+</span></span></code></pre></div><p>то с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get svc auth0-proxy -o yaml --export<span style="color:#f92672">=</span>true
+</span></span></code></pre></div><p>можно получить не только описание сервиса (в том числе, с полями по умолчанию), но и последнюю удачно развернутую версию из аннотации:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Service</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">annotations</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">kubectl.kubernetes.io/last-applied-configuration</span>: |<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      </span>      {<span style="color:#e6db74">&#34;apiVersion&#34;</span>:<span style="color:#e6db74">&#34;v1&#34;</span>,<span style="color:#e6db74">&#34;kind&#34;</span>:<span style="color:#e6db74">&#34;Service&#34;</span>,<span style="color:#e6db74">&#34;metadata&#34;</span>:{<span style="color:#e6db74">&#34;annotations&#34;</span>:{},<span style="color:#e6db74">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;auth0-proxy&#34;</span>,<span style="color:#e6db74">&#34;namespace&#34;</span>:<span style="color:#e6db74">&#34;default&#34;</span>},<span style="color:#e6db74">&#34;spec&#34;</span>:{<span style="color:#e6db74">&#34;clusterIP&#34;</span>:<span style="color:#e6db74">&#34;None&#34;</span>,<span style="color:#e6db74">&#34;ports&#34;</span>:[{<span style="color:#e6db74">&#34;port&#34;</span>:<span style="color:#ae81ff">8080</span>}],<span style="color:#e6db74">&#34;selector&#34;</span>:{<span style="color:#e6db74">&#34;app&#34;</span>:<span style="color:#e6db74">&#34;auth0-proxy&#34;</span>}}}
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">creationTimestamp</span>: <span style="color:#66d9ef">null</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">auth0-proxy</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">selfLink</span>: <span style="color:#ae81ff">/api/v1/namespaces/default/services/auth0-proxy</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">clusterIP</span>: <span style="color:#ae81ff">None</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8080</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">protocol</span>: <span style="color:#ae81ff">TCP</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">targetPort</span>: <span style="color:#ae81ff">8080</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">selector</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">auth0-proxy</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">sessionAffinity</span>: <span style="color:#ae81ff">None</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">type</span>: <span style="color:#ae81ff">ClusterIP</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">status</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">loadBalancer</span>: {}
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -248,7 +248,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -121,50 +121,50 @@
                     <p>В последнее время после обновления PhpStorm (особенно до версии 2017.3.3) все чаще &ldquo;слетает&rdquo; активация продукта по методу &ldquo;License server&rdquo; - за последние пару дней приходилось раз 5 менять адрес сервера лицензий.</p>
 <p>Давайте разберемся <strong>как поднять свой сервер лицензий для продуктов JetBrains</strong> в docker-контейнере и навсегда забыть о <strong>проблемах с активацией PhpStorm</strong>!</p>
 <p>Считаем, что docker уже установлен и настроен. В моем примере используется самая последняя версия Docker for Mac из канала Edge:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker -v
-Docker version 18.01.0-ce, build 03596f5
-</code></pre></div><p>Создаем каталог для работы и переходим в него:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p ~/Code/jb-license-server <span style="color:#f92672">&amp;&amp;</span> cd ~/Code/jb-license-server
-</code></pre></div><p>В каталоге создадим Dockerfile с инструкциями для сборки docker-образа:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano Dockerfile
-</code></pre></div><p>Содержимое файла будет следующим:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:9.4.0-alpine</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apk add --update sudo <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> sudo npm install ilsap -g --unsafe-perm <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> rm -rf /var/cache/apk/*<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 8997</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> ilsap<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>Собираем docker-образ командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t my-license-server:v1 .
-</code></pre></div><p>Запускаем контейнер из созданного docker-образа:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d --name my-license-server -p 8997:8997 --restart<span style="color:#f92672">=</span>always my-license-server:v1
-</code></pre></div><p>После старта контейнера смотрим его логи:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker logs my-license-server
-</code></pre></div><p>Вывод должен быть примерно таким:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Starting server...
-Redirecting requests to http://xidea.online
-Listening on http://0.0.0.0:8997 &lt;- Use this url to register your product
-</code></pre></div><p>Далее для активации продукта в PhpStorm в поле &ldquo;License server address&rdquo; вводим адрес из лога - <code>http://0.0.0.0:8997</code>, жмем кнопку &ldquo;Activate&rdquo; и забываем о <strong>проблемах с активацией PhpStorm навсегда</strong>!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker -v
+</span></span><span style="display:flex;"><span>Docker version 18.01.0-ce, build 03596f5
+</span></span></code></pre></div><p>Создаем каталог для работы и переходим в него:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/Code/jb-license-server <span style="color:#f92672">&amp;&amp;</span> cd ~/Code/jb-license-server
+</span></span></code></pre></div><p>В каталоге создадим Dockerfile с инструкциями для сборки docker-образа:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano Dockerfile
+</span></span></code></pre></div><p>Содержимое файла будет следующим:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:9.4.0-alpine</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apk add --update sudo <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> sudo npm install ilsap -g --unsafe-perm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	<span style="color:#f92672">&amp;&amp;</span> rm -rf /var/cache/apk/*<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 8997</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> ilsap<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>Собираем docker-образ командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker build -t my-license-server:v1 .
+</span></span></code></pre></div><p>Запускаем контейнер из созданного docker-образа:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run -d --name my-license-server -p 8997:8997 --restart<span style="color:#f92672">=</span>always my-license-server:v1
+</span></span></code></pre></div><p>После старта контейнера смотрим его логи:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker logs my-license-server
+</span></span></code></pre></div><p>Вывод должен быть примерно таким:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Starting server...
+</span></span><span style="display:flex;"><span>Redirecting requests to http://xidea.online
+</span></span><span style="display:flex;"><span>Listening on http://0.0.0.0:8997 &lt;- Use this url to register your product
+</span></span></code></pre></div><p>Далее для активации продукта в PhpStorm в поле &ldquo;License server address&rdquo; вводим адрес из лога - <code>http://0.0.0.0:8997</code>, жмем кнопку &ldquo;Activate&rdquo; и забываем о <strong>проблемах с активацией PhpStorm навсегда</strong>!</p>
 <p>Описанный метод должен работать и для <strong>активации других продуктов JetBrains</strong>, однако я проверял только на примере PhpStorm.</p>
 <p>Кроме того, доступно еще несколько дополнительных опций для <strong>запуска личного JetBrains Products License Server</strong> - узнать о них можно с помощью такой команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm --name my-license-server -p 8997:8997 my-license-server:v1 ilsap --help
-</code></pre></div><p>Результат выполнения будет следующим:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Usage: ilsap <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span>
-
-  Options:
-
-    -V, --version          output the version number
-    -h, --host &lt;host&gt;      hostname to listen on <span style="color:#f92672">(</span>default: 0.0.0.0<span style="color:#f92672">)</span>
-    -p, --port &lt;port&gt;      port to listen on <span style="color:#f92672">(</span>default: 8997<span style="color:#f92672">)</span>
-    -s, --server &lt;server&gt;  license server url <span style="color:#f92672">(</span>default: http://xidea.online<span style="color:#f92672">)</span>
-    -n, --ngrok            start a ngrok server pointed to your local port
-    -h, --help             output usage information
-</code></pre></div><p><strong>Примечание.</strong> Если собираетесь переопределить порт по умолчанию, не забудьте также изменить его и в Dockerfile (инструкция <code>EXPOSE</code>).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run --rm --name my-license-server -p 8997:8997 my-license-server:v1 ilsap --help
+</span></span></code></pre></div><p>Результат выполнения будет следующим:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Usage: ilsap <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Options:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    -V, --version          output the version number
+</span></span><span style="display:flex;"><span>    -h, --host &lt;host&gt;      hostname to listen on <span style="color:#f92672">(</span>default: 0.0.0.0<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    -p, --port &lt;port&gt;      port to listen on <span style="color:#f92672">(</span>default: 8997<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    -s, --server &lt;server&gt;  license server url <span style="color:#f92672">(</span>default: http://xidea.online<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    -n, --ngrok            start a ngrok server pointed to your local port
+</span></span><span style="display:flex;"><span>    -h, --help             output usage information
+</span></span></code></pre></div><p><strong>Примечание.</strong> Если собираетесь переопределить порт по умолчанию, не забудьте также изменить его и в Dockerfile (инструкция <code>EXPOSE</code>).</p>
 <p>Например, если вы хотите проксировать запросы из docker-контейнера на другой сервер лицензирования, можно это сделать так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d --name my-license-server -p 8997:8997 --restart<span style="color:#f92672">=</span>always my-lic-server:v1 ilsap -s http://idea.ibdyr.com
-</code></pre></div><p>Если нет желания собирать docker-образ самостоятельно - можете воспользоваться готовым из <a href="https://hub.docker.com/r/ealebed/jb-license-server/">Docker Hub</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run -d --name my-license-server -p 8997:8997 --restart<span style="color:#f92672">=</span>always my-lic-server:v1 ilsap -s http://idea.ibdyr.com
+</span></span></code></pre></div><p>Если нет желания собирать docker-образ самостоятельно - можете воспользоваться готовым из <a href="https://hub.docker.com/r/ealebed/jb-license-server/">Docker Hub</a>.</p>
                 </section>
             </article>
 
@@ -256,7 +256,7 @@ Listening on http://0.0.0.0:8997 &lt;- Use this url to register your product
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

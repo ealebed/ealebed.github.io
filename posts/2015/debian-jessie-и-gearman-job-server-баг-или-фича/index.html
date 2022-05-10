@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,15 +102,15 @@
                 <section id="post-body">
                     <p>После обновления дистрибутива на одном из серверов с Debian Wheezy до Debian Jessie была обнаружена проблема с работоспособностью <code>gearman-job-server</code> — он игнорировал параметры, указанные в конфигурационном файле <code>/etc/default/gearman-job-server</code>. Давайте разберемся!</p>
 <p>Файл конфигурации <code>/etc/default/gearman-job-server</code> содержит следующие параметры:</p>
-<pre><code>cat /etc/default/gearman-job-server
+<pre tabindex="0"><code>cat /etc/default/gearman-job-server
 ...
 
 # Parameters to pass to gearmand.
-PARAMS=&quot;--listen=192.168.0.1 --verbose=INFO&quot;
+PARAMS=&#34;--listen=192.168.0.1 --verbose=INFO&#34;
 </code></pre><p>Но при при запуске сервера очередей с помощью init-скрипта:</p>
-<pre><code>/etc/init.d/gearman-job-server start
+<pre tabindex="0"><code>/etc/init.d/gearman-job-server start
 </code></pre><p>указанные параметры игнорировались, а демон запускался с параметром <code>--listen=127.0.0.1</code> (параметр по умолчанию):</p>
-<pre><code>/etc/init.d/gearman-job-server status
+<pre tabindex="0"><code>/etc/init.d/gearman-job-server status
 ● gearman-job-server.service - gearman job control server
    Loaded: loaded (/lib/systemd/system/gearman-job-server.service; enabled)
    Active: active (running) since Wed 2015-11-25 15:25:00 EET; 1s ago
@@ -119,15 +119,15 @@ PARAMS=&quot;--listen=192.168.0.1 --verbose=INFO&quot;
    CGroup: /system.slice/gearman-job-server.service
            └─4220 /usr/sbin/gearmand --listen=127.0.0.1 --pid-file=/run/gearman/server.pid --log-file=/var/log/gearman-job-server/gearman.log
 </code></pre><p>Попытки указать нужные параметры в самом init-скрипте:</p>
-<pre><code>...
-GEARMANUSER=&quot;gearman&quot;
-PARAMS=&quot;--listen=192.168.0.1 --verbose=INFO&quot;
+<pre tabindex="0"><code>...
+GEARMANUSER=&#34;gearman&#34;
+PARAMS=&#34;--listen=192.168.0.1 --verbose=INFO&#34;
 ...
 </code></pre><p>или в конфигурационном файле <code>/etc/init/gearman-job-server.conf</code>:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 exec start-stop-daemon --start --chuid gearman --exec /usr/sbin/gearmand --listen=192.168.0.1 --verbose=INFO --log-file=/var/log/gearman-job-server/gearman.log
 </code></pre><p>также не привели к ожидаемому результату:</p>
-<pre><code>/etc/init.d/gearman-job-server status
+<pre tabindex="0"><code>/etc/init.d/gearman-job-server status
 ● gearman-job-server.service - gearman job control server
    Loaded: loaded (/lib/systemd/system/gearman-job-server.service; enabled)
    Active: active (running) since Wed 2015-11-25 15:41:01 EET; 2s ago
@@ -136,7 +136,7 @@ exec start-stop-daemon --start --chuid gearman --exec /usr/sbin/gearmand --liste
    CGroup: /system.slice/gearman-job-server.service
            └─4220 /usr/sbin/gearmand --listen=127.0.0.1 --pid-file=/run/gearman/server.pid --log-file=/var/log/gearman-job-server/gearman.log
 </code></pre><p>Проблему удалось решить только после приведения файла <code>/lib/systemd/system/gearman-job-server.service</code> к следующему виду:</p>
-<pre><code>[Unit]
+<pre tabindex="0"><code>[Unit]
 Description=gearman job control server
  
 [Service]
@@ -150,11 +150,11 @@ ExecStart=/usr/sbin/gearmand --listen=192.168.0.1 --verbose=INFO --pid-file=/run
 [Install]
 WantedBy=multi-user.target
 </code></pre><p>перечитывания настроек <code>systemd</code>:</p>
-<pre><code>/bin/systemctl daemon-reload
+<pre tabindex="0"><code>/bin/systemctl daemon-reload
 </code></pre><p>и перезапуска <code>gearman-job-server</code>:</p>
-<pre><code>/etc/init.d/gearman-job-server restart
+<pre tabindex="0"><code>/etc/init.d/gearman-job-server restart
 </code></pre><p>Теперь <code>gearman-job-server</code> в ОС Debian Jessie запущен с нужными нам параметрами:</p>
-<pre><code>/etc/init.d/gearman-job-server status
+<pre tabindex="0"><code>/etc/init.d/gearman-job-server status
 ● gearman-job-server.service - gearman job control server
    Loaded: loaded (/lib/systemd/system/gearman-job-server.service; enabled)
    Active: active (running) since Wed 2015-11-25 15:59:34 EET; 4s ago
@@ -254,7 +254,7 @@ WantedBy=multi-user.target
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

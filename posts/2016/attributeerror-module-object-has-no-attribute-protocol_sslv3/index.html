@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,14 +102,14 @@
                 <section id="post-body">
                     <p>После обновления операционной системы с Debian Wheezy до Debian Jessie на серверах не запускается <code>newrelic_plugin_agent</code>. Давайте разберемся!</p>
 <p>При старте демона появляется следующая ошибка:</p>
-<pre><code>AttributeError: 'module' object has no attribute 'PROTOCOL_SSLv3'
+<pre tabindex="0"><code>AttributeError: &#39;module&#39; object has no attribute &#39;PROTOCOL_SSLv3&#39;
 </code></pre><p>Как выяснилось, в новом Debian пакет OpenSSL собирается без поддержки SSLv3 (подробнее <a href="https://launchpad.net/debian/+source/openssl/1.0.1j-1">здесь</a>), который нужен для нормальной работы библиотеки <code>urllib3</code>.</p>
 <p>Проблема была известна уже давно, и была устранена <a href="https://github.com/shazow/urllib3/commit/b9b3b0102ead7ad8ad086c39737f22ddefa7e626">этим коммитом</a> для <code>urllib3</code>.</p>
 <p>Конкретно в нашем случае данная библиотека используется как часть питоновского модуля <code>requests</code>, установленного с помощью <code>pip</code>. Данный модуль необходимо обновить до версии 2.6, которая уже включает в себя необходимый патч, позволяющий работать с SSLv3. Делаем это так:</p>
-<pre><code>easy_install --upgrade pip
+<pre tabindex="0"><code>easy_install --upgrade pip
 pip install requests==2.6.0
 </code></pre><p>Проверим установленную версию модуля <code>requests</code>:</p>
-<pre><code>pip show requests
+<pre tabindex="0"><code>pip show requests
 Name: requests
 Version: 2.6.0
 Summary: Python HTTP for Humans.
@@ -119,7 +119,7 @@ Author-email: me@kennethreitz.com
 License: Apache 2.0
 Location: /usr/local/lib/python2.7/dist-packages
 </code></pre><p>Пробуем запустить <code>newrelic_plugin_agent</code> после проделанных действий:</p>
-<pre><code>/etc/init.d/newrelic_plugin_agent start
+<pre tabindex="0"><code>/etc/init.d/newrelic_plugin_agent start
 [ ok ] Starting newrelic_plugin_agent (via systemctl): newrelic_plugin_agent.service.
 </code></pre><p>Все работает!</p>
                 </section>
@@ -213,7 +213,7 @@ Location: /usr/local/lib/python2.7/dist-packages
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

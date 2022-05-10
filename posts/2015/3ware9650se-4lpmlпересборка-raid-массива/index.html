@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,7 +102,7 @@
                 <section id="post-body">
                     <p>На днях с одного из серверов пришло оповещение о развалившемся RAID-массиве. Давайте разберемся как исправить данную проблему и <strong>пересобрать RAID-массив</strong> на конкретном примере <strong>контроллера 3ware 9650SE-4LPML</strong>.</p>
 <p>Прежде всего подключаемся к серверу и проверяем состояние RAID-массива:</p>
-<pre><code>tw_cli /c0 show
+<pre tabindex="0"><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
 ------------------------------------------------------------------------------
@@ -115,12 +115,12 @@ p1     NOT-PRESENT      -      -           -             -
 p2     DEGRADED         u0     465.76 GB   976773168     WD-WMAYP6626070     
 p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
 </code></pre><p>Так и есть, статус нашего RAID-массива <code>DEGRADED</code>. Удалим проблемный диск, подключенный ко второму порту <strong>контроллера 3ware 9650SE-4LPML</strong> из массива:</p>
-<pre><code>tw_cli /c0/p2 remove
+<pre tabindex="0"><code>tw_cli /c0/p2 remove
 Removing /c0/p2 will take the disk offline.
 Do you want to continue ? Y|N [N]: y
 Removing port /c0/p2 ... Done.
 </code></pre><p>Еще раз проверяем состояние RAID-массива:</p>
-<pre><code>tw_cli /c0 show
+<pre tabindex="0"><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
 ------------------------------------------------------------------------------
@@ -133,12 +133,12 @@ p1     NOT-PRESENT      -      -           -             -
 p2     NOT-PRESENT      -      -           -             -
 p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
 </code></pre><p>Проблемный диск отсутствует. В данный момент мы его не будем менять, но точно так же, как и при установке нового жесткого диска нужно выполнить <code>rescan</code>:</p>
-<pre><code>tw_cli /c0 rescan
+<pre tabindex="0"><code>tw_cli /c0 rescan
 Rescanning controller /c0 for units and drives ...Done.
 Found the following unit(s): [none].
 Found the following drive(s): [/c0/p2].
 </code></pre><p>Проверяем состояние RAID-массива:</p>
-<pre><code>tw_cli /c0 show
+<pre tabindex="0"><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
 ------------------------------------------------------------------------------
@@ -153,10 +153,10 @@ p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
 </code></pre><p>Как видим, у нас появился подключенный ко второму порту <strong>контроллера 3ware 9650SE-4LPML</strong> жесткий диск.</p>
 <p><strong>Примечание.</strong> Обратите внимание, что у «нового» диска в графе <code>Unit</code> должен быть прочерк.</p>
 <p>Теперь можно запустить <strong>пересборку RAID-массива</strong>:</p>
-<pre><code>tw_cli /c0/u0 start rebuild disk=2
+<pre tabindex="0"><code>tw_cli /c0/u0 start rebuild disk=2
 Sending rebuild start request to /c0/u0 on 1 disk(s) [2] ... Done.
 </code></pre><p>Через некоторое время проверяем состояние RAID-массива:</p>
-<pre><code>tw_cli /c0 show
+<pre tabindex="0"><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
 ------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ p1     NOT-PRESENT      -      -           -             -
 p2     DEGRADED         u0     465.76 GB   976773168     WD-WMAYP6626070     
 p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
 </code></pre><p>Видим, что статус RAID-массива теперь <code>REBUILDING</code> вместо <code>DEGRADED</code>, как было ранее и рядом указан прогресс (4%). После завершения пересборки статус RAID-массива будет следующим:</p>
-<pre><code>tw_cli /c0 show
+<pre tabindex="0"><code>tw_cli /c0 show
 
 Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
 ------------------------------------------------------------------------------
@@ -273,7 +273,7 @@ p3     OK               u0     465.76 GB   976773168     WD-WMAYP6691211
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

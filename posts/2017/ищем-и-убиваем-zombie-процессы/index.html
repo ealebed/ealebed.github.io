@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,42 +103,42 @@
                     <p>Дочерний процесс в Unix-системе, завершивший своё выполнение, но ещё присутствующий в списке процессов операционной системы, чтобы дать родительскому процессу считать код завершения называют зомби (англ. zombie process, defunct process) — говорит нам <a href="https://ru.wikipedia.org/wiki/%D0%9F%D1%80%D0%BE%D1%86%D0%B5%D1%81%D1%81-%D0%B7%D0%BE%D0%BC%D0%B1%D0%B8">Википедия</a>.</p>
 <p>Подробнее ознакомиться с возникновением зомби-процессов и связанными с ними проблемами можно на той же Wiki, а мы разберемся как вычислить такие процессы и &ldquo;убить&rdquo; их!</p>
 <p>Найти <code>zombie</code>-процесс можно несколькими способами, например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">top | grep zombie
-</code></pre></div><p>или</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps aux | grep -w Z
-</code></pre></div><p>или</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps -alx | awk <span style="color:#e6db74">&#39;$10 ~ /STAT|Z/&#39;</span>
-</code></pre></div><p>Итак, находим <code>zombie</code>-процессы в нашей системе:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps aux | grep -w Z
-git       <span style="color:#ae81ff">2512</span>  0.6  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    08:31   1:08 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-git       <span style="color:#ae81ff">3574</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві13   0:48 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-root     <span style="color:#ae81ff">12523</span>  0.0  0.0 <span style="color:#ae81ff">112652</span>  <span style="color:#ae81ff">1036</span> pts/5    S+   11:22   0:00 grep --color<span style="color:#f92672">=</span>auto -w Z
-git      <span style="color:#ae81ff">13855</span>  0.3  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    07:07   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-git      <span style="color:#ae81ff">14896</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві13   0:48 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-git      <span style="color:#ae81ff">16213</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві03   0:44 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-git      <span style="color:#ae81ff">24146</span>  0.5  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    07:49   1:11 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-git      <span style="color:#ae81ff">26321</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві13   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-git      <span style="color:#ae81ff">29765</span>  0.5  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    08:10   1:09 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-git      <span style="color:#ae81ff">32440</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві13   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-</code></pre></div><p>&ldquo;Убить&rdquo; найденные zombie-процессы просто так не получится. Самый правильный вариант — найти родительский процесс и убить или перезапустить его. (Еще может помочь перезагрузка сервера, но это точно не наш путь). Находим родительские процессы (их PID’ы в третьей колонке):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps ajx | grep -w Z
- <span style="color:#ae81ff">2475</span>  <span style="color:#ae81ff">2512</span>  <span style="color:#ae81ff">2427</span>  <span style="color:#ae81ff">2427</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   1:08 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
- <span style="color:#ae81ff">3557</span>  <span style="color:#ae81ff">3574</span>  <span style="color:#ae81ff">3509</span>  <span style="color:#ae81ff">3509</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:48 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-<span style="color:#ae81ff">12350</span> <span style="color:#ae81ff">12671</span> <span style="color:#ae81ff">12671</span> <span style="color:#ae81ff">12330</span> pts/5    <span style="color:#ae81ff">12671</span> S+       <span style="color:#ae81ff">0</span>   0:00 grep --color<span style="color:#f92672">=</span>auto -w Z
-<span style="color:#ae81ff">13839</span> <span style="color:#ae81ff">13855</span> <span style="color:#ae81ff">13791</span> <span style="color:#ae81ff">13791</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-<span style="color:#ae81ff">14869</span> <span style="color:#ae81ff">14896</span> <span style="color:#ae81ff">14820</span> <span style="color:#ae81ff">14820</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:48 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-<span style="color:#ae81ff">16192</span> <span style="color:#ae81ff">16213</span> <span style="color:#ae81ff">16144</span> <span style="color:#ae81ff">16144</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:44 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-<span style="color:#ae81ff">24120</span> <span style="color:#ae81ff">24146</span> <span style="color:#ae81ff">24071</span> <span style="color:#ae81ff">24071</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   1:11 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-<span style="color:#ae81ff">26290</span> <span style="color:#ae81ff">26321</span> <span style="color:#ae81ff">26236</span> <span style="color:#ae81ff">26236</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-<span style="color:#ae81ff">29725</span> <span style="color:#ae81ff">29765</span> <span style="color:#ae81ff">29645</span> <span style="color:#ae81ff">29645</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   1:09 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-<span style="color:#ae81ff">32423</span> <span style="color:#ae81ff">32440</span> <span style="color:#ae81ff">32375</span> <span style="color:#ae81ff">32375</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
-</code></pre></div><p>При желании можно узнать больше подробностей о родительском процессе, например так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ps auxww | grep <span style="color:#ae81ff">32375</span>
-root     <span style="color:#ae81ff">12689</span>  0.0  0.0 <span style="color:#ae81ff">112648</span>  <span style="color:#ae81ff">1016</span> pts/5    S+   11:23   0:00 grep --color<span style="color:#f92672">=</span>auto <span style="color:#ae81ff">32375</span>
-git      <span style="color:#ae81ff">32375</span>  0.0  0.0 <span style="color:#ae81ff">211180</span>  <span style="color:#ae81ff">2892</span> ?        Ss   кві13   0:00 git-receive-pack /home/git/repo/ed.git
-</code></pre></div><p>Дальше этот процесс можем просто &ldquo;убить&rdquo;:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kill -9 <span style="color:#ae81ff">32375</span>
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>top | grep zombie
+</span></span></code></pre></div><p>или</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ps aux | grep -w Z
+</span></span></code></pre></div><p>или</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ps -alx | awk <span style="color:#e6db74">&#39;$10 ~ /STAT|Z/&#39;</span>
+</span></span></code></pre></div><p>Итак, находим <code>zombie</code>-процессы в нашей системе:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ps aux | grep -w Z
+</span></span><span style="display:flex;"><span>git       <span style="color:#ae81ff">2512</span>  0.6  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    08:31   1:08 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>git       <span style="color:#ae81ff">3574</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві13   0:48 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>root     <span style="color:#ae81ff">12523</span>  0.0  0.0 <span style="color:#ae81ff">112652</span>  <span style="color:#ae81ff">1036</span> pts/5    S+   11:22   0:00 grep --color<span style="color:#f92672">=</span>auto -w Z
+</span></span><span style="display:flex;"><span>git      <span style="color:#ae81ff">13855</span>  0.3  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    07:07   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>git      <span style="color:#ae81ff">14896</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві13   0:48 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>git      <span style="color:#ae81ff">16213</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві03   0:44 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>git      <span style="color:#ae81ff">24146</span>  0.5  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    07:49   1:11 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>git      <span style="color:#ae81ff">26321</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві13   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>git      <span style="color:#ae81ff">29765</span>  0.5  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    08:10   1:09 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span>git      <span style="color:#ae81ff">32440</span>  0.0  0.0      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span> ?        Z    кві13   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span></code></pre></div><p>&ldquo;Убить&rdquo; найденные zombie-процессы просто так не получится. Самый правильный вариант — найти родительский процесс и убить или перезапустить его. (Еще может помочь перезагрузка сервера, но это точно не наш путь). Находим родительские процессы (их PID’ы в третьей колонке):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ps ajx | grep -w Z
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">2475</span>  <span style="color:#ae81ff">2512</span>  <span style="color:#ae81ff">2427</span>  <span style="color:#ae81ff">2427</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   1:08 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">3557</span>  <span style="color:#ae81ff">3574</span>  <span style="color:#ae81ff">3509</span>  <span style="color:#ae81ff">3509</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:48 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">12350</span> <span style="color:#ae81ff">12671</span> <span style="color:#ae81ff">12671</span> <span style="color:#ae81ff">12330</span> pts/5    <span style="color:#ae81ff">12671</span> S+       <span style="color:#ae81ff">0</span>   0:00 grep --color<span style="color:#f92672">=</span>auto -w Z
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">13839</span> <span style="color:#ae81ff">13855</span> <span style="color:#ae81ff">13791</span> <span style="color:#ae81ff">13791</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">14869</span> <span style="color:#ae81ff">14896</span> <span style="color:#ae81ff">14820</span> <span style="color:#ae81ff">14820</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:48 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">16192</span> <span style="color:#ae81ff">16213</span> <span style="color:#ae81ff">16144</span> <span style="color:#ae81ff">16144</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:44 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">24120</span> <span style="color:#ae81ff">24146</span> <span style="color:#ae81ff">24071</span> <span style="color:#ae81ff">24071</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   1:11 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">26290</span> <span style="color:#ae81ff">26321</span> <span style="color:#ae81ff">26236</span> <span style="color:#ae81ff">26236</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">29725</span> <span style="color:#ae81ff">29765</span> <span style="color:#ae81ff">29645</span> <span style="color:#ae81ff">29645</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   1:09 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">32423</span> <span style="color:#ae81ff">32440</span> <span style="color:#ae81ff">32375</span> <span style="color:#ae81ff">32375</span> ?           -1 Z     <span style="color:#ae81ff">1004</span>   0:47 <span style="color:#f92672">[</span>grunt<span style="color:#f92672">]</span> 
+</span></span></code></pre></div><p>При желании можно узнать больше подробностей о родительском процессе, например так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ps auxww | grep <span style="color:#ae81ff">32375</span>
+</span></span><span style="display:flex;"><span>root     <span style="color:#ae81ff">12689</span>  0.0  0.0 <span style="color:#ae81ff">112648</span>  <span style="color:#ae81ff">1016</span> pts/5    S+   11:23   0:00 grep --color<span style="color:#f92672">=</span>auto <span style="color:#ae81ff">32375</span>
+</span></span><span style="display:flex;"><span>git      <span style="color:#ae81ff">32375</span>  0.0  0.0 <span style="color:#ae81ff">211180</span>  <span style="color:#ae81ff">2892</span> ?        Ss   кві13   0:00 git-receive-pack /home/git/repo/ed.git
+</span></span></code></pre></div><p>Дальше этот процесс можем просто &ldquo;убить&rdquo;:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kill -9 <span style="color:#ae81ff">32375</span>
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -230,7 +230,7 @@ git      <span style="color:#ae81ff">32375</span>  0.0  0.0 <span style="color:#
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

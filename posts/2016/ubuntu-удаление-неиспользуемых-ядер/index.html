@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,27 +101,27 @@
                     <p>Вместе с обновлениями в Ubuntu устанавливаются новые версии ядра, при этом старые не удаляются и занимают место на жестком диске. Давайте разберемся как быстро и без вреда системе удалить старые ядра!</p>
 <p>Первый вариант — графический (не наш случай). С помощью менеджера пакетов Synaptic нужно вручную отметить устаревшие версии ядра для удаления и нажать кнопку «Применить».</p>
 <p>Второй вариант — консольный. Чтобы удалить все ядра кроме последней и предпоследней версии можно сначала выполнить:</p>
-<pre><code>apt-get purge $(dpkg -l 'linux-*' | sed '/^ii/!d;/'&quot;$(uname -r | sed &quot;s/\(.*\)-\([^0-9]\+\)/\1/&quot;)&quot;'/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d' | head -n -1)
+<pre tabindex="0"><code>apt-get purge $(dpkg -l &#39;linux-*&#39; | sed &#39;/^ii/!d;/&#39;&#34;$(uname -r | sed &#34;s/\(.*\)-\([^0-9]\+\)/\1/&#34;)&#34;&#39;/d;s/^[^ ]* [^ ]* \([^ ]*\).*/\1/;/[0-9]/!d&#39; | head -n -1)
 </code></pre><p>а потом запустить команду:</p>
-<pre><code>apt-get autoremove
+<pre tabindex="0"><code>apt-get autoremove
 </code></pre><p>Третий вариант — тоже консольный (мой выбор). Оставить только текущую версию ядра и удались все остальные можно с помощью команды:</p>
-<pre><code>export KERNEL=&quot;$(uname -r | grep -Po '([0-9\.\-]*[0-9])?')&quot;; dpkg --get-selections | grep -E &quot;linux-(header|image).*&quot; | grep -iw install | sort | grep -v &quot;$KERNEL&quot; | grep -v &quot;lts&quot; | sed 's/install//g' | xargs dpkg -P
+<pre tabindex="0"><code>export KERNEL=&#34;$(uname -r | grep -Po &#39;([0-9\.\-]*[0-9])?&#39;)&#34;; dpkg --get-selections | grep -E &#34;linux-(header|image).*&#34; | grep -iw install | sort | grep -v &#34;$KERNEL&#34; | grep -v &#34;lts&#34; | sed &#39;s/install//g&#39; | xargs dpkg -P
 </code></pre><p>Разберем данную команду подробнее. Первая часть в переменную <code>KERNEL</code> записывает текущую версию ядра:</p>
-<pre><code>export KERNEL=&quot;$(uname -r | grep -Po '([0-9\.\-]*[0-9])?')&quot;
+<pre tabindex="0"><code>export KERNEL=&#34;$(uname -r | grep -Po &#39;([0-9\.\-]*[0-9])?&#39;)&#34;
 </code></pre><p>Вторая часть выводит список всех пакетов в системе:</p>
-<pre><code>dpkg --get-selections
+<pre tabindex="0"><code>dpkg --get-selections
 </code></pre><p>Третья часть выбирает из списка всех пакетов в системе те пакеты, в имени которых есть <code>linux-header</code> или <code>linux-image</code>:</p>
-<pre><code>grep -E &quot;linux-(header|image).*&quot;
+<pre tabindex="0"><code>grep -E &#34;linux-(header|image).*&#34;
 </code></pre><p>Четвертая часть среди оставшихся пакетов выбирает только установленные:</p>
-<pre><code>grep -iw install
+<pre tabindex="0"><code>grep -iw install
 </code></pre><p>Пятая часть сортирует вывод оставшихся пакетов:</p>
-<pre><code>sort
+<pre tabindex="0"><code>sort
 </code></pre><p>Шестая часть убирает из выборки пакеты с текущей версией ядра и lts-версии:</p>
-<pre><code>grep -v &quot;$KERNEL&quot; | grep -v &quot;lts&quot;
+<pre tabindex="0"><code>grep -v &#34;$KERNEL&#34; | grep -v &#34;lts&#34;
 </code></pre><p>Седьмая часть удаляет слово <code>install</code>:</p>
-<pre><code>sed 's/install//g'
+<pre tabindex="0"><code>sed &#39;s/install//g&#39;
 </code></pre><p>В последней части наконец удаляются старые неиспользуемые ядра — <code>xargs</code> передает имена пакетов менеджеру пакетов <code>dpkg</code>, который удаляет их с ключом <code>-P</code> (<code>purge</code>):</p>
-<pre><code>xargs dpkg -P
+<pre tabindex="0"><code>xargs dpkg -P
 </code></pre>
                 </section>
             </article>
@@ -214,7 +214,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

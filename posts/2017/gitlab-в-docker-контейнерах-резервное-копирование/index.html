@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -107,33 +107,33 @@
 <p>При создании резервных копий Gitlab бекапятся все git-репозитории, загруженные файлы и база данных. SSH-ключи не бекапятся, следует помнить об этом!</p>
 <p>По умолчанию резервные копии сохраняются в каталоге <code>/home/git/data/backups</code> внутри контейнера. Так как в этой статье мы монтируем каталог <code>/srv/gitlab/data</code> с хост-машины в каталог <code>/home/git/data</code> внутри контейнера, то на хост-машине резервные копии можно увидеть в папке <code>/srv/gitlab/data/backups</code>.</p>
 <p>Создание резервной копии вручную выполняется в два этапа. Прежде всего, следует убедиться, что контейнер с именем gitlab остановлен и удален:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stop gitlab <span style="color:#f92672">&amp;&amp;</span> docker rm gitlab
-</code></pre></div><p>задача для создания бекапа запускается следующей командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:create
-</code></pre></div><p>При использовании утилиты <code>docker-compose</code>, последнюю команду можно заменить на:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose run --rm gitlab app:rake gitlab:backup:create
-</code></pre></div><p>Развертывание бекапа требует чуть больше действий, но не должно вызывать вопросов. Убеждаемся, что контейнер с именем gitlab остановлен и удален:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stop gitlab <span style="color:#f92672">&amp;&amp;</span> docker rm gitlab
-</code></pre></div><p>Инициализируем базу данных:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake db:setup
-</code></pre></div><p>Смотрим список доступных бекапов для восстановления:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:restore
-</code></pre></div><p>Восстанавливаемся из резервной копии (с помощью аргумента <code>BACKUP</code> указываем таймстамп интересующего нас бекапа):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:restore BACKUP<span style="color:#f92672">=</span><span style="color:#ae81ff">1417624827</span>
-</code></pre></div><p>С <code>docker-compose</code>, последние две команды будут выглядеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose run --rm gitlab app:rake gitlab:backup:restore
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose run --rm gitlab app:rake gitlab:backup:restore BACKUP<span style="color:#f92672">=</span><span style="color:#ae81ff">1417624827</span>
-</code></pre></div><p>Создание резервных копий вручную — не самый удобный и правильный способ, который может быть полезен разве что при переносе Gitlab на другой хост. В реальном мире используется автоматическое резервное копирование.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker stop gitlab <span style="color:#f92672">&amp;&amp;</span> docker rm gitlab
+</span></span></code></pre></div><p>задача для создания бекапа запускается следующей командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:create
+</span></span></code></pre></div><p>При использовании утилиты <code>docker-compose</code>, последнюю команду можно заменить на:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose run --rm gitlab app:rake gitlab:backup:create
+</span></span></code></pre></div><p>Развертывание бекапа требует чуть больше действий, но не должно вызывать вопросов. Убеждаемся, что контейнер с именем gitlab остановлен и удален:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker stop gitlab <span style="color:#f92672">&amp;&amp;</span> docker rm gitlab
+</span></span></code></pre></div><p>Инициализируем базу данных:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake db:setup
+</span></span></code></pre></div><p>Смотрим список доступных бекапов для восстановления:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:restore
+</span></span></code></pre></div><p>Восстанавливаемся из резервной копии (с помощью аргумента <code>BACKUP</code> указываем таймстамп интересующего нас бекапа):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run --name gitlab -it --rm <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    sameersbn/gitlab:9.1.0-1 app:rake gitlab:backup:restore BACKUP<span style="color:#f92672">=</span><span style="color:#ae81ff">1417624827</span>
+</span></span></code></pre></div><p>С <code>docker-compose</code>, последние две команды будут выглядеть так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose run --rm gitlab app:rake gitlab:backup:restore
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose run --rm gitlab app:rake gitlab:backup:restore BACKUP<span style="color:#f92672">=</span><span style="color:#ae81ff">1417624827</span>
+</span></span></code></pre></div><p>Создание резервных копий вручную — не самый удобный и правильный способ, который может быть полезен разве что при переносе Gitlab на другой хост. В реальном мире используется автоматическое резервное копирование.</p>
 <p>Для минимальной конфигурации автоматического создания бекапов достаточно в конфигурационный файл <code>docker-compose.yml</code> добавить две строки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
-    - <span style="color:#ae81ff">GITLAB_BACKUP_SCHEDULE=daily</span>
-    - <span style="color:#ae81ff">GITLAB_BACKUP_TIME=03:00</span>
-...
-</code></pre></div><p>Эти два параметра позволят создавать ежедневные резервные копии в 3 часа ночи. По умолчанию бекапы хранятся 7 дней, после чего самые старые удаляются из системы, но это можно изменить с помощью параметра <code>GITLAB_BACKUP_EXPIRY</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">GITLAB_BACKUP_SCHEDULE=daily</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">GITLAB_BACKUP_TIME=03:00</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Эти два параметра позволят создавать ежедневные резервные копии в 3 часа ночи. По умолчанию бекапы хранятся 7 дней, после чего самые старые удаляются из системы, но это можно изменить с помощью параметра <code>GITLAB_BACKUP_EXPIRY</code>.</p>
 <p>Для хранения резервных копий на AWS (Amazon Web Services) или GCS (Google Cloud Storage) нужно использовать дополнительные опции, подробнее о которых можно почитать <a href="https://github.com/sameersbn/docker-gitlab#creating-backups">здесь</a>.</p>
                 </section>
             </article>
@@ -226,7 +226,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

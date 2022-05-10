@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,55 +104,55 @@
 <p>Итак, давайте разберемся с кешем и артефактами в <strong>GitLab CI</strong>!</p>
 <p>Чтобы ускорить время сборки проекта, которое в первоначальной реализации составляет 7-8 минут, мы будем использовать кеш. Решить вторую проблему (файлы созданные на этапе сборки не передаются на следующий этап <strong>GitLab CI</strong>) нам помогут артефакты (artifacts).</p>
 <p>Теперь этап <strong>сборки проекта с помощью GitLab CI</strong> в специальном файле <code>.gitlab-ci.yml</code> будет выглядеть следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
-<span style="color:#f92672">compile</span>:
-  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">build</span>
-  <span style="color:#f92672">script</span>:
-    - <span style="color:#ae81ff">cp -u .env.develop .env</span>
-    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;composer install&#34;</span>
-    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./zf routes compile&#34;</span>
-    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./zf cache clean-modified-content&#34;</span>
-    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml run -T --rm node sh -c &#34;npm install --production &amp;&amp; grunt install-build --no-dev&#34;</span>
-    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./zf user-default-avatar&#34;</span>
-  <span style="color:#f92672">cache</span>:
-    <span style="color:#f92672">key</span>: <span style="color:#ae81ff">${CI_COMMIT_REF_NAME}</span>
-    <span style="color:#f92672">paths</span>:
-      - <span style="color:#ae81ff">node_modules/</span>
-      - <span style="color:#ae81ff">vendor/</span>
-  <span style="color:#f92672">artifacts</span>:
-    <span style="color:#f92672">paths</span>:
-    - <span style="color:#ae81ff">vendor/</span>
-    - <span style="color:#ae81ff">public/dsd/js/utils/routes.js</span>
-    - <span style="color:#ae81ff">bin/</span>
-    - <span style="color:#ae81ff">.env</span>
-    - <span style="color:#ae81ff">public/default_img/user/en/</span>
-    - <span style="color:#ae81ff">public/default_img/user/ru/</span>
-    - <span style="color:#ae81ff">public/dsd/css/style.css</span>
-    - <span style="color:#ae81ff">public/dsd/css/style.css.map</span>
-    - <span style="color:#ae81ff">public/dsd/mix/tmp-pages-bundle/</span>
-    - <span style="color:#ae81ff">public/dsd/js/bundles/</span>
-    - <span style="color:#ae81ff">public/dsd/js/templates.hbs.js</span>
-    - <span style="color:#ae81ff">public/dsd/js/templates.html.js</span>
-    - <span style="color:#ae81ff">public/dsl/css/</span>
-    - <span style="color:#ae81ff">public/dsl/js/bundles/</span>
-    - <span style="color:#ae81ff">public/dsm/css/ltr-style.css</span>
-    - <span style="color:#ae81ff">public/dsm/css/ltr-style.css.map</span>
-    - <span style="color:#ae81ff">public/dsm/css/rtl-style.css</span>
-    - <span style="color:#ae81ff">public/dsm/css/rtl-style.css.map</span>
-    - <span style="color:#ae81ff">public/dsm/js/main-build.js</span>
-    - <span style="color:#ae81ff">public/dsm/js/main-build.js.map</span>
-    - <span style="color:#ae81ff">public/vendor/</span>
-    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">on_success</span>
-    <span style="color:#f92672">expire_in</span>: <span style="color:#ae81ff">1h</span>
-  <span style="color:#f92672">only</span>:
-    - <span style="color:#ae81ff">develop</span>
-    - <span style="color:#ae81ff">docker</span>
-...
-</code></pre></div><p>Действия, описанные в секции <code>script</code> остаются точно такими же, как и в предыдущей статье, а вот о секциях <code>cache</code> и <code>artifacts</code> мы поговорим подробнее.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">compile</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">build</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">script</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">cp -u .env.develop .env</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;composer install&#34;</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./zf routes compile&#34;</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./zf cache clean-modified-content&#34;</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml run -T --rm node sh -c &#34;npm install --production &amp;&amp; grunt install-build --no-dev&#34;</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./zf user-default-avatar&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">cache</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">key</span>: <span style="color:#ae81ff">${CI_COMMIT_REF_NAME}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">paths</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">node_modules/</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">vendor/</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">artifacts</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">paths</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">vendor/</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsd/js/utils/routes.js</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">bin/</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">.env</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/default_img/user/en/</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/default_img/user/ru/</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsd/css/style.css</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsd/css/style.css.map</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsd/mix/tmp-pages-bundle/</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsd/js/bundles/</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsd/js/templates.hbs.js</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsd/js/templates.html.js</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsl/css/</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsl/js/bundles/</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsm/css/ltr-style.css</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsm/css/ltr-style.css.map</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsm/css/rtl-style.css</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsm/css/rtl-style.css.map</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsm/js/main-build.js</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/dsm/js/main-build.js.map</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">public/vendor/</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">on_success</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">expire_in</span>: <span style="color:#ae81ff">1h</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">only</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">develop</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Действия, описанные в секции <code>script</code> остаются точно такими же, как и в предыдущей статье, а вот о секциях <code>cache</code> и <code>artifacts</code> мы поговорим подробнее.</p>
 <p>В секции <code>cache</code> мы указываем раннеру кешировать содержимое каталогов <code>node_modules</code> и <code>vendor</code>, причем ключем кеша будет значение переменной <code>CI_COMMIT_REF_NAME</code> — имя ветки, для которой выполняются инструкции <strong>GitLab CI</strong>. Так как процесс continuous integration у нас настроен только для двух веток (develop и docker), то и кеш у них будет разным.</p>
 <p>В секции <code>artifacts</code> мы указываем, что в случае успешного выполнения этапа сборки (<code>build</code>) проекта, необходимо все перечисленные каталоги и файлы сохранить для передачи на следующие этапы continuous integration. Храниться перечисленные файлы будут 1 час, после чего будут автоматически удалены с целью экономии места.</p>
 <p>Выполнение инструкций с внесенными изменениями теперь займет менее двух минут (01:53), а детали на вкладке pipelines при успешном завершении будут такими (вывод очень сокращен):</p>
-<pre><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
+<pre tabindex="0"><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
 Starting service registry.gitlab.lc/develop/ed:my-docker-dind ...
 Using locally found image version due to if-not-present pull policy
@@ -160,43 +160,43 @@ Waiting for services to be up and running...
 Using locally found image version due to if-not-present pull policy
 Running on runner-9e68759f-project-8-concurrent-0 via c7662d5025ba...
 Fetching changes...
-HEAD is now at 635e14c14a Merge branch 'develop' into 'develop'
+HEAD is now at 635e14c14a Merge branch &#39;develop&#39; into &#39;develop&#39;
 Checking out 635e14c1 as develop...
 Skipping Git submodules setup
 Checking cache for develop...
 Successfully extracted cache
 $ cp -u .env.develop .env
-$ docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &quot;composer install&quot;
+$ docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;composer install&#34;
 Loading composer repositories with package information
 Installing dependencies (including require-dev) from lock file
 Nothing to install or update
 Package egeloen/http-adapter is abandoned, you should avoid using it. Use php-http/httplug instead.
 Package sparkpost/php-sparkpost is abandoned, you should avoid using it. Use sparkpost/sparkpost instead.
 Generating autoload files
-$ docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &quot;./zf routes compile&quot;
+$ docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./zf routes compile&#34;
 Routes compiled and copied to public/dsd/js/utils/routes.js
 Now run: sudo -u root ./zf cache clean-modified-content
-$ docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &quot;./zf cache clean-modified-content&quot;
+$ docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./zf cache clean-modified-content&#34;
 Unable to find: data/cache/cache_modified_content.php. Possible file already removed.
-$ docker-compose -f docker/docker-compose-build.yml run -T --rm node sh -c &quot;npm install --production &amp;&amp; grunt install-build --no-dev&quot;
+$ docker-compose -f docker/docker-compose-build.yml run -T --rm node sh -c &#34;npm install --production &amp;&amp; grunt install-build --no-dev&#34;
 Starting application
 npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@^1.0.0 (node_modules/chokidar/node_modules/fsevents):
 ...
-&gt;&gt; Local Npm module &quot;grunt-scss-lint&quot; not found. Is it installed?
-&gt;&gt; Local Npm module &quot;grunt-svgzr&quot; not found. Is it installed?
-&gt;&gt; Local Npm module &quot;grunt-tinypng&quot; not found. Is it installed?
+&gt;&gt; Local Npm module &#34;grunt-scss-lint&#34; not found. Is it installed?
+&gt;&gt; Local Npm module &#34;grunt-svgzr&#34; not found. Is it installed?
+&gt;&gt; Local Npm module &#34;grunt-tinypng&#34; not found. Is it installed?
 
-Running &quot;clean:js&quot; (clean) task
+Running &#34;clean:js&#34; (clean) task
 &gt;&gt; 0 paths cleaned.
 
-Running &quot;copy:js&quot; (copy) task
+Running &#34;copy:js&#34; (copy) task
 Created 58 directories, copied 995 files
 
-Running &quot;sass:dsl&quot; (sass) task
+Running &#34;sass:dsl&#34; (sass) task
 
-Running &quot;sass:dsd&quot; (sass) task
+Running &#34;sass:dsd&#34; (sass) task
 
-Running &quot;sass:dsm&quot; (sass) task
+Running &#34;sass:dsm&#34; (sass) task
 
                          Asset       Size  Chunks            Chunk Names
                        main.js     287 kB       2  [emitted]  main
@@ -208,11 +208,11 @@ Running &quot;sass:dsm&quot; (sass) task
                     contact.js     269 kB      19  [emitted]  contact
                 simple-page.js     267 kB      20  [emitted]  simple-page
 ...
-Running &quot;handlebars:compile&quot; (handlebars) task
+Running &#34;handlebars:compile&#34; (handlebars) task
 &gt;&gt; 1 file created.
 ...
-Running &quot;dom_templates:compile&quot; (dom_templates) task
-File &quot;./public/dsd/js/templates.html.js&quot; created.
+Running &#34;dom_templates:compile&#34; (dom_templates) task
+File &#34;./public/dsd/js/templates.html.js&#34; created.
 ...
                         Asset       Size  Chunks            Chunk Names
                      steps.js    8.98 kB      23  [emitted]  steps
@@ -222,7 +222,7 @@ File &quot;./public/dsd/js/templates.html.js&quot; created.
                     common.js     2.9 MB      46  [emitted]  common
 Done, without errors.
 
-$ docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &quot;./zf user-default-avatar&quot;
+$ docker-compose -f docker/docker-compose-build.yml exec --user www-data -T workspace sh -c &#34;./zf user-default-avatar&#34;
 Done!
 Creating cache develop...
 Created cache
@@ -342,7 +342,7 @@ Build succeeded
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

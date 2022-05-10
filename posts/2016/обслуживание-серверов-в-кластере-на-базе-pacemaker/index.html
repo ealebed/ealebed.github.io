@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,33 +106,33 @@
 <p>В таких ситуациях встроенные компоненты мониторинга и миграции кластера могут привести к неожиданным побочным эффектам — давайте разберемся, как этого избежать!</p>
 <p>Специально для таких моментов разработчики <code>Pacemaker</code> предусмотрели специальный режим для кластера — «режим обслуживания» (maintenance mode). В режиме обслуживания компоненты мониторинга и миграции убирают «руки прочь» от кластерных ресурсов и не предпринимают попыток переключения на другие ноды.</p>
 <p>Включить <strong>режим обслуживания в кластере на базе <code>Pacemaker</code> и <code>Corosync</code></strong> можно следующей командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure property maintenance-mode<span style="color:#f92672">=</span>true
-</code></pre></div><p>При этом, возле ресурсов кластера в скобках появится надпись <code>unmanaged</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
- Master/Slave Set: ms_drbd_mysql <span style="color:#f92672">[</span>drbd_mysql<span style="color:#f92672">]</span> <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
-     drbd_mysql:0	<span style="color:#f92672">(</span>ocf::linbit:drbd<span style="color:#f92672">)</span>:	Master db1 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
-     drbd_mysql:1	<span style="color:#f92672">(</span>ocf::linbit:drbd<span style="color:#f92672">)</span>:	Started db2 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
- Master/Slave Set: ms_drbd_www <span style="color:#f92672">[</span>drbd_www<span style="color:#f92672">]</span> <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
-     drbd_www:0	<span style="color:#f92672">(</span>ocf::linbit:drbd<span style="color:#f92672">)</span>:	Master db1 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
-     drbd_www:1	<span style="color:#f92672">(</span>ocf::linbit:drbd<span style="color:#f92672">)</span>:	Started db2 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
-...
-</code></pre></div><p>В таком состоянии можно останавливать/перезапускать любые кластерные ресурсы — <code>Pacemaker</code> не будет пытаться запустить их.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure property maintenance-mode<span style="color:#f92672">=</span>true
+</span></span></code></pre></div><p>При этом, возле ресурсов кластера в скобках появится надпись <code>unmanaged</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span> Master/Slave Set: ms_drbd_mysql <span style="color:#f92672">[</span>drbd_mysql<span style="color:#f92672">]</span> <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     drbd_mysql:0	<span style="color:#f92672">(</span>ocf::linbit:drbd<span style="color:#f92672">)</span>:	Master db1 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     drbd_mysql:1	<span style="color:#f92672">(</span>ocf::linbit:drbd<span style="color:#f92672">)</span>:	Started db2 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> Master/Slave Set: ms_drbd_www <span style="color:#f92672">[</span>drbd_www<span style="color:#f92672">]</span> <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     drbd_www:0	<span style="color:#f92672">(</span>ocf::linbit:drbd<span style="color:#f92672">)</span>:	Master db1 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>     drbd_www:1	<span style="color:#f92672">(</span>ocf::linbit:drbd<span style="color:#f92672">)</span>:	Started db2 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>В таком состоянии можно останавливать/перезапускать любые кластерные ресурсы — <code>Pacemaker</code> не будет пытаться запустить их.</p>
 <p>Отключить режим обслуживания можно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure property maintenance-mode<span style="color:#f92672">=</span>false
-</code></pre></div><p>В случаях, когда изменения конфигурации могут занимать несколько часов (на такое время опасно оставлять кластер «без присмотра»), можно отключить мониторинг и восстановление только для одного ресурса — остальные ресурсы будут по прежнему под управлением кластера.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure property maintenance-mode<span style="color:#f92672">=</span>false
+</span></span></code></pre></div><p>В случаях, когда изменения конфигурации могут занимать несколько часов (на такое время опасно оставлять кластер «без присмотра»), можно отключить мониторинг и восстановление только для одного ресурса — остальные ресурсы будут по прежнему под управлением кластера.</p>
 <p>Для этого открываем на редактирование настройки нужного ресурса кластера (например, отказоустойчивый ip-адрес):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure edit failover_ip
-</code></pre></div><p>и добавляем/изменяем следующие meta-атрибуты:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">meta is-managed<span style="color:#f92672">=</span>false
-op monitor interval<span style="color:#f92672">=</span><span style="color:#ae81ff">60</span> enabled<span style="color:#f92672">=</span>false
-</code></pre></div><p>Эти значения переведут ресурс кластера <code>failover_ip</code> в режим обслуживания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"> failover_ip	<span style="color:#f92672">(</span>ocf::heartbeat:IPaddr2<span style="color:#f92672">)</span>:	Started db1 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
-</code></pre></div><p>Включить мониторинг и передать ресурс под управление кластера можно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure edit failover_ip
-</code></pre></div><p>и</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">meta is-managed<span style="color:#f92672">=</span>true
-op monitor interval<span style="color:#f92672">=</span><span style="color:#ae81ff">60</span> enabled<span style="color:#f92672">=</span>true
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure edit failover_ip
+</span></span></code></pre></div><p>и добавляем/изменяем следующие meta-атрибуты:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>meta is-managed<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>op monitor interval<span style="color:#f92672">=</span><span style="color:#ae81ff">60</span> enabled<span style="color:#f92672">=</span>false
+</span></span></code></pre></div><p>Эти значения переведут ресурс кластера <code>failover_ip</code> в режим обслуживания:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span> failover_ip	<span style="color:#f92672">(</span>ocf::heartbeat:IPaddr2<span style="color:#f92672">)</span>:	Started db1 <span style="color:#f92672">(</span>unmanaged<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Включить мониторинг и передать ресурс под управление кластера можно так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure edit failover_ip
+</span></span></code></pre></div><p>и</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>meta is-managed<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span>op monitor interval<span style="color:#f92672">=</span><span style="color:#ae81ff">60</span> enabled<span style="color:#f92672">=</span>true
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -224,7 +224,7 @@ op monitor interval<span style="color:#f92672">=</span><span style="color:#ae81f
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

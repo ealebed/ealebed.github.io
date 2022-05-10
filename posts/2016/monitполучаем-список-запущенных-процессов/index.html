@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,14 +102,14 @@
                 <section id="post-body">
                     <p>Давайте разберемся <strong>как использовать Monit для получения списка запущенных процессов</strong> в системе при аномальном росте нагрузки сервера!</p>
 <p>Переходим в каталог <code>/etc/monit/conf.d/</code>:</p>
-<pre><code>cd /etc/monit/conf.d/
+<pre tabindex="0"><code>cd /etc/monit/conf.d/
 </code></pre><p>Создаем файл <code>system</code>:</p>
-<pre><code>touch system
+<pre tabindex="0"><code>touch system
 </code></pre><p>Приводим созданный файл к следующему виду:</p>
-<pre><code>check system localhost
-if loadavg (5min) &gt; 20 for 2 cycles then exec &quot;/usr/local/sbin/highload&quot;
+<pre tabindex="0"><code>check system localhost
+if loadavg (5min) &gt; 20 for 2 cycles then exec &#34;/usr/local/sbin/highload&#34;
 </code></pre><p>Далее создаем исполняемый файл <code>/usr/local/sbin/highload</code> со следующим содержанием:</p>
-<pre><code>#!/bin/bash
+<pre tabindex="0"><code>#!/bin/bash
 #
 # 11.07.16 by e.lebed
 #
@@ -119,27 +119,27 @@ if loadavg (5min) &gt; 20 for 2 cycles then exec &quot;/usr/local/sbin/highload&
 #
  
 STAMP=`date +%H%M%S`
-address='admin@example.com'
+address=&#39;admin@example.com&#39;
  
-echo &quot;Load Average&quot; &gt;&gt; /tmp/$STAMP.tmp
+echo &#34;Load Average&#34; &gt;&gt; /tmp/$STAMP.tmp
 top -b | head -5 &gt;&gt; /tmp/$STAMP.tmp 2&gt;&amp;1
 echo &gt;&gt; /tmp/$STAMP.tmp
  
-echo &quot;Memory process list (top50)&quot; &gt;&gt; /tmp/$STAMP.tmp
-ps -ewwwo pid,size,command --sort -size | head -50 | awk '{ pid=$1 ; printf(&quot;%7s &quot;, pid) }{ hr=$2/1024 ; printf(&quot;%8.2f Mb &quot;, hr) } { for ( x=3 ; x&lt;=NF ; x++ ) { printf(&quot;%s &quot;,$x) } print &quot;&quot; }' &gt;&gt; /tmp/$STAMP.tmp 2&gt;&amp;1
+echo &#34;Memory process list (top50)&#34; &gt;&gt; /tmp/$STAMP.tmp
+ps -ewwwo pid,size,command --sort -size | head -50 | awk &#39;{ pid=$1 ; printf(&#34;%7s &#34;, pid) }{ hr=$2/1024 ; printf(&#34;%8.2f Mb &#34;, hr) } { for ( x=3 ; x&lt;=NF ; x++ ) { printf(&#34;%s &#34;,$x) } print &#34;&#34; }&#39; &gt;&gt; /tmp/$STAMP.tmp 2&gt;&amp;1
 echo &gt;&gt; /tmp/$STAMP.tmp
  
-echo &quot;CPU process list (top50)&quot; &gt;&gt; /tmp/$STAMP.tmp
+echo &#34;CPU process list (top50)&#34; &gt;&gt; /tmp/$STAMP.tmp
 ps -ewwwo pcpu,pid,user,command --sort -pcpu  | head -50 &gt;&gt; /tmp/$STAMP.tmp 2&gt;&amp;1
 echo &gt;&gt; /tmp/$STAMP.tmp
  
-cat /tmp/$STAMP.tmp | mail -s &quot;Highload Report from &quot;`hostname -f` $address
+cat /tmp/$STAMP.tmp | mail -s &#34;Highload Report from &#34;`hostname -f` $address
  
 rm /tmp/$STAMP.tmp
  
 exit 1
 </code></pre><p>Не забываем выполнить:</p>
-<pre><code>/etc/init.d/monit reload
+<pre tabindex="0"><code>/etc/init.d/monit reload
 </code></pre><p>Теперь, если LA сервера в течении двух проверок будет превышать 20, monit запустит скрипт, в результате выполнения которого будет сгенерировано и отправлено письмо на указанный адрес. В письме будет информация о текущей нагрузке на сервер, топ-50 процессов, отсортированных по потреблению памяти и топ-50 процессов, отсортированных по потреблению CPU.</p>
 <p>Скрипт очень просто откорректировать под свои нужды с учетом текущей нагрузки серверов.</p>
                 </section>
@@ -233,7 +233,7 @@ exit 1
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

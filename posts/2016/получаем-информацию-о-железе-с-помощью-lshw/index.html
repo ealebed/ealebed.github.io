@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,84 +100,84 @@
                 <section id="post-body">
                     <p>Как получить исчерпывающую информацию о серверном железе не имея физического доступа к серверу? Давайте разберемся с использованием утилиты <code>lshw</code>!</p>
 <p>Установка утилиты не должна вызывать никаких проблем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install lshw
-</code></pre></div><p>Если запустить <code>lshw</code> без дополнительных опций, то утилита выведет очень много информации, которая будет структурирована примерно следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">system information
-   motherboard information
-     cpu information
-	cache, logical cpu
-     memory
-	capacity, total size, individual bank information
-     pci slot information
-     ide slot information
-	disk information
-		total size, partition,
-     usb slot information
-    network
-</code></pre></div><p>Вывод первых 15 строк отчета в моем случае выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lshw | head -n <span style="color:#ae81ff">15</span>
-web1
-    description: System
-    product: X9DRL-7F <span style="color:#f92672">(</span>To be filled by O.E.M.<span style="color:#f92672">)</span>
-    vendor: Supermicro
-    version: <span style="color:#ae81ff">0123456789</span>
-    serial: <span style="color:#ae81ff">0123456789</span>
-    width: <span style="color:#ae81ff">64</span> bits
-    capabilities: smbios-2.7 dmi-2.7 vsyscall32
-    configuration: boot<span style="color:#f92672">=</span>normal chassis<span style="color:#f92672">=</span>server family<span style="color:#f92672">=</span>To be filled by O.E.M. sku<span style="color:#f92672">=</span>To be filled by O.E.M. uuid<span style="color:#f92672">=</span>00000000-0000-0000-0000-00259086CA14
-  *-core
-       description: Motherboard
-       product: X9DRL-7F
-       vendor: Supermicro
-       physical id: <span style="color:#ae81ff">0</span>
-       version: <span style="color:#ae81ff">0123456789</span>
-</code></pre></div><p>Для получения информации об определенной подсистеме нужно использовать параметр <code>-class</code>, который может принимать одно из следующих значений: <code>address</code>, <code>bridge</code>, <code>bus</code>, <code>communication</code>, <code>disk</code>, <code>display</code>, <code>generic</code>, <code>input</code>, <code>memory</code>, <code>multimedia</code>, <code>network</code>, <code>power</code>, <code>printer</code>, <code>processor</code>, <code>storage</code>, <code>system</code>, <code>tape</code> и <code>volume</code>. Например так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lshw -class disk
-  *-disk:1
-       description: SCSI Disk
-       product: LSI2208iMR
-       vendor: LSI
-       physical id: 2.0.0
-       bus info: scsi@0:2.0.0
-       logical name: /dev/sdb
-       version: 3.23
-       serial: 008ebe5c0e47dd3a1b00688711800403
-       size: 931GiB <span style="color:#f92672">(</span>999GB<span style="color:#f92672">)</span>
-       capabilities: partitioned partitioned:dos
-       configuration: ansiversion<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span> sectorsize<span style="color:#f92672">=</span><span style="color:#ae81ff">4096</span> signature<span style="color:#f92672">=</span>000574c6
-</code></pre></div><p>Или так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lshw -class memory
-  *-memory
-       description: System memory
-       physical id: <span style="color:#ae81ff">0</span>
-       size: 126GiB
-</code></pre></div><p>Для получения информации в более компактном виде можно воспользоваться параметром <code>-short</code> (вывод сокращен):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">H/W path          Device     Class          Description
-<span style="color:#f92672">=======================================================</span>
-                             system         Computer
-/0                           bus            Motherboard
-/0/0                         memory         126GiB System memory
-/0/1                         processor      Intel<span style="color:#f92672">(</span>R<span style="color:#f92672">)</span> Xeon<span style="color:#f92672">(</span>R<span style="color:#f92672">)</span> CPU E5-2640 v4 @ 2.40GHz
-/0/2                         processor      Intel<span style="color:#f92672">(</span>R<span style="color:#f92672">)</span> Xeon<span style="color:#f92672">(</span>R<span style="color:#f92672">)</span> CPU E5-2640 v4 @ 2.40GHz
-/0/100                       bridge         Broadwell DMI2
-/0/100/1                     bridge         Broadwell PCI Express Root Port <span style="color:#ae81ff">1</span>
-/0/100/1/0        scsi0      storage        MegaRAID SAS-3 <span style="color:#ae81ff">3108</span> <span style="color:#f92672">[</span>Invader<span style="color:#f92672">]</span>
-/0/100/1/0/2.0.0  /dev/sda   volume         3725GiB SMC3108
-/0/100/3                     bridge         Broadwell PCI Express Root Port <span style="color:#ae81ff">3</span>
-/0/100/3/0        eth2       network        82599ES 10-Gigabit SFI/SFP+ Network Connection
-/0/100/3/0.1      eth3       network        82599ES 10-Gigabit SFI/SFP+ Network Connection
-/0/100/3.2                   bridge         Broadwell PCI Express Root Port <span style="color:#ae81ff">3</span>
-/0/100/3.2/0      eth1       network        I350 Gigabit Network Connection
-/0/100/3.2/0.1    eth0       network        I350 Gigabit Network Connection
-/0/100/4                     generic        Broadwell-DE Crystal Beach DMA Channel <span style="color:#ae81ff">0</span>
-...
-/0/8b             scsi6      storage
-/0/8b/0.0.0       /dev/sdb   volume         372GiB INTEL SSDSC2BA40
-/0/8c             scsi9      storage
-/0/8c/0.0.0       /dev/sdc   disk           16GB SATA SSD
-/0/8c/0.0.0/1     /dev/sdc1  volume         14GiB EXT4 volume
-/1                bond0      network        Ethernet interface
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>aptitude install lshw
+</span></span></code></pre></div><p>Если запустить <code>lshw</code> без дополнительных опций, то утилита выведет очень много информации, которая будет структурирована примерно следующим образом:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>system information
+</span></span><span style="display:flex;"><span>   motherboard information
+</span></span><span style="display:flex;"><span>     cpu information
+</span></span><span style="display:flex;"><span>	cache, logical cpu
+</span></span><span style="display:flex;"><span>     memory
+</span></span><span style="display:flex;"><span>	capacity, total size, individual bank information
+</span></span><span style="display:flex;"><span>     pci slot information
+</span></span><span style="display:flex;"><span>     ide slot information
+</span></span><span style="display:flex;"><span>	disk information
+</span></span><span style="display:flex;"><span>		total size, partition,
+</span></span><span style="display:flex;"><span>     usb slot information
+</span></span><span style="display:flex;"><span>    network
+</span></span></code></pre></div><p>Вывод первых 15 строк отчета в моем случае выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lshw | head -n <span style="color:#ae81ff">15</span>
+</span></span><span style="display:flex;"><span>web1
+</span></span><span style="display:flex;"><span>    description: System
+</span></span><span style="display:flex;"><span>    product: X9DRL-7F <span style="color:#f92672">(</span>To be filled by O.E.M.<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    vendor: Supermicro
+</span></span><span style="display:flex;"><span>    version: <span style="color:#ae81ff">0123456789</span>
+</span></span><span style="display:flex;"><span>    serial: <span style="color:#ae81ff">0123456789</span>
+</span></span><span style="display:flex;"><span>    width: <span style="color:#ae81ff">64</span> bits
+</span></span><span style="display:flex;"><span>    capabilities: smbios-2.7 dmi-2.7 vsyscall32
+</span></span><span style="display:flex;"><span>    configuration: boot<span style="color:#f92672">=</span>normal chassis<span style="color:#f92672">=</span>server family<span style="color:#f92672">=</span>To be filled by O.E.M. sku<span style="color:#f92672">=</span>To be filled by O.E.M. uuid<span style="color:#f92672">=</span>00000000-0000-0000-0000-00259086CA14
+</span></span><span style="display:flex;"><span>  *-core
+</span></span><span style="display:flex;"><span>       description: Motherboard
+</span></span><span style="display:flex;"><span>       product: X9DRL-7F
+</span></span><span style="display:flex;"><span>       vendor: Supermicro
+</span></span><span style="display:flex;"><span>       physical id: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>       version: <span style="color:#ae81ff">0123456789</span>
+</span></span></code></pre></div><p>Для получения информации об определенной подсистеме нужно использовать параметр <code>-class</code>, который может принимать одно из следующих значений: <code>address</code>, <code>bridge</code>, <code>bus</code>, <code>communication</code>, <code>disk</code>, <code>display</code>, <code>generic</code>, <code>input</code>, <code>memory</code>, <code>multimedia</code>, <code>network</code>, <code>power</code>, <code>printer</code>, <code>processor</code>, <code>storage</code>, <code>system</code>, <code>tape</code> и <code>volume</code>. Например так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lshw -class disk
+</span></span><span style="display:flex;"><span>  *-disk:1
+</span></span><span style="display:flex;"><span>       description: SCSI Disk
+</span></span><span style="display:flex;"><span>       product: LSI2208iMR
+</span></span><span style="display:flex;"><span>       vendor: LSI
+</span></span><span style="display:flex;"><span>       physical id: 2.0.0
+</span></span><span style="display:flex;"><span>       bus info: scsi@0:2.0.0
+</span></span><span style="display:flex;"><span>       logical name: /dev/sdb
+</span></span><span style="display:flex;"><span>       version: 3.23
+</span></span><span style="display:flex;"><span>       serial: 008ebe5c0e47dd3a1b00688711800403
+</span></span><span style="display:flex;"><span>       size: 931GiB <span style="color:#f92672">(</span>999GB<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>       capabilities: partitioned partitioned:dos
+</span></span><span style="display:flex;"><span>       configuration: ansiversion<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span> sectorsize<span style="color:#f92672">=</span><span style="color:#ae81ff">4096</span> signature<span style="color:#f92672">=</span>000574c6
+</span></span></code></pre></div><p>Или так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lshw -class memory
+</span></span><span style="display:flex;"><span>  *-memory
+</span></span><span style="display:flex;"><span>       description: System memory
+</span></span><span style="display:flex;"><span>       physical id: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>       size: 126GiB
+</span></span></code></pre></div><p>Для получения информации в более компактном виде можно воспользоваться параметром <code>-short</code> (вывод сокращен):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>H/W path          Device     Class          Description
+</span></span><span style="display:flex;"><span><span style="color:#f92672">=======================================================</span>
+</span></span><span style="display:flex;"><span>                             system         Computer
+</span></span><span style="display:flex;"><span>/0                           bus            Motherboard
+</span></span><span style="display:flex;"><span>/0/0                         memory         126GiB System memory
+</span></span><span style="display:flex;"><span>/0/1                         processor      Intel<span style="color:#f92672">(</span>R<span style="color:#f92672">)</span> Xeon<span style="color:#f92672">(</span>R<span style="color:#f92672">)</span> CPU E5-2640 v4 @ 2.40GHz
+</span></span><span style="display:flex;"><span>/0/2                         processor      Intel<span style="color:#f92672">(</span>R<span style="color:#f92672">)</span> Xeon<span style="color:#f92672">(</span>R<span style="color:#f92672">)</span> CPU E5-2640 v4 @ 2.40GHz
+</span></span><span style="display:flex;"><span>/0/100                       bridge         Broadwell DMI2
+</span></span><span style="display:flex;"><span>/0/100/1                     bridge         Broadwell PCI Express Root Port <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>/0/100/1/0        scsi0      storage        MegaRAID SAS-3 <span style="color:#ae81ff">3108</span> <span style="color:#f92672">[</span>Invader<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>/0/100/1/0/2.0.0  /dev/sda   volume         3725GiB SMC3108
+</span></span><span style="display:flex;"><span>/0/100/3                     bridge         Broadwell PCI Express Root Port <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>/0/100/3/0        eth2       network        82599ES 10-Gigabit SFI/SFP+ Network Connection
+</span></span><span style="display:flex;"><span>/0/100/3/0.1      eth3       network        82599ES 10-Gigabit SFI/SFP+ Network Connection
+</span></span><span style="display:flex;"><span>/0/100/3.2                   bridge         Broadwell PCI Express Root Port <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>/0/100/3.2/0      eth1       network        I350 Gigabit Network Connection
+</span></span><span style="display:flex;"><span>/0/100/3.2/0.1    eth0       network        I350 Gigabit Network Connection
+</span></span><span style="display:flex;"><span>/0/100/4                     generic        Broadwell-DE Crystal Beach DMA Channel <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>/0/8b             scsi6      storage
+</span></span><span style="display:flex;"><span>/0/8b/0.0.0       /dev/sdb   volume         372GiB INTEL SSDSC2BA40
+</span></span><span style="display:flex;"><span>/0/8c             scsi9      storage
+</span></span><span style="display:flex;"><span>/0/8c/0.0.0       /dev/sdc   disk           16GB SATA SSD
+</span></span><span style="display:flex;"><span>/0/8c/0.0.0/1     /dev/sdc1  volume         14GiB EXT4 volume
+</span></span><span style="display:flex;"><span>/1                bond0      network        Ethernet interface
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -269,7 +269,7 @@ web1
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

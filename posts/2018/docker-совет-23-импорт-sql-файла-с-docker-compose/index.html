@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -105,16 +105,16 @@
                     <p>При работе с базами данных (например, PostgreSQL, MariaDB или MySQL) в docker-контейнере, вам наверняка понадобится импортировать данные из SQL-файла. Давайте разберемся!</p>
 <p>В данной статье рассмотрим пример с PostgreSQL и утилитой <code>psql</code>, но для баз данных MariaDB / MySQL и утилиты <code>mysql</code> все будет работать аналогично. Кроме того, для упрощения, в командах я не использую имена пользователей / пароли (в реальной ситуации вам придется их добавить самостоятельно).</p>
 <p>Итак, импорт данных из файла в общем случае (когда не используются docker-контейнеры) будет выглядеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">psql exampledb &lt; exampledump.sql
-</code></pre></div><p>Все просто - следует указать утилите <code>psql</code> в какую базу данных необходимо импортировать данные и перенаправить содержимое файла с дампом через STDIN.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>psql exampledb &lt; exampledump.sql
+</span></span></code></pre></div><p>Все просто - следует указать утилите <code>psql</code> в какую базу данных необходимо импортировать данные и перенаправить содержимое файла с дампом через STDIN.</p>
 <p>Если вы запускаете docker-контейнер с PostgreSQL с помощью утилиты <code>docker-compose</code>, то кажется &ldquo;очевидным&rdquo; попробовать импортировать данные из SQL-файла командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose exec postgres psql exampledb &lt; exampledump.sql
-</code></pre></div><p>Теоретически, это должно было сработать, но (по крайней мере в <code>docker-compose</code> версии 1.20) вместо импорта данных получаем ошибку:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ValueError: file descriptor cannot be a negative integer <span style="color:#f92672">(</span>-1<span style="color:#f92672">)</span>
-</code></pre></div><p>Можно к команде <code>exec</code> добавить ключ <code>-T</code> (для отключения TTY) - в таком случае ошибки не будет, но, увы, данные тоже импортированы не будут.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose exec postgres psql exampledb &lt; exampledump.sql
+</span></span></code></pre></div><p>Теоретически, это должно было сработать, но (по крайней мере в <code>docker-compose</code> версии 1.20) вместо импорта данных получаем ошибку:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ValueError: file descriptor cannot be a negative integer <span style="color:#f92672">(</span>-1<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Можно к команде <code>exec</code> добавить ключ <code>-T</code> (для отключения TTY) - в таком случае ошибки не будет, но, увы, данные тоже импортированы не будут.</p>
 <p>Возможно, в следующих версиях <code>docker-compose</code> данную &ldquo;особенность&rdquo; устранят, но на сегодняшний день для импорта SQL-файла в базу данных внутри docker-контейнера можно воспользоваться такой командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -i <span style="color:#66d9ef">$(</span>docker-compose ps -q postgres<span style="color:#66d9ef">)</span> psql exampledb &lt; exampledump.sql
-</code></pre></div><p>Команду можно упростить, заменив <code>$(docker-compose ps -q postgres)</code> на имя docker-контейнера (если вы его знаете или явно задаете в файле <code>docker-compose.yml</code>).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker exec -i <span style="color:#66d9ef">$(</span>docker-compose ps -q postgres<span style="color:#66d9ef">)</span> psql exampledb &lt; exampledump.sql
+</span></span></code></pre></div><p>Команду можно упростить, заменив <code>$(docker-compose ps -q postgres)</code> на имя docker-контейнера (если вы его знаете или явно задаете в файле <code>docker-compose.yml</code>).</p>
 <p>На этом все, теперь вы знаете, как импортировать данные из SQL-файла в базу данных внутри docker-контейнера!</p>
                 </section>
             </article>
@@ -207,7 +207,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

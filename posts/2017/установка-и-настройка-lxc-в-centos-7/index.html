@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,59 +101,59 @@
                     <p><strong>LXC (Linux Containers)</strong> — система виртуализации уровня ОС, позволяющая внутри основной операционной системы запускать изолированные дочерние ОС (с отдельными файловыми системами, сетевым стеком и памятью, но общим ядром).</p>
 <p>Давайте разберемся на конкретном примере <strong>установки Linux Containers (LXC)</strong> в операционной системе CentOS 7!</p>
 <p>На сегодняшний день установка LXC недоступна из базового репозитория CentOS 7, поэтому нужно добавить в систему EPEL репозиторий командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">yum -y install epel-release
-</code></pre></div><p>LXC-контейнеры используют сетевой мост для взаимодействия с хостом, между собой и доступом в интернет, поэтому перед созданием контейнеров следует настроить сеть как описано в <a href="https://ealebed.github.io/posts/2017/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%81%D0%B5%D1%82%D0%B8-%D0%B4%D0%BB%D1%8F-lxc-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%BE%D0%B2-%D0%B2-debian-8-centos-7-%D0%B8-fedora-21/">этой статье</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>yum -y install epel-release
+</span></span></code></pre></div><p>LXC-контейнеры используют сетевой мост для взаимодействия с хостом, между собой и доступом в интернет, поэтому перед созданием контейнеров следует настроить сеть как описано в <a href="https://ealebed.github.io/posts/2017/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%81%D0%B5%D1%82%D0%B8-%D0%B4%D0%BB%D1%8F-lxc-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%BE%D0%B2-%D0%B2-debian-8-centos-7-%D0%B8-fedora-21/">этой статье</a>.</p>
 <p>После настройки сети приступаем к установке необходимых пакетов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">yum -y install lxc lxc-templates libcap-devel libcgroup wget bridge-utils dnsmasq iptables-services
-</code></pre></div><p>После установки убедимся, что все готово к созданию и запуску контейнеров:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-checkconfig
-Kernel configuration not found at /proc/config.gz; searching...
-Kernel configuration found at /boot/config-3.10.0-514.2.2.el7.x86_64
---- Namespaces ---
-Namespaces: enabled
-Utsname namespace: enabled
-Ipc namespace: enabled
-Pid namespace: enabled
-User namespace: enabled
-Network namespace: enabled
-Multiple /dev/pts instances: enabled
-
---- Control groups ---
-Cgroup: enabled
-Cgroup clone_children flag: enabled
-Cgroup device: enabled
-Cgroup sched: enabled
-Cgroup cpu account: enabled
-Cgroup memory controller: enabled
-Cgroup cpuset: enabled
-
---- Misc ---
-Veth pair device: enabled
-Macvlan: enabled
-Vlan: enabled
-Bridges: enabled
-Advanced netfilter: enabled
-CONFIG_NF_NAT_IPV4: enabled
-CONFIG_NF_NAT_IPV6: enabled
-CONFIG_IP_NF_TARGET_MASQUERADE: enabled
-CONFIG_IP6_NF_TARGET_MASQUERADE: enabled
-CONFIG_NETFILTER_XT_TARGET_CHECKSUM: enabled
-
---- Checkpoint/Restore ---
-checkpoint restore: enabled
-CONFIG_FHANDLE: enabled
-CONFIG_EVENTFD: enabled
-CONFIG_EPOLL: enabled
-CONFIG_UNIX_DIAG: enabled
-CONFIG_INET_DIAG: enabled
-CONFIG_PACKET_DIAG: enabled
-CONFIG_NETLINK_DIAG: enabled
-File capabilities: enabled
-
-Note : Before booting a new kernel, you can check its configuration
-usage : CONFIG<span style="color:#f92672">=</span>/path/to/config /usr/bin/lxc-checkconfig
-</code></pre></div><p>Благодаря установленному пакету <code>lxc-templates</code> мы получили готовые шаблоны, которые можно использовать для <strong>быстрого создания LXC-контейнеров</strong>. Просмотреть список шаблонов можно так:</p>
-<pre><code class="language-bahs" data-lang="bahs">ls -la /usr/share/lxc/templates/
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>yum -y install lxc lxc-templates libcap-devel libcgroup wget bridge-utils dnsmasq iptables-services
+</span></span></code></pre></div><p>После установки убедимся, что все готово к созданию и запуску контейнеров:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-checkconfig
+</span></span><span style="display:flex;"><span>Kernel configuration not found at /proc/config.gz; searching...
+</span></span><span style="display:flex;"><span>Kernel configuration found at /boot/config-3.10.0-514.2.2.el7.x86_64
+</span></span><span style="display:flex;"><span>--- Namespaces ---
+</span></span><span style="display:flex;"><span>Namespaces: enabled
+</span></span><span style="display:flex;"><span>Utsname namespace: enabled
+</span></span><span style="display:flex;"><span>Ipc namespace: enabled
+</span></span><span style="display:flex;"><span>Pid namespace: enabled
+</span></span><span style="display:flex;"><span>User namespace: enabled
+</span></span><span style="display:flex;"><span>Network namespace: enabled
+</span></span><span style="display:flex;"><span>Multiple /dev/pts instances: enabled
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>--- Control groups ---
+</span></span><span style="display:flex;"><span>Cgroup: enabled
+</span></span><span style="display:flex;"><span>Cgroup clone_children flag: enabled
+</span></span><span style="display:flex;"><span>Cgroup device: enabled
+</span></span><span style="display:flex;"><span>Cgroup sched: enabled
+</span></span><span style="display:flex;"><span>Cgroup cpu account: enabled
+</span></span><span style="display:flex;"><span>Cgroup memory controller: enabled
+</span></span><span style="display:flex;"><span>Cgroup cpuset: enabled
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>--- Misc ---
+</span></span><span style="display:flex;"><span>Veth pair device: enabled
+</span></span><span style="display:flex;"><span>Macvlan: enabled
+</span></span><span style="display:flex;"><span>Vlan: enabled
+</span></span><span style="display:flex;"><span>Bridges: enabled
+</span></span><span style="display:flex;"><span>Advanced netfilter: enabled
+</span></span><span style="display:flex;"><span>CONFIG_NF_NAT_IPV4: enabled
+</span></span><span style="display:flex;"><span>CONFIG_NF_NAT_IPV6: enabled
+</span></span><span style="display:flex;"><span>CONFIG_IP_NF_TARGET_MASQUERADE: enabled
+</span></span><span style="display:flex;"><span>CONFIG_IP6_NF_TARGET_MASQUERADE: enabled
+</span></span><span style="display:flex;"><span>CONFIG_NETFILTER_XT_TARGET_CHECKSUM: enabled
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>--- Checkpoint/Restore ---
+</span></span><span style="display:flex;"><span>checkpoint restore: enabled
+</span></span><span style="display:flex;"><span>CONFIG_FHANDLE: enabled
+</span></span><span style="display:flex;"><span>CONFIG_EVENTFD: enabled
+</span></span><span style="display:flex;"><span>CONFIG_EPOLL: enabled
+</span></span><span style="display:flex;"><span>CONFIG_UNIX_DIAG: enabled
+</span></span><span style="display:flex;"><span>CONFIG_INET_DIAG: enabled
+</span></span><span style="display:flex;"><span>CONFIG_PACKET_DIAG: enabled
+</span></span><span style="display:flex;"><span>CONFIG_NETLINK_DIAG: enabled
+</span></span><span style="display:flex;"><span>File capabilities: enabled
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Note : Before booting a new kernel, you can check its configuration
+</span></span><span style="display:flex;"><span>usage : CONFIG<span style="color:#f92672">=</span>/path/to/config /usr/bin/lxc-checkconfig
+</span></span></code></pre></div><p>Благодаря установленному пакету <code>lxc-templates</code> мы получили готовые шаблоны, которые можно использовать для <strong>быстрого создания LXC-контейнеров</strong>. Просмотреть список шаблонов можно так:</p>
+<pre tabindex="0"><code class="language-bahs" data-lang="bahs">ls -la /usr/share/lxc/templates/
 total 344
 drwxr-xr-x. 2 root root  4096 Jan 12 02:43 .
 drwxr-xr-x. 6 root root   106 Jan 12 02:43 ..
@@ -175,75 +175,75 @@ drwxr-xr-x. 6 root root   106 Jan 12 02:43 ..
 -rwxr-xr-x. 1 root root 23976 Dec  3 14:09 lxc-ubuntu
 -rwxr-xr-x. 1 root root 11641 Dec  3 14:09 lxc-ubuntu-cloud
 </code></pre><p>Создать контейнер можно командой <code>lxc-create</code>, указав после опции <code>-n</code> имя контейнера, а после <code>-t</code> шаблон ОС для его создания. Результат выполнения команды сильно сокращен:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-create -n Lxc0 -t centos
-Host CPE ID from /etc/os-release: cpe:/o:centos:centos:7
-Checking cache download in /var/cache/lxc/centos/x86_64/7/rootfs ...
-Cache found. Updating...
-Loaded plugins: fastestmirror
-...
-...
-...
-Complete!
-Loaded plugins: fastestmirror
-Cleaning repos: base extras updates
-<span style="color:#ae81ff">0</span> package files removed
-Update finished
-Copy /var/cache/lxc/centos/x86_64/7/rootfs to /var/lib/lxc/Lxc0/rootfs ...
-Copying rootfs to /var/lib/lxc/Lxc0/rootfs ...
-sed: can<span style="color:#e6db74">&#39;t read /var/lib/lxc/Lxc0/rootfs/etc/init/tty.conf: No such file or directory
-</span><span style="color:#e6db74">Storing root password in &#39;</span>/var/lib/lxc/Lxc0/tmp_root_pass<span style="color:#e6db74">&#39;
-</span><span style="color:#e6db74">Expiring password for user root.
-</span><span style="color:#e6db74">passwd: Success
-</span><span style="color:#e6db74">sed: can&#39;</span>t read /var/lib/lxc/Lxc0/rootfs/etc/rc.sysinit: No such file or directory
-sed: can<span style="color:#e6db74">&#39;t read /var/lib/lxc/Lxc0/rootfs/etc/rc.d/rc.sysinit: No such file or directory
-</span><span style="color:#e6db74">
-</span><span style="color:#e6db74">Container rootfs and config have been created.
-</span><span style="color:#e6db74">Edit the config file to check/enable networking setup.
-</span><span style="color:#e6db74">
-</span><span style="color:#e6db74">The temporary root password is stored in:
-</span><span style="color:#e6db74">
-</span><span style="color:#e6db74">        &#39;</span>/var/lib/lxc/Lxc0/tmp_root_pass<span style="color:#960050;background-color:#1e0010">&#39;</span>
-
-
-The root password is set up as expired and will require it to be changed
-at first login, which you should <span style="color:#66d9ef">do</span> as soon as possible.  If you lose the
-root password or wish to change it without starting the container, you
-can change it from the host by running the following command <span style="color:#f92672">(</span>which will
-also reset the expired flag<span style="color:#f92672">)</span>:
-
-        chroot /var/lib/lxc/Lxc0/rootfs passwd
-</code></pre></div><p>Контейнер будет создан с паролем по умолчанию, который можно подсмотреть в файле <code>/var/lib/lxc/Lxc0/tmp_root_pass</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /var/lib/lxc/Lxc0/tmp_root_pass
-Root-Lxc0-d3OLnh
-</code></pre></div><p>Этот автоматически созданный рутовый пароль сразу же меняем на более удобный. Сделать это можно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chroot /var/lib/lxc/Lxc0/rootfs passwd
-</code></pre></div><p>Существует также вариант создания контейнеров в более интерактивном режиме (возможность выбрать дистрибутив/релиз/архитектуру), например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-create -t download -n Lxc1
-...
-Distribution: centos
-Release: <span style="color:#ae81ff">7</span>
-Architecture: amd64
-</code></pre></div><p>Для запуска LXC-контейнера в фоновом режиме следует использовать команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-start -n Lxc1 -d
-</code></pre></div><p>Если же вы не укажете опцию <code>-d</code>, то после старта контейнера автоматически попадете в его консоль. При первом подключении к контейнеру вы увидите что-то типа:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Type  to exit the console,  to enter Ctrl+a itself
-</code></pre></div><p>— в моем случае это не заработало, поэтому я всегда запускаю контейнеры с опцией <code>-d</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-create -n Lxc0 -t centos
+</span></span><span style="display:flex;"><span>Host CPE ID from /etc/os-release: cpe:/o:centos:centos:7
+</span></span><span style="display:flex;"><span>Checking cache download in /var/cache/lxc/centos/x86_64/7/rootfs ...
+</span></span><span style="display:flex;"><span>Cache found. Updating...
+</span></span><span style="display:flex;"><span>Loaded plugins: fastestmirror
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Complete!
+</span></span><span style="display:flex;"><span>Loaded plugins: fastestmirror
+</span></span><span style="display:flex;"><span>Cleaning repos: base extras updates
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">0</span> package files removed
+</span></span><span style="display:flex;"><span>Update finished
+</span></span><span style="display:flex;"><span>Copy /var/cache/lxc/centos/x86_64/7/rootfs to /var/lib/lxc/Lxc0/rootfs ...
+</span></span><span style="display:flex;"><span>Copying rootfs to /var/lib/lxc/Lxc0/rootfs ...
+</span></span><span style="display:flex;"><span>sed: can<span style="color:#e6db74">&#39;t read /var/lib/lxc/Lxc0/rootfs/etc/init/tty.conf: No such file or directory
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Storing root password in &#39;</span>/var/lib/lxc/Lxc0/tmp_root_pass<span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Expiring password for user root.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">passwd: Success
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">sed: can&#39;</span>t read /var/lib/lxc/Lxc0/rootfs/etc/rc.sysinit: No such file or directory
+</span></span><span style="display:flex;"><span>sed: can<span style="color:#e6db74">&#39;t read /var/lib/lxc/Lxc0/rootfs/etc/rc.d/rc.sysinit: No such file or directory
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Container rootfs and config have been created.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Edit the config file to check/enable networking setup.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">The temporary root password is stored in:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#39;</span>/var/lib/lxc/Lxc0/tmp_root_pass<span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>The root password is set up as expired and will require it to be changed
+</span></span><span style="display:flex;"><span>at first login, which you should <span style="color:#66d9ef">do</span> as soon as possible.  If you lose the
+</span></span><span style="display:flex;"><span>root password or wish to change it without starting the container, you
+</span></span><span style="display:flex;"><span>can change it from the host by running the following command <span style="color:#f92672">(</span>which will
+</span></span><span style="display:flex;"><span>also reset the expired flag<span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        chroot /var/lib/lxc/Lxc0/rootfs passwd
+</span></span></code></pre></div><p>Контейнер будет создан с паролем по умолчанию, который можно подсмотреть в файле <code>/var/lib/lxc/Lxc0/tmp_root_pass</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /var/lib/lxc/Lxc0/tmp_root_pass
+</span></span><span style="display:flex;"><span>Root-Lxc0-d3OLnh
+</span></span></code></pre></div><p>Этот автоматически созданный рутовый пароль сразу же меняем на более удобный. Сделать это можно так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chroot /var/lib/lxc/Lxc0/rootfs passwd
+</span></span></code></pre></div><p>Существует также вариант создания контейнеров в более интерактивном режиме (возможность выбрать дистрибутив/релиз/архитектуру), например:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-create -t download -n Lxc1
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Distribution: centos
+</span></span><span style="display:flex;"><span>Release: <span style="color:#ae81ff">7</span>
+</span></span><span style="display:flex;"><span>Architecture: amd64
+</span></span></code></pre></div><p>Для запуска LXC-контейнера в фоновом режиме следует использовать команду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-start -n Lxc1 -d
+</span></span></code></pre></div><p>Если же вы не укажете опцию <code>-d</code>, то после старта контейнера автоматически попадете в его консоль. При первом подключении к контейнеру вы увидите что-то типа:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Type  to exit the console,  to enter Ctrl+a itself
+</span></span></code></pre></div><p>— в моем случае это не заработало, поэтому я всегда запускаю контейнеры с опцией <code>-d</code>.</p>
 <p>Для подключения к контейнеру можно использовать команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-attach -n Lxc0
-</code></pre></div><p>На этом этапе следует установить внутри контейнера все необходимые для комфортной работы системные утилиты.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-attach -n Lxc0
+</span></span></code></pre></div><p>На этом этапе следует установить внутри контейнера все необходимые для комфортной работы системные утилиты.</p>
 <p>Для управления контейнерами чаще всего используются такие команды как остановка контейнера:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-stop -n Lxc0
-</code></pre></div><p>получение дополнительной информации о контейнере:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-info -n Lxc0
-</code></pre></div><p>клонирования контейнеров:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-clone Lxc0 Lxc2
-</code></pre></div><p>создания снепшотов (работает при остановленном контейнере):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-snapshot -n Lxc0
-</code></pre></div><p>восстановления из снепшотов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-snapshot -r snap0 -n Lxc0
-</code></pre></div><p>и удаления контейнеров:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lxc-destroy -n Lxc0
-</code></pre></div><p>Для более тонкой настройки контейнера можно использовать конфигурационный файл <code>/var/lib/lxc/{имя_контейнера}/config</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-stop -n Lxc0
+</span></span></code></pre></div><p>получение дополнительной информации о контейнере:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-info -n Lxc0
+</span></span></code></pre></div><p>клонирования контейнеров:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-clone Lxc0 Lxc2
+</span></span></code></pre></div><p>создания снепшотов (работает при остановленном контейнере):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-snapshot -n Lxc0
+</span></span></code></pre></div><p>восстановления из снепшотов:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-snapshot -r snap0 -n Lxc0
+</span></span></code></pre></div><p>и удаления контейнеров:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lxc-destroy -n Lxc0
+</span></span></code></pre></div><p>Для более тонкой настройки контейнера можно использовать конфигурационный файл <code>/var/lib/lxc/{имя_контейнера}/config</code>.</p>
                 </section>
             </article>
 
@@ -335,7 +335,7 @@ Architecture: amd64
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

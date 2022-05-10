@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,7 +102,7 @@
 <p>Давайте разберемся как можно ускорить процесс сборки образа (<code>docker build</code>) используя возможности <code>.dockerignore</code>!</p>
 <p>Как известно, команда <code>docker build</code> используется для сборки образа. При этом, демон докера (он же докер сервер) должен получить доступ к файлам, из которых вы хотите собрать docker-образ — эти файлы называются <code>build context</code>. Каждый раз, когда вы собираете docker-образ, докер клиент создает новый <code>build context</code> — выбирает файлы, упаковывает их в архив и отправляет докер серверу — иногда это может существенно замедлить процесс сборки.</p>
 <p>Здесь нам на помощь приходит файл <code>.dockerignore</code> в нем следует перечислить те файлы и каталоги, которые докер клиент НЕ должен включать в <code>build context</code>. Рассмотрим простой пример на реальных данных — на одном из этапов CI (release) собирается docker-образ с исходниками проекта, подробности выглядят примерно так:</p>
-<pre><code>Running with gitlab-ci-multi-runner 9.4.1 (d24b11c)
+<pre tabindex="0"><code>Running with gitlab-ci-multi-runner 9.4.1 (d24b11c)
   on docker-build-runner (9e68759f)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed/tmaier-dc-ssh:latest ...
 Starting service registry.gitlab.lc/develop/ed/my-docker-dind:latest ...
@@ -132,9 +132,9 @@ Removing public/dsl/css/
 Removing public/dsl/js/bundles/
 Removing public/vendor/
 Removing vendor/
-HEAD is now at 97796d7 Merge branch 'feature/LK-9208' into 'develop'
+HEAD is now at 97796d7 Merge branch &#39;feature/LK-9208&#39; into &#39;develop&#39;
 Auto packing the repository in background for optimum performance.
-See &quot;git help gc&quot; for manual housekeeping.
+See &#34;git help gc&#34; for manual housekeeping.
 Checking out 97796d7f as develop...
 Skipping Git submodules setup
 Downloading artifacts for compile (12377)...
@@ -210,15 +210,15 @@ d8efc7f9a927: Pushed
 latest: digest: sha256:4335cb03335cabbc20daa926db504bfba4427b6143af75a9a2a59a021cf8c3d2 size: 951
 Job succeeded
 </code></pre><p>Выполнение данной задачи занимает аж 2 минуты 47 секунд! Обратите внимание на размер <code>build context</code>:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 Sending build context to Docker daemon 1.218 GB
 ...
 </code></pre><p>Добавим рядом с нашим Dockerfil’ом новый файл <code>.dockerignore</code> следующего содержания:</p>
-<pre><code>.git/
+<pre tabindex="0"><code>.git/
 node_modules/  
 docker/
 </code></pre><p>После добавления файла в репозиторий запустится процесс CI и на этот раз этап сборки образа (release) будет выглядеть так:</p>
-<pre><code>Running with gitlab-ci-multi-runner 9.4.1 (d24b11c)
+<pre tabindex="0"><code>Running with gitlab-ci-multi-runner 9.4.1 (d24b11c)
   on docker-build-runner (9e68759f)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed/tmaier-dc-ssh:latest ...
 Starting service registry.gitlab.lc/develop/ed/my-docker-dind:latest ...
@@ -248,9 +248,9 @@ Removing public/dsl/css/
 Removing public/dsl/js/bundles/
 Removing public/vendor/
 Removing vendor/
-HEAD is now at d605b86 Merge branch 'feature/LK-8867' into 'develop'
+HEAD is now at d605b86 Merge branch &#39;feature/LK-8867&#39; into &#39;develop&#39;
 Auto packing the repository in background for optimum performance.
-See &quot;git help gc&quot; for manual housekeeping.
+See &#34;git help gc&#34; for manual housekeeping.
 Checking out d605b860 as develop...
 Skipping Git submodules setup
 Downloading artifacts for compile (12613)...
@@ -326,7 +326,7 @@ f0a24a86880d: Pushed
 latest: digest: sha256:f8f17362721885672fd0fc903505d2c2e71ac44a382533e1ab26684091447f63 size: 951
 Job succeeded
 </code></pre><p>Как видим, у нас изменился размер build context:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 Sending build context to Docker daemon 375.3 MB
 ...
 </code></pre><p>но самое главное, что docker-образ теперь собирается за 1 минуту 24 секунды — достойная оптимизация!</p>
@@ -421,7 +421,7 @@ Sending build context to Docker daemon 375.3 MB
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

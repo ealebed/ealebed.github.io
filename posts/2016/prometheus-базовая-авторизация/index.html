@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,28 +104,28 @@
 <p>В итоге, метрики, которые собирает, например, <code>node_exporter</code>, доступны для просмотра любому желающему по адресу http://[IP-адрес сервера]:9100/metrics. Как добавить <strong>базовую авторизацию в Prometheus</strong> — давайте разберемся!</p>
 <p>Считаем, что у нас <a href="https://ealebed.github.io/posts/2016/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-prometheus-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0/">установлены</a> все необходимые компоненты <strong>системы мониторинга Prometheus</strong>, а также веб-сервер Nginx.</p>
 <p>В конфигурационном файле <code>/etc/nginx/nginx.conf</code> добавим описание нашего сервера:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 server {
     listen 0.0.0.0:19100;
     location / { 
       proxy_pass http://localhost:9100/;
  
-      auth_basic &quot;Prometheus&quot;;
-      auth_basic_user_file &quot;.htpasswd&quot;;
+      auth_basic &#34;Prometheus&#34;;
+      auth_basic_user_file &#34;.htpasswd&#34;;
     }
   }
 ...
 </code></pre><p><strong>Примечание.</strong> Это лишь базовый пример настройки, если у вас на сервере расположено несколько веб-сайтов то конфиг будет выглядеть иначе.</p>
 <p>С помощью утилиты <code>htpasswd</code>, которая входит в состав пакета <code>apache2-utils</code>, создадим нового пользователя, учетные данные которого будут использоваться для доступа к метрикам <code>node_exporter</code>. Назовем его «testuser»:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">htpasswd -c .htpasswd testuser
-New password: 
-Re-type new password: 
-Adding password <span style="color:#66d9ef">for</span> user testuser
-</code></pre></div><p>Файл <code>.htpasswd</code> состоит из строк, каждая из которых соответствует паре логин/хеш пароля. Логин отделяется от хеша пароля двоеточием. Пример содержимого файла <code>.htpasswd</code>:</p>
-<pre><code>testuser:eCc5ls0kn3MEXyserbY
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>htpasswd -c .htpasswd testuser
+</span></span><span style="display:flex;"><span>New password: 
+</span></span><span style="display:flex;"><span>Re-type new password: 
+</span></span><span style="display:flex;"><span>Adding password <span style="color:#66d9ef">for</span> user testuser
+</span></span></code></pre></div><p>Файл <code>.htpasswd</code> состоит из строк, каждая из которых соответствует паре логин/хеш пароля. Логин отделяется от хеша пароля двоеточием. Пример содержимого файла <code>.htpasswd</code>:</p>
+<pre tabindex="0"><code>testuser:eCc5ls0kn3MEXyserbY
 </code></pre><p>Перечитаем конфиг веб-сервера Nginx командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -s reload
-</code></pre></div><p>Теперь при переходе по адресу http://[IP-адрес сервера]:19100 необходимо будет ввести логин/пароль созданного с помощью утилиты <code>htpasswd</code> пользователя.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nginx -s reload
+</span></span></code></pre></div><p>Теперь при переходе по адресу http://[IP-адрес сервера]:19100 необходимо будет ввести логин/пароль созданного с помощью утилиты <code>htpasswd</code> пользователя.</p>
 <p>Аналогичным образом можно настроить базовую авторизацию и для остальных компонентов <strong>системы мониторинга Prometheus</strong>, например <code>Alertmanager</code>, <code>Pushgateway</code> и т. д.</p>
                 </section>
             </article>
@@ -218,7 +218,7 @@ Adding password <span style="color:#66d9ef">for</span> user testuser
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

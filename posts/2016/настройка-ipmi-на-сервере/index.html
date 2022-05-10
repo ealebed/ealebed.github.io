@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -107,82 +107,82 @@
 <p>Как правило, <strong>настройка IPMI осуществляется в BIOS</strong>, но не всегда есть возможность перезагрузить сервер.</p>
 <p><strong>Примечание.</strong> Например, в моем случае необходимо было срочно, без перезагрузки сервера, <strong>изменить сетевые настройки IPMI</strong>, которые были получены по DHCP от хостера.</p>
 <p>Все действия выполняются в ОС Debian Wheezy. Устанавливаем пакет для управления <strong>IPMI</strong>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get install ipmitool
-</code></pre></div><p>Загружаем необходимые для корректной работы модули:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">modprobe ipmi_devintf
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">modprobe ipmi_si
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">modprobe ipmi_msghandler
-</code></pre></div><p>Смотрим сетевые настройки на первом канале:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apt-get install ipmitool
+</span></span></code></pre></div><p>Загружаем необходимые для корректной работы модули:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>modprobe ipmi_devintf
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>modprobe ipmi_si
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>modprobe ipmi_msghandler
+</span></span></code></pre></div><p>Смотрим сетевые настройки на первом канале:</p>
 <p><strong>Примечание.</strong> В терминологии <strong>IPMI</strong>, сетевой адаптер — это канал, следовательно будем смотреть настройки на первой сетевой карте (eth0).</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ipmitool lan print <span style="color:#ae81ff">1</span>
-
-Set in Progress         : Set Complete
-Auth Type Support       : MD2 MD5 OEM
-Auth Type Enable        : Callback : MD2 MD5 OEM
-                        : User     : MD2 MD5 OEM
-                        : Operator : MD2 MD5 OEM
-                        : Admin    : MD2 MD5 OEM
-                        : OEM      :
-IP Address Source       : DHCP Address
-IP Address              : 89.184.67.28
-Subnet Mask             : 255.255.255.0
-MAC Address             : 00:25:90:49:fe:24
-SNMP Community String   : AMI
-IP Header               : TTL<span style="color:#f92672">=</span>0x00 Flags<span style="color:#f92672">=</span>0x00 Precedence<span style="color:#f92672">=</span>0x00 TOS<span style="color:#f92672">=</span>0x00
-BMC ARP Control         : ARP Responses Enabled, Gratuitous ARP Disabled
-Gratituous ARP Intrvl   : 0.0 seconds
-Default Gateway IP      : 89.184.67.21
-Default Gateway MAC     : 00:00:00:00:00:00
-Backup Gateway IP       : 0.0.0.0
-Backup Gateway MAC      : 00:00:00:00:00:00
-802.1q VLAN ID          : Disabled
-802.1q VLAN Priority    : <span style="color:#ae81ff">0</span>
-RMCP+ Cipher Suites     : 1,2,3,6,7,8,11,12,0
-Cipher Suite Priv Max   : aaaaXXaaaXXaaXX
-                        :     X<span style="color:#f92672">=</span>Cipher Suite Unused
-                        :     c<span style="color:#f92672">=</span>CALLBACK
-                        :     u<span style="color:#f92672">=</span>USER
-                        :     o<span style="color:#f92672">=</span>OPERATOR
-                        :     a<span style="color:#f92672">=</span>ADMIN
-                        :     O<span style="color:#f92672">=</span>OEM
-</code></pre></div><p>Изменим параметр IP Address Source — нам нужны статические настройки сети:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ipmitool lan set <span style="color:#ae81ff">1</span> ipsrc static
-</code></pre></div><p>Установим статический ip-адрес для первого канала <strong>IPMI</strong>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ipmitool lan set <span style="color:#ae81ff">1</span> ipaddr 10.10.10.101
-</code></pre></div><p>и адрес шлюза по умолчанию:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ipmitool lan set <span style="color:#ae81ff">1</span> defgw ipaddr 10.10.10.254
-</code></pre></div><p>Проверим корректность настроек:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ipmitool lan print <span style="color:#ae81ff">1</span>
-Set in Progress         : Set Complete
-Auth Type Support       : MD2 MD5 OEM
-Auth Type Enable        : Callback : MD2 MD5 OEM
-                        : User     : MD2 MD5 OEM
-                        : Operator : MD2 MD5 OEM
-                        : Admin    : MD2 MD5 OEM
-                        : OEM      :
-IP Address Source       : Static Address
-IP Address              : 10.10.10.101
-Subnet Mask             : 255.255.255.0
-MAC Address             : 00:25:90:49:fe:24
-SNMP Community String   : AMI
-IP Header               : TTL<span style="color:#f92672">=</span>0x00 Flags<span style="color:#f92672">=</span>0x00 Precedence<span style="color:#f92672">=</span>0x00 TOS<span style="color:#f92672">=</span>0x00
-BMC ARP Control         : ARP Responses Enabled, Gratuitous ARP Disabled
-Gratituous ARP Intrvl   : 0.0 seconds
-Default Gateway IP      : 10.10.10.254
-Default Gateway MAC     : 00:00:00:00:00:00
-Backup Gateway IP       : 0.0.0.0
-Backup Gateway MAC      : 00:00:00:00:00:00
-802.1q VLAN ID          : Disabled
-802.1q VLAN Priority    : <span style="color:#ae81ff">0</span>
-RMCP+ Cipher Suites     : 1,2,3,6,7,8,11,12,0
-Cipher Suite Priv Max   : aaaaXXaaaXXaaXX
-                        :     X<span style="color:#f92672">=</span>Cipher Suite Unused
-                        :     c<span style="color:#f92672">=</span>CALLBACK
-                        :     u<span style="color:#f92672">=</span>USER
-                        :     o<span style="color:#f92672">=</span>OPERATOR
-                        :     a<span style="color:#f92672">=</span>ADMIN
-                        :     O<span style="color:#f92672">=</span>OEM
-</code></pre></div><p>Готово — сетевые <strong>настройки IPMI изменены без перезагрузки сервера</strong>. С помощью утилиты <code>ipmitool</code> так же можно собирать информацию о сенсорах, управлять питанием сервера, протоколировать системные события и т.д.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ipmitool lan print <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Set in Progress         : Set Complete
+</span></span><span style="display:flex;"><span>Auth Type Support       : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>Auth Type Enable        : Callback : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>                        : User     : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>                        : Operator : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>                        : Admin    : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>                        : OEM      :
+</span></span><span style="display:flex;"><span>IP Address Source       : DHCP Address
+</span></span><span style="display:flex;"><span>IP Address              : 89.184.67.28
+</span></span><span style="display:flex;"><span>Subnet Mask             : 255.255.255.0
+</span></span><span style="display:flex;"><span>MAC Address             : 00:25:90:49:fe:24
+</span></span><span style="display:flex;"><span>SNMP Community String   : AMI
+</span></span><span style="display:flex;"><span>IP Header               : TTL<span style="color:#f92672">=</span>0x00 Flags<span style="color:#f92672">=</span>0x00 Precedence<span style="color:#f92672">=</span>0x00 TOS<span style="color:#f92672">=</span>0x00
+</span></span><span style="display:flex;"><span>BMC ARP Control         : ARP Responses Enabled, Gratuitous ARP Disabled
+</span></span><span style="display:flex;"><span>Gratituous ARP Intrvl   : 0.0 seconds
+</span></span><span style="display:flex;"><span>Default Gateway IP      : 89.184.67.21
+</span></span><span style="display:flex;"><span>Default Gateway MAC     : 00:00:00:00:00:00
+</span></span><span style="display:flex;"><span>Backup Gateway IP       : 0.0.0.0
+</span></span><span style="display:flex;"><span>Backup Gateway MAC      : 00:00:00:00:00:00
+</span></span><span style="display:flex;"><span>802.1q VLAN ID          : Disabled
+</span></span><span style="display:flex;"><span>802.1q VLAN Priority    : <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>RMCP+ Cipher Suites     : 1,2,3,6,7,8,11,12,0
+</span></span><span style="display:flex;"><span>Cipher Suite Priv Max   : aaaaXXaaaXXaaXX
+</span></span><span style="display:flex;"><span>                        :     X<span style="color:#f92672">=</span>Cipher Suite Unused
+</span></span><span style="display:flex;"><span>                        :     c<span style="color:#f92672">=</span>CALLBACK
+</span></span><span style="display:flex;"><span>                        :     u<span style="color:#f92672">=</span>USER
+</span></span><span style="display:flex;"><span>                        :     o<span style="color:#f92672">=</span>OPERATOR
+</span></span><span style="display:flex;"><span>                        :     a<span style="color:#f92672">=</span>ADMIN
+</span></span><span style="display:flex;"><span>                        :     O<span style="color:#f92672">=</span>OEM
+</span></span></code></pre></div><p>Изменим параметр IP Address Source — нам нужны статические настройки сети:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ipmitool lan set <span style="color:#ae81ff">1</span> ipsrc static
+</span></span></code></pre></div><p>Установим статический ip-адрес для первого канала <strong>IPMI</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ipmitool lan set <span style="color:#ae81ff">1</span> ipaddr 10.10.10.101
+</span></span></code></pre></div><p>и адрес шлюза по умолчанию:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ipmitool lan set <span style="color:#ae81ff">1</span> defgw ipaddr 10.10.10.254
+</span></span></code></pre></div><p>Проверим корректность настроек:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ipmitool lan print <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>Set in Progress         : Set Complete
+</span></span><span style="display:flex;"><span>Auth Type Support       : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>Auth Type Enable        : Callback : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>                        : User     : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>                        : Operator : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>                        : Admin    : MD2 MD5 OEM
+</span></span><span style="display:flex;"><span>                        : OEM      :
+</span></span><span style="display:flex;"><span>IP Address Source       : Static Address
+</span></span><span style="display:flex;"><span>IP Address              : 10.10.10.101
+</span></span><span style="display:flex;"><span>Subnet Mask             : 255.255.255.0
+</span></span><span style="display:flex;"><span>MAC Address             : 00:25:90:49:fe:24
+</span></span><span style="display:flex;"><span>SNMP Community String   : AMI
+</span></span><span style="display:flex;"><span>IP Header               : TTL<span style="color:#f92672">=</span>0x00 Flags<span style="color:#f92672">=</span>0x00 Precedence<span style="color:#f92672">=</span>0x00 TOS<span style="color:#f92672">=</span>0x00
+</span></span><span style="display:flex;"><span>BMC ARP Control         : ARP Responses Enabled, Gratuitous ARP Disabled
+</span></span><span style="display:flex;"><span>Gratituous ARP Intrvl   : 0.0 seconds
+</span></span><span style="display:flex;"><span>Default Gateway IP      : 10.10.10.254
+</span></span><span style="display:flex;"><span>Default Gateway MAC     : 00:00:00:00:00:00
+</span></span><span style="display:flex;"><span>Backup Gateway IP       : 0.0.0.0
+</span></span><span style="display:flex;"><span>Backup Gateway MAC      : 00:00:00:00:00:00
+</span></span><span style="display:flex;"><span>802.1q VLAN ID          : Disabled
+</span></span><span style="display:flex;"><span>802.1q VLAN Priority    : <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>RMCP+ Cipher Suites     : 1,2,3,6,7,8,11,12,0
+</span></span><span style="display:flex;"><span>Cipher Suite Priv Max   : aaaaXXaaaXXaaXX
+</span></span><span style="display:flex;"><span>                        :     X<span style="color:#f92672">=</span>Cipher Suite Unused
+</span></span><span style="display:flex;"><span>                        :     c<span style="color:#f92672">=</span>CALLBACK
+</span></span><span style="display:flex;"><span>                        :     u<span style="color:#f92672">=</span>USER
+</span></span><span style="display:flex;"><span>                        :     o<span style="color:#f92672">=</span>OPERATOR
+</span></span><span style="display:flex;"><span>                        :     a<span style="color:#f92672">=</span>ADMIN
+</span></span><span style="display:flex;"><span>                        :     O<span style="color:#f92672">=</span>OEM
+</span></span></code></pre></div><p>Готово — сетевые <strong>настройки IPMI изменены без перезагрузки сервера</strong>. С помощью утилиты <code>ipmitool</code> так же можно собирать информацию о сенсорах, управлять питанием сервера, протоколировать системные события и т.д.</p>
                 </section>
             </article>
 
@@ -274,7 +274,7 @@ Cipher Suite Priv Max   : aaaaXXaaaXXaaXX
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -105,15 +105,15 @@
 <p>Для хранения данных Munin использует <code>rrd</code> (Round-robin Database, кольцевая база данных), поэтому первое, что нам поможет — это RRDCached. RRDCached — демон, кэширующий данные для записи в базу данных, и записывающий их после накопления определенного объема (по истечению лимита времени).</p>
 <p><strong>Примечание.</strong> Полная поддержка <code>rrdcached</code> присутствует в Munin начиная с версии 2.0.x.</p>
 <p>Установим необходимый пакет:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install rrdcached
-</code></pre></div><p>Запустим следующую команду для создания сокета:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo -u munin /usr/bin/rrdcached <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -p /run/munin/rrdcached.pid <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -B -b /var/lib/munin/ <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -F -j /var/lib/munin/rrdcached-journal/ <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -m <span style="color:#ae81ff">0660</span> -l unix:/run/munin/rrdcached.sock <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -w <span style="color:#ae81ff">1800</span> -z <span style="color:#ae81ff">1800</span> -f <span style="color:#ae81ff">3600</span>
-</code></pre></div><p><strong>Примечание.</strong> Эту команду также следует добавить в <code>/etc/rc.local</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>aptitude install rrdcached
+</span></span></code></pre></div><p>Запустим следующую команду для создания сокета:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo -u munin /usr/bin/rrdcached <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -p /run/munin/rrdcached.pid <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -B -b /var/lib/munin/ <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -F -j /var/lib/munin/rrdcached-journal/ <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -m <span style="color:#ae81ff">0660</span> -l unix:/run/munin/rrdcached.sock <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -w <span style="color:#ae81ff">1800</span> -z <span style="color:#ae81ff">1800</span> -f <span style="color:#ae81ff">3600</span>
+</span></span></code></pre></div><p><strong>Примечание.</strong> Эту команду также следует добавить в <code>/etc/rc.local</code>.</p>
 <p>RRDCached по умолчанию записывает данные в базу каждые 5 минут (такой же интервал по умолчанию используется в Munin для сбора данных). Следовательно, нам нужно изменить интервалы кеширования, записи и очистки кеша — можно использовать данные из примера или ввести ваши значения. За эти интервалы отвечают следующие параметры:</p>
 <ul>
 <li><code>-w 1800</code> — данные записываются с таймаутом 30 минут;</li>
@@ -121,46 +121,46 @@
 <li><code>-f 3600</code> — очистка устаревших данных происходит каждый час.</li>
 </ul>
 <p>Добавим в конфигурационный файл <code>/etc/munin/munin.conf</code> следующую строку:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">rrdcached_socket /run/munin/rrdcached.sock
-</code></pre></div><p>и перезапустим Munin для применения изменений.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>rrdcached_socket /run/munin/rrdcached.sock
+</span></span></code></pre></div><p>и перезапустим Munin для применения изменений.</p>
 <p>Скрипты <code>/usr/share/munin/munin-update</code> и <code>/usr/share/munin/munin-graph</code> по умолчанию запускаются по крону каждые 5 минут (одной задачей в кронтабе <code>/etc/cron.d/munin</code>). Эти скрипты лучше разделить, для этого создаем файл <code>/usr/bin/munin-graph</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano /usr/bin/munin-graph
-</code></pre></div><p>Содержимое файла следующее:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/bash
-</span><span style="color:#75715e"></span><span style="color:#75715e"># We always launch munin-html.</span>
-<span style="color:#75715e"># It is a noop if html_strategy is &amp;quot;cgi&amp;quot;</span>
-nice /usr/share/munin/munin-html $@ <span style="color:#f92672">||</span> exit <span style="color:#ae81ff">1</span>
- 
-<span style="color:#75715e"># The result of munin-html is needed for munin-graph.</span>
-<span style="color:#75715e"># It is a noop if graph_strategy is &amp;quot;cgi&amp;quot;</span>
-nice /usr/share/munin/munin-graph --cron $@ <span style="color:#f92672">||</span> exit <span style="color:#ae81ff">1</span>
-</code></pre></div><p>Делаем файл исполняемым:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod +x /usr/bin/munin-graph
-</code></pre></div><p>Правим существующий файл <code>/usr/bin/munin-cron</code> (закомментируем строки, которые добавили в файл <code>/usr/bin/munin-graph</code>):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
-<span style="color:#75715e"># We always launch munin-html.</span>
-<span style="color:#75715e"># It is a noop if html_strategy is &amp;quot;cgi&amp;quot;</span>
-<span style="color:#75715e"># nice /usr/share/munin/munin-html $@ || exit 1</span>
- 
-<span style="color:#75715e"># The result of munin-html is needed for munin-graph.</span>
-<span style="color:#75715e"># It is a noop if graph_strategy is &amp;quot;cgi&amp;quot;</span>
-<span style="color:#75715e"># nice /usr/share/munin/munin-graph --cron $@ || exit 1</span>
-</code></pre></div><p>Добавим еще одно задание в кронтаб <code>/etc/cron.d/munin</code> — дописываем следующую строку:</p>
-<pre><code>10 * * * *      munin if [ -x /usr/bin/munin-graph ]; then /usr/bin/munin-graph; fi
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano /usr/bin/munin-graph
+</span></span></code></pre></div><p>Содержимое файла следующее:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># We always launch munin-html.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># It is a noop if html_strategy is &amp;quot;cgi&amp;quot;</span>
+</span></span><span style="display:flex;"><span>nice /usr/share/munin/munin-html $@ <span style="color:#f92672">||</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The result of munin-html is needed for munin-graph.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># It is a noop if graph_strategy is &amp;quot;cgi&amp;quot;</span>
+</span></span><span style="display:flex;"><span>nice /usr/share/munin/munin-graph --cron $@ <span style="color:#f92672">||</span> exit <span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><p>Делаем файл исполняемым:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x /usr/bin/munin-graph
+</span></span></code></pre></div><p>Правим существующий файл <code>/usr/bin/munin-cron</code> (закомментируем строки, которые добавили в файл <code>/usr/bin/munin-graph</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># We always launch munin-html.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># It is a noop if html_strategy is &amp;quot;cgi&amp;quot;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># nice /usr/share/munin/munin-html $@ || exit 1</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The result of munin-html is needed for munin-graph.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># It is a noop if graph_strategy is &amp;quot;cgi&amp;quot;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># nice /usr/share/munin/munin-graph --cron $@ || exit 1</span>
+</span></span></code></pre></div><p>Добавим еще одно задание в кронтаб <code>/etc/cron.d/munin</code> — дописываем следующую строку:</p>
+<pre tabindex="0"><code>10 * * * *      munin if [ -x /usr/bin/munin-graph ]; then /usr/bin/munin-graph; fi
 </code></pre><p>После этих действий Munin будет собирать данные каждые 5 минут (как и раньше), но строить по ним графики и генерировать html-страницы раз в час.</p>
 <p>Еще для оптимизации Munin можно использовать <code>nice</code> и <code>ionice</code>. Для этого достаточно привести кронтаб <code>/etc/cron.d/munin</code> к следующему виду:</p>
-<pre><code>*/5 * * * *     munin if [ -x /usr/bin/munin-cron ]; then /usr/bin/ionice -c 3 /usr/bin/nice -n 19 /usr/bin/munin-cron; fi
+<pre tabindex="0"><code>*/5 * * * *     munin if [ -x /usr/bin/munin-cron ]; then /usr/bin/ionice -c 3 /usr/bin/nice -n 19 /usr/bin/munin-cron; fi
 </code></pre><p>А если вы использовали предложенный выше вариант с разделением скриптов <code>/usr/share/munin/munin-update</code> и <code>/usr/share/munin/munin-graph</code>, то в кронтабе будет еще и такая строка:</p>
-<pre><code>10 * * * *      munin if [ -x /usr/bin/munin-graph ]; then /usr/bin/ionice -c 3 /usr/bin/nice -n 19 /usr/bin/munin-graph; fi
+<pre tabindex="0"><code>10 * * * *      munin if [ -x /usr/bin/munin-graph ]; then /usr/bin/ionice -c 3 /usr/bin/nice -n 19 /usr/bin/munin-graph; fi
 </code></pre><p>При большом количестве хостов (&gt;200) можно снизить нагрузку на диск если Munin будет генеририровать html-страницы в памяти. Для этого, проверим параметр <code>htmldir</code> в конфигурационном файле <code>/etc/munin/munin.conf</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /etc/munin/munin.conf | grep htmldir
-htmldir /var/cache/munin/www
-</code></pre></div><p>Добавим в <code>/etc/fstab</code> следующую строку:</p>
-<pre><code>...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /etc/munin/munin.conf | grep htmldir
+</span></span><span style="display:flex;"><span>htmldir /var/cache/munin/www
+</span></span></code></pre></div><p>Добавим в <code>/etc/fstab</code> следующую строку:</p>
+<pre tabindex="0"><code>...
 tmpfs  /var/cache/munin/www   tmpfs   rw,mode=755,uid=munin,gid=munin,size=150M   0 0
 </code></pre><p>и выполним:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mount -a
-</code></pre></div><p><strong>Примечание.</strong> Эффект от предложенных шагов будет тем ощутимее, чем больше хостов мониторится с помощью Munin.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -a
+</span></span></code></pre></div><p><strong>Примечание.</strong> Эффект от предложенных шагов будет тем ощутимее, чем больше хостов мониторится с помощью Munin.</p>
                 </section>
             </article>
 
@@ -252,7 +252,7 @@ tmpfs  /var/cache/munin/www   tmpfs   rw,mode=755,uid=munin,gid=munin,size=150M 
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

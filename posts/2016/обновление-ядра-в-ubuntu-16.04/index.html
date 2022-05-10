@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,38 +104,38 @@
 <p>В моем случае необходимо обновить ядро до версии 4.7 чтобы устранить баги с видеозвонками в скайпе.</p>
 <p><strong>Примечание.</strong> Ядро Linux является критичным элементом системы, поэтому устанавливайте новое ядро на свой страх и риск.</p>
 <p>Для обновления необходимо выполнить следующие команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-headers-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-headers-4.7.0-040700_4.7.0-040700.201608021801_all.deb
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-image-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dpkg -i *.deb
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">update-grub
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">reboot
-</code></pre></div><p>После проделанных действий можно проверить текущую версия ядра в системе:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -r
-4.7.0-040700-generic
-</code></pre></div><p>Если у вас установлена и настроена система управления конфигурациями <code>ansible</code>, то для обновления ядра на всех компьютерах в сети можно использовать следующий плейбук:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">all</span>
-  <span style="color:#f92672">become</span>: <span style="color:#66d9ef">yes</span>
-  <span style="color:#f92672">tasks</span>:
- 
-  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Wget packages</span>
-    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">wget {{ item }}</span>
-    <span style="color:#f92672">with_items</span>:
-    - <span style="color:#ae81ff">http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-headers-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb</span>
-    - <span style="color:#ae81ff">http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-headers-4.7.0-040700_4.7.0-040700.201608021801_all.deb</span>
-    - <span style="color:#ae81ff">http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-image-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb</span>
- 
-  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Install packages</span>
-    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">dpkg -i {{ item }}</span>
-    <span style="color:#f92672">with_items</span>:
-    - <span style="color:#ae81ff">linux-headers-4.7.0-040700_4.7.0-040700.201608021801_all.deb</span>
-    - <span style="color:#ae81ff">linux-headers-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb</span>
-    - <span style="color:#ae81ff">linux-image-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb</span>
- 
-  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Update GRUB</span>
-    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">update-grub</span>
-</code></pre></div><p>Плейбук можно оптимизировать (например, добавить проверку разрядности ОС) и доработать под свои нужды, обсуждения и конструктивная критика приветствуется.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-headers-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-headers-4.7.0-040700_4.7.0-040700.201608021801_all.deb
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-image-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dpkg -i *.deb
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>update-grub
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>reboot
+</span></span></code></pre></div><p>После проделанных действий можно проверить текущую версия ядра в системе:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -r
+</span></span><span style="display:flex;"><span>4.7.0-040700-generic
+</span></span></code></pre></div><p>Если у вас установлена и настроена система управления конфигурациями <code>ansible</code>, то для обновления ядра на всех компьютерах в сети можно использовать следующий плейбук:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">all</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">become</span>: <span style="color:#66d9ef">yes</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">tasks</span>:
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Wget packages</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">wget {{ item }}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">with_items</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-headers-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-headers-4.7.0-040700_4.7.0-040700.201608021801_all.deb</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.7/linux-image-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Install packages</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">dpkg -i {{ item }}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">with_items</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">linux-headers-4.7.0-040700_4.7.0-040700.201608021801_all.deb</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">linux-headers-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">linux-image-4.7.0-040700-generic_4.7.0-040700.201608021801_amd64.deb</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Update GRUB</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">update-grub</span>
+</span></span></code></pre></div><p>Плейбук можно оптимизировать (например, добавить проверку разрядности ОС) и доработать под свои нужды, обсуждения и конструктивная критика приветствуется.</p>
                 </section>
             </article>
 
@@ -227,7 +227,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

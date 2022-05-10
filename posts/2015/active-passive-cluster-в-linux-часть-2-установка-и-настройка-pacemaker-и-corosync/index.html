@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,18 +104,18 @@
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2015/active-passive-cluster-%D0%B2-linux-%D1%87%D0%B0%D1%81%D1%82%D1%8C-1-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-drbd/">предыдущей части</a> мы успешно настроили DRBD-ресурсы на двух нодах будущего кластера, теперь давайте разберемся с <strong>установкой и настройкой <code>Pacemaker</code> и <code>Corosync</code></strong>.</p>
 <p>Для начала установим необходимые пакеты:</p>
-<pre><code>aptitude install pacemaker
+<pre tabindex="0"><code>aptitude install pacemaker
 </code></pre><p>На обоих серверах разрешаем автозапуск <code>corosync</code> в конфигурационном файле <code>/etc/default/corosync</code>, ставим параметр:</p>
-<pre><code>START=yes
+<pre tabindex="0"><code>START=yes
 </code></pre><p>Создаем ключи для <code>corosync</code> командой:</p>
-<pre><code>corosync-keygen
+<pre tabindex="0"><code>corosync-keygen
 </code></pre><p>Меняем права сгенерированного файла ключей:</p>
-<pre><code>chown root:root /etc/corosync/authkey
-</code></pre><pre><code>chmod 400 /etc/corosync/authkey
+<pre tabindex="0"><code>chown root:root /etc/corosync/authkey
+</code></pre><pre tabindex="0"><code>chmod 400 /etc/corosync/authkey
 </code></pre><p>и копируем этот файл на все узлы кластера (в нашем случае их всего два):</p>
-<pre><code>scp /etc/corosync/authkey root@db2:/etc/corosync/authkey
+<pre tabindex="0"><code>scp /etc/corosync/authkey root@db2:/etc/corosync/authkey
 </code></pre><p>Приводим конфигурационный файл <code>/etc/corosync/corosync.conf</code> на обоих серверах к следующему виду:</p>
-<pre><code># Please read the openais.conf.5 manual page
+<pre tabindex="0"><code># Please read the openais.conf.5 manual page
  
 totem {
   version: 2
@@ -220,9 +220,9 @@ logging {
         }
 }
 </code></pre><p>И запускаем corosync командой:</p>
-<pre><code>/etc/init.d/corosync start
+<pre tabindex="0"><code>/etc/init.d/corosync start
 </code></pre><p>Просмотреть статус нашего кластера можно командой <code>crm_mon -1</code> или <code>crm status</code>, результат выполнения команды будет примерно таким:</p>
-<pre><code>============
+<pre tabindex="0"><code>============
 Last updated: Thu Mar 27 17:07:47 2014
 Last change: Thu Mar 27 17:07:21 2014 via crmd on db1
 Stack: openais
@@ -234,18 +234,18 @@ Version: 1.1.7-ee0730e13d124c3d58f00016c3376a1de5323cff
 
 Online: [ db1 db2 ] 
 </code></pre><p>Выставляем базовые настройки для кластера (учитываем, что у нас кластер состоит из двух нод):</p>
-<pre><code>crm configure property stonith-enabled=&quot;false&quot;
-</code></pre><pre><code>crm configure property symmetric-cluster=&quot;false&quot;
-</code></pre><pre><code>crm configure rsc_defaults resource-stickiness=&quot;110&quot;
-</code></pre><pre><code>crm configure rsc_defaults migration-threshold=3
-</code></pre><pre><code>crm configure property no-quorum-policy=ignore
+<pre tabindex="0"><code>crm configure property stonith-enabled=&#34;false&#34;
+</code></pre><pre tabindex="0"><code>crm configure property symmetric-cluster=&#34;false&#34;
+</code></pre><pre tabindex="0"><code>crm configure rsc_defaults resource-stickiness=&#34;110&#34;
+</code></pre><pre tabindex="0"><code>crm configure rsc_defaults migration-threshold=3
+</code></pre><pre tabindex="0"><code>crm configure property no-quorum-policy=ignore
 </code></pre><p>Перед настройкой ресурсов кластера на обоих серверах убираем из автозагрузки скрипты, которые в дальнейшем будут контролироватся <code>corosync</code>’ом:</p>
-<pre><code>update-rc.d -f drbd remove
-</code></pre><pre><code>update-rc.d -f mysql remove
-</code></pre><pre><code>update-rc.d -f nfs-common remove
-</code></pre><pre><code>update-rc.d -f nfs-kernel-server remove
-</code></pre><pre><code>update-rc.d -f sphinxsearch remove
-</code></pre><pre><code>update-rc.d -f gearman-job-server remove
+<pre tabindex="0"><code>update-rc.d -f drbd remove
+</code></pre><pre tabindex="0"><code>update-rc.d -f mysql remove
+</code></pre><pre tabindex="0"><code>update-rc.d -f nfs-common remove
+</code></pre><pre tabindex="0"><code>update-rc.d -f nfs-kernel-server remove
+</code></pre><pre tabindex="0"><code>update-rc.d -f sphinxsearch remove
+</code></pre><pre tabindex="0"><code>update-rc.d -f gearman-job-server remove
 </code></pre><p>На этом <strong>установка и настройка <code>Pacemaker</code> и <code>Corosync</code></strong> закончена, в <a href="https://ealebed.github.io/posts/2015/active-passive-cluster-%D0%B2-linux-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D0%BE%D0%B2-%D0%BA%D0%BB%D0%B0%D1%81%D1%82%D0%B5%D1%80%D0%B0/">заключительной части</a> пошаговой настройки Active/Passive Cluster в Linux мы добавим ресурсы кластера, организуем их в группы и определим порядок запуска.</p>
                 </section>
             </article>
@@ -338,7 +338,7 @@ Online: [ db1 db2 ]
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

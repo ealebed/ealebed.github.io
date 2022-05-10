@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,101 +104,101 @@
 <p>Как и обещал, каждый из этапов (<code>stage</code>) мы будем рассматривать отдельно, так что для начала давайте разберемся с этапом spawn из нашего файла <code>.gitlab-ci.yml</code>!</p>
 <p>Сразу стоит отметить, что названия этапов (<code>stage</code>) и задач (<code>jobs</code>) не являются зарезервированными или ключевыми словами, поэтому их можно называть как угодно (лишь бы вы понимали, что там написано).</p>
 <p>В данном случае самый первый этап из continuous integration я обозначил как <code>spawn</code> (порождение) — запуск всех контейнеров, необходимых при сборке проекта. В конфигурационном файле <code>.gitlab-ci.yml</code> этот этап выглядит следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
-<span style="color:#f92672">spawn_containers</span>:
-  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">spawn</span>
-  <span style="color:#f92672">before_script</span>:
-    - <span style="color:#ae81ff">docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY</span>
-  <span style="color:#f92672">script</span>:
-    - <span style="color:#ae81ff">set -o allexport; . ./docker/.env.staging.lc</span>
-    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml up -d</span>
-  <span style="color:#f92672">only</span>:
-    - <span style="color:#ae81ff">develop</span>
-    - <span style="color:#ae81ff">docker</span>
-...
-</code></pre></div><p>Задачи, которые необходимо выполнить раннеру описываются в секции <code>script</code>. В нашем примере это две задачи — первая считывает переменные окружения из файла <code>/docker/.env.staging.lc</code>, вторая — создает и запускает контейнеры, описанные в конфигурационном файле <code>/docker/docker-compose-build.yml</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spawn_containers</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">spawn</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">before_script</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">script</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">set -o allexport; . ./docker/.env.staging.lc</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker-compose -f docker/docker-compose-build.yml up -d</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">only</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">develop</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Задачи, которые необходимо выполнить раннеру описываются в секции <code>script</code>. В нашем примере это две задачи — первая считывает переменные окружения из файла <code>/docker/.env.staging.lc</code>, вторая — создает и запускает контейнеры, описанные в конфигурационном файле <code>/docker/docker-compose-build.yml</code>.</p>
 <p><strong>Примечание.</strong> Обратите внимание, пути к конфигам указываются относительно корня проекта, ведь файл <code>.gitlab-ci.yml</code> должен лежать именно в корне проекта.</p>
 <p>Как оказалось в процессе тестирования, перед выполнением задач, описанных в секции <code>script</code> необходимо залогиниться в локальный Docker Registry, где хранятся нужные нам образы. Действия, которые необходимо выполнить перед основными задачами (из секции <code>script</code>) обозначить довольно легко с помощью ключевого слова <code>before_script</code>. Соответственно, действия которые выполняются после основных задач, должны описываться в секции <code>after_script</code>.</p>
 <p>Переменные <code>$CI_JOB_TOKEN</code> и <code>$CI_REGISTRY</code> — это специальные (предопределенные) переменные, весь список которых находится <a href="https://docs.gitlab.com/ce/ci/variables/">здесь</a>.</p>
 <p>С помощью ключевого слова <a href="https://docs.gitlab.com/ce/ci/yaml/#only-and-except"><code>only</code></a> мы также определяем для каких веток нужно производить все описанные действия (develop и docker), здесь можно также использовать регулярные выражения.</p>
 <p>Запускаемые контейнеры описаны в конфигурационном файле <code>docker-compose-build.yml</code> и выглядят так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
-<span style="color:#f92672">services</span>:
-<span style="color:#75715e">### Applications Code Container #############################</span>
-    <span style="color:#f92672">applications</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">tianon/true</span>
-        <span style="color:#f92672">volumes</span>:
-            - <span style="color:#ae81ff">../:${PROJECT_PATH}</span>
-<span style="color:#75715e">### Workspace Utilities Container ###########################</span>
-    <span style="color:#f92672">workspace</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">workspace</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:workspace-ed-sq</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">applications</span>
-<span style="color:#75715e">### PHP-FPM Container #######################################</span>
-    <span style="color:#f92672">php-fpm</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">applications</span>
-        <span style="color:#f92672">expose</span>:
-            - <span style="color:#e6db74">&#34;9000&#34;</span>
-        <span style="color:#f92672">links</span>:
-            - <span style="color:#ae81ff">workspace</span>
-<span style="color:#75715e">### Node+npm Container ######################################</span>
-    <span style="color:#f92672">node</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">node</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:node-npm-ed-sq</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">applications</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;${NODE_PORT}:${NODE_PORT}&#34;</span>
-<span style="color:#75715e">### Redis Container #########################################</span>
-    <span style="color:#f92672">redis</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:redis-ed-sq</span>
-        <span style="color:#f92672">volumes</span>:
-            - <span style="color:#ae81ff">redis:/data</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;${REDIS_PORT}:${REDIS_PORT}&#34;</span>
-        <span style="color:#f92672">links</span>:
-            - <span style="color:#ae81ff">php-fpm</span>
-<span style="color:#75715e">### Memcached Container #####################################</span>
-    <span style="color:#f92672">memcached</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">memcached</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:memcached-ed-sq</span>
-        <span style="color:#f92672">volumes</span>:
-            - <span style="color:#ae81ff">memcached:/var/lib/memcached</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;${MC_PORT}:${MC_PORT}&#34;</span>
-        <span style="color:#f92672">links</span>:
-            - <span style="color:#ae81ff">php-fpm</span>
-<span style="color:#75715e">### Websocket Container #####################################</span>
-    <span style="color:#f92672">websocket</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">websocket</span>
-        <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:websocket-ed-sq</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">applications</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;${WS_PORT}:${WS_PORT}&#34;</span>
-<span style="color:#75715e">### Volumes Setup ###########################################</span>
-<span style="color:#f92672">volumes</span>:
-    <span style="color:#f92672">memcached</span>:
-        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
-    <span style="color:#f92672">redis</span>:
-        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
-</code></pre></div><p>Все docker-образы были заранее собраны и загружены в локальный docker registry проекта. Самый первый запуск задачи <code>spawn_containers</code> в процессе continuous integration может занять до нескольких минут (раннер должен скачать образы), но при последующих запусках это время сократится до нескольких секунд.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Applications Code Container #############################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">applications</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">tianon/true</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">../:${PROJECT_PATH}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Workspace Utilities Container ###########################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">workspace</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">workspace</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:workspace-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### PHP-FPM Container #######################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">php-fpm</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">expose</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;9000&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">links</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">workspace</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Node+npm Container ######################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">node</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">node</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:node-npm-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;${NODE_PORT}:${NODE_PORT}&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Redis Container #########################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:redis-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">redis:/data</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;${REDIS_PORT}:${REDIS_PORT}&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">links</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">php-fpm</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Memcached Container #####################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memcached</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">memcached</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:memcached-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">memcached:/var/lib/memcached</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;${MC_PORT}:${MC_PORT}&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">links</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">php-fpm</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Websocket Container #####################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">websocket</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">websocket</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:websocket-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;${WS_PORT}:${WS_PORT}&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Volumes Setup ###########################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memcached</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</span></span></code></pre></div><p>Все docker-образы были заранее собраны и загружены в локальный docker registry проекта. Самый первый запуск задачи <code>spawn_containers</code> в процессе continuous integration может занять до нескольких минут (раннер должен скачать образы), но при последующих запусках это время сократится до нескольких секунд.</p>
 <p>В моем случае, запуск контейнеров занимает 18 секунд, а на вкладке pipelines детали выполнения задачи выглядят следующим образом:</p>
-<pre><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
+<pre tabindex="0"><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
 Starting service registry.gitlab.lc/develop/ed:my-docker-dind ...
 Using locally found image version due to if-not-present pull policy
 Waiting for services to be up and running...
 Using locally found image version due to if-not-present pull policy
 Running on runner-9e68759f-project-8-concurrent-0 via c7662d5025ba...
-HEAD is now at 679227f2ed Merge branch 'feature/LK-7341' into 'develop'
+HEAD is now at 679227f2ed Merge branch &#39;feature/LK-7341&#39; into &#39;develop&#39;
 From http://gitlab.lc:10087/develop/ed
   679227f2ed..635e14c14a  develop    -&gt; origin/develop
 Checking out 635e14c1 as develop...
@@ -207,7 +207,7 @@ $ docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
 Login Succeeded
 $ set -o allexport; . ./docker/.env.staging.lc
 $ docker-compose -f docker/docker-compose-build.yml up -d
-Creating network &quot;docker_default&quot; with the default driver
+Creating network &#34;docker_default&#34; with the default driver
 Creating application
 Creating websocket
 Creating workspace
@@ -308,7 +308,7 @@ Build succeeded
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,42 +101,42 @@
                     <p>Ранее мы уже рассматривали <a href="https://ealebed.github.io/posts/2017/%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-%D0%BA%D1%8D%D1%88%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F-%D0%BD%D0%B0-nginx/">настройку кэширования на Nginx</a>, упоминали об <a href="https://ealebed.github.io/posts/2017/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D1%8F-ngx_cache_purge-%D0%B4%D0%BB%D1%8F-%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B8-%D0%BA%D1%8D%D1%88%D0%B0-fastcgi/">очистке кэша FastCGI</a> в бесплатной версии веб-сервера Nginx с помощью модуля <code>ngx_cache_purge</code>.</p>
 <p>Как оказалось, бывают случаи, когда функционала данного модуля недостаточно или нет возможности пересборки веб-сервера Nginx — давайте разберемся и рассмотрим <strong>еще один вариант очистки кэша FastCGI</strong>!</p>
 <p>Однажды я столкнулся с тем, что функционал модуля <code>ngx_cache_purge</code> позволял чистить кэш страницы только частично. Это было связано со специфическим значением директивы <code>fastcgi_cache_key</code>, который в рассматриваемом случае выглядел так:</p>
-<pre><code>...
-        fastcgi_cache_key &quot;$scheme$request_method$host$request_uri$allowed_country&quot;;
+<pre tabindex="0"><code>...
+        fastcgi_cache_key &#34;$scheme$request_method$host$request_uri$allowed_country&#34;;
 ...
 </code></pre><p>Мы знаем, что имена кэша основываются на переменных директивы <code>fastcgi_cache_key</code>. Значение последней переменной (<code>$allowed_country</code>) определяется с помощью GeoIP и содержит двухбуквенный код страны, с которой происходит запрос к сайту.</p>
 <p><strong>Примечание.</strong> Читайте также <a href="https://ealebed.github.io/posts/2017/nginx-%D0%B8-geoip-%D0%B1%D0%BB%D0%BE%D0%BA%D0%B8%D1%80%D0%BE%D0%B2%D0%BA%D0%B0-%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D1%82%D0%B5%D0%BB%D0%B5%D0%B9-%D0%B8%D0%B7-%D0%BE%D0%BF%D1%80%D0%B5%D0%B4%D0%B5%D0%BB%D0%B5%D0%BD%D0%BD%D1%8B%D1%85-%D1%81%D1%82%D1%80%D0%B0%D0%BD/">Nginx + GeoIP: блокировка пользователей из определенных стран</a>.</p>
 <p>Таким образом, при запросе страницы <a href="http://example.com/test.php">http://example.com/test.php</a> с украинского ip-адреса будет сформировано следующее имя кэша:</p>
-<pre><code>fastcgi_cache_key &quot;httpGETexample.com/test.phpUA&quot;;
+<pre tabindex="0"><code>fastcgi_cache_key &#34;httpGETexample.com/test.phpUA&#34;;
 </code></pre><p>После хеширования этой строки в MD5 получилось бы следующее:</p>
-<pre><code>b57290d1cda3bf4187dcd7fc68fae2db
+<pre tabindex="0"><code>b57290d1cda3bf4187dcd7fc68fae2db
 </code></pre><p>В соотношении с подкаталогами, указанными в <code>levels=1:2</code>, первый уровень каталога в этой строке MD5 будет обозначен последним символом строки (в данном примере это символ <code>b</code>). Второму уровню принадлежат следующие после первого уровня 2 символа (<code>2d</code>). Таким образом, вся структура каталогов нашей кэш-зоны будет такой:</p>
-<pre><code>/var/tmp/nginx_cache/b/2d/b57290d1cda3bf4187dcd7fc68fae2db
+<pre tabindex="0"><code>/var/tmp/nginx_cache/b/2d/b57290d1cda3bf4187dcd7fc68fae2db
 </code></pre><p>Для пользователя, посетившего сайт с российского ip-адреса получится соответственно:</p>
-<pre><code>5b5d5cfc3aba90a81ecb7fddf0d8259d
+<pre tabindex="0"><code>5b5d5cfc3aba90a81ecb7fddf0d8259d
 </code></pre><p>и</p>
-<pre><code>/var/tmp/nginx_cache/d/59/5b5d5cfc3aba90a81ecb7fddf0d8259d
+<pre tabindex="0"><code>/var/tmp/nginx_cache/d/59/5b5d5cfc3aba90a81ecb7fddf0d8259d
 </code></pre><p>Зная структуру каталогов кэш-зоны, можно легко создать скрипт очистки кэша (в данном примере используется PHP). В корневой директории сайта создайте файл <code>cleancache.php</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
-$cache_path <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;/var/tmp/nginx_cache/&#39;</span>;
-$url <span style="color:#f92672">=</span> <span style="color:#a6e22e">parse_url</span>($_POST[<span style="color:#e6db74">&#39;url&#39;</span>]);
- 
-$scheme <span style="color:#f92672">=</span> $url[<span style="color:#e6db74">&#39;scheme&#39;</span>];
-$host <span style="color:#f92672">=</span> $url[<span style="color:#e6db74">&#39;host&#39;</span>];
-$requesturi <span style="color:#f92672">=</span> $url[<span style="color:#e6db74">&#39;path&#39;</span>];
- 
-$hash_ua <span style="color:#f92672">=</span> <span style="color:#a6e22e">md5</span>($scheme<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;GET&#39;</span><span style="color:#f92672">.</span>$host<span style="color:#f92672">.</span>$requesturi<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;UA&#39;</span>);
-$hash_ru <span style="color:#f92672">=</span> <span style="color:#a6e22e">md5</span>($scheme<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;GET&#39;</span><span style="color:#f92672">.</span>$host<span style="color:#f92672">.</span>$requesturi<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;RU&#39;</span>);
-<span style="color:#75715e">// Выводим хэш MD5 для отладки
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">var_dump</span>($hash_ua);
-<span style="color:#a6e22e">var_dump</span>($hash_ru);
- 
-<span style="color:#a6e22e">var_dump</span>(<span style="color:#a6e22e">unlink</span>($cache_path <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ua, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ua,<span style="color:#f92672">-</span><span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> $hash_ua));
-<span style="color:#a6e22e">var_dump</span>(<span style="color:#a6e22e">unlink</span>($cache_path <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ru, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ru,<span style="color:#f92672">-</span><span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> $hash_ru));
-<span style="color:#75715e">?&gt;</span><span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>Теперь можно отправить POST-запрос на этот файл с URL, который нужно очистить, в качестве параметра:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -d <span style="color:#e6db74">&#39;url=http://example.com/url-for-clean.php&#39;</span> http://example.com/cleancache.php
-</code></pre></div><p>В результате выполнения скрипта вы увидите в консоли <code>true</code> или <code>false</code> в зависимости от того, очистился кэш или нет.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
+</span></span><span style="display:flex;"><span>$cache_path <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;/var/tmp/nginx_cache/&#39;</span>;
+</span></span><span style="display:flex;"><span>$url <span style="color:#f92672">=</span> <span style="color:#a6e22e">parse_url</span>($_POST[<span style="color:#e6db74">&#39;url&#39;</span>]);
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>$scheme <span style="color:#f92672">=</span> $url[<span style="color:#e6db74">&#39;scheme&#39;</span>];
+</span></span><span style="display:flex;"><span>$host <span style="color:#f92672">=</span> $url[<span style="color:#e6db74">&#39;host&#39;</span>];
+</span></span><span style="display:flex;"><span>$requesturi <span style="color:#f92672">=</span> $url[<span style="color:#e6db74">&#39;path&#39;</span>];
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>$hash_ua <span style="color:#f92672">=</span> <span style="color:#a6e22e">md5</span>($scheme<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;GET&#39;</span><span style="color:#f92672">.</span>$host<span style="color:#f92672">.</span>$requesturi<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;UA&#39;</span>);
+</span></span><span style="display:flex;"><span>$hash_ru <span style="color:#f92672">=</span> <span style="color:#a6e22e">md5</span>($scheme<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;GET&#39;</span><span style="color:#f92672">.</span>$host<span style="color:#f92672">.</span>$requesturi<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;RU&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Выводим хэш MD5 для отладки
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">var_dump</span>($hash_ua);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">var_dump</span>($hash_ru);
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">var_dump</span>(<span style="color:#a6e22e">unlink</span>($cache_path <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ua, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ua,<span style="color:#f92672">-</span><span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> $hash_ua));
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">var_dump</span>(<span style="color:#a6e22e">unlink</span>($cache_path <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ru, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> <span style="color:#a6e22e">substr</span>($hash_ru,<span style="color:#f92672">-</span><span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>) <span style="color:#f92672">.</span> <span style="color:#e6db74">&#39;/&#39;</span> <span style="color:#f92672">.</span> $hash_ru));
+</span></span><span style="display:flex;"><span><span style="color:#75715e">?&gt;</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>Теперь можно отправить POST-запрос на этот файл с URL, который нужно очистить, в качестве параметра:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -d <span style="color:#e6db74">&#39;url=http://example.com/url-for-clean.php&#39;</span> http://example.com/cleancache.php
+</span></span></code></pre></div><p>В результате выполнения скрипта вы увидите в консоли <code>true</code> или <code>false</code> в зависимости от того, очистился кэш или нет.</p>
 <p>Не забудьте исключить данный скрипт из кэширования и ограничить доступ к нему.</p>
                 </section>
             </article>
@@ -229,7 +229,7 @@ $hash_ru <span style="color:#f92672">=</span> <span style="color:#a6e22e">md5</s
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,64 +102,64 @@
                 <section id="post-body">
                     <p><strong>Установка и настройка Monit в ОС Debian Jessie</strong> мало отличается от установки Monit в седьмой версии Debian (Wheezy), однако есть пару моментов, на которые стоит обратить внимание. Давайте разберемся!</p>
 <p>Установка Monit с помощью менеджера пакетов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo aptitude install monit
-</code></pre></div><p>После успешной установки открываем конфигурационный файл <code>/etc/monit/monitrc</code> и вносим следующие правки в секции <code>Global</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-set daemon  10   #проверять сервисы с интервалом 10 секунд
-...
-...
-set logfile /var/log/monit.log   #писать логи в отдельный файл
-...
-...
-set mailserver localhost   #почтовый сервер для отправки алертов
-...
-...
-set mail-format { from: monit@$HOST }    #меняем формат получаемых алертов 
-set mail-format { Subject: monit alert -- $SERVICE - $EVENT -&gt; $ACTION }
-...
-...
-set alert alert@mydomain.com    #ящик для получения алертов
-...
-...
-set httpd port 2812 and    #открываем доступ к web-интерфейсу 
-      use address IP-ADDRESS    #с адреса IP-ADDRESS
-      allow USER:PASSWORD    #и для пользователя USER с паролем PASSWORD
-...
-</code></pre></div><p>В этом же конфигурационном файле <code>/etc/monit/monitrc</code> можно описывать и сервисы, которые необходимо мониторить, но я предпочитаю помещать такие настройки в каталог <code>/etc/monit/conf.d/</code>. Рассмотрим конкретный пример — мониторинг web-сервера <code>apache</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo aptitude install monit
+</span></span></code></pre></div><p>После успешной установки открываем конфигурационный файл <code>/etc/monit/monitrc</code> и вносим следующие правки в секции <code>Global</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>set daemon  10   #проверять сервисы с интервалом 10 секунд
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>set logfile /var/log/monit.log   #писать логи в отдельный файл
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>set mailserver localhost   #почтовый сервер для отправки алертов
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>set mail-format { from: monit@$HOST }    #меняем формат получаемых алертов 
+</span></span><span style="display:flex;"><span>set mail-format { Subject: monit alert -- $SERVICE - $EVENT -&gt; $ACTION }
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>set alert alert@mydomain.com    #ящик для получения алертов
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>set httpd port 2812 and    #открываем доступ к web-интерфейсу 
+</span></span><span style="display:flex;"><span>      use address IP-ADDRESS    #с адреса IP-ADDRESS
+</span></span><span style="display:flex;"><span>      allow USER:PASSWORD    #и для пользователя USER с паролем PASSWORD
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>В этом же конфигурационном файле <code>/etc/monit/monitrc</code> можно описывать и сервисы, которые необходимо мониторить, но я предпочитаю помещать такие настройки в каталог <code>/etc/monit/conf.d/</code>. Рассмотрим конкретный пример — мониторинг web-сервера <code>apache</code>.</p>
 <p>Переходим в каталог <code>/etc/monit/conf.d/</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /etc/monit/conf.d/
-</code></pre></div><p>Создаем файл apache:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch apache
-</code></pre></div><p>И, следуя <a href="https://mmonit.com/monit/documentation/monit.html">официальной документации</a>, приводим его к следующему виду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">check process apache with pidfile /var/run/apache2/apache2.pid
-start program = &#34;/etc/init.d/apache2 start&#34;
-stop  program = &#34;/etc/init.d/apache2 stop&#34;
- 
-if totalmem &gt; 1500.0 MB for 5 cycles then alert
-if totalmem &gt; 2000.0 MB for 5 cycles then restart
- 
-if children &gt; 30 for 6 cycles then restart
-</code></pre></div><p><strong>Примечание.</strong> Не забываем убедиться, что <code>.pid</code>-файл действительно находится в том месте, которое указано после параметра <code>pidfile</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /etc/monit/conf.d/
+</span></span></code></pre></div><p>Создаем файл apache:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>touch apache
+</span></span></code></pre></div><p>И, следуя <a href="https://mmonit.com/monit/documentation/monit.html">официальной документации</a>, приводим его к следующему виду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>check process apache with pidfile /var/run/apache2/apache2.pid
+</span></span><span style="display:flex;"><span>start program = &#34;/etc/init.d/apache2 start&#34;
+</span></span><span style="display:flex;"><span>stop  program = &#34;/etc/init.d/apache2 stop&#34;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>if totalmem &gt; 1500.0 MB for 5 cycles then alert
+</span></span><span style="display:flex;"><span>if totalmem &gt; 2000.0 MB for 5 cycles then restart
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>if children &gt; 30 for 6 cycles then restart
+</span></span></code></pre></div><p><strong>Примечание.</strong> Не забываем убедиться, что <code>.pid</code>-файл действительно находится в том месте, которое указано после параметра <code>pidfile</code>.</p>
 <p>Выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">monit reload
-</code></pre></div><p>И ожидаем, что все будет работать — ведь в Debian Wheezy это работало! Но когда требуется выполнить перезапуск web-сервера (в нашем примере — когда основной и дочерние процессы используют более 2 ГБ памяти либо когда дочерних процессов больше 30), то возникают проблемы — процесс переходит в состояние <code>Active: active (exited)</code> вместо <code>Active: active (running)</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>monit reload
+</span></span></code></pre></div><p>И ожидаем, что все будет работать — ведь в Debian Wheezy это работало! Но когда требуется выполнить перезапуск web-сервера (в нашем примере — когда основной и дочерние процессы используют более 2 ГБ памяти либо когда дочерних процессов больше 30), то возникают проблемы — процесс переходит в состояние <code>Active: active (exited)</code> вместо <code>Active: active (running)</code>.</p>
 <p><strong>Примечание.</strong> Вот что говорит об этом Google: «State active (exited) means that systemd has successfully run the commands but that it does not know there is a daemon to monitor.»</p>
 <p>Когда процесс находится в <code>Active: active (exited)</code> — сайты работают, но остальные мониторинги (например, Zabbix) тревожно вопят, что web-сервер <code>apache</code> не запущен — это как минимум раздражает. Выяснилось, что все дело в новой системе инициализации (<code>systemd-sysv</code>) по умолчанию установленной в Debian Jessie.</p>
 <p>Решается данная проблема довольно просто — приводим конфиг <code>/etc/monit/conf.d/apache</code> к следующему виду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">check process apache with pidfile /var/run/apache2/apache2.pid
-start program = &#34;/etc/init.d/apache2 start&#34;
-stop  program = &#34;/etc/init.d/apache2 stop&#34;
- 
-if totalmem &gt; 1500.0 MB for 5 cycles then alert
-if totalmem &gt; 2000.0 MB for 5 cycles then exec &#34;/usr/local/sbin/apache2restart&#34;
- 
-if children &gt; 30 for 6 cycles then exec &#34;/usr/local/sbin/apache2restart&#34;
-</code></pre></div><p>Создаем исполняемый файл <code>/usr/local/sbin/apache2restart</code> со следующим содержанием:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/bash
-</span><span style="color:#75715e"></span><span style="color:#e6db74">`</span>systemctl restart apache2.service<span style="color:#e6db74">`</span>
-</code></pre></div><p>Не забываем выполнить:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">monit reload
-</code></pre></div><p>После этого web-сервер <code>apache</code> корректно перезапускается и находится в «правильном» состоянии <code>Active: active (running)</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>check process apache with pidfile /var/run/apache2/apache2.pid
+</span></span><span style="display:flex;"><span>start program = &#34;/etc/init.d/apache2 start&#34;
+</span></span><span style="display:flex;"><span>stop  program = &#34;/etc/init.d/apache2 stop&#34;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>if totalmem &gt; 1500.0 MB for 5 cycles then alert
+</span></span><span style="display:flex;"><span>if totalmem &gt; 2000.0 MB for 5 cycles then exec &#34;/usr/local/sbin/apache2restart&#34;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>if children &gt; 30 for 6 cycles then exec &#34;/usr/local/sbin/apache2restart&#34;
+</span></span></code></pre></div><p>Создаем исполняемый файл <code>/usr/local/sbin/apache2restart</code> со следующим содержанием:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#e6db74">`</span>systemctl restart apache2.service<span style="color:#e6db74">`</span>
+</span></span></code></pre></div><p>Не забываем выполнить:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>monit reload
+</span></span></code></pre></div><p>После этого web-сервер <code>apache</code> корректно перезапускается и находится в «правильном» состоянии <code>Active: active (running)</code>.</p>
                 </section>
             </article>
 
@@ -251,7 +251,7 @@ if children &gt; 30 for 6 cycles then exec &#34;/usr/local/sbin/apache2restart&#
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,135 +103,135 @@
                     <p>В данной статье рассмотрим процесс сборки docker-образа включающего в себя систему полнотекстового поиска Sphinxsearch с возможностью переиндексации - давайте разберемся!</p>
 <p>Несмотря на то, что в данный момент уже есть <a href="http://sphinxsearch.com/blog/2017/12/18/sphinx-3-0-1-released/">Sphinxsearch версии 3.0.1</a>, в данном примере мы будем использовать стабильную и &ldquo;обкатанную&rdquo; версию поискового движка - 2.2.11.</p>
 <p>За основу для нашего docker-образа возьмем ubuntu:16.04, и наш Dockerfile будет выглядеть следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> ubuntu:16.04</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> APP_ENV<span style="color:#f92672">=</span>dev
-<span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get -y install <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        software-properties-common<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> add-apt-repository ppa:builds/sphinxsearch-rel22 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get update <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get -y install <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        mysql-client <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        unixodbc <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        libpq5 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        sphinxsearch <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get remove -y software-properties-common <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoremove -y <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoclean <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -r /var/lib/apt/lists/*<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> ln -sf /dev/stdout /var/log/sphinxsearch/searchd.log <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ln -sf /dev/stderr /var/log/sphinxsearch/query.log<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> start.sh /start.sh<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> sphinx.conf.<span style="color:#e6db74">${</span>APP_ENV<span style="color:#e6db74">}</span> /etc/sphinxsearch/sphinx.conf<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span> [<span style="color:#e6db74">&#34;/etc/sphinxsearch&#34;</span>]<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span> [<span style="color:#e6db74">&#34;/var/lib/sphinxsearch/data&#34;</span>]<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 9312 9306</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;/start.sh&#34;</span>]<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>В зависимости от переданного при сборке docker-образа значения аргумента <code>APP_ENV</code> (по умолчанию это dev), в образ будет скопирован соответствующий конфигурационный файл <code>sphinx.conf.${APP_ENV}</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> ubuntu:16.04</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> APP_ENV<span style="color:#f92672">=</span>dev
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get -y install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        software-properties-common<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> add-apt-repository ppa:builds/sphinxsearch-rel22 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get update <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get -y install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        mysql-client <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        unixodbc <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        libpq5 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        sphinxsearch <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get remove -y software-properties-common <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoremove -y <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoclean <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -r /var/lib/apt/lists/*<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> ln -sf /dev/stdout /var/log/sphinxsearch/searchd.log <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ln -sf /dev/stderr /var/log/sphinxsearch/query.log<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> start.sh /start.sh<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> sphinx.conf.<span style="color:#e6db74">${</span>APP_ENV<span style="color:#e6db74">}</span> /etc/sphinxsearch/sphinx.conf<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span> [<span style="color:#e6db74">&#34;/etc/sphinxsearch&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span> [<span style="color:#e6db74">&#34;/var/lib/sphinxsearch/data&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 9312 9306</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;/start.sh&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>В зависимости от переданного при сборке docker-образа значения аргумента <code>APP_ENV</code> (по умолчанию это dev), в образ будет скопирован соответствующий конфигурационный файл <code>sphinx.conf.${APP_ENV}</code>.</p>
 <p>При старте docker-контейнера будет выполнен bash-скрипт <code>start.sh</code>, который выполняет переиндексацию и запуск поискового движка. Содержимое скрипта довольно простое:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/env bash
-</span><span style="color:#75715e"></span>
-indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
-searchd --config /etc/sphinxsearch/sphinx.conf --nodetach
-</code></pre></div><p>Пример конфигурационного файла <code>sphinx.conf</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">source parent_source
-{
-    type			= mysql
-
-    sql_host			= db1.lc
-    sql_user			= testuser
-    sql_pass			= password
-    sql_db		    	= test
-    sql_port			= 3306
-
-    mysql_connect_flags		= 32 # enable compression
-    sql_query_pre		= SET NAMES utf8
-    sql_query_pre       	= SET CHARACTER SET utf8
-}
-
-source src_blog_posts:parent_source
-{
-    sql_query = \
-        SELECT blog_post_id as id, title, content, tags \
-        FROM blog_posts \
-        WHERE visible = 1 \
-        AND dt_published &lt;= NOW()
-
-    sql_ranged_throttle = 0
-    sql_field_string = title
-    sql_field_string = content
-    sql_field_string = tags
-}
-
-index blog_posts
-{
-    source = src_blog_posts
-    path = /var/lib/sphinxsearch/data/blog_posts
-    docinfo = extern
-    mlock = 0
-    morphology = stem_enru
-    index_exact_words = 1
-    charset_table = 0..9, A..Z-&gt;a..z, _, a..z, U+410..U+42F-&gt;U+430..U+44F, U+430..U+44F
-    min_word_len = 1
-    min_infix_len = 1
-    html_strip = 1
-}
-
-indexer
-{
-    mem_limit = 256M
-}
-
-searchd
-{
-    listen			= 9312
-    listen			= 9306:mysql41
-    log 			= /var/log/sphinxsearch/searchd.log
-    query_log			= /var/log/sphinxsearch/query.log
-    read_timeout		= 5
-    client_timeout		= 300
-    max_children		= 30
-    pid_file			= /var/run/sphinxsearch/searchd.pid
-    seamless_rotate		= 1
-    preopen_indexes		= 1
-    unlink_old			= 1
-    workers			= threads
-    binlog_path			= /var/lib/sphinxsearch/data
-    collation_server		= utf8_general_ci
-    watchdog			= 1
-}
-</code></pre></div><p>Собираем docker-образ находясь в каталоге с Dockerfile с помощью следующей команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t sphinx:latest .
-</code></pre></div><p>Запустить docker-контейнер из созданного нами образа можно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--name sphinxsearch <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	-v <span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>/sphinx.conf:/etc/sphinxsearch/sphinx.conf <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	-v <span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>/sphinxdata:/var/lib/sphinxsearch/data <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>sphinx:latest
-</code></pre></div><p>Или с помощью <code>docker-compose.yml</code> (для удобства редактирования конфиг sphinx монтируем с хост-машины в docker-контейнер):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">...
-<span style="color:#75715e">### Sphinxsearch Container ##################################</span>
-  <span style="color:#f92672">sphinxsearch</span>:
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">sphinxsearch</span>
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">sphinx:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">./sphinx/sphinx.conf:/etc/sphinxsearch/sphinx.conf</span>
-      - <span style="color:#ae81ff">sphinx:/var/lib/sphinxsearch/data</span>
-...
-<span style="color:#75715e">### Volumes Setup ###########################################</span>
-<span style="color:#f92672">volumes</span>:
-  <span style="color:#f92672">sphinx</span>:
-    <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
-</code></pre></div><p>При необходимости можно запустить переиндексацию с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
+</span></span><span style="display:flex;"><span>searchd --config /etc/sphinxsearch/sphinx.conf --nodetach
+</span></span></code></pre></div><p>Пример конфигурационного файла <code>sphinx.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>source parent_source
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    type			= mysql
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sql_host			= db1.lc
+</span></span><span style="display:flex;"><span>    sql_user			= testuser
+</span></span><span style="display:flex;"><span>    sql_pass			= password
+</span></span><span style="display:flex;"><span>    sql_db		    	= test
+</span></span><span style="display:flex;"><span>    sql_port			= 3306
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    mysql_connect_flags		= 32 # enable compression
+</span></span><span style="display:flex;"><span>    sql_query_pre		= SET NAMES utf8
+</span></span><span style="display:flex;"><span>    sql_query_pre       	= SET CHARACTER SET utf8
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>source src_blog_posts:parent_source
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    sql_query = \
+</span></span><span style="display:flex;"><span>        SELECT blog_post_id as id, title, content, tags \
+</span></span><span style="display:flex;"><span>        FROM blog_posts \
+</span></span><span style="display:flex;"><span>        WHERE visible = 1 \
+</span></span><span style="display:flex;"><span>        AND dt_published &lt;= NOW()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sql_ranged_throttle = 0
+</span></span><span style="display:flex;"><span>    sql_field_string = title
+</span></span><span style="display:flex;"><span>    sql_field_string = content
+</span></span><span style="display:flex;"><span>    sql_field_string = tags
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>index blog_posts
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    source = src_blog_posts
+</span></span><span style="display:flex;"><span>    path = /var/lib/sphinxsearch/data/blog_posts
+</span></span><span style="display:flex;"><span>    docinfo = extern
+</span></span><span style="display:flex;"><span>    mlock = 0
+</span></span><span style="display:flex;"><span>    morphology = stem_enru
+</span></span><span style="display:flex;"><span>    index_exact_words = 1
+</span></span><span style="display:flex;"><span>    charset_table = 0..9, A..Z-&gt;a..z, _, a..z, U+410..U+42F-&gt;U+430..U+44F, U+430..U+44F
+</span></span><span style="display:flex;"><span>    min_word_len = 1
+</span></span><span style="display:flex;"><span>    min_infix_len = 1
+</span></span><span style="display:flex;"><span>    html_strip = 1
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>indexer
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    mem_limit = 256M
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>searchd
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    listen			= 9312
+</span></span><span style="display:flex;"><span>    listen			= 9306:mysql41
+</span></span><span style="display:flex;"><span>    log 			= /var/log/sphinxsearch/searchd.log
+</span></span><span style="display:flex;"><span>    query_log			= /var/log/sphinxsearch/query.log
+</span></span><span style="display:flex;"><span>    read_timeout		= 5
+</span></span><span style="display:flex;"><span>    client_timeout		= 300
+</span></span><span style="display:flex;"><span>    max_children		= 30
+</span></span><span style="display:flex;"><span>    pid_file			= /var/run/sphinxsearch/searchd.pid
+</span></span><span style="display:flex;"><span>    seamless_rotate		= 1
+</span></span><span style="display:flex;"><span>    preopen_indexes		= 1
+</span></span><span style="display:flex;"><span>    unlink_old			= 1
+</span></span><span style="display:flex;"><span>    workers			= threads
+</span></span><span style="display:flex;"><span>    binlog_path			= /var/lib/sphinxsearch/data
+</span></span><span style="display:flex;"><span>    collation_server		= utf8_general_ci
+</span></span><span style="display:flex;"><span>    watchdog			= 1
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Собираем docker-образ находясь в каталоге с Dockerfile с помощью следующей команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker build -t sphinx:latest .
+</span></span></code></pre></div><p>Запустить docker-контейнер из созданного нами образа можно так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run -d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--name sphinxsearch <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	-v <span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>/sphinx.conf:/etc/sphinxsearch/sphinx.conf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	-v <span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>/sphinxdata:/var/lib/sphinxsearch/data <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>sphinx:latest
+</span></span></code></pre></div><p>Или с помощью <code>docker-compose.yml</code> (для удобства редактирования конфиг sphinx монтируем с хост-машины в docker-контейнер):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yml" data-lang="yml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Sphinxsearch Container ##################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">sphinxsearch</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">sphinxsearch</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">sphinx:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">./sphinx/sphinx.conf:/etc/sphinxsearch/sphinx.conf</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">sphinx:/var/lib/sphinxsearch/data</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Volumes Setup ###########################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">sphinx</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</span></span></code></pre></div><p>При необходимости можно запустить переиндексацию с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker exec -it sphinxsearch indexer --config /etc/sphinxsearch/sphinx.conf  --rotate --all
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -323,7 +323,7 @@ searchd
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

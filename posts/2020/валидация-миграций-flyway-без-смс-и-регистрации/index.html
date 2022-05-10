@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -120,35 +120,35 @@
 <p>Здесь, первый и последний этапы (&ldquo;Prepare environment&rdquo; и &ldquo;Cleanup environment&rdquo;) выглядят абсолютно одинаково и продублированы, так сказать, для надежности. Этапы запуска docker-контейнера с БД и валидации миграций (&ldquo;Up postgres DB&rdquo; и &ldquo;Validate migrations&rdquo; соответственно) не содержат никакой магии и не нуждаются в дополнительном описании.</p>
 <p>Основная логика скрыта в этапе определения статуса (&ldquo;Set build status&rdquo;). Могут быть случаи, когда для одной из БД валидация миграций завершится неудачно, в то время как для других - вполне успешно. Jenkins, в таком случае, будет считать этап успешным - это не совсем то, чего мы добиваемся.</p>
 <p>Даже если &ldquo;валидация&rdquo; (применение) миграции к одной из БД внутри docker-образа завершится неудачно, например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">Creating migrations-validate_flyway-migrate-lsm_1 ...
-Attaching to migrations-validate_flyway-migrate-lsm_1
-flyway-migrate-lsm_1          | Flyway Community Edition 6.3.2 by Redgate
-flyway-migrate-lsm_1          | Database: jdbc:postgresql://postgres:5432/lsm (PostgreSQL 12.1)
-flyway-migrate-lsm_1          | Successfully validated 5 migrations (execution time 00:00.041s)
-flyway-migrate-lsm_1          | Creating Schema History table &#34;public&#34;.&#34;flyway_schema_history&#34; ...
-flyway-migrate-lsm_1          | Current version of schema &#34;public&#34;: &lt;&lt; Empty Schema &gt;&gt;
-flyway-migrate-lsm_1          | Migrating schema &#34;public&#34; to version 20200130000000 - Base version
-flyway-migrate-lsm_1          | +------------+
-flyway-migrate-lsm_1          | | set_config |
-flyway-migrate-lsm_1          | +------------+
-flyway-migrate-lsm_1          | |            |
-flyway-migrate-lsm_1          | +------------+
-...
-flyway-migrate-lsm_1          | Migrating schema &#34;public&#34; to version 20200323112608 - add new field to users table
-flyway-migrate-lsm_1          | ERROR: Migration of schema &#34;public&#34; to version 20200323112608 - add new field to users table failed! Changes successfully rolled back.
-flyway-migrate-lsm_1          | ERROR: 
-flyway-migrate-lsm_1          | Migration V20200323112608__add_new_field_to_users_table.sql failed
-flyway-migrate-lsm_1          | ------------------------------------------------------------------
-flyway-migrate-lsm_1          | SQL State  : 42704
-flyway-migrate-lsm_1          | Error Code : 0
-flyway-migrate-lsm_1          | Message    : ERROR: role &#34;test&#34; does not exist
-flyway-migrate-lsm_1          | Location   : /flyway/sql/V20200323112608__add_new_field_to_users_table.sql (/flyway/sql/V20200323112608__add_new_field_to_users_table.sql)
-flyway-migrate-lsm_1          | Line       : 1
-flyway-migrate-lsm_1          | Statement  : REVOKE CONNECT ON DATABASE lsm FROM PUBLIC, lsm, ro_user, test
-flyway-migrate-lsm_1          | 
-migrations-validate_flyway-migrate-lsm_1 exited with code 1
-...
-</code></pre></div><p>то результат выполнения команды <code>docker-compose -f docker-compose.yaml up flyway-migrate-lsm</code> будет <code>EXIT 0</code>, то есть успешный - и Jenkins промаркирует данный билд как &lsquo;SUCCESS&rsquo;.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Creating migrations-validate_flyway-migrate-lsm_1 ...
+</span></span><span style="display:flex;"><span>Attaching to migrations-validate_flyway-migrate-lsm_1
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Flyway Community Edition 6.3.2 by Redgate
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Database: jdbc:postgresql://postgres:5432/lsm (PostgreSQL 12.1)
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Successfully validated 5 migrations (execution time 00:00.041s)
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Creating Schema History table &#34;public&#34;.&#34;flyway_schema_history&#34; ...
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Current version of schema &#34;public&#34;: &lt;&lt; Empty Schema &gt;&gt;
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Migrating schema &#34;public&#34; to version 20200130000000 - Base version
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | +------------+
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | | set_config |
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | +------------+
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | |            |
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | +------------+
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Migrating schema &#34;public&#34; to version 20200323112608 - add new field to users table
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | ERROR: Migration of schema &#34;public&#34; to version 20200323112608 - add new field to users table failed! Changes successfully rolled back.
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | ERROR: 
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Migration V20200323112608__add_new_field_to_users_table.sql failed
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | ------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | SQL State  : 42704
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Error Code : 0
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Message    : ERROR: role &#34;test&#34; does not exist
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Location   : /flyway/sql/V20200323112608__add_new_field_to_users_table.sql (/flyway/sql/V20200323112608__add_new_field_to_users_table.sql)
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Line       : 1
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | Statement  : REVOKE CONNECT ON DATABASE lsm FROM PUBLIC, lsm, ro_user, test
+</span></span><span style="display:flex;"><span>flyway-migrate-lsm_1          | 
+</span></span><span style="display:flex;"><span>migrations-validate_flyway-migrate-lsm_1 exited with code 1
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>то результат выполнения команды <code>docker-compose -f docker-compose.yaml up flyway-migrate-lsm</code> будет <code>EXIT 0</code>, то есть успешный - и Jenkins промаркирует данный билд как &lsquo;SUCCESS&rsquo;.</p>
 <p>Чтобы этого не произошло, переопределим текущее поведение - для каждого контейнера с помощью команды <code>docker inspect</code> будем получать код его завершения из поля <code>.State.ExitCode</code>, отсекать успешно завершенные (<code>grep -v '^0'</code>) и суммировать остальные. Если в итоге получим <code>0</code> - пометим билд как успешный, в любом другом случае считаем билд неудачным.</p>
 <p>Результат выполнения задачи с помощью Post-build action отправляем в slack-канал, для уведомления пользователя(ей) и на github - для установки статуса проверки (check) на странице пуллреквеста.</p>
 <p>На этом все - вот так легко, без магии, СМС и регистрации можно сделать валидацию flyway-миграций своими силами.</p>
@@ -243,7 +243,7 @@ migrations-validate_flyway-migrate-lsm_1 exited with code 1
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

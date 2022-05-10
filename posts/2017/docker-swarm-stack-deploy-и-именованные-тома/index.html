@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,174 +103,174 @@
                     <p>При переходе на 3.х версию файла <code>docker-compose.yml</code> (необходимое требование для работы Docker Swarm) пропадает возможность использовать Data-only контейнеры — специальные контейнеры-спутники, файловая система которых служит для хранения данных и подключается к остальным сервисам с помощью параметра <code>volumes-from</code>.</p>
 <p>Давайте разберемся с возможным решением данной проблемы на реальном примере!</p>
 <p>В примере используются сервисы [docker-контейнеры] <code>nginx</code> (в качестве фронтенда) и <code>php-fpm</code> (бэкенд), которым необходим доступ к одному и тому же каталогу с кодом. Используя <code>docker-compose.yml</code> второй версии, мы вправе были написать так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
-<span style="color:#f92672">services</span>:
-<span style="color:#75715e">### Applications Code Container #############################</span>
-    <span style="color:#f92672">applications</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
-<span style="color:#75715e">### PHP-FPM Container #######################################</span>
-    <span style="color:#f92672">php-fpm</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">applications</span>
-        <span style="color:#f92672">expose</span>:
-            - <span style="color:#e6db74">&#34;9000&#34;</span>
-<span style="color:#75715e">### Nginx Server Container ##################################</span>
-    <span style="color:#f92672">nginx</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">nginx</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">applications</span>
-        <span style="color:#f92672">depends_on</span>:
-            - <span style="color:#e6db74">&#34;php-fpm&#34;</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;80:80&#34;</span>
-            - <span style="color:#e6db74">&#34;443:443&#34;</span>
-</code></pre></div><p>Dockerfile для сборки data-only контейнера (<code>application</code>) в процессе CI выглядит так (<code>BRANCH_NAME</code> — имя git-ветки, для которой выполняется CI):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> registry.gitlab.lc:5000/develop/ed/image_for_sources:latest</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> BRANCH_NAME<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./bin /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/bin<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./build /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/build<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./config /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/config<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./data /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/data<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./.env /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./grunt /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/grunt<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./init_autoloader.php /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./library /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/library<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./module /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/module<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./postcss.config.js /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./public /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/public<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./vendor /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/vendor<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./zf /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span><span style="color:#e6db74"> /var/www/${BRANCH_NAME}</span><span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>При изменении data-only контейнера для обновления содержимого каталога <code>/var/www/${BRANCH_NAME}</code> в контейнерах <code>nginx</code> и <code>php-fpm</code> необходимо выполнить команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose down <span style="color:#f92672">&amp;&amp;</span> docker compose up -d
-</code></pre></div><p>которые неизменно повлекут за собой простой (downtime) ~10-15 секунд (если контейнеров больше, чем в данном примере, то время простоя также возрастает).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Applications Code Container #############################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">applications</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### PHP-FPM Container #######################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">php-fpm</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">expose</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;9000&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Nginx Server Container ##################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">nginx</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">nginx</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">depends_on</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;php-fpm&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;80:80&#34;</span>
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;443:443&#34;</span>
+</span></span></code></pre></div><p>Dockerfile для сборки data-only контейнера (<code>application</code>) в процессе CI выглядит так (<code>BRANCH_NAME</code> — имя git-ветки, для которой выполняется CI):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> registry.gitlab.lc:5000/develop/ed/image_for_sources:latest</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> BRANCH_NAME<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./bin /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/bin<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./build /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/build<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./config /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/config<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./data /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/data<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./.env /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./grunt /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/grunt<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./init_autoloader.php /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./library /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/library<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./module /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/module<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./postcss.config.js /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./public /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/public<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./vendor /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/vendor<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./zf /var/www/<span style="color:#e6db74">${</span>BRANCH_NAME<span style="color:#e6db74">}</span>/<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">VOLUME</span><span style="color:#e6db74"> /var/www/${BRANCH_NAME}</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>При изменении data-only контейнера для обновления содержимого каталога <code>/var/www/${BRANCH_NAME}</code> в контейнерах <code>nginx</code> и <code>php-fpm</code> необходимо выполнить команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose down <span style="color:#f92672">&amp;&amp;</span> docker compose up -d
+</span></span></code></pre></div><p>которые неизменно повлекут за собой простой (downtime) ~10-15 секунд (если контейнеров больше, чем в данном примере, то время простоя также возрастает).</p>
 <p>Первым этапом на пути к Docker Swarm стало изменение файла <code>docker-compose.yml</code> (перевод его на третью версию с использованием именованных томов):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3&#39;</span>
-<span style="color:#f92672">services</span>:
-<span style="color:#75715e">### Code from branch develop #################################</span>
-  <span style="color:#f92672">applications</span>:
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
-<span style="color:#75715e">### PHP-FPM ##################################################</span>
-  <span style="color:#f92672">php-fpm</span>:
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
-    <span style="color:#f92672">expose</span>:
-      - <span style="color:#e6db74">&#34;9000&#34;</span>
-<span style="color:#75715e">### Nginx ####################################################</span>
-  <span style="color:#f92672">nginx</span>:
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">nginx</span>
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#e6db74">&#34;80:80&#34;</span>
-      - <span style="color:#e6db74">&#34;443:443&#34;</span>
-<span style="color:#75715e">### Volumes Setup ############################################</span>
-<span style="color:#f92672">volumes</span>:
-  <span style="color:#f92672">developcode</span>:
-</code></pre></div><p>Однако в этом случае возникли проблемы с обновлением содержимого каталога <code>/var/www/develop</code> в контейнерах <code>nginx</code> и <code>php-fpm</code>. Дело в том, что при первом выполнении команды <code>docker-compose up -d</code> создается пустой именованный том <code>developcode</code>, и, так как он пустой, в него копируется содержимое каталога <code>/var/www/develop</code> из контейнера <code>application</code>. При повторном запуске <code>docker-compose up -d</code> именованный том уже существует, и он не пустой (содержит код предыдущего «релиза»), следовательно содержимое тома <code>developcode</code> будет скопировано в каталоги <code>/var/www/develop</code> контейнеров <code>application</code>, <code>nginx</code> и <code>php-fpm</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Code from branch develop #################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">applications</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### PHP-FPM ##################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">php-fpm</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">expose</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;9000&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Nginx ####################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">nginx</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">nginx</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;80:80&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;443:443&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Volumes Setup ############################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">developcode</span>:
+</span></span></code></pre></div><p>Однако в этом случае возникли проблемы с обновлением содержимого каталога <code>/var/www/develop</code> в контейнерах <code>nginx</code> и <code>php-fpm</code>. Дело в том, что при первом выполнении команды <code>docker-compose up -d</code> создается пустой именованный том <code>developcode</code>, и, так как он пустой, в него копируется содержимое каталога <code>/var/www/develop</code> из контейнера <code>application</code>. При повторном запуске <code>docker-compose up -d</code> именованный том уже существует, и он не пустой (содержит код предыдущего «релиза»), следовательно содержимое тома <code>developcode</code> будет скопировано в каталоги <code>/var/www/develop</code> контейнеров <code>application</code>, <code>nginx</code> и <code>php-fpm</code>.</p>
 <p>Решение данной проблемы находится быстро, но добавляет еще ~5-10 секунд к времени простоя: нужно выполнять команду <code>docker-compose down</code> с дополнительным ключом <code>--volumes</code> или <code>-v</code>. Таким образом, именованные тома будут удалены, а при следующем вызове <code>docker-compose up -d</code> вновь создастся пустой том, в который скопируются файлы из data-only контейнера.</p>
 <p>Так как наща цель избавиться от времени простоя, то нужно использовать для развертывания/обновления стека сервисов команду <code>docker stack deploy</code>. Однако здесь мы также сталкиваемся с той же проблемой — содержимое каталога <code>/var/www/develop</code> в контейнерах <code>nginx</code> и <code>php-fpm</code> не обновляется. Использование связки <code>docker stack rm ... &amp;&amp; docker stack deploy ...</code> нам не подходит — во-первых, это не исключает даунтайма, во-вторых именованные тома не удаляются (и дополнительных ключей для этого нет), а значит код не будет обновлен.</p>
 <p>После множества вопросов заданных с docker-сообществах и переписках с признанными docker-капитанами (<a href="https://twitter.com/EltonStoneman">Elton Stoneman</a> и <a href="https://twitter.com/BretFisher">Bret Fisher</a>) мне предложили отказаться от использования томов, переделать процесс CI и сразу добавлять код в оба контейнера <code>nginx</code> и <code>php-fpm</code> — мол, это лучшие практики использования docker.</p>
 <p>Я уже почти согласился с данным предложением (хотя мне откровенно не нравилось добавлять 337MB «обвески» контейнерам <code>nginx</code> и <code>php-fpm</code> и пересобирать их по 15-25 раз в день) но решил попробовать реализовать еще один «велосипед» с использованием переменных в именах томов.</p>
 <p>Первая же попытка в таком виде:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3&#39;</span>
-<span style="color:#f92672">services</span>:
-<span style="color:#75715e">### Code from branch develop #################################</span>
-  <span style="color:#f92672">applications</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">${VOLUME_NAME}:/var/www/develop</span>
-<span style="color:#75715e">### PHP-FPM ##################################################</span>
-  <span style="color:#f92672">php-fpm</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">${VOLUME_NAME}:/var/www/develop</span>
-<span style="color:#75715e">### Nginx ####################################################</span>
-  <span style="color:#f92672">nginx</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">${VOLUME_NAME}:/var/www/develop</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#e6db74">&#34;80:80&#34;</span>
-      - <span style="color:#e6db74">&#34;443:443&#34;</span>
-<span style="color:#75715e">### Volumes Setup ############################################</span>
-<span style="color:#f92672">volumes</span>:
-  <span style="color:#ae81ff">${VOLUME_NAME}:</span>
-</code></pre></div><p>привела к неудаче:</p>
-<pre><code>...
-volumes value Additional properties are not allowed ('${VOLUME_NAME}' was unexpected)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Code from branch develop #################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">applications</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">${VOLUME_NAME}:/var/www/develop</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### PHP-FPM ##################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">php-fpm</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">${VOLUME_NAME}:/var/www/develop</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Nginx ####################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">nginx</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">${VOLUME_NAME}:/var/www/develop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;80:80&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;443:443&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Volumes Setup ############################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">${VOLUME_NAME}:</span>
+</span></span></code></pre></div><p>привела к неудаче:</p>
+<pre tabindex="0"><code>...
+volumes value Additional properties are not allowed (&#39;${VOLUME_NAME}&#39; was unexpected)
 ...
 </code></pre><p>Как оказалось, это нормальное поведение — docker-compose умеет работать в переменными в значениях, но не в ключах (<a href="https://github.com/docker/compose/pull/3108#issuecomment-248038373">подробности</a>). И вообще, как оказалось использование переменных в режиме роя (Swarm) с командой <code>stack deploy</code> это целая <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-env-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5/">эпопея</a>.</p>
 <p>Но ведь никто нам не запрещает использовать <a href="https://docs.docker.com/compose/compose-file/#external"><code>external</code></a> тома! Теперь наш <code>docker-compose.yml</code> полностью готов к развертыванию через <code>stack deploy</code> и выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3.1&#39;</span>
-<span style="color:#f92672">services</span>:
-<span style="color:#75715e">### Code from branch develop #################################</span>
-  <span style="color:#f92672">applications</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
-    <span style="color:#f92672">deploy</span>:
-      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">1</span>
-      <span style="color:#f92672">update_config</span>:
-        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
-        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
-      <span style="color:#f92672">restart_policy</span>:
-        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
-      <span style="color:#f92672">placement</span>:
-        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
-<span style="color:#75715e">### PHP-FPM ##################################################</span>
-  <span style="color:#f92672">php-fpm</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
-    <span style="color:#f92672">deploy</span>:
-      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
-      <span style="color:#f92672">update_config</span>:
-        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
-        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
-      <span style="color:#f92672">restart_policy</span>:
-        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
-      <span style="color:#f92672">placement</span>:
-        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
-<span style="color:#75715e">### Nginx ####################################################</span>
-  <span style="color:#f92672">nginx</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:staging</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#e6db74">&#34;80:80&#34;</span>
-      - <span style="color:#e6db74">&#34;443:443&#34;</span>
-    <span style="color:#f92672">deploy</span>:
-      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
-      <span style="color:#f92672">update_config</span>:
-        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
-        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
-      <span style="color:#f92672">restart_policy</span>:
-        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
-      <span style="color:#f92672">placement</span>:
-        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
-<span style="color:#75715e">### Volumes Setup ############################################</span>
-<span style="color:#f92672">volumes</span>:
-  <span style="color:#f92672">developcode</span>:
-    <span style="color:#f92672">external</span>:
-      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">code-${VER}</span>
-</code></pre></div><p>Процесс деплоя сервисов усложнился на одну команду (создание именованного тома с определенным именем) и выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export VER<span style="color:#f92672">=</span>1.1 <span style="color:#f92672">&amp;&amp;</span> docker volume create --name code-$VER
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stack deploy --with-registry-auth --compose-file docker-compose.yml MY_STACK
-</code></pre></div><p>Стоит отметить, что данное решение пока не тестировалось на продакшене (да и вообще, кластер Docker Swarm в данном примере состоял из одной ноды) — это просто демонстрация возможности использования data-only контейнеров.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3.1&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Code from branch develop #################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">applications</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">deploy</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">update_config</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restart_policy</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">placement</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### PHP-FPM ##################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">php-fpm</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">deploy</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">update_config</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restart_policy</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">placement</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Nginx ####################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">nginx</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:staging</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;80:80&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;443:443&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">deploy</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">update_config</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restart_policy</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">placement</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Volumes Setup ############################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">developcode</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">external</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">code-${VER}</span>
+</span></span></code></pre></div><p>Процесс деплоя сервисов усложнился на одну команду (создание именованного тома с определенным именем) и выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export VER<span style="color:#f92672">=</span>1.1 <span style="color:#f92672">&amp;&amp;</span> docker volume create --name code-$VER
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker stack deploy --with-registry-auth --compose-file docker-compose.yml MY_STACK
+</span></span></code></pre></div><p>Стоит отметить, что данное решение пока не тестировалось на продакшене (да и вообще, кластер Docker Swarm в данном примере состоял из одной ноды) — это просто демонстрация возможности использования data-only контейнеров.</p>
                 </section>
             </article>
 
@@ -362,7 +362,7 @@ volumes value Additional properties are not allowed ('${VOLUME_NAME}' was unexpe
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

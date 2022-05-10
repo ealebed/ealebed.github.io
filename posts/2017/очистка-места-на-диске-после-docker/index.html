@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,29 +101,29 @@
                     <p>Технология Docker позволяет упаковать приложение или сервис в контейнер, который легко может быть запущен в любом окружении. Однако при <a href="https://ealebed.github.io/posts/2017/docker-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0-%D1%81-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0%D0%BC%D0%B8/">активной работе с Docker</a> жесткий диск быстро засоряется неиспользуемыми образами, контейнерами и томами данных.</p>
 <p>Давайте разберемся с набором инструментов для чистки системы, предоставляемым Docker и рассмотрим несколько примеров!</p>
 <p>Как мы уже упоминали <a href="https://ealebed.github.io/posts/2017/docker-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0-%D1%81-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0%D0%BC%D0%B8/">ранее</a>, для очистки неиспользуемых данных можно воспользоваться командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker system prune
-</code></pre></div><p>Однако данная команда появилась в <code>docker-engine</code> начиная с версии 1.13.0, а в предыдущих версиях приходилось исхитряться самостоятельно. Например, чтобы удалить недействительные образы (у которых нет метки), я вводил в консоли:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images --no-trunc | grep <span style="color:#e6db74">&#39;&#39;</span> | awk <span style="color:#e6db74">&#39;{ print $3 }&#39;</span> | xargs -r docker rmi
-</code></pre></div><p>Как оказалось, все можно было сделать намного проще. Для поиска недействительных образов используется команда:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images -f dangling<span style="color:#f92672">=</span>true
-</code></pre></div><p>Тогда для удаления ненужных образов можем использовать конструкцию:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker rmi <span style="color:#66d9ef">$(</span>docker images -f dangling<span style="color:#f92672">=</span>true -q<span style="color:#66d9ef">)</span>
-</code></pre></div><p><strong>Примечание.</strong> Недействительные образы – это уровень образов, которые больше не имеют никакого отношения к образам с метками — они впустую потребляют дисковое пространство.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker system prune
+</span></span></code></pre></div><p>Однако данная команда появилась в <code>docker-engine</code> начиная с версии 1.13.0, а в предыдущих версиях приходилось исхитряться самостоятельно. Например, чтобы удалить недействительные образы (у которых нет метки), я вводил в консоли:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker images --no-trunc | grep <span style="color:#e6db74">&#39;&#39;</span> | awk <span style="color:#e6db74">&#39;{ print $3 }&#39;</span> | xargs -r docker rmi
+</span></span></code></pre></div><p>Как оказалось, все можно было сделать намного проще. Для поиска недействительных образов используется команда:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker images -f dangling<span style="color:#f92672">=</span>true
+</span></span></code></pre></div><p>Тогда для удаления ненужных образов можем использовать конструкцию:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker rmi <span style="color:#66d9ef">$(</span>docker images -f dangling<span style="color:#f92672">=</span>true -q<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><p><strong>Примечание.</strong> Недействительные образы – это уровень образов, которые больше не имеют никакого отношения к образам с метками — они впустую потребляют дисковое пространство.</p>
 <p>Для удаления остановленных контейнеров ранее я использовал команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps --filter status<span style="color:#f92672">=</span>exited -aq | xargs docker rm -v
-</code></pre></div><p>Но гораздо проще воспользоваться ввести в консоли:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker rm <span style="color:#66d9ef">$(</span>docker ps -a -f status<span style="color:#f92672">=</span>exited -q<span style="color:#66d9ef">)</span>
-</code></pre></div><p>В идеологии docker том хранения данных должен существовать независимо от контейнера. Следовательно, когда контейнер удаляется, том не удаляется автоматически. Он остаётся в системе, хотя больше не обслуживает ни один контейнер. Для удаления неиспользуемых томов в ранних версиях docker можно было использовать следующий скрипт:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/bash
-</span><span style="color:#75715e"></span> 
-find <span style="color:#e6db74">&#39;/var/lib/docker/volumes/&#39;</span> -mindepth <span style="color:#ae81ff">1</span> -maxdepth <span style="color:#ae81ff">1</span> -type d | grep -vFf &lt;<span style="color:#f92672">(</span>
-  docker ps -aq | xargs docker inspect | jq -r <span style="color:#e6db74">&#39;.[]|.Mounts|.[]|.Name|select(.)&#39;</span>
-<span style="color:#f92672">)</span>
-</code></pre></div><p>Начиная с версии <code>docker-engine</code> 1.9 все неиспользуемые (недействительные) тома можно найти с помощь такой командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker volume ls -f dangling<span style="color:#f92672">=</span>true
-</code></pre></div><p>а удалить с помощью такой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker volume rm <span style="color:#66d9ef">$(</span>docker volume ls -f dangling<span style="color:#f92672">=</span>true -q<span style="color:#66d9ef">)</span>
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker ps --filter status<span style="color:#f92672">=</span>exited -aq | xargs docker rm -v
+</span></span></code></pre></div><p>Но гораздо проще воспользоваться ввести в консоли:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker rm <span style="color:#66d9ef">$(</span>docker ps -a -f status<span style="color:#f92672">=</span>exited -q<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><p>В идеологии docker том хранения данных должен существовать независимо от контейнера. Следовательно, когда контейнер удаляется, том не удаляется автоматически. Он остаётся в системе, хотя больше не обслуживает ни один контейнер. Для удаления неиспользуемых томов в ранних версиях docker можно было использовать следующий скрипт:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> 
+</span></span><span style="display:flex;"><span>find <span style="color:#e6db74">&#39;/var/lib/docker/volumes/&#39;</span> -mindepth <span style="color:#ae81ff">1</span> -maxdepth <span style="color:#ae81ff">1</span> -type d | grep -vFf &lt;<span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>  docker ps -aq | xargs docker inspect | jq -r <span style="color:#e6db74">&#39;.[]|.Mounts|.[]|.Name|select(.)&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Начиная с версии <code>docker-engine</code> 1.9 все неиспользуемые (недействительные) тома можно найти с помощь такой командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker volume ls -f dangling<span style="color:#f92672">=</span>true
+</span></span></code></pre></div><p>а удалить с помощью такой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker volume rm <span style="color:#66d9ef">$(</span>docker volume ls -f dangling<span style="color:#f92672">=</span>true -q<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -215,7 +215,7 @@ find <span style="color:#e6db74">&#39;/var/lib/docker/volumes/&#39;</span> -mind
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

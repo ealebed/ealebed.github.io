@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,179 +103,178 @@
 <p>C периодичностью 15 секунд (можно изменить с помощью параметра <code>--horizontal-pod-autoscaler-sync-period</code>), контроллер собирает данные по использованию метрик, определенных в манифесте ресурса <code>HorizontalPodAutoscaler</code>. Метрики собираются или с resource metrics API (метрики использования ресурсов подами) или с custom metrics API (остальные метрики, например, метрики приложения).</p>
 <p>Для каждого подконтрольного пода, контроллер собирает метрики (например, использования CPU) с resource metrics API (<code>metrics.k8s.io</code>, предоставляется <a href="https://kubernetes.io/docs/tasks/debug-application-cluster/resource-metrics-pipeline/#metrics-server">metrics-server</a>). Далее, происходит вычисление текущего значения использования CPU в процентах от запрошенных ресурсов (resource request) контейнерами каждого пода, после чего это значение сравнивается с &ldquo;целевым&rdquo; (target) значением - порогом, после которого количество подов должно быть увеличено.</p>
 <p>Рассмотрим конкретный пример. Создадим файл <code>test-hpa.yaml</code> с описанием ресурса <code>HorizontalPodAutoscaler</code> такого содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">autoscaling/v2beta1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">HorizontalPodAutoscaler</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-hpa</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">scaleTargetRef</span>:
-    <span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">apps/v1</span>
-    <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Deployment</span>
-    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-api-deploy</span>
-  <span style="color:#f92672">minReplicas</span>: <span style="color:#ae81ff">10</span>
-  <span style="color:#f92672">maxReplicas</span>: <span style="color:#ae81ff">29</span>
-  <span style="color:#f92672">metrics</span>:
-  - <span style="color:#f92672">type</span>: <span style="color:#ae81ff">Resource</span>
-    <span style="color:#f92672">resource</span>:
-      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cpu</span>
-      <span style="color:#f92672">targetAverageUtilization</span>: <span style="color:#ae81ff">80</span>
-</code></pre></div><p>Создадим данный объект в кластере <code>Kubernetes</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f test-hpa.yaml
-</code></pre></div><p>Проверим наличие объекта:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get horizontalpodautoscaler
-NAME          REFERENCE                        TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
-test-hpa      Deployment/test-api-deploy       &lt;unknown&gt;/80%   <span style="color:#ae81ff">10</span>        <span style="color:#ae81ff">29</span>        <span style="color:#ae81ff">0</span>          7s
-</code></pre></div><p>Спустя некоторое время, вместо <code>&lt;unknown&gt;</code>, мы должны увидеть текущее использование CPU подами в деплойменте test-api-deploy, однако в моем случае этого не произошло. Начинаем разбираться - для начала, убедимся, что <code>metrics.k8s.io</code> доступно:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get --raw <span style="color:#e6db74">&#34;/apis/metrics.k8s.io/&#34;</span> | jq
-<span style="color:#f92672">{</span>
-  <span style="color:#e6db74">&#34;kind&#34;</span>: <span style="color:#e6db74">&#34;APIGroup&#34;</span>,
-  <span style="color:#e6db74">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;v1&#34;</span>,
-  <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;metrics.k8s.io&#34;</span>,
-  <span style="color:#e6db74">&#34;versions&#34;</span>: <span style="color:#f92672">[</span>
-    <span style="color:#f92672">{</span>
-      <span style="color:#e6db74">&#34;groupVersion&#34;</span>: <span style="color:#e6db74">&#34;metrics.k8s.io/v1beta1&#34;</span>,
-      <span style="color:#e6db74">&#34;version&#34;</span>: <span style="color:#e6db74">&#34;v1beta1&#34;</span>
-    <span style="color:#f92672">}</span>
-  <span style="color:#f92672">]</span>,
-  <span style="color:#e6db74">&#34;preferredVersion&#34;</span>: <span style="color:#f92672">{</span>
-    <span style="color:#e6db74">&#34;groupVersion&#34;</span>: <span style="color:#e6db74">&#34;metrics.k8s.io/v1beta1&#34;</span>,
-    <span style="color:#e6db74">&#34;version&#34;</span>: <span style="color:#e6db74">&#34;v1beta1&#34;</span>
-  <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Проверим, что метрики использования CPU доступны. Первый вариант:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl top pod | grep test-api-deploy
-test-api-deploy-5f77b79896-2t9x9                        738m         43931Mi
-test-api-deploy-5f77b79896-fhr7b                        643m         43999Mi
-test-api-deploy-5f77b79896-gcrlc                        700m         44028Mi
-test-api-deploy-5f77b79896-lx24k                        666m         44201Mi
-test-api-deploy-5f77b79896-mzlzb                        660m         44048Mi
-test-api-deploy-5f77b79896-ndjwx                        651m         44136Mi
-test-api-deploy-5f77b79896-q2nvw                        654m         44177Mi
-test-api-deploy-5f77b79896-qmw4t                        692m         44051Mi
-test-api-deploy-5f77b79896-rl4bb                        650m         43979Mi
-test-api-deploy-5f77b79896-xhpbx                        752m         44116Mi
-</code></pre></div><p>Второй вариант (метрики только одного конкретного пода):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/default/pods/test-api-deploy-5f77b79896-xhpbx | jq
-<span style="color:#f92672">{</span>
-  <span style="color:#e6db74">&#34;kind&#34;</span>: <span style="color:#e6db74">&#34;PodMetrics&#34;</span>,
-  <span style="color:#e6db74">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;metrics.k8s.io/v1beta1&#34;</span>,
-  <span style="color:#e6db74">&#34;metadata&#34;</span>: <span style="color:#f92672">{</span>
-    <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;test-api-deploy-5f77b79896-xhpbx&#34;</span>,
-    <span style="color:#e6db74">&#34;namespace&#34;</span>: <span style="color:#e6db74">&#34;default&#34;</span>,
-    <span style="color:#e6db74">&#34;selfLink&#34;</span>: <span style="color:#e6db74">&#34;/apis/metrics.k8s.io/v1beta1/namespaces/default/pods/test-api-deploy-5f77b79896-xhpbx&#34;</span>,
-    <span style="color:#e6db74">&#34;creationTimestamp&#34;</span>: <span style="color:#e6db74">&#34;2019-06-11T13:50:00Z&#34;</span>
-  <span style="color:#f92672">}</span>,
-  <span style="color:#e6db74">&#34;timestamp&#34;</span>: <span style="color:#e6db74">&#34;2019-06-11T13:49:41Z&#34;</span>,
-  <span style="color:#e6db74">&#34;window&#34;</span>: <span style="color:#e6db74">&#34;30s&#34;</span>,
-  <span style="color:#e6db74">&#34;containers&#34;</span>: <span style="color:#f92672">[</span>
-    <span style="color:#f92672">{</span>
-      <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;envoy&#34;</span>,
-      <span style="color:#e6db74">&#34;usage&#34;</span>: <span style="color:#f92672">{</span>
-        <span style="color:#e6db74">&#34;cpu&#34;</span>: <span style="color:#e6db74">&#34;489151208n&#34;</span>,
-        <span style="color:#e6db74">&#34;memory&#34;</span>: <span style="color:#e6db74">&#34;45692Ki&#34;</span>
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>,
-    <span style="color:#f92672">{</span>
-      <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;test&#34;</span>,
-      <span style="color:#e6db74">&#34;usage&#34;</span>: <span style="color:#f92672">{</span>
-        <span style="color:#e6db74">&#34;cpu&#34;</span>: <span style="color:#e6db74">&#34;7125240328n&#34;</span>,
-        <span style="color:#e6db74">&#34;memory&#34;</span>: <span style="color:#e6db74">&#34;45515856Ki&#34;</span>
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-  <span style="color:#f92672">]</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Как видим, метрики доступны. Получим детальное описание нашего <code>HorizontalPodAutoscaler</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl describe hpa test-hpa
-Name:                                                  test-hpa
-Namespace:                                             default
-Labels:                                                app.kubernetes.io/managed-by<span style="color:#f92672">=</span>spinnaker
-                                                       app.kubernetes.io/name<span style="color:#f92672">=</span>test
-Annotations:                                           artifact.spinnaker.io/location: default
-                                                       artifact.spinnaker.io/name: test-hpa
-                                                       artifact.spinnaker.io/type: kubernetes/horizontalpodautoscaler
-                                                       kubectl.kubernetes.io/last-applied-configuration:
-                                                         <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;apiVersion&#34;</span>:<span style="color:#e6db74">&#34;autoscaling/v2beta1&#34;</span>,<span style="color:#e6db74">&#34;kind&#34;</span>:<span style="color:#e6db74">&#34;HorizontalPodAutoscaler&#34;</span>,<span style="color:#e6db74">&#34;metadata&#34;</span>:<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;annotations&#34;</span>:<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;artifact.spinnaker.io/location&#34;</span>:<span style="color:#e6db74">&#34;default&#34;</span>...
-                                                       moniker.spinnaker.io/application: test
-                                                       moniker.spinnaker.io/cluster: horizontalpodautoscaler test-hpa
-CreationTimestamp:                                     Tue, <span style="color:#ae81ff">11</span> Jun <span style="color:#ae81ff">2019</span> 11:21:03 +0300
-Reference:                                             Deployment/test-api-deploy
-Metrics:                                               <span style="color:#f92672">(</span> current / target <span style="color:#f92672">)</span>
-  resource cpu on pods  <span style="color:#f92672">(</span>as a percentage of request<span style="color:#f92672">)</span>:  &lt;unknown&gt; / 80%
-Min replicas:                                          <span style="color:#ae81ff">10</span>
-Max replicas:                                          <span style="color:#ae81ff">29</span>
-Deployment pods:                                       <span style="color:#ae81ff">10</span> current / <span style="color:#ae81ff">10</span> desired
-Conditions:
-  Type           Status  Reason                   Message
-  ----           ------  ------                   -------
-  AbleToScale    True    SucceededGetScale        the HPA controller was able to get the target<span style="color:#960050;background-color:#1e0010">&#39;</span>s current scale
-  ScalingActive  False   FailedGetResourceMetric  the HPA was unable to compute the replica count: missing request <span style="color:#66d9ef">for</span> cpu
-Events:
-  Type     Reason                        Age                    From                       Message
-  ----     ------                        ----                   ----                       -------
-  Normal   SuccessfulRescale             7m17s                  horizontal-pod-autoscaler  New size: 10; reason: Current number of replicas below Spec.MinReplicas
-  Warning  FailedComputeMetricsReplicas  4m15s <span style="color:#f92672">(</span>x12 over 7m2s<span style="color:#f92672">)</span>  horizontal-pod-autoscaler  failed to get cpu utilization: missing request <span style="color:#66d9ef">for</span> cpu
-  Warning  FailedGetResourceMetric       2m15s <span style="color:#f92672">(</span>x20 over 7m2s<span style="color:#f92672">)</span>  horizontal-pod-autoscaler  missing request <span style="color:#66d9ef">for</span> cpu
-</code></pre></div><p>Здесь самое важное - сообщение <code>the HPA was unable to compute the replica count: missing request for cpu</code>. И действительно, в манифесте развертывания (<code>Deployment</code>) не указаны resource requests для одного из контейнеров (с именем envoy):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">apps/v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Deployment</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">annotations</span>:
-<span style="color:#75715e"># From https://www.spinnaker.io/reference/providers/kubernetes-v2/#strategy  </span>
-    <span style="color:#f92672">strategy.spinnaker.io/use-source-capacity</span>: <span style="color:#e6db74">&#34;true&#34;</span>
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-api-deploy</span>
-<span style="color:#f92672">spec</span>:
-<span style="color:#75715e">#  replicas: 15</span>
-  <span style="color:#f92672">selector</span>:
-    <span style="color:#f92672">matchLabels</span>:
-      <span style="color:#f92672">deployment</span>: <span style="color:#ae81ff">test-api-deploy</span>
-  <span style="color:#f92672">strategy</span>:
-    <span style="color:#f92672">rollingUpdate</span>:
-      <span style="color:#f92672">maxSurge</span>: <span style="color:#ae81ff">0</span>
-    <span style="color:#f92672">type</span>: <span style="color:#ae81ff">RollingUpdate</span>
-  <span style="color:#f92672">template</span>:
-    <span style="color:#f92672">metadata</span>:
-      <span style="color:#f92672">labels</span>:
-        <span style="color:#f92672">deployment</span>: <span style="color:#ae81ff">test-api-deploy</span>
-    <span style="color:#f92672">spec</span>:
-      <span style="color:#f92672">containers</span>:
-      - <span style="color:#f92672">image</span>: <span style="color:#ae81ff">envoyproxy/envoy:v1.10.0</span>
-        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">envoy</span>
-        <span style="color:#f92672">ports</span>:
-        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">8080</span>
-          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">http</span>
-        <span style="color:#f92672">volumeMounts</span>:
-        - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/etc/envoy</span>
-          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">envoy-config</span>
-      - <span style="color:#f92672">env</span>:
-        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">JAVA_OPTS</span>
-          <span style="color:#f92672">value</span>: -<span style="color:#ae81ff">Xms40g -Xmx40g</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">index.docker.io/ealebed/test:v1</span>
-        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test</span>
-        <span style="color:#f92672">resources</span>:
-          <span style="color:#f92672">limits</span>:
-            <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">55Gi</span>
-          <span style="color:#f92672">requests</span>:
-            <span style="color:#f92672">cpu</span>: <span style="color:#e6db74">&#34;10&#34;</span>
-            <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">55Gi</span>
-      <span style="color:#f92672">volumes</span>:
-      - <span style="color:#f92672">configMap</span>:
-          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">envoy-config</span>
-        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">envoy-config</span>
-
-</code></pre></div><p><strong>Важно!</strong> Если не указаны resource request хотя бы для одного из контейнеров в <code>Replication Controller</code>, <code>Replica Set</code> или <code>Deployment</code>, то текущее значение использование CPU подами не может быть корректно определено, и, в результате, <code>HorizontalPodAutoscaler</code> не будет предпринимать никаких действий по масштабированию.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">autoscaling/v2beta1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">HorizontalPodAutoscaler</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-hpa</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">scaleTargetRef</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">apps/v1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Deployment</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-api-deploy</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">minReplicas</span>: <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">maxReplicas</span>: <span style="color:#ae81ff">29</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">metrics</span>:
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">type</span>: <span style="color:#ae81ff">Resource</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">resource</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cpu</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">targetAverageUtilization</span>: <span style="color:#ae81ff">80</span>
+</span></span></code></pre></div><p>Создадим данный объект в кластере <code>Kubernetes</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl create -f test-hpa.yaml
+</span></span></code></pre></div><p>Проверим наличие объекта:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get horizontalpodautoscaler
+</span></span><span style="display:flex;"><span>NAME          REFERENCE                        TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+</span></span><span style="display:flex;"><span>test-hpa      Deployment/test-api-deploy       &lt;unknown&gt;/80%   <span style="color:#ae81ff">10</span>        <span style="color:#ae81ff">29</span>        <span style="color:#ae81ff">0</span>          7s
+</span></span></code></pre></div><p>Спустя некоторое время, вместо <code>&lt;unknown&gt;</code>, мы должны увидеть текущее использование CPU подами в деплойменте test-api-deploy, однако в моем случае этого не произошло. Начинаем разбираться - для начала, убедимся, что <code>metrics.k8s.io</code> доступно:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get --raw <span style="color:#e6db74">&#34;/apis/metrics.k8s.io/&#34;</span> | jq
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;kind&#34;</span>: <span style="color:#e6db74">&#34;APIGroup&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;v1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;metrics.k8s.io&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;versions&#34;</span>: <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;groupVersion&#34;</span>: <span style="color:#e6db74">&#34;metrics.k8s.io/v1beta1&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;version&#34;</span>: <span style="color:#e6db74">&#34;v1beta1&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">]</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;preferredVersion&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;groupVersion&#34;</span>: <span style="color:#e6db74">&#34;metrics.k8s.io/v1beta1&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;version&#34;</span>: <span style="color:#e6db74">&#34;v1beta1&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Проверим, что метрики использования CPU доступны. Первый вариант:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl top pod | grep test-api-deploy
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-2t9x9                        738m         43931Mi
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-fhr7b                        643m         43999Mi
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-gcrlc                        700m         44028Mi
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-lx24k                        666m         44201Mi
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-mzlzb                        660m         44048Mi
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-ndjwx                        651m         44136Mi
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-q2nvw                        654m         44177Mi
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-qmw4t                        692m         44051Mi
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-rl4bb                        650m         43979Mi
+</span></span><span style="display:flex;"><span>test-api-deploy-5f77b79896-xhpbx                        752m         44116Mi
+</span></span></code></pre></div><p>Второй вариант (метрики только одного конкретного пода):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/default/pods/test-api-deploy-5f77b79896-xhpbx | jq
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;kind&#34;</span>: <span style="color:#e6db74">&#34;PodMetrics&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;apiVersion&#34;</span>: <span style="color:#e6db74">&#34;metrics.k8s.io/v1beta1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;metadata&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;test-api-deploy-5f77b79896-xhpbx&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;namespace&#34;</span>: <span style="color:#e6db74">&#34;default&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;selfLink&#34;</span>: <span style="color:#e6db74">&#34;/apis/metrics.k8s.io/v1beta1/namespaces/default/pods/test-api-deploy-5f77b79896-xhpbx&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;creationTimestamp&#34;</span>: <span style="color:#e6db74">&#34;2019-06-11T13:50:00Z&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;timestamp&#34;</span>: <span style="color:#e6db74">&#34;2019-06-11T13:49:41Z&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;window&#34;</span>: <span style="color:#e6db74">&#34;30s&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;containers&#34;</span>: <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;envoy&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;usage&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;cpu&#34;</span>: <span style="color:#e6db74">&#34;489151208n&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;memory&#34;</span>: <span style="color:#e6db74">&#34;45692Ki&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;test&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;usage&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;cpu&#34;</span>: <span style="color:#e6db74">&#34;7125240328n&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;memory&#34;</span>: <span style="color:#e6db74">&#34;45515856Ki&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Как видим, метрики доступны. Получим детальное описание нашего <code>HorizontalPodAutoscaler</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl describe hpa test-hpa
+</span></span><span style="display:flex;"><span>Name:                                                  test-hpa
+</span></span><span style="display:flex;"><span>Namespace:                                             default
+</span></span><span style="display:flex;"><span>Labels:                                                app.kubernetes.io/managed-by<span style="color:#f92672">=</span>spinnaker
+</span></span><span style="display:flex;"><span>                                                       app.kubernetes.io/name<span style="color:#f92672">=</span>test
+</span></span><span style="display:flex;"><span>Annotations:                                           artifact.spinnaker.io/location: default
+</span></span><span style="display:flex;"><span>                                                       artifact.spinnaker.io/name: test-hpa
+</span></span><span style="display:flex;"><span>                                                       artifact.spinnaker.io/type: kubernetes/horizontalpodautoscaler
+</span></span><span style="display:flex;"><span>                                                       kubectl.kubernetes.io/last-applied-configuration:
+</span></span><span style="display:flex;"><span>                                                         <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;apiVersion&#34;</span>:<span style="color:#e6db74">&#34;autoscaling/v2beta1&#34;</span>,<span style="color:#e6db74">&#34;kind&#34;</span>:<span style="color:#e6db74">&#34;HorizontalPodAutoscaler&#34;</span>,<span style="color:#e6db74">&#34;metadata&#34;</span>:<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;annotations&#34;</span>:<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;artifact.spinnaker.io/location&#34;</span>:<span style="color:#e6db74">&#34;default&#34;</span>...
+</span></span><span style="display:flex;"><span>                                                       moniker.spinnaker.io/application: test
+</span></span><span style="display:flex;"><span>                                                       moniker.spinnaker.io/cluster: horizontalpodautoscaler test-hpa
+</span></span><span style="display:flex;"><span>CreationTimestamp:                                     Tue, <span style="color:#ae81ff">11</span> Jun <span style="color:#ae81ff">2019</span> 11:21:03 +0300
+</span></span><span style="display:flex;"><span>Reference:                                             Deployment/test-api-deploy
+</span></span><span style="display:flex;"><span>Metrics:                                               <span style="color:#f92672">(</span> current / target <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  resource cpu on pods  <span style="color:#f92672">(</span>as a percentage of request<span style="color:#f92672">)</span>:  &lt;unknown&gt; / 80%
+</span></span><span style="display:flex;"><span>Min replicas:                                          <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>Max replicas:                                          <span style="color:#ae81ff">29</span>
+</span></span><span style="display:flex;"><span>Deployment pods:                                       <span style="color:#ae81ff">10</span> current / <span style="color:#ae81ff">10</span> desired
+</span></span><span style="display:flex;"><span>Conditions:
+</span></span><span style="display:flex;"><span>  Type           Status  Reason                   Message
+</span></span><span style="display:flex;"><span>  ----           ------  ------                   -------
+</span></span><span style="display:flex;"><span>  AbleToScale    True    SucceededGetScale        the HPA controller was able to get the target<span style="color:#960050;background-color:#1e0010">&#39;</span>s current scale
+</span></span><span style="display:flex;"><span>  ScalingActive  False   FailedGetResourceMetric  the HPA was unable to compute the replica count: missing request <span style="color:#66d9ef">for</span> cpu
+</span></span><span style="display:flex;"><span>Events:
+</span></span><span style="display:flex;"><span>  Type     Reason                        Age                    From                       Message
+</span></span><span style="display:flex;"><span>  ----     ------                        ----                   ----                       -------
+</span></span><span style="display:flex;"><span>  Normal   SuccessfulRescale             7m17s                  horizontal-pod-autoscaler  New size: 10; reason: Current number of replicas below Spec.MinReplicas
+</span></span><span style="display:flex;"><span>  Warning  FailedComputeMetricsReplicas  4m15s <span style="color:#f92672">(</span>x12 over 7m2s<span style="color:#f92672">)</span>  horizontal-pod-autoscaler  failed to get cpu utilization: missing request <span style="color:#66d9ef">for</span> cpu
+</span></span><span style="display:flex;"><span>  Warning  FailedGetResourceMetric       2m15s <span style="color:#f92672">(</span>x20 over 7m2s<span style="color:#f92672">)</span>  horizontal-pod-autoscaler  missing request <span style="color:#66d9ef">for</span> cpu
+</span></span></code></pre></div><p>Здесь самое важное - сообщение <code>the HPA was unable to compute the replica count: missing request for cpu</code>. И действительно, в манифесте развертывания (<code>Deployment</code>) не указаны resource requests для одного из контейнеров (с именем envoy):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">apps/v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Deployment</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">annotations</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># From https://www.spinnaker.io/reference/providers/kubernetes-v2/#strategy  </span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">strategy.spinnaker.io/use-source-capacity</span>: <span style="color:#e6db74">&#34;true&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test-api-deploy</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  replicas: 15</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">selector</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">matchLabels</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">deployment</span>: <span style="color:#ae81ff">test-api-deploy</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">strategy</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">rollingUpdate</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">maxSurge</span>: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">type</span>: <span style="color:#ae81ff">RollingUpdate</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">template</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">labels</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">deployment</span>: <span style="color:#ae81ff">test-api-deploy</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">containers</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">image</span>: <span style="color:#ae81ff">envoyproxy/envoy:v1.10.0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">envoy</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">8080</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">http</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumeMounts</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/etc/envoy</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">envoy-config</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">env</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">JAVA_OPTS</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">value</span>: -<span style="color:#ae81ff">Xms40g -Xmx40g</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">index.docker.io/ealebed/test:v1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">test</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">resources</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">limits</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">55Gi</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">requests</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">cpu</span>: <span style="color:#e6db74">&#34;10&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">55Gi</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">configMap</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">name</span>: <span style="color:#ae81ff">envoy-config</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">envoy-config</span>
+</span></span></code></pre></div><p><strong>Важно!</strong> Если не указаны resource request хотя бы для одного из контейнеров в <code>Replication Controller</code>, <code>Replica Set</code> или <code>Deployment</code>, то текущее значение использование CPU подами не может быть корректно определено, и, в результате, <code>HorizontalPodAutoscaler</code> не будет предпринимать никаких действий по масштабированию.</p>
 <p>После исправления этой досадной ошибки, <code>HorizontalPodAutoscaler</code>, базируясь на полученных метриках, начинает масштабировать поды в развертывании:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get horizontalpodautoscaler                                                                                                              
-NAME          REFERENCE                       TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
-test-hpa      Deployment/test-api-deploy      86%/80%   <span style="color:#ae81ff">10</span>        <span style="color:#ae81ff">29</span>        <span style="color:#ae81ff">29</span>         9m10
-</code></pre></div><p>Формула, по которой <code>HorizontalPodAutoscaler</code> вычисляет требуемое количество реплик выглядит так:</p>
-<pre><code>desiredReplicas = ceil[currentReplicas * ( currentMetricValue / desiredMetricValue )]
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get horizontalpodautoscaler                                                                                                              
+</span></span><span style="display:flex;"><span>NAME          REFERENCE                       TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+</span></span><span style="display:flex;"><span>test-hpa      Deployment/test-api-deploy      86%/80%   <span style="color:#ae81ff">10</span>        <span style="color:#ae81ff">29</span>        <span style="color:#ae81ff">29</span>         9m10
+</span></span></code></pre></div><p>Формула, по которой <code>HorizontalPodAutoscaler</code> вычисляет требуемое количество реплик выглядит так:</p>
+<pre tabindex="0"><code>desiredReplicas = ceil[currentReplicas * ( currentMetricValue / desiredMetricValue )]
 </code></pre><p>Например, если текущее значение метрики (currentMetricValue) равно <code>200m</code>, а ожидаемое (desiredMetricValue) установлено в <code>100m</code>, то количество реплик будет удвоено (<code>200.0 / 100.0 == 2.0</code>). Если же текущее значение метрики равно всего лишь <code>50m</code>, то количество реплик должно быть уменьшено вдвое (<code>50.0 / 100.0 == 0.5</code>). Если соотношение текущего значения метрики к ожидаемому значению достаточно близко к 1, то никаких действий не будет предпринято.</p>
 <p>Так как мы указали <code>targetAverageUtilization</code> при описании ресурса <code>HorizontalPodAutoscaler</code>, то текущее значение метрики (currentMetricValue) использования CPU рассчитывается как среднее значение этой метрики для всех подов, контролируемых данным автоскейлером.</p>
 <p>После того, как текущее значение использования CPU снизилось и оставалось низким в течении 5 минут (устанавливается с помощью параметра <code>--horizontal-pod-autoscaler-downscale-stabilization</code>), количество реплик было автоматически уменьшено:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl get horizontalpodautoscaler                                                                                                              
-NAME          REFERENCE                       TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
-test-hpa      Deployment/test-api-deploy      70%/80%   <span style="color:#ae81ff">20</span>        <span style="color:#ae81ff">29</span>        <span style="color:#ae81ff">23</span>         1h
-</code></pre></div><p>На этом все, в одной из следующих статей рассмотрим более сложный вариант автоскейлинга, базирующийся на метриках приложения.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl get horizontalpodautoscaler                                                                                                              
+</span></span><span style="display:flex;"><span>NAME          REFERENCE                       TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+</span></span><span style="display:flex;"><span>test-hpa      Deployment/test-api-deploy      70%/80%   <span style="color:#ae81ff">20</span>        <span style="color:#ae81ff">29</span>        <span style="color:#ae81ff">23</span>         1h
+</span></span></code></pre></div><p>На этом все, в одной из следующих статей рассмотрим более сложный вариант автоскейлинга, базирующийся на метриках приложения.</p>
                 </section>
             </article>
 
@@ -367,7 +366,7 @@ test-hpa      Deployment/test-api-deploy      70%/80%   <span style="color:#ae81
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

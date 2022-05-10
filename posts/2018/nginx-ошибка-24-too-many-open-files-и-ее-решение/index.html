@@ -15,7 +15,7 @@
   
   <meta name="twitter:title" content="Nginx: ошибка (24: Too many open files) и ее решение"/>
   <meta name="twitter:description" content="На одном из серверов в логе ошибок веб-сервера Nginx появились сообщения вида
-2017/11/22 08:21:02 [crit] 29098#29098: *174583882 open() &quot;/var/www/public/blackfriday/img/tabs/img4.png&quot; failed (24: Too many open files), client: 176.113.144.142, server: example.com, request: &quot;GET /blackfriday/img/tabs/img4.png HTTP/2.0&quot;, host: &quot;example.com&quot;
+2017/11/22 08:21:02 [crit] 29098#29098: *174583882 open() &#34;/var/www/public/blackfriday/img/tabs/img4.png&#34; failed (24: Too many open files), client: 176.113.144.142, server: example.com, request: &#34;GET /blackfriday/img/tabs/img4.png HTTP/2.0&#34;, host: &#34;example.com&#34;
 "/>
   
     <meta name="twitter:site" content="@ealebed"/>
@@ -31,7 +31,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,33 +101,33 @@
                 </header>
                 <section id="post-body">
                     <p>На одном из серверов в логе ошибок веб-сервера Nginx появились сообщения вида</p>
-<pre><code>2017/11/22 08:21:02 [crit] 29098#29098: *174583882 open() &quot;/var/www/public/blackfriday/img/tabs/img4.png&quot; failed (24: Too many open files), client: 176.113.144.142, server: example.com, request: &quot;GET /blackfriday/img/tabs/img4.png HTTP/2.0&quot;, host: &quot;example.com&quot;
+<pre tabindex="0"><code>2017/11/22 08:21:02 [crit] 29098#29098: *174583882 open() &#34;/var/www/public/blackfriday/img/tabs/img4.png&#34; failed (24: Too many open files), client: 176.113.144.142, server: example.com, request: &#34;GET /blackfriday/img/tabs/img4.png HTTP/2.0&#34;, host: &#34;example.com&#34;
 </code></pre><p>Давайте разберемся как исправить данную ошибку в операционной системе Centos 7!</p>
 <p>Смотрим текущие <code>soft</code>/<code>hard</code> лимиты файловых дескрипторов и открытых файлов для основного (master) процесса Nginx:</p>
-<pre><code>cat /proc/$(cat /var/run/nginx.pid)/limits|grep open.files
+<pre tabindex="0"><code>cat /proc/$(cat /var/run/nginx.pid)/limits|grep open.files
 Max open files            1024                 4096                 files 
 </code></pre><p>и для дочерних (worker) процессов:</p>
-<pre><code>ps --ppid $(cat /var/run/nginx.pid) -o %p|sed '1d'|xargs -I{} cat /proc/{}/limits|grep open.files
+<pre tabindex="0"><code>ps --ppid $(cat /var/run/nginx.pid) -o %p|sed &#39;1d&#39;|xargs -I{} cat /proc/{}/limits|grep open.files
 Max open files            1024                 4096                 files     
 Max open files            1024                 4096                 files
 Max open files            1024                 4096                 files
 </code></pre><p>Открываем на редактирование конфигурационный файл <code>/etc/security/limits.conf</code> и вставляем в него следующие строки:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 nginx   soft  nofile    10000
 nginx   hard  nofile    30000
 </code></pre><p>В конфигурациооный файл <code>nginx.conf</code> добавляем следующую строку:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 worker_rlimit_nofile 30000;
 ...
 </code></pre><p>Проверим конфигурацию веб-сервера на предмет ошибок и перечитаем конфиг:</p>
-<pre><code>nginx -t &amp;&amp; nginx -s reload
+<pre tabindex="0"><code>nginx -t &amp;&amp; nginx -s reload
 </code></pre><p>Проверим новые лимиты, установленные для дочерних процессов веб-сервера Nginx:</p>
-<pre><code>ps --ppid $(cat /var/run/nginx.pid) -o %p|sed '1d'|xargs -I{} cat /proc/{}/limits|grep open.files
+<pre tabindex="0"><code>ps --ppid $(cat /var/run/nginx.pid) -o %p|sed &#39;1d&#39;|xargs -I{} cat /proc/{}/limits|grep open.files
 Max open files            10000                30000                files     
 Max open files            10000                30000                files     
 Max open files            10000                30000                files     
 </code></pre><p>Новые лимиты могут примениться не ко всем дочерним процессам веб-сервера, в таком случае необходимо перезапустить <code>nginx</code> с помощью команды:</p>
-<pre><code>service nginx restart
+<pre tabindex="0"><code>service nginx restart
 </code></pre>
                 </section>
             </article>
@@ -220,7 +220,7 @@ Max open files            10000                30000                files
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

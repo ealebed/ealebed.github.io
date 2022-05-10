@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,13 +103,13 @@
 <p>Преимущества <strong>кэширования Nginx</strong> по сравнению с Varnish состоят прежде всего в простоте настройки. Оптимально использовать кэширование для сайтов с контентом, который доступен неавторизованным пользователям (публичный).</p>
 <p>Считаем, что Nginx у нас <a href="https://ealebed.github.io/posts/2015/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-nginx-%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D0%B8-1-6-%D0%B2-debian-wheezy/">установлен из пакетов</a> (или <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">собран из исходников</a>) и настроен.</p>
 <p>Для <strong>включения кэширования в Nginx</strong> сначала необходимо определить максимальный размер кеша (общий размер всех страниц в кеше не может превышать это значение). Сделать это можно в конфигурационном файле <code>/etc/nginx/nginx.conf</code> с помощью директивы в секции <code>http</code>:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=all:32m;
 ...
 </code></pre><p>Не забываем создать каталог для кеширования, который мы указали выше:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /var/cache/nginx
-</code></pre></div><p>Далее следует изменить настройки сайта, создав еще одну секцию server. Переносим наш основной сервер на другой порт (например, 81), а на стандартном 80 у нас теперь будет работать кэширующий хост, который либо будет отдавать данные из кэша, либо перенаправлять запросы на основной хост. Это может выглядеть примерно так:</p>
-<pre><code>server {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir /var/cache/nginx
+</span></span></code></pre></div><p>Далее следует изменить настройки сайта, создав еще одну секцию server. Переносим наш основной сервер на другой порт (например, 81), а на стандартном 80 у нас теперь будет работать кэширующий хост, который либо будет отдавать данные из кэша, либо перенаправлять запросы на основной хост. Это может выглядеть примерно так:</p>
+<pre tabindex="0"><code>server {
 	listen 80;
  
 	location / {
@@ -119,7 +119,7 @@ proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=all:32m;
 	
 }
 </code></pre><p>Для основного сервера:</p>
-<pre><code>server {
+<pre tabindex="0"><code>server {
 	listen 81;
  
 	location / {
@@ -150,11 +150,11 @@ proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=all:32m;
 	}
 }
 </code></pre><p>Если у пользователя установлены какие-либо Cookies, кэширование можно отключить:</p>
-<pre><code>server {
+<pre tabindex="0"><code>server {
 	listen 80;
  
 	location / {
-		if ($http_cookie ~* &quot;.+&quot; ) {
+		if ($http_cookie ~* &#34;.+&#34; ) {
 			set $do_not_cache 1;
 		}
 		proxy_pass http://127.0.0.1:81/;
@@ -163,11 +163,11 @@ proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=all:32m;
 	}
 }
 </code></pre><p>Есть смысл включать кэширование также и для ошибочных запросов, чтобы снизить нагрузку от обращений к неработающей части сайта:</p>
-<pre><code>server {
+<pre tabindex="0"><code>server {
 	listen 80;
  
 	location / {
-		if ($http_cookie ~* &quot;.+&quot; ) {
+		if ($http_cookie ~* &#34;.+&#34; ) {
 			set $do_not_cache 1;
 		}
 		proxy_pass http://127.0.0.1:81/;
@@ -177,14 +177,14 @@ proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=all:32m;
 	}
 }
 </code></pre><p>У Nginx есть возможность кеширования ответов от <code>fastcgi</code>. Чтобы использовать данную возможность, в секции http файла <code>/etc/nginx/nginx.conf</code> добавляем:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 fastcgi_cache_path /var/cache/fpm levels=1:2 keys_zone=fcgi:100m;
-fastcgi_cache_key &quot;$scheme$request_method$host$request_uri&quot;;
+fastcgi_cache_key &#34;$scheme$request_method$host$request_uri&#34;;
 ...
 </code></pre><p>Создаем каталог:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /var/cache/fpm
-</code></pre></div><p>После чего в настройках сайта (в секции server для основного хоста) добавим такие строки:</p>
-<pre><code>server {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir /var/cache/fpm
+</span></span></code></pre></div><p>После чего в настройках сайта (в секции server для основного хоста) добавим такие строки:</p>
+<pre tabindex="0"><code>server {
 	listen 81;
 ...
 	location ~ \.php$ {
@@ -291,7 +291,7 @@ fastcgi_cache_key &quot;$scheme$request_method$host$request_uri&quot;;
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,7 +106,7 @@
 <li>после загрузки сервера <strong>Gearman</strong> загружает в очередь задания из хранилища, если таковые имеются.</li>
 </ul>
 <p>Для использования базы данных MySQL в качестве постоянного хранилища для заданий <strong>Gearman</strong> необходимо создать отдельную базу данных (или использовать существующую — по вашему желанию) и таблицу следующей структуры:</p>
-<pre><code>CREATE TABLE `queue` (
+<pre tabindex="0"><code>CREATE TABLE `queue` (
   `unique_key` varchar(64) DEFAULT NULL,
   `function_name` varchar(255) DEFAULT NULL,
   `priority` int(11) DEFAULT NULL,
@@ -115,20 +115,20 @@
   UNIQUE KEY `unique_key` (`unique_key`,`function_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 </code></pre><p>За правильное определение «уникальности» задания в таблице <code>queue</code> отвечают <code>unique_key</code> (уникальный идентификатор задания) и <code>function_name</code> (название очереди заданий). После создания таблицы необходимо перезапустить сервер <strong>Gearman</strong>, добавив такие параметры:</p>
-<pre><code>gearmand --queue-type=MySQL --mysql-host=localhost --mysql-port=3306 \
+<pre tabindex="0"><code>gearmand --queue-type=MySQL --mysql-host=localhost --mysql-port=3306 \
          --mysql-user=gearman --mysql-password=&lt;сложный_пароль&gt; \
          --mysql-db=gearman --mysql-table=queue
 </code></pre><p>Записи в таблице <code>queue</code> смотрим следующим запросом:</p>
-<pre><code>SELECT * FROM queue LIMIT 5;
+<pre tabindex="0"><code>SELECT * FROM queue LIMIT 5;
 </code></pre><p>И будут выглядеть примерно так:</p>
-<pre><code>+--------------------------------------+---------------------+----------+----------+-------------+
+<pre tabindex="0"><code>+--------------------------------------+---------------------+----------+----------+-------------+
 | unique_key                           | function_name       | priority | data     | when_to_run |
 +--------------------------------------+---------------------+----------+----------+-------------+
-| 94b1iobe-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&quot;test&quot;] |           0 |
-| u2uke04c-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&quot;test&quot;] |           0 |
-| a6j4ofzq-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&quot;test&quot;] |           0 |
-| apobi7h5-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&quot;test&quot;] |           0 |
-| 0hq6yocr-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&quot;test&quot;] |           0 |
+| 94b1iobe-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&#34;test&#34;] |           0 |
+| u2uke04c-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&#34;test&#34;] |           0 |
+| a6j4ofzq-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&#34;test&#34;] |           0 |
+| apobi7h5-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&#34;test&#34;] |           0 |
+| 0hq6yocr-1a04-12e4-a3d8-040198067d11 | create_message      |        1 | [&#34;test&#34;] |           0 |
 +--------------------------------------+---------------+----------+----------------+-------------+
 5 rows in set (0.00 sec)
 </code></pre><p>При правильной настройке менеджера очередей <strong>Gearman</strong> количество записей в таблице должно стремиться к нулю — worker’ы должны максимально быстро обрабатывать задания из очереди.</p>
@@ -224,7 +224,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

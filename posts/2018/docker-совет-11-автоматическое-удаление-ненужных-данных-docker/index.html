@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,47 +101,47 @@
                     <p>Ранее мы уже упоминали о проблеме быстрого «засорения» локального хранилища при работе с docker-контейнерами и рассматривали варианты <a href="https://ealebed.github.io/posts/2017/%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0-%D0%BC%D0%B5%D1%81%D1%82%D0%B0-%D0%BD%D0%B0-%D0%B4%D0%B8%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D1%81%D0%BB%D0%B5-docker/">очистки места на диске</a> после docker вручную.</p>
 <p>Давайте разберемся, как автоматизировать этот процесс!</p>
 <p>В примере используется следующая версия docker:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker -v
-Docker version 17.09.0-ce, build afdb6d4
-</code></pre></div><p>Еще начиная с версии docker-engine 1.13.0 появилась команда <code>docker system prune</code>, которая и используется для очистки места на диске. Однако, начиная с версии docker 17.09 поведение этой команды изменилось — ранее она удаляла все остановленные контейнеры, неиспользуемые сети, недействительные образы (у которых нет метки), тома, которые не принадлежат ни одному запущенному контейнеру и кэш сборки docker-образов, теперь тома не удаляются:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker system prune
-WARNING! This will remove:
-        - all stopped containers
-        - all networks not used by at least one container
-        - all dangling images
-        - all build cache
-Are you sure you want to <span style="color:#66d9ef">continue</span>? <span style="color:#f92672">[</span>y/N<span style="color:#f92672">]</span>
-</code></pre></div><p>Запускать команду будем с ключом <code>-f</code> (<code>--force</code>, не требовать подтверждения). Чтобы команда запускалась автоматически, добавим ее в планировщик задач (в ОС Linux это утилита <code>cron</code>). Открываем файл <code>crontab</code> на редактирование с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crontab -e
-</code></pre></div><p>и добавляем в него следующую строку:</p>
-<pre><code>0 1 * * * /usr/bin/docker system prune -f
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker -v
+</span></span><span style="display:flex;"><span>Docker version 17.09.0-ce, build afdb6d4
+</span></span></code></pre></div><p>Еще начиная с версии docker-engine 1.13.0 появилась команда <code>docker system prune</code>, которая и используется для очистки места на диске. Однако, начиная с версии docker 17.09 поведение этой команды изменилось — ранее она удаляла все остановленные контейнеры, неиспользуемые сети, недействительные образы (у которых нет метки), тома, которые не принадлежат ни одному запущенному контейнеру и кэш сборки docker-образов, теперь тома не удаляются:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker system prune
+</span></span><span style="display:flex;"><span>WARNING! This will remove:
+</span></span><span style="display:flex;"><span>        - all stopped containers
+</span></span><span style="display:flex;"><span>        - all networks not used by at least one container
+</span></span><span style="display:flex;"><span>        - all dangling images
+</span></span><span style="display:flex;"><span>        - all build cache
+</span></span><span style="display:flex;"><span>Are you sure you want to <span style="color:#66d9ef">continue</span>? <span style="color:#f92672">[</span>y/N<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>Запускать команду будем с ключом <code>-f</code> (<code>--force</code>, не требовать подтверждения). Чтобы команда запускалась автоматически, добавим ее в планировщик задач (в ОС Linux это утилита <code>cron</code>). Открываем файл <code>crontab</code> на редактирование с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crontab -e
+</span></span></code></pre></div><p>и добавляем в него следующую строку:</p>
+<pre tabindex="0"><code>0 1 * * * /usr/bin/docker system prune -f
 </code></pre><p>В ОС MacOS можно воспользоваться планировщиком LaunchD. Для этого создаем файл:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo touch /Library/LaunchDaemons/DockerSystemPrune.plist
-</code></pre></div><p>и вставляем в него следующие строки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
-<span style="color:#75715e">&lt;!DOCTYPE plist PUBLIC &#34;-//Apple//DTD PLIST 1.0//EN&#34;
-</span><span style="color:#75715e">          http://www.apple.com/DTDs/PropertyList-1.0.dtd&#34;&gt;</span>
-<span style="color:#f92672">&lt;plist</span> <span style="color:#a6e22e">version=</span><span style="color:#e6db74">&#34;1.0&#34;</span><span style="color:#f92672">&gt;</span>
-<span style="color:#f92672">&lt;dict&gt;</span>
-    <span style="color:#f92672">&lt;key&gt;</span>Label<span style="color:#f92672">&lt;/key&gt;</span>
-    <span style="color:#f92672">&lt;string&gt;</span>DockerSystemPrune<span style="color:#f92672">&lt;/string&gt;</span>
-    <span style="color:#f92672">&lt;key&gt;</span>Program<span style="color:#f92672">&lt;/key&gt;</span>
-    <span style="color:#f92672">&lt;string&gt;</span>/usr/local/bin/docker system prune -f<span style="color:#f92672">&lt;/string&gt;</span>
-    <span style="color:#f92672">&lt;key&gt;</span>StartCalendarInterval<span style="color:#f92672">&lt;/key&gt;</span>
-    <span style="color:#f92672">&lt;dict&gt;</span>
-        <span style="color:#f92672">&lt;key&gt;</span>Hour<span style="color:#f92672">&lt;/key&gt;</span>
-        <span style="color:#f92672">&lt;integer&gt;</span>1<span style="color:#f92672">&lt;/integer&gt;</span>
-        <span style="color:#f92672">&lt;key&gt;</span>Minute<span style="color:#f92672">&lt;/key&gt;</span>
-        <span style="color:#f92672">&lt;integer&gt;</span>0<span style="color:#f92672">&lt;/integer&gt;</span>
-    <span style="color:#f92672">&lt;/dict&gt;</span>
-<span style="color:#f92672">&lt;/dict&gt;</span>
-<span style="color:#f92672">&lt;/plist&gt;</span>
-</code></pre></div><p>Добавляем созданную задачу в планировщик командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">launchctl load -w /Library/LaunchDaemons/DockerSystemPrune.plist
-</code></pre></div><p>С ОС Windows я не работаю, но уверен там тоже есть возможность добавить задачу по очистке места после docker в планировщик задач.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo touch /Library/LaunchDaemons/DockerSystemPrune.plist
+</span></span></code></pre></div><p>и вставляем в него следующие строки:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">&lt;!DOCTYPE plist PUBLIC &#34;-//Apple//DTD PLIST 1.0//EN&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">          http://www.apple.com/DTDs/PropertyList-1.0.dtd&#34;&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;plist</span> <span style="color:#a6e22e">version=</span><span style="color:#e6db74">&#34;1.0&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dict&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;key&gt;</span>Label<span style="color:#f92672">&lt;/key&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;string&gt;</span>DockerSystemPrune<span style="color:#f92672">&lt;/string&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;key&gt;</span>Program<span style="color:#f92672">&lt;/key&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;string&gt;</span>/usr/local/bin/docker system prune -f<span style="color:#f92672">&lt;/string&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;key&gt;</span>StartCalendarInterval<span style="color:#f92672">&lt;/key&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;dict&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;key&gt;</span>Hour<span style="color:#f92672">&lt;/key&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;integer&gt;</span>1<span style="color:#f92672">&lt;/integer&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;key&gt;</span>Minute<span style="color:#f92672">&lt;/key&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;integer&gt;</span>0<span style="color:#f92672">&lt;/integer&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dict&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dict&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/plist&gt;</span>
+</span></span></code></pre></div><p>Добавляем созданную задачу в планировщик командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>launchctl load -w /Library/LaunchDaemons/DockerSystemPrune.plist
+</span></span></code></pre></div><p>С ОС Windows я не работаю, но уверен там тоже есть возможность добавить задачу по очистке места после docker в планировщик задач.</p>
 <p>Если вы хотите также удалять тома (<code>volumes</code>), которые не принадлежат ни одному запущенному контейнеру, то можно воспользоваться командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker volume prune -f
-</code></pre></div><p>и также добавить ее в планировщик задач описанным выше способом.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker volume prune -f
+</span></span></code></pre></div><p>и также добавить ее в планировщик задач описанным выше способом.</p>
                 </section>
             </article>
 
@@ -233,7 +233,7 @@ Are you sure you want to <span style="color:#66d9ef">continue</span>? <span styl
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

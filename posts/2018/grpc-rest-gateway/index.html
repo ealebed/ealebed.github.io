@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,191 +104,190 @@
 <p>При написании микросервисов использование gRPC позволяет получить несколько преимуществ перед традиционным подходом (REST+JSON) - например, декларативный вариант описания типов и RPC-методов или экономию траффика. Но, к сожалению, часто переход на использование gRPC в существующих проектах затруднителен из-за наличия уже использующихся REST-клиентов, которые невозможно &ldquo;взять и обновить&rdquo; за раз.</p>
 <p>В gRPC по умолчанию используется <code>Google Protobuf 3</code> в качестве IDL (Interface Description Language) и HTTP/2 в качестве транспорта. Кодогенерация возможна с помощью 12 (официально) языков программирования, в том числе Go, Java, C++, Python, Ruby, Node.js, C#, PHP. В данной статье в качестве примера мы будем использовать Go. В случае использования gRPC у вас существует только одно место, где вы указываете, как именуются поля, как называются запросы, что они принимают и что возвращают - это <code>.proto</code> файл.</p>
 <p>Для начала необходимо установить <code>protobuf</code> - сделать это можно несколькими способами, например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir tmp
-cd tmp
-git clone https://github.com/google/protobuf
-cd protobuf
-./autogen.sh
-./configure
-make
-make check
-sudo make install
-</code></pre></div><p>Или (в моем случае установка выполнялась на MacOS) так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">brew install protobuf
-</code></pre></div><p>Убедиться, что установка прошла успешно можно с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">protoc --version
-libprotoc 3.6.1
-</code></pre></div><p>Далее устанавливаем необходимые плагины:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-go get -u github.com/golang/protobuf/protoc-gen-go
-</code></pre></div><p>Убедитесь, что <code>${GOPATH}/bin</code> присутствует в вашем <code>${PATH}</code> - в моем случае пришлось выполнить дополнительные команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export GOPATH<span style="color:#f92672">=</span>$HOME/go
-export PATH<span style="color:#f92672">=</span>$PATH:$GOPATH/bin
-</code></pre></div><p>Структура проекта следующая:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tree
-.
-├── gateway
-│   ├── main.go
-│   └── proto
-│       └── hello
-│           └── hello.proto
-└── server
-    ├── main.go
-    └── proto
-        └── hello
-            └── hello.proto
-</code></pre></div><p>Для сервиса <code>.proto</code> файл будет выглядеть следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#a6e22e">syntax</span> = <span style="color:#e6db74">&#34;proto3&#34;</span>;
-
-<span style="color:#f92672">package</span> <span style="color:#a6e22e">hello</span>;
-
-<span style="color:#75715e">// The greeting service definition.
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">service</span> <span style="color:#a6e22e">Say</span> {
-    <span style="color:#75715e">// Sends a greeting
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rpc</span> <span style="color:#a6e22e">Hello</span>(<span style="color:#a6e22e">Request</span>) <span style="color:#a6e22e">returns</span> (<span style="color:#a6e22e">Response</span>) {}
-}
-
-<span style="color:#75715e">// The request message containing the user&#39;s name.
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">message</span> <span style="color:#a6e22e">Request</span> {
-	<span style="color:#66d9ef">string</span> <span style="color:#a6e22e">name</span> = <span style="color:#ae81ff">1</span>;
-}
-
-<span style="color:#75715e">// The response message containing the greetings
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">message</span> <span style="color:#a6e22e">Response</span> {
-	<span style="color:#66d9ef">string</span> <span style="color:#a6e22e">message</span> = <span style="color:#ae81ff">1</span>;
-}
-</code></pre></div><p>Сам сервис выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
-
-<span style="color:#f92672">import</span> (
-	<span style="color:#e6db74">&#34;context&#34;</span>
-	<span style="color:#e6db74">&#34;log&#34;</span>
-	<span style="color:#e6db74">&#34;net&#34;</span>
-
-	<span style="color:#e6db74">&#34;google.golang.org/grpc&#34;</span>
-	<span style="color:#e6db74">&#34;google.golang.org/grpc/reflection&#34;</span>
-	<span style="color:#a6e22e">hello</span> <span style="color:#e6db74">&#34;./proto/hello&#34;</span>
-)
-
-<span style="color:#66d9ef">const</span> (
-	<span style="color:#a6e22e">port</span> = <span style="color:#e6db74">&#34;:50051&#34;</span>
-)
-
-<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">server</span> <span style="color:#66d9ef">struct</span>{}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">server</span>) <span style="color:#a6e22e">Hello</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">in</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">Request</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">Response</span>, <span style="color:#66d9ef">error</span>) {
-	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">Response</span>{<span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;Hello &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">Name</span>}, <span style="color:#66d9ef">nil</span>
-}
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">lis</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Listen</span>(<span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#a6e22e">port</span>)
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;failed to listen: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
-	}
-	<span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">NewServer</span>()
-	<span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">RegisterSayServer</span>(<span style="color:#a6e22e">s</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">server</span>{})
-
-	<span style="color:#a6e22e">reflection</span>.<span style="color:#a6e22e">Register</span>(<span style="color:#a6e22e">s</span>)
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Serve</span>(<span style="color:#a6e22e">lis</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;failed to serve: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
-	}
-}
-</code></pre></div><p>Генерируем с помощью protoc-компилятора код для сервиса (на языке Go, естественно):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">protoc -I/usr/local/include -I. <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	-I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	-I server/proto/hello/hello.proto <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--go_out<span style="color:#f92672">=</span>plugins<span style="color:#f92672">=</span>grpc:. <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	server/proto/hello/hello.proto
-</code></pre></div><p>Для gRPC-gateway необходимо немного изменить <code>.proto</code> файл (импортируем google.api и добавляем опции к нашему сервису):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#a6e22e">syntax</span> = <span style="color:#e6db74">&#34;proto3&#34;</span>;
-
-<span style="color:#f92672">package</span> <span style="color:#a6e22e">hello</span>;
-
-<span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;google/api/annotations.proto&#34;</span>;
-
-<span style="color:#75715e">// The greeting service definition.
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">service</span> <span style="color:#a6e22e">Say</span> {
-	<span style="color:#75715e">// Sends a greeting
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rpc</span> <span style="color:#a6e22e">Hello</span>(<span style="color:#a6e22e">Request</span>) <span style="color:#a6e22e">returns</span> (<span style="color:#a6e22e">Response</span>) {
-		<span style="color:#a6e22e">option</span> (<span style="color:#a6e22e">google</span>.<span style="color:#a6e22e">api</span>.<span style="color:#a6e22e">http</span>) = {
-			<span style="color:#a6e22e">post</span>: <span style="color:#e6db74">&#34;/greeter/hello&#34;</span>
-			<span style="color:#a6e22e">body</span>: <span style="color:#e6db74">&#34;*&#34;</span>
-		};
-	}
-}
-
-<span style="color:#75715e">// The request message containing the user&#39;s name.
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">message</span> <span style="color:#a6e22e">Request</span> {
-	<span style="color:#66d9ef">string</span> <span style="color:#a6e22e">name</span> = <span style="color:#ae81ff">1</span>;
-}
-
-<span style="color:#75715e">// The response message containing the greetings
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">message</span> <span style="color:#a6e22e">Response</span> {
-	<span style="color:#66d9ef">string</span> <span style="color:#a6e22e">message</span> = <span style="color:#ae81ff">1</span>;
-}
-
-</code></pre></div><p>Код для gRPC-шлюза будет выглядеть следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
-
-<span style="color:#f92672">import</span> (
-	<span style="color:#e6db74">&#34;context&#34;</span>
-	<span style="color:#e6db74">&#34;flag&#34;</span>
-	<span style="color:#e6db74">&#34;net/http&#34;</span>
-
-	<span style="color:#e6db74">&#34;github.com/golang/glog&#34;</span>
-	<span style="color:#e6db74">&#34;google.golang.org/grpc&#34;</span>
-	<span style="color:#e6db74">&#34;github.com/grpc-ecosystem/grpc-gateway/runtime&#34;</span>
-
-	<span style="color:#a6e22e">hello</span> <span style="color:#e6db74">&#34;./proto/hello&#34;</span>
-)
-
-<span style="color:#66d9ef">var</span> (
-	<span style="color:#a6e22e">endpoint</span> = <span style="color:#a6e22e">flag</span>.<span style="color:#a6e22e">String</span>(<span style="color:#e6db74">&#34;endpoint&#34;</span>, <span style="color:#e6db74">&#34;localhost:50051&#34;</span>, <span style="color:#e6db74">&#34;address&#34;</span>)
-)
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">run</span>() <span style="color:#66d9ef">error</span> {
-	<span style="color:#a6e22e">ctx</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>()
-	<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cancel</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">WithCancel</span>(<span style="color:#a6e22e">ctx</span>)
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">cancel</span>()
-
-	<span style="color:#a6e22e">mux</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">runtime</span>.<span style="color:#a6e22e">NewServeMux</span>()
-	<span style="color:#a6e22e">opts</span> <span style="color:#f92672">:=</span> []<span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">DialOption</span>{<span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">WithInsecure</span>()}
-
-	<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">RegisterSayHandlerFromEndpoint</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">mux</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">endpoint</span>, <span style="color:#a6e22e">opts</span>)
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
-	}
-
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:80&#34;</span>, <span style="color:#a6e22e">mux</span>)
-}
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">flag</span>.<span style="color:#a6e22e">Parse</span>()
-
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">glog</span>.<span style="color:#a6e22e">Flush</span>()
-
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">run</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		<span style="color:#a6e22e">glog</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
-	}
-}
-</code></pre></div><p>Генерация кода из <code>.proto</code> файла для gRPC-gateway потребует на одно действие больше:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">protoc -I/usr/local/include -I. <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	-I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	-I gateway/proto/hello/hello.proto <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--go_out<span style="color:#f92672">=</span>plugins<span style="color:#f92672">=</span>grpc:. <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	gateway/proto/hello/hello.proto
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">protoc -I/usr/local/include -I. <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	-I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	-I gateway/proto/hello/hello.proto <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--grpc-gateway_out<span style="color:#f92672">=</span>logtostderr<span style="color:#f92672">=</span>true:. <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	gateway/proto/hello/hello.proto
-</code></pre></div><p>Приступаем к тестированию, для начала запустим наш сервис:</p>
-<pre><code>go run server/main.go
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir tmp
+</span></span><span style="display:flex;"><span>cd tmp
+</span></span><span style="display:flex;"><span>git clone https://github.com/google/protobuf
+</span></span><span style="display:flex;"><span>cd protobuf
+</span></span><span style="display:flex;"><span>./autogen.sh
+</span></span><span style="display:flex;"><span>./configure
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make check
+</span></span><span style="display:flex;"><span>sudo make install
+</span></span></code></pre></div><p>Или (в моем случае установка выполнялась на MacOS) так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>brew install protobuf
+</span></span></code></pre></div><p>Убедиться, что установка прошла успешно можно с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>protoc --version
+</span></span><span style="display:flex;"><span>libprotoc 3.6.1
+</span></span></code></pre></div><p>Далее устанавливаем необходимые плагины:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+</span></span><span style="display:flex;"><span>go get -u github.com/golang/protobuf/protoc-gen-go
+</span></span></code></pre></div><p>Убедитесь, что <code>${GOPATH}/bin</code> присутствует в вашем <code>${PATH}</code> - в моем случае пришлось выполнить дополнительные команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export GOPATH<span style="color:#f92672">=</span>$HOME/go
+</span></span><span style="display:flex;"><span>export PATH<span style="color:#f92672">=</span>$PATH:$GOPATH/bin
+</span></span></code></pre></div><p>Структура проекта следующая:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tree
+</span></span><span style="display:flex;"><span>.
+</span></span><span style="display:flex;"><span>├── gateway
+</span></span><span style="display:flex;"><span>│   ├── main.go
+</span></span><span style="display:flex;"><span>│   └── proto
+</span></span><span style="display:flex;"><span>│       └── hello
+</span></span><span style="display:flex;"><span>│           └── hello.proto
+</span></span><span style="display:flex;"><span>└── server
+</span></span><span style="display:flex;"><span>    ├── main.go
+</span></span><span style="display:flex;"><span>    └── proto
+</span></span><span style="display:flex;"><span>        └── hello
+</span></span><span style="display:flex;"><span>            └── hello.proto
+</span></span></code></pre></div><p>Для сервиса <code>.proto</code> файл будет выглядеть следующим образом:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#a6e22e">syntax</span> = <span style="color:#e6db74">&#34;proto3&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">hello</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// The greeting service definition.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">service</span> <span style="color:#a6e22e">Say</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Sends a greeting
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rpc</span> <span style="color:#a6e22e">Hello</span>(<span style="color:#a6e22e">Request</span>) <span style="color:#a6e22e">returns</span> (<span style="color:#a6e22e">Response</span>) {}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// The request message containing the user&#39;s name.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">message</span> <span style="color:#a6e22e">Request</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">string</span> <span style="color:#a6e22e">name</span> = <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// The response message containing the greetings
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">message</span> <span style="color:#a6e22e">Response</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">string</span> <span style="color:#a6e22e">message</span> = <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Сам сервис выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;log&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;google.golang.org/grpc&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;google.golang.org/grpc/reflection&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">hello</span> <span style="color:#e6db74">&#34;./proto/hello&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">port</span> = <span style="color:#e6db74">&#34;:50051&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">server</span> <span style="color:#66d9ef">struct</span>{}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">server</span>) <span style="color:#a6e22e">Hello</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">in</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">Request</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">Response</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">Response</span>{<span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;Hello &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">Name</span>}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">lis</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Listen</span>(<span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#a6e22e">port</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;failed to listen: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">NewServer</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">RegisterSayServer</span>(<span style="color:#a6e22e">s</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">server</span>{})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">reflection</span>.<span style="color:#a6e22e">Register</span>(<span style="color:#a6e22e">s</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Serve</span>(<span style="color:#a6e22e">lis</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;failed to serve: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Генерируем с помощью protoc-компилятора код для сервиса (на языке Go, естественно):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>protoc -I/usr/local/include -I. <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	-I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	-I server/proto/hello/hello.proto <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--go_out<span style="color:#f92672">=</span>plugins<span style="color:#f92672">=</span>grpc:. <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	server/proto/hello/hello.proto
+</span></span></code></pre></div><p>Для gRPC-gateway необходимо немного изменить <code>.proto</code> файл (импортируем google.api и добавляем опции к нашему сервису):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#a6e22e">syntax</span> = <span style="color:#e6db74">&#34;proto3&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">hello</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;google/api/annotations.proto&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// The greeting service definition.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">service</span> <span style="color:#a6e22e">Say</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Sends a greeting
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rpc</span> <span style="color:#a6e22e">Hello</span>(<span style="color:#a6e22e">Request</span>) <span style="color:#a6e22e">returns</span> (<span style="color:#a6e22e">Response</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">option</span> (<span style="color:#a6e22e">google</span>.<span style="color:#a6e22e">api</span>.<span style="color:#a6e22e">http</span>) = {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">post</span>: <span style="color:#e6db74">&#34;/greeter/hello&#34;</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">body</span>: <span style="color:#e6db74">&#34;*&#34;</span>
+</span></span><span style="display:flex;"><span>		};
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// The request message containing the user&#39;s name.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">message</span> <span style="color:#a6e22e">Request</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">string</span> <span style="color:#a6e22e">name</span> = <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// The response message containing the greetings
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">message</span> <span style="color:#a6e22e">Response</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">string</span> <span style="color:#a6e22e">message</span> = <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Код для gRPC-шлюза будет выглядеть следующим образом:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;flag&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net/http&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/golang/glog&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;google.golang.org/grpc&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/grpc-ecosystem/grpc-gateway/runtime&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">hello</span> <span style="color:#e6db74">&#34;./proto/hello&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">endpoint</span> = <span style="color:#a6e22e">flag</span>.<span style="color:#a6e22e">String</span>(<span style="color:#e6db74">&#34;endpoint&#34;</span>, <span style="color:#e6db74">&#34;localhost:50051&#34;</span>, <span style="color:#e6db74">&#34;address&#34;</span>)
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">run</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ctx</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cancel</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">WithCancel</span>(<span style="color:#a6e22e">ctx</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">cancel</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mux</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">runtime</span>.<span style="color:#a6e22e">NewServeMux</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">opts</span> <span style="color:#f92672">:=</span> []<span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">DialOption</span>{<span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">WithInsecure</span>()}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">hello</span>.<span style="color:#a6e22e">RegisterSayHandlerFromEndpoint</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">mux</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">endpoint</span>, <span style="color:#a6e22e">opts</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:80&#34;</span>, <span style="color:#a6e22e">mux</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flag</span>.<span style="color:#a6e22e">Parse</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">glog</span>.<span style="color:#a6e22e">Flush</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">run</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">glog</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Генерация кода из <code>.proto</code> файла для gRPC-gateway потребует на одно действие больше:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>protoc -I/usr/local/include -I. <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	-I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	-I gateway/proto/hello/hello.proto <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--go_out<span style="color:#f92672">=</span>plugins<span style="color:#f92672">=</span>grpc:. <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	gateway/proto/hello/hello.proto
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>protoc -I/usr/local/include -I. <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	-I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	-I gateway/proto/hello/hello.proto <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--grpc-gateway_out<span style="color:#f92672">=</span>logtostderr<span style="color:#f92672">=</span>true:. <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	gateway/proto/hello/hello.proto
+</span></span></code></pre></div><p>Приступаем к тестированию, для начала запустим наш сервис:</p>
+<pre tabindex="0"><code>go run server/main.go
 </code></pre><p>Теперь (в отдельной консоли) запускаем непосредственно gRPC-gateway:</p>
-<pre><code>go run gateway/main.go
+<pre tabindex="0"><code>go run gateway/main.go
 </code></pre><p>С помощью утилиты <code>curl</code> пробуем получить ответ от нашего сервиса:</p>
-<pre><code>curl -d '{&quot;name&quot;: &quot;John&quot;}' http://localhost/greeter/hello
-{&quot;message&quot;:&quot;Hello John&quot;}
+<pre tabindex="0"><code>curl -d &#39;{&#34;name&#34;: &#34;John&#34;}&#39; http://localhost/greeter/hello
+{&#34;message&#34;:&#34;Hello John&#34;}
 </code></pre><p>Все использованные в данном примере файлы можно найти в <a href="https://github.com/ealebed/grpc-gw-example">этом</a> репозитории, а больше информации о gRPC можно найти на <a href="https://grpc.io/">официальном сайте</a>.</p>
                 </section>
             </article>
@@ -381,7 +380,7 @@ export PATH<span style="color:#f92672">=</span>$PATH:$GOPATH/bin
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,89 +106,89 @@
 <ul>
 <li>переходим в каталог <code>/etc/munin/plugin-conf.d/</code>:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /etc/munin/plugin-conf.d/
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /etc/munin/plugin-conf.d/
+</span></span></code></pre></div><ul>
 <li>открываем на редактирование конфиг <code>munin-node</code>:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano munin-node
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano munin-node
+</span></span></code></pre></div><ul>
 <li>добавляем в него следующие строки:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-[http_response_median]
-env.domain letsclearitup.com.ua
-env.url1 /
-env.url2 /about
-env.url3 /category/asterisk
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>[http_response_median]
+</span></span><span style="display:flex;"><span>env.domain letsclearitup.com.ua
+</span></span><span style="display:flex;"><span>env.url1 /
+</span></span><span style="display:flex;"><span>env.url2 /about
+</span></span><span style="display:flex;"><span>env.url3 /category/asterisk
+</span></span></code></pre></div><ul>
 <li>далее переходим в каталог <code>/etc/munin/plugins</code>:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /etc/munin/plugins
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /etc/munin/plugins
+</span></span></code></pre></div><ul>
 <li>создаем файл <code>http_response_median</code>:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch http_response_median
-</code></pre></div><p>содержимое <strong>плагина munin</strong> должно быть следующим:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/usr/bin/perl
-</span><span style="color:#75715e"></span>use strict;
- 
-my $domain <span style="color:#f92672">=</span> $ENV<span style="color:#f92672">{</span><span style="color:#e6db74">&#39;domain&#39;</span><span style="color:#f92672">}</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;letsclearitup.com.ua&#34;</span>;
-my @urls;
-my $i <span style="color:#f92672">=</span> 1;
- 
-<span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>defined <span style="color:#f92672">(</span>$ENV<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;url</span>$i<span style="color:#e6db74">&#34;</span><span style="color:#f92672">}))</span> <span style="color:#f92672">{</span>
-    push<span style="color:#f92672">(</span>@urls, $ENV<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;url</span>$i<span style="color:#e6db74">&#34;</span><span style="color:#f92672">})</span>;
-    $i++;
-<span style="color:#f92672">}</span>
-<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>! @urls<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    die <span style="color:#e6db74">&#34;No urls defined\n&#34;</span>;
-<span style="color:#f92672">}</span>
- 
-<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>exists $ARGV<span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> and $ARGV<span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> eq <span style="color:#e6db74">&#34;config&#34;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-    print <span style="color:#e6db74">&#34;graph_title </span>$domain<span style="color:#e6db74"> Page response times by curl\n&#34;</span>;
-    print <span style="color:#e6db74">&#34;graph_category apache\n&#34;</span>;
-    print <span style="color:#e6db74">&#34;graph_vlabel request time (ms)\n&#34;</span>;
-    print <span style="color:#e6db74">&#34;graph_info Response times of </span>$domain<span style="color:#e6db74">.\n&#34;</span>;
- 
-    foreach my $url <span style="color:#f92672">(</span>@urls<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-  my $label <span style="color:#f92672">=</span> $url; 
-  $label <span style="color:#f92672">=</span>~ s@<span style="color:#f92672">[</span><span style="color:#ae81ff">\/</span>-<span style="color:#f92672">]</span>@_@g;
-  print <span style="color:#e6db74">&#34;</span>$label<span style="color:#e6db74">.label </span>$url<span style="color:#e6db74">\n&#34;</span>;
-  print <span style="color:#e6db74">&#34;</span>$label<span style="color:#e6db74">.type GAUGE\n&#34;</span>;
-    <span style="color:#f92672">}</span>
-    exit 0;
-<span style="color:#f92672">}</span>
- 
-sub get_url <span style="color:#f92672">{</span>
-    my $cur_url <span style="color:#f92672">=</span> $_<span style="color:#f92672">[</span>0<span style="color:#f92672">]</span>;
-    my $content <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span>/usr/bin/curl -s -w %<span style="color:#f92672">{</span>time_total<span style="color:#f92672">}</span><span style="color:#ae81ff">\\</span>n -o /dev/null <span style="color:#e6db74">&#34;</span>$cur_url<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">`</span>;
-<span style="color:#f92672">}</span>
- 
-foreach <span style="color:#f92672">(</span>@urls<span style="color:#f92672">){</span>
-    my $value <span style="color:#f92672">=</span> $_;
-    my $summary <span style="color:#f92672">=</span> 0;
-    my $url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://&#34;</span>.$domain.$value;
-    my @time;
-    <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>$i<span style="color:#f92672">=</span>0; $i&lt;5;$i++<span style="color:#f92672">){</span>
-  $time<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> get_url<span style="color:#f92672">(</span>$url<span style="color:#f92672">)</span>;
-  my $counter <span style="color:#f92672">=</span> <span style="color:#ae81ff">1000</span> * $time<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>;
-  $summary +<span style="color:#f92672">=</span> $counter;
-    <span style="color:#f92672">}</span>
-    $value <span style="color:#f92672">=</span>~ s@<span style="color:#f92672">[</span><span style="color:#ae81ff">\/</span>-<span style="color:#f92672">]</span>@_@g;
-    print $value.<span style="color:#e6db74">&#34;.value &#34;</span>.<span style="color:#f92672">(</span>$summary/5<span style="color:#f92672">)</span>.<span style="color:#e6db74">&#34;\n&#34;</span>;
-<span style="color:#f92672">}</span>;
- 
-exit 0;
-</code></pre></div><p><strong>Примечание.</strong> Для получения более объективного значения времени отклика сайта делаем 5 замеров и выводим среднее значение.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>touch http_response_median
+</span></span></code></pre></div><p>содержимое <strong>плагина munin</strong> должно быть следующим:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/perl
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>use strict;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>my $domain <span style="color:#f92672">=</span> $ENV<span style="color:#f92672">{</span><span style="color:#e6db74">&#39;domain&#39;</span><span style="color:#f92672">}</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;letsclearitup.com.ua&#34;</span>;
+</span></span><span style="display:flex;"><span>my @urls;
+</span></span><span style="display:flex;"><span>my $i <span style="color:#f92672">=</span> 1;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>defined <span style="color:#f92672">(</span>$ENV<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;url</span>$i<span style="color:#e6db74">&#34;</span><span style="color:#f92672">}))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    push<span style="color:#f92672">(</span>@urls, $ENV<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;url</span>$i<span style="color:#e6db74">&#34;</span><span style="color:#f92672">})</span>;
+</span></span><span style="display:flex;"><span>    $i++;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>! @urls<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    die <span style="color:#e6db74">&#34;No urls defined\n&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>exists $ARGV<span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> and $ARGV<span style="color:#f92672">[</span>0<span style="color:#f92672">]</span> eq <span style="color:#e6db74">&#34;config&#34;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    print <span style="color:#e6db74">&#34;graph_title </span>$domain<span style="color:#e6db74"> Page response times by curl\n&#34;</span>;
+</span></span><span style="display:flex;"><span>    print <span style="color:#e6db74">&#34;graph_category apache\n&#34;</span>;
+</span></span><span style="display:flex;"><span>    print <span style="color:#e6db74">&#34;graph_vlabel request time (ms)\n&#34;</span>;
+</span></span><span style="display:flex;"><span>    print <span style="color:#e6db74">&#34;graph_info Response times of </span>$domain<span style="color:#e6db74">.\n&#34;</span>;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    foreach my $url <span style="color:#f92672">(</span>@urls<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  my $label <span style="color:#f92672">=</span> $url; 
+</span></span><span style="display:flex;"><span>  $label <span style="color:#f92672">=</span>~ s@<span style="color:#f92672">[</span><span style="color:#ae81ff">\/</span>-<span style="color:#f92672">]</span>@_@g;
+</span></span><span style="display:flex;"><span>  print <span style="color:#e6db74">&#34;</span>$label<span style="color:#e6db74">.label </span>$url<span style="color:#e6db74">\n&#34;</span>;
+</span></span><span style="display:flex;"><span>  print <span style="color:#e6db74">&#34;</span>$label<span style="color:#e6db74">.type GAUGE\n&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    exit 0;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>sub get_url <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    my $cur_url <span style="color:#f92672">=</span> $_<span style="color:#f92672">[</span>0<span style="color:#f92672">]</span>;
+</span></span><span style="display:flex;"><span>    my $content <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span>/usr/bin/curl -s -w %<span style="color:#f92672">{</span>time_total<span style="color:#f92672">}</span><span style="color:#ae81ff">\\</span>n -o /dev/null <span style="color:#e6db74">&#34;</span>$cur_url<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>foreach <span style="color:#f92672">(</span>@urls<span style="color:#f92672">){</span>
+</span></span><span style="display:flex;"><span>    my $value <span style="color:#f92672">=</span> $_;
+</span></span><span style="display:flex;"><span>    my $summary <span style="color:#f92672">=</span> 0;
+</span></span><span style="display:flex;"><span>    my $url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://&#34;</span>.$domain.$value;
+</span></span><span style="display:flex;"><span>    my @time;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>$i<span style="color:#f92672">=</span>0; $i&lt;5;$i++<span style="color:#f92672">){</span>
+</span></span><span style="display:flex;"><span>  $time<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> get_url<span style="color:#f92672">(</span>$url<span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>  my $counter <span style="color:#f92672">=</span> <span style="color:#ae81ff">1000</span> * $time<span style="color:#f92672">[</span>$i<span style="color:#f92672">]</span>;
+</span></span><span style="display:flex;"><span>  $summary +<span style="color:#f92672">=</span> $counter;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    $value <span style="color:#f92672">=</span>~ s@<span style="color:#f92672">[</span><span style="color:#ae81ff">\/</span>-<span style="color:#f92672">]</span>@_@g;
+</span></span><span style="display:flex;"><span>    print $value.<span style="color:#e6db74">&#34;.value &#34;</span>.<span style="color:#f92672">(</span>$summary/5<span style="color:#f92672">)</span>.<span style="color:#e6db74">&#34;\n&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>exit 0;
+</span></span></code></pre></div><p><strong>Примечание.</strong> Для получения более объективного значения времени отклика сайта делаем 5 замеров и выводим среднее значение.</p>
 <ul>
 <li>делаем файл <code>http_response_median</code> исполняемым:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod +x http_response_median
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x http_response_median
+</span></span></code></pre></div><ul>
 <li>и перезапускаем <code>munin-node</code>:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/munin-node restart
-</code></pre></div><p>На этом <strong>написание плагина для munin</strong> закончено, и через некоторое время можно будет увидеть результаты в виде графика.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/munin-node restart
+</span></span></code></pre></div><p>На этом <strong>написание плагина для munin</strong> закончено, и через некоторое время можно будет увидеть результаты в виде графика.</p>
                 </section>
             </article>
 
@@ -280,7 +280,7 @@ exit 0;
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

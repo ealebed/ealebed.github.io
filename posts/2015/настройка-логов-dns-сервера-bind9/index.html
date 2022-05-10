@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,37 +100,37 @@
                 <section id="post-body">
                     <p>По умолчанию, демон <code>named</code> пишет свои логи в файл <code>/var/log/syslog</code>. Таких записей может быть очень много, из-за чего отыскать что-нибудь важное в системном логе просто нереально. Давайте разберемся, как заставить <code>named</code> писать свои логи отдельно!</p>
 <p>Прежде всего создаем каталог, в котором будут находиться логи:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /var/log/bind/
-</code></pre></div><p>Переходим в созданный каталог, создаем два файла (<code>query.log</code> и <code>misc.log</code>) для логов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /var/log/bind/
-touch query.log
-touch misc.log
-</code></pre></div><p>Меняем владельца каталога и находящихся в нем файлов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chown -R bind:bind /var/log/bind/
-</code></pre></div><p>Редактируем конфигурационный файл DNS-сервера <code>/etc/bind/named.conf</code>, добавляя следующие строки:</p>
-<pre><code>logging {
-   channel &quot;misc&quot; {
-      file &quot;/var/log/bind/misc.log&quot; versions 4 size 4m;
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir /var/log/bind/
+</span></span></code></pre></div><p>Переходим в созданный каталог, создаем два файла (<code>query.log</code> и <code>misc.log</code>) для логов:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /var/log/bind/
+</span></span><span style="display:flex;"><span>touch query.log
+</span></span><span style="display:flex;"><span>touch misc.log
+</span></span></code></pre></div><p>Меняем владельца каталога и находящихся в нем файлов:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chown -R bind:bind /var/log/bind/
+</span></span></code></pre></div><p>Редактируем конфигурационный файл DNS-сервера <code>/etc/bind/named.conf</code>, добавляя следующие строки:</p>
+<pre tabindex="0"><code>logging {
+   channel &#34;misc&#34; {
+      file &#34;/var/log/bind/misc.log&#34; versions 4 size 4m;
       print-time YES;
       print-severity YES;
       print-category YES;
    };
-   channel &quot;query&quot; {
-      file &quot;/var/log/bind/query.log&quot; versions 4 size 4m;
+   channel &#34;query&#34; {
+      file &#34;/var/log/bind/query.log&#34; versions 4 size 4m;
       print-time YES;
       print-severity NO;
       print-category NO;
    };
    category default {
-      &quot;misc&quot;;
+      &#34;misc&#34;;
    };
    category queries {
-      &quot;query&quot;;
+      &#34;query&#34;;
    };
 };
 </code></pre><p>Перезапускаем DNS-сервер командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/bind9 restart
-</code></pre></div><p>На этом все, логи DNS-сервера <code>bind9</code> будут писаться в отдельные файлы, а <code>/var/log/syslog</code> станет гораздо чище!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/bind9 restart
+</span></span></code></pre></div><p>На этом все, логи DNS-сервера <code>bind9</code> будут писаться в отдельные файлы, а <code>/var/log/syslog</code> станет гораздо чище!</p>
                 </section>
             </article>
 
@@ -222,7 +222,7 @@ touch misc.log
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

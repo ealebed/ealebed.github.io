@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,14 +100,14 @@
                 <section id="post-body">
                     <p>Большинство действий в наборах инструкций <strong>системы управления конфигурациями Ansible</strong> следует выполнять с привилегиями суперпользователя. Давайте разберемся с вариантами ввода <code>sudo</code>-пароля при выполнении playbook’ов!</p>
 <p>Самый простой способ — отключить необходимость ввода пароля при использовании <code>sudo</code>. Делается это в конфигурационном файле <code>/etc/sudoers</code>, где нужно добавить (или раскомментировать) строку:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 %sudo ALL=(ALL:ALL) NOPASSWD: ALL
 ...
 </code></pre><p>Второй вариант — использовать дополнительные параметры при запуске набора инструкций. Чтобы <strong>Ansible</strong> в нужный момент попросил ввести <code>sudo</code>-пароль, в старых версиях (&lt; 1.9) следует использовать параметр <code>-—ask-sudo-pass</code> (или <code>-K</code>), а в версии <strong>Ansible</strong> старше 1.9 параметр <code>--ask-become-pass</code>, например:</p>
-<pre><code>ansible-playbook playbooks/useradd.yml --ask-become-pass
+<pre tabindex="0"><code>ansible-playbook playbooks/useradd.yml --ask-become-pass
 </code></pre><p>Бывают случаи, когда не подходит ни один из предложенных вариантов — отключать ввод пароля при использовании <code>sudo</code> небезопасно, а вводить пароль на каждое действие при выполнении набора инструкций неудобно (к тому же, можно ошибиться при ручном вводе).</p>
 <p>Я использовал третий вариант — добавил буквально пару строк в инвентарном файле, теперь он выглядит следующим образом:</p>
-<pre><code>[all:vars]
+<pre tabindex="0"><code>[all:vars]
 ansible_sudo_pass=VeryStrongPassword
  
 [webservers]
@@ -138,14 +138,14 @@ earth
 </ul>
 <p>Если хочется еще больше «безопасности» и зашифрованный пароль, то следует использовать <a href="https://docs.ansible.com/playbooks_vault.html"><code>ansible-vault</code></a>.</p>
 <p>Сначала создадим файл, в котором будет храниться пароль для получения привилегий суперпользователя:</p>
-<pre><code>ansible-vault create secret
+<pre tabindex="0"><code>ansible-vault create secret
 </code></pre><p>В созданный файл <code>secret</code> следует добавить строку вида:</p>
-<pre><code>ansible_sudo_pass: VeryStrongPassword
+<pre tabindex="0"><code>ansible_sudo_pass: VeryStrongPassword
 </code></pre><p>И, так как мы все равно не хотим вводить пароль при запуске плейбука (даже пароль <code>ansible-vault</code>), то создадим файл <code>vault.txt</code> (не забываем выставить корректные права доступа):</p>
-<pre><code>touch vault.txt
+<pre tabindex="0"><code>touch vault.txt
 </code></pre><p>В котором в текстовом виде запишем свой пароль от <code>ansible-vault</code>.</p>
 <p>Далее приводим playbook к примерно такому виду:</p>
-<pre><code>---
+<pre tabindex="0"><code>---
 - hosts: all
   become: yes
  
@@ -157,9 +157,9 @@ earth
     user: name=admin groups=sudo shell=/bin/bash password=$7$ZIJUvGwr$empMJ4r1JUGcxmjxtTBfTpIdO95JBTJO2/BtD23F2Rfeg2rqN.8t1v3ePPXVl.W7yal2fvrtbJ0T18YwCXmbh0
  
   - name: Add SSH keys to remote hosts
-    authorized_key: user=admin key=&quot;{{ lookup('file', &quot;~/Downloads/key.pub&quot;) }}&quot;
+    authorized_key: user=admin key=&#34;{{ lookup(&#39;file&#39;, &#34;~/Downloads/key.pub&#34;) }}&#34;
 </code></pre><p>Теперь можно запускать выполнение набора инструкций командой:</p>
-<pre><code>ansible-playbook playbooks/useradd.yml --vault-password-file=vault.txt
+<pre tabindex="0"><code>ansible-playbook playbooks/useradd.yml --vault-password-file=vault.txt
 </code></pre>
                 </section>
             </article>
@@ -252,7 +252,7 @@ earth
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,18 +102,18 @@
                 <section id="post-body">
                     <p>Появилась необходимость запуска <code>x11vnc</code> в ОС Kubuntu 16.04 еще до момента логина пользователя. Давайте разберемся!</p>
 <p>Запускать <code>x11vnc</code> будем с помощью <code>systemd</code>. Для этого создаем файл <code>/etc/systemd/system/x11vnc.service</code> следующего содержания:</p>
-<pre><code>[Unit]
+<pre tabindex="0"><code>[Unit]
 Description=Start x11vnc server at startup
 After=graphical.target
  
 [Service]
 Type=simple
-ExecStart=-/bin/bash -c &quot;/usr/local/sbin/x11vnc_start_script&quot;
+ExecStart=-/bin/bash -c &#34;/usr/local/sbin/x11vnc_start_script&#34;
  
 [Install]
 WantedBy=graphical.target
 </code></pre><p>Дополнительно создаем скрипт (и делаем его исполняемым) <code>/usr/local/sbin/x11vnc_start_script</code> с таким содержимым:</p>
-<pre><code>#!/bin/bash
+<pre tabindex="0"><code>#!/bin/bash
  
 while true
 do
@@ -121,8 +121,8 @@ do
     /usr/bin/x11vnc -display :0 -auth $(ls /var/run/sddm/{*}) -noxdamage -shared -rfbauth ~/.vnc/passwd -o /var/log/x11vnc.log -notruecolor -rfbport 5900
 done
 </code></pre><p>Не забываем включить и запустить сервис <code>x11vnc</code>:</p>
-<pre><code>systemctl enable x11vnc.service
-</code></pre><pre><code>systemctl start x11vnc.service
+<pre tabindex="0"><code>systemctl enable x11vnc.service
+</code></pre><pre tabindex="0"><code>systemctl start x11vnc.service
 </code></pre><p>Итак, <code>x11vnc</code> будет запускаться с параметром <code>-auth</code>, который принимает в качестве аргумента имя файла <code>xauthority</code> (это имя меняется каждую сессию). Также любопытным параметром является <code>-rfbauth</code>, который в качестве аргумента принимает файл с паролем, использующимся для подключения к <code>x11vnc</code>-серверу.</p>
                 </section>
             </article>
@@ -215,7 +215,7 @@ done
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

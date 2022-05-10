@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,30 +106,30 @@
 <p>Для работы с хранилищем <strong>Amazon S3</strong> утилита <code>s4cmd</code> поддерживает только 8 команд (<code>ls</code>, <code>put</code>, <code>get</code>, <code>cp</code>, <code>mv</code>, <code>sync</code>, <code>del</code>, <code>du</code>), в то время как <code>s3cmd</code> позволяет использовать 32(!) команды. Аналогичная ситуация и с поддерживаемыми опциями — 5 параметров в <code>s4cmd</code> (<code>--recursive</code>, <code>--show-directory</code>, <code>--sync-check</code>, <code>--force</code>, <code>--dry-run</code>) против 70 параметров в <code>s3cmd</code> (полный список <a href="http://s3tools.org/usage">здесь</a>).</p>
 <p>Единственной причиной, по которой стоит использовать утилиту <code>s4cmd</code> для работы с <strong>Amazon S3</strong> является скорость — выгрузка/загрузка файлов происходит почти в два раза быстрее.</p>
 <p>Для установки утилиты нам понадобятся <code>python-pip</code> и <code>boto</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install python-pip
-pip install boto
-</code></pre></div><p>Для установки утилиты <code>s4cmd</code> можно использовать два варианта. Первый вариант:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pip install s4cmd
-</code></pre></div><p>Второй вариант:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd ~ <span style="color:#f92672">&amp;&amp;</span> git clone https://github.com/bloomreach/s4cmd.git
-cp -r s4cmd/s4cmd.py /usr/bin/
-</code></pre></div><p>Запускать утилиту будем как <code>s4cmd</code>, а не <code>s4cmd.py</code>, следовательно нужно создать симлинк:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ln -s /usr/bin/s4cmd.py /usr/bin/s4cmd
-</code></pre></div><p><strong>Примечание.</strong> Считаем, что уже есть конфигурационный файл <code>~/.s3cfg</code>, который мы создавали в <a href="https://ealebed.github.io/posts/2015/%D1%83%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D0%B0-s3cmd-%D0%B4%D0%BB%D1%8F-amazon-simple-storage-service/">этой статье</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>aptitude install python-pip
+</span></span><span style="display:flex;"><span>pip install boto
+</span></span></code></pre></div><p>Для установки утилиты <code>s4cmd</code> можно использовать два варианта. Первый вариант:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install s4cmd
+</span></span></code></pre></div><p>Второй вариант:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~ <span style="color:#f92672">&amp;&amp;</span> git clone https://github.com/bloomreach/s4cmd.git
+</span></span><span style="display:flex;"><span>cp -r s4cmd/s4cmd.py /usr/bin/
+</span></span></code></pre></div><p>Запускать утилиту будем как <code>s4cmd</code>, а не <code>s4cmd.py</code>, следовательно нужно создать симлинк:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ln -s /usr/bin/s4cmd.py /usr/bin/s4cmd
+</span></span></code></pre></div><p><strong>Примечание.</strong> Считаем, что уже есть конфигурационный файл <code>~/.s3cfg</code>, который мы создавали в <a href="https://ealebed.github.io/posts/2015/%D1%83%D1%82%D0%B8%D0%BB%D0%B8%D1%82%D0%B0-s3cmd-%D0%B4%D0%BB%D1%8F-amazon-simple-storage-service/">этой статье</a>.</p>
 <p>Проверяем работу утилиты <code>s4cmd</code> с хранилищем <strong>Amazon S3</strong>:</p>
 <ul>
 <li>выгружаем файл с локального компьютера:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">s4cmd put mysql_20150831.sql s3://test_bucket/mysql_20150831.sql
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>s4cmd put mysql_20150831.sql s3://test_bucket/mysql_20150831.sql
+</span></span></code></pre></div><ul>
 <li>проверяем содержимое хранилища <strong>Amazon S3</strong>:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">s4cmd ls s3://test_bucket/
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>s4cmd ls s3://test_bucket/
+</span></span></code></pre></div><ul>
 <li>скачиваем файл с хранилища <strong>Amazon S3</strong> на локальный компьютер:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">s4cmd get s3://test_bucket/mysql_20150831.sql /home/mysql_20150831_from_s3.sql
-</code></pre></div><p><strong>Примечание.</strong> Утилита <code>s4cmd</code> не поддерживает команду <code>mb</code> (создание корзин), поэтому работаем с корзиной, которую создавали утилитой <code>s3cmd</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>s4cmd get s3://test_bucket/mysql_20150831.sql /home/mysql_20150831_from_s3.sql
+</span></span></code></pre></div><p><strong>Примечание.</strong> Утилита <code>s4cmd</code> не поддерживает команду <code>mb</code> (создание корзин), поэтому работаем с корзиной, которую создавали утилитой <code>s3cmd</code>.</p>
 <p>По результатам использования утилит могу сказать следующее — <code>s4cmd</code> действительно работает быстрее, но <code>s3cmd</code> — стабильнее.</p>
                 </section>
             </article>
@@ -222,7 +222,7 @@ cp -r s4cmd/s4cmd.py /usr/bin/
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

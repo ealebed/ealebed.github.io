@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -105,7 +105,7 @@
 Для совершения таких звонков можно использовать протокол H.323 или более распространенный и перспективный протокол SIP. За счет простоты реализации, связь по протоколу SIP становится все более популярной услугой, которую предоставляют множество провайдеров Интернет-телефонии.</p>
 <p>Поддержка протокола SIP в Asterisk встроена по умолчанию, поэтому как только мы заключим договор с провайдером и получим от него учетные данные, можно сразу же приступать к <strong>настройке входящих и исходящих звонков</strong>.</p>
 <p>Для этого откроем файл <code>/etc/asterisk/sip.conf</code> и в секции <code>[general]</code> добавим определение <code>register</code> в следующем формате:</p>
-<pre><code>register =&gt; user [:secret[:authuser]] @host [:port] [/extension]
+<pre tabindex="0"><code>register =&gt; user [:secret[:authuser]] @host [:port] [/extension]
 </code></pre><ul>
 <li><code>user</code> — идентификатор пользователя, используемый SIP-сервером (например, лицевой счет);</li>
 <li><code>authuser</code> — необязательное имя пользователя для авторизации на SIP-сервере;</li>
@@ -115,14 +115,14 @@
 <li><code>extension</code> — номер екстеншена для приема вызовов в вашем Asterisk’е.</li>
 </ul>
 <p>В нашем случае получится примерно следующее:</p>
-<pre><code>register =&gt; номер_лс_1:очень_сложный_пароль@62.64.127.43/номер_лс_1
+<pre tabindex="0"><code>register =&gt; номер_лс_1:очень_сложный_пароль@62.64.127.43/номер_лс_1
 register =&gt; номер_лс_2:очень_сложный_пароль@62.64.127.43/номер_лс_2
 </code></pre><p><strong>Примечание.</strong> На мой взгляд, использование незашифрованных паролей в текстовом файле — не самая удачная идея, но что уж тут поделать…</p>
 <p>Для каждого SIP-сервера нужно создать свою секцию в файле <code>/etc/asterisk/sip.conf</code>, в которой должны быть описаны его параметры. В данном примере используется один SIP-сервер провайдера, но с двумя разными телефонными номерами (лицевыми счетами) — киевским и днепропетровским. Следовательно, будем использовать шаблоны, как мы уже делали <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B2%D0%BD%D1%83%D1%82%D1%80%D0%B5%D0%BD%D0%BD%D0%B8%D1%85-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%BE%D0%B2/">ранее</a>.</p>
 <ul>
 <li>сначала создаем шаблон (общие параметры для всех лицевых счетов провайдера):</li>
 </ul>
-<pre><code>[beeline](!)
+<pre tabindex="0"><code>[beeline](!)
 type=friend
 host=62.64.127.43
 dtmfmode=inband
@@ -132,7 +132,7 @@ context=beeline-in
 </code></pre><ul>
 <li>теперь указываем отдельные параметры для каждого лицевого счета:</li>
 </ul>
-<pre><code>[bee56](beeline)
+<pre tabindex="0"><code>[bee56](beeline)
 username=номер_лс_1
 secret=очень_сложный_пароль
 fromuser=номер_лс_1
@@ -141,10 +141,10 @@ username=номер_лс_2
 secret=очень_сложный_пароль
 fromuser=номер_лс_2
 </code></pre><p>Для совершения <strong>входящих и исходящих звонков</strong> через SIP-сервер данного провайдера необходимо также изменить номерной план. В большинстве инструкций, которые мне доводилось встречать, исходящие звонки предлагают настраивать через дополнительную цифру (например, 9) и примерно следующую строку в файле <code>/etc/asterisk/extensions.conf</code>:</p>
-<pre><code>exten =&gt; _9.,1,Dial(SIP/${EXTEN:1}@beeline,30,r)
+<pre tabindex="0"><code>exten =&gt; _9.,1,Dial(SIP/${EXTEN:1}@beeline,30,r)
 </code></pre><p><strong>Примечание.</strong> Конструкция <code>${EXTEN:1}</code> извлекает содержимое переменной за исключением первой цифры, в которой содержится вызываемый екстеншен.</p>
 <p>Но так как у нас два телефонных номера, разумнее и экономнее будет разделить исходящие звонки по коду города. Еще мы умеем записывать телефонные звонки, поэтому в нашем случае в <strong>номерной план Asterisk’а</strong> нужно добавить следующие строки:</p>
-<pre><code>; звонки на киев
+<pre tabindex="0"><code>; звонки на киев
 exten =&gt; _044[1-9].,1,Set(fname=${STRFTIME(${EPOCH},,%Y%m%d)}-${UNIQUEID})
 exten =&gt; _044[1-9].,n,MixMonitor(/var/spool/asterisk/monitor/${fname}.wav)
 exten =&gt; _044[1-9].,n,Set(AUDIOHOOK_INHERIT(MixMonitor)=yes)
@@ -168,7 +168,7 @@ exten =&gt; s,n(BUSY),Busy()
 exten =&gt; s,n(NOANSWER),Hangup()
 exten =&gt; s,n,Hangup
 </code></pre><p>Входящие звонки на выданные SIP-провайдером номера (441233211 и 561233211) будем принимать в контекст <code>[beeline-in]</code>. Его можно сконфигурировать примерно так:</p>
-<pre><code>[beeline-in]
+<pre tabindex="0"><code>[beeline-in]
 exten =&gt; 441233211,1,Goto(office-in,s,1)
 exten =&gt; 561233211,1,Goto(office-in,s,1)
  
@@ -286,7 +286,7 @@ exten =&gt; s,n,Hangup()
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

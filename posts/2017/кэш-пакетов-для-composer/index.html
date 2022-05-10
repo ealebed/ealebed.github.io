@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -105,59 +105,59 @@
 <p>Проблема заключается в частой установке одних и тех же пакетов. Каждая новая установка проекта, это обращение к packagist.org для нахождения источников зависимостей вашего пакета, зависимостей зависимостей и т.д. и скачивание необходимых пакетов. Конечно, у Composer есть встроенный кэш, но он хранится в <code>~/.composer/cache</code>, индивидуален для каждого пользователя и не доступен для других разработчиков, QA и окружений разработки.</p>
 <p><a href="https://github.com/composer/satis">Satis</a> — статическое хранилище Composer пакетов, ультра-легкая версия Packagist, которая также может быть использована для размещения приватных пакетов вашей компании.</p>
 <p>Поднимать локальную версию хранилища пакетов будем с помощью docker-контейнера, сам контейнер будет запускаться с помощью файла <code>docker-compose.yml</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#34;2&#34;</span>
-<span style="color:#f92672">services</span>:
-  <span style="color:#f92672">satis</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">ealebed/satis:1.0</span>
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">satis</span>
-    <span style="color:#f92672">hostname</span>: <span style="color:#ae81ff">satis</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#e6db74">&#34;/srv/satis/COMPOSER_CACHE:/root/.composer&#34;</span>
-      - <span style="color:#e6db74">&#34;/srv/satis/satis.json:/app/config.json&#34;</span>
-      - <span style="color:#e6db74">&#34;/srv/satis/dist:/satisfy/web/dist&#34;</span>
-      - <span style="color:#e6db74">&#34;/srv/satis/include:/satisfy/web/include&#34;</span>
-    <span style="color:#f92672">environment</span>:
-      <span style="color:#f92672">CRONTAB_FREQUENCY</span>: <span style="color:#e6db74">&#34;*/10 * * * *&#34;</span>
-      <span style="color:#f92672">VIRTUAL_HOST</span>: <span style="color:#ae81ff">satis.lc</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#ae81ff">3333</span>:<span style="color:#ae81ff">3000</span>
-      - <span style="color:#ae81ff">8181</span>:<span style="color:#ae81ff">80</span>
-</code></pre></div><p>Перед запуском docker-контейнера в каталоге <code>/srv/satis/www</code> на хост-машине создаем конфигурационный файл <code>satis.json</code> примерно с таким содержимым:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
-    <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;Satis&#34;</span>,
-    <span style="color:#f92672">&#34;homepage&#34;</span>: <span style="color:#e6db74">&#34;http://satis.lc:8181&#34;</span>,
-    <span style="color:#f92672">&#34;archive&#34;</span>: {
-        <span style="color:#f92672">&#34;directory&#34;</span>: <span style="color:#e6db74">&#34;dist&#34;</span>,
-        <span style="color:#f92672">&#34;format&#34;</span>: <span style="color:#e6db74">&#34;zip&#34;</span>,
-        <span style="color:#f92672">&#34;skip-dev&#34;</span>: <span style="color:#66d9ef">false</span>
-    },
-    <span style="color:#f92672">&#34;repositories&#34;</span>: [
-    {
-      <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;composer&#34;</span>,
-      <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;https://packagist.org&#34;</span>
-    }
-  ],
-    <span style="color:#f92672">&#34;require&#34;</span>: {
-        <span style="color:#f92672">&#34;league/fractal&#34;</span>: <span style="color:#e6db74">&#34;^0.15.0&#34;</span>,
-        <span style="color:#f92672">&#34;psr/container&#34;</span>: <span style="color:#e6db74">&#34;^1.0&#34;</span>,
-        <span style="color:#f92672">&#34;roave/security-advisories&#34;</span>: <span style="color:#e6db74">&#34;dev-master&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-component-installer&#34;</span>: <span style="color:#e6db74">&#34;^1.0 || ^0.7.0&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-config-aggregator&#34;</span>: <span style="color:#e6db74">&#34;^0.2.0&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-expressive&#34;</span>: <span style="color:#e6db74">&#34;^2.0.2&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-expressive-fastroute&#34;</span>: <span style="color:#e6db74">&#34;^2.0&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-expressive-helpers&#34;</span>: <span style="color:#e6db74">&#34;^4.0&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-http&#34;</span>: <span style="color:#e6db74">&#34;^2.6&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-log&#34;</span>: <span style="color:#e6db74">&#34;^2.9&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-servicemanager&#34;</span>: <span style="color:#e6db74">&#34;^3.3&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-stdlib&#34;</span>: <span style="color:#e6db74">&#34;^3.1&#34;</span>,
-        <span style="color:#f92672">&#34;phpunit/phpunit&#34;</span>: <span style="color:#e6db74">&#34;^6.0.8 || ^5.7.15&#34;</span>,
-        <span style="color:#f92672">&#34;squizlabs/php_codesniffer&#34;</span>: <span style="color:#e6db74">&#34;^2.8.1&#34;</span>,
-        <span style="color:#f92672">&#34;zfcampus/zf-development-mode&#34;</span>: <span style="color:#e6db74">&#34;^3.1&#34;</span>,
-        <span style="color:#f92672">&#34;zendframework/zend-expressive-tooling&#34;</span>: <span style="color:#e6db74">&#34;^0.3.2&#34;</span>
-    },
-    <span style="color:#f92672">&#34;require-dependencies&#34;</span>: <span style="color:#66d9ef">true</span>
-}
-</code></pre></div><p>Здесь:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#34;2&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">satis</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">ealebed/satis:1.0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">satis</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">hostname</span>: <span style="color:#ae81ff">satis</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;/srv/satis/COMPOSER_CACHE:/root/.composer&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;/srv/satis/satis.json:/app/config.json&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;/srv/satis/dist:/satisfy/web/dist&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;/srv/satis/include:/satisfy/web/include&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">environment</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">CRONTAB_FREQUENCY</span>: <span style="color:#e6db74">&#34;*/10 * * * *&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">VIRTUAL_HOST</span>: <span style="color:#ae81ff">satis.lc</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">3333</span>:<span style="color:#ae81ff">3000</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">8181</span>:<span style="color:#ae81ff">80</span>
+</span></span></code></pre></div><p>Перед запуском docker-контейнера в каталоге <code>/srv/satis/www</code> на хост-машине создаем конфигурационный файл <code>satis.json</code> примерно с таким содержимым:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;Satis&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;homepage&#34;</span>: <span style="color:#e6db74">&#34;http://satis.lc:8181&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;archive&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;directory&#34;</span>: <span style="color:#e6db74">&#34;dist&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;format&#34;</span>: <span style="color:#e6db74">&#34;zip&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;skip-dev&#34;</span>: <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;repositories&#34;</span>: [
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;composer&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;https://packagist.org&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  ],
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;require&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;league/fractal&#34;</span>: <span style="color:#e6db74">&#34;^0.15.0&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;psr/container&#34;</span>: <span style="color:#e6db74">&#34;^1.0&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;roave/security-advisories&#34;</span>: <span style="color:#e6db74">&#34;dev-master&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-component-installer&#34;</span>: <span style="color:#e6db74">&#34;^1.0 || ^0.7.0&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-config-aggregator&#34;</span>: <span style="color:#e6db74">&#34;^0.2.0&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-expressive&#34;</span>: <span style="color:#e6db74">&#34;^2.0.2&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-expressive-fastroute&#34;</span>: <span style="color:#e6db74">&#34;^2.0&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-expressive-helpers&#34;</span>: <span style="color:#e6db74">&#34;^4.0&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-http&#34;</span>: <span style="color:#e6db74">&#34;^2.6&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-log&#34;</span>: <span style="color:#e6db74">&#34;^2.9&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-servicemanager&#34;</span>: <span style="color:#e6db74">&#34;^3.3&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-stdlib&#34;</span>: <span style="color:#e6db74">&#34;^3.1&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;phpunit/phpunit&#34;</span>: <span style="color:#e6db74">&#34;^6.0.8 || ^5.7.15&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;squizlabs/php_codesniffer&#34;</span>: <span style="color:#e6db74">&#34;^2.8.1&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zfcampus/zf-development-mode&#34;</span>: <span style="color:#e6db74">&#34;^3.1&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;zendframework/zend-expressive-tooling&#34;</span>: <span style="color:#e6db74">&#34;^0.3.2&#34;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;require-dependencies&#34;</span>: <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Здесь:</p>
 <ul>
 <li><code>name:</code> имя локального хранилища;</li>
 <li><code>homepage:</code> линк по которому будет доступна <code>/srv/satis/web</code> директория;</li>
@@ -170,106 +170,106 @@
 <li><code>require-dependencies:</code> нужно ли скачивать зависимости зависимостей. Опять же, для полной независимости ставим <code>true</code>;</li>
 </ul>
 <p>Теперь, находясь в каталоге с конфигурационным файлом <code>docker-compose.yml</code> выполняем команду:</p>
-<pre><code class="language-bahs" data-lang="bahs">docker-compose up -d
+<pre tabindex="0"><code class="language-bahs" data-lang="bahs">docker-compose up -d
 </code></pre><p>При первом запуске контейнера будет скачаны и упакованы все зависимости (и их зависимости), указанные в секции <code>&quot;require&quot;: { }</code>. Если их много, то процесс займет довольно продолжительное время, поэтому можно наблюдать за прогрессом с помощью команды:</p>
-<pre><code class="language-bahs" data-lang="bahs">docker logs -f satis
+<pre tabindex="0"><code class="language-bahs" data-lang="bahs">docker logs -f satis
 </code></pre><p>Пример вывода логов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
-Dumping <span style="color:#e6db74">&#39;symfony/dependency-injection&#39;</span>.
-Dumping <span style="color:#e6db74">&#39;symfony/yaml&#39;</span>.
-wrote packages to /var/www/mirror/include/all$133181d2d1ff19075832276e1ade0a6499395e5d.json
-Writing packages.json
-Pruning include directories
-Deleted /var/www/mirror/include/all$f77decc941e6a091ed3c3abe89dafd6343a053f3.json
-Writing web view
-Rather than invoking init scripts through /etc/init.d, use the service<span style="color:#f92672">(</span>8<span style="color:#f92672">)</span>
-utility, e.g. service cron start
-
-Since the script you are attempting to invoke has been converted to an
-Upstart job, you may also use the start<span style="color:#f92672">(</span>8<span style="color:#f92672">)</span> utility, e.g. start cron
-</code></pre></div><p>После скачивания и упаковки зависимостей в браузере открываем адрес, который указывали в <code>homepage</code> и проверяем список имеющихся пакетов</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Dumping <span style="color:#e6db74">&#39;symfony/dependency-injection&#39;</span>.
+</span></span><span style="display:flex;"><span>Dumping <span style="color:#e6db74">&#39;symfony/yaml&#39;</span>.
+</span></span><span style="display:flex;"><span>wrote packages to /var/www/mirror/include/all$133181d2d1ff19075832276e1ade0a6499395e5d.json
+</span></span><span style="display:flex;"><span>Writing packages.json
+</span></span><span style="display:flex;"><span>Pruning include directories
+</span></span><span style="display:flex;"><span>Deleted /var/www/mirror/include/all$f77decc941e6a091ed3c3abe89dafd6343a053f3.json
+</span></span><span style="display:flex;"><span>Writing web view
+</span></span><span style="display:flex;"><span>Rather than invoking init scripts through /etc/init.d, use the service<span style="color:#f92672">(</span>8<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>utility, e.g. service cron start
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Since the script you are attempting to invoke has been converted to an
+</span></span><span style="display:flex;"><span>Upstart job, you may also use the start<span style="color:#f92672">(</span>8<span style="color:#f92672">)</span> utility, e.g. start cron
+</span></span></code></pre></div><p>После скачивания и упаковки зависимостей в браузере открываем адрес, который указывали в <code>homepage</code> и проверяем список имеющихся пакетов</p>
 <p>Теперь в проектах, для которых мы хотим использовать локальное хранилище пакетов, в файле <code>composer.json</code> вставляем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
-    <span style="color:#f92672">&#34;repositories&#34;</span>: [
-        {
-            <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;composer&#34;</span>,
-            <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;http://satis.lc:8181&#34;</span>
-        }
-    ]
-}
-</code></pre></div><p>В таком случае, нужные зависимости сначала будут браться из локального хранилища, а если их там нет — то из packagist.org. Запретить использование официального репозитория пакетов можно добавив такие строки в <code>composer.json</code> проекта:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
-    <span style="color:#f92672">&#34;repositories&#34;</span>: [
-        {
-            <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;composer&#34;</span>,
-            <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;http://satis.lc:8181&#34;</span>
-        },
-        {
-            <span style="color:#f92672">&#34;packagist&#34;</span>:<span style="color:#66d9ef">false</span>
-        }
-    ]
-}
-</code></pre></div><p>Далее следует очистить индивидуальный кэш Composer и удалить файл <code>composer.lock</code>, после чего можно протестировать работоспособность созданного хранилища.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;repositories&#34;</span>: [
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;composer&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;http://satis.lc:8181&#34;</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>В таком случае, нужные зависимости сначала будут браться из локального хранилища, а если их там нет — то из packagist.org. Запретить использование официального репозитория пакетов можно добавив такие строки в <code>composer.json</code> проекта:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;repositories&#34;</span>: [
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;composer&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;http://satis.lc:8181&#34;</span>
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&#34;packagist&#34;</span>:<span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Далее следует очистить индивидуальный кэш Composer и удалить файл <code>composer.lock</code>, после чего можно протестировать работоспособность созданного хранилища.</p>
 <p>Несколько тестов (вывод сокращен).</p>
 <ul>
 <li>Установка зависимостей из официального репозитория packagist.org:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">time composer install
-Loading composer repositories with package information
-Installing dependencies <span style="color:#f92672">(</span>including require-dev<span style="color:#f92672">)</span> from lock file
-Warning: The lock file is not up to date with the latest changes in composer.json. You may be getting outdated dependencies. Run update to update them.
-Package operations: <span style="color:#ae81ff">59</span> installs, <span style="color:#ae81ff">0</span> updates, <span style="color:#ae81ff">0</span> removals
-  - Installing zendframework/zend-component-installer <span style="color:#f92672">(</span>0.7.1<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
-  - Installing league/fractal <span style="color:#f92672">(</span>0.15.0<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
-...
-Generating autoload files
-
-real	2m0.982s
-user	0m2.460s
-sys	0m0.496s
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>time composer install
+</span></span><span style="display:flex;"><span>Loading composer repositories with package information
+</span></span><span style="display:flex;"><span>Installing dependencies <span style="color:#f92672">(</span>including require-dev<span style="color:#f92672">)</span> from lock file
+</span></span><span style="display:flex;"><span>Warning: The lock file is not up to date with the latest changes in composer.json. You may be getting outdated dependencies. Run update to update them.
+</span></span><span style="display:flex;"><span>Package operations: <span style="color:#ae81ff">59</span> installs, <span style="color:#ae81ff">0</span> updates, <span style="color:#ae81ff">0</span> removals
+</span></span><span style="display:flex;"><span>  - Installing zendframework/zend-component-installer <span style="color:#f92672">(</span>0.7.1<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
+</span></span><span style="display:flex;"><span>  - Installing league/fractal <span style="color:#f92672">(</span>0.15.0<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Generating autoload files
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>real	2m0.982s
+</span></span><span style="display:flex;"><span>user	0m2.460s
+</span></span><span style="display:flex;"><span>sys	0m0.496s
+</span></span></code></pre></div><ul>
 <li>Установка зависимостей из локального satis-репозитория:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">time composer install
-Loading composer repositories with package information
-Warning: Accessing satis.lc over http which is an insecure protocol.
-Updating dependencies <span style="color:#f92672">(</span>including require-dev<span style="color:#f92672">)</span>
-Package operations: <span style="color:#ae81ff">60</span> installs, <span style="color:#ae81ff">0</span> updates, <span style="color:#ae81ff">0</span> removals
-  - Installing zendframework/zend-component-installer <span style="color:#f92672">(</span>0.7.1<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
-  - Installing league/fractal <span style="color:#f92672">(</span>0.15.0<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
-  ...
-Writing lock file
-Generating autoload files
-
-real	0m12.749s
-user	0m3.640s
-sys	0m1.404s
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>time composer install
+</span></span><span style="display:flex;"><span>Loading composer repositories with package information
+</span></span><span style="display:flex;"><span>Warning: Accessing satis.lc over http which is an insecure protocol.
+</span></span><span style="display:flex;"><span>Updating dependencies <span style="color:#f92672">(</span>including require-dev<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Package operations: <span style="color:#ae81ff">60</span> installs, <span style="color:#ae81ff">0</span> updates, <span style="color:#ae81ff">0</span> removals
+</span></span><span style="display:flex;"><span>  - Installing zendframework/zend-component-installer <span style="color:#f92672">(</span>0.7.1<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
+</span></span><span style="display:flex;"><span>  - Installing league/fractal <span style="color:#f92672">(</span>0.15.0<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
+</span></span><span style="display:flex;"><span>  ...
+</span></span><span style="display:flex;"><span>Writing lock file
+</span></span><span style="display:flex;"><span>Generating autoload files
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>real	0m12.749s
+</span></span><span style="display:flex;"><span>user	0m3.640s
+</span></span><span style="display:flex;"><span>sys	0m1.404s
+</span></span></code></pre></div><ul>
 <li>Установка зависимостей при недоступном локальном репозитории (попытка подключиться к satis’у, после чего загрузка и установка из официального packagist.org):</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">time composer install
-Loading composer repositories with package information
-Installing dependencies <span style="color:#f92672">(</span>including require-dev<span style="color:#f92672">)</span> from lock file
-Package operations: <span style="color:#ae81ff">60</span> installs, <span style="color:#ae81ff">0</span> updates, <span style="color:#ae81ff">0</span> removals
-  - Installing zendframework/zend-component-installer <span style="color:#f92672">(</span>0.7.1<span style="color:#f92672">)</span>: Warning: Accessing satis.lc over http which is an insecure protocol.
-Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>       
-Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>       
-Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>    Failed to download zendframework/zend-component-installer from dist: The <span style="color:#e6db74">&#34;http://satis.lc:8181/dist/zendframework-zend-component-installer-700a22e4791daa1110be06f2fb055dc678d2b7ff-zip-5e33b1.zip&#34;</span> file could not be downloaded: failed to open stream: Connection refused
-    Now trying to download from source
-  - Installing zendframework/zend-component-installer <span style="color:#f92672">(</span>0.7.1<span style="color:#f92672">)</span>: Cloning 700a22e479 from cache
-  - Installing league/fractal <span style="color:#f92672">(</span>0.15.0<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
-  - Installing zendframework/zend-config-aggregator <span style="color:#f92672">(</span>0.2.1<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>       
-Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>       
-Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>    Failed to download zendframework/zend-config-aggregator from dist: The <span style="color:#e6db74">&#34;http://satis.lc:8181/dist/zendframework-zend-config-aggregator-633a0bf3030a68d2a71cb41a121ad930a52041ea-zip-84656d.zip&#34;</span> file could not be downloaded: failed to open stream: Connection refused
-    Now trying to download from source
-  - Installing zendframework/zend-config-aggregator <span style="color:#f92672">(</span>0.2.1<span style="color:#f92672">)</span>: Cloning 633a0bf303 from cache
-...
-Generating autoload files
-
-real	5m5.170s
-user	0m22.544s
-sys	0m4.496s
-</code></pre></div><p>Также есть возможность обновлять локальный кэш для композера по крону или вручную, больше подробностей и готовый проект есть на <a href="https://github.com/ealebed/satis">github</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>time composer install
+</span></span><span style="display:flex;"><span>Loading composer repositories with package information
+</span></span><span style="display:flex;"><span>Installing dependencies <span style="color:#f92672">(</span>including require-dev<span style="color:#f92672">)</span> from lock file
+</span></span><span style="display:flex;"><span>Package operations: <span style="color:#ae81ff">60</span> installs, <span style="color:#ae81ff">0</span> updates, <span style="color:#ae81ff">0</span> removals
+</span></span><span style="display:flex;"><span>  - Installing zendframework/zend-component-installer <span style="color:#f92672">(</span>0.7.1<span style="color:#f92672">)</span>: Warning: Accessing satis.lc over http which is an insecure protocol.
+</span></span><span style="display:flex;"><span>Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>       
+</span></span><span style="display:flex;"><span>Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>       
+</span></span><span style="display:flex;"><span>Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>    Failed to download zendframework/zend-component-installer from dist: The <span style="color:#e6db74">&#34;http://satis.lc:8181/dist/zendframework-zend-component-installer-700a22e4791daa1110be06f2fb055dc678d2b7ff-zip-5e33b1.zip&#34;</span> file could not be downloaded: failed to open stream: Connection refused
+</span></span><span style="display:flex;"><span>    Now trying to download from source
+</span></span><span style="display:flex;"><span>  - Installing zendframework/zend-component-installer <span style="color:#f92672">(</span>0.7.1<span style="color:#f92672">)</span>: Cloning 700a22e479 from cache
+</span></span><span style="display:flex;"><span>  - Installing league/fractal <span style="color:#f92672">(</span>0.15.0<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>100%<span style="color:#f92672">)</span>         
+</span></span><span style="display:flex;"><span>  - Installing zendframework/zend-config-aggregator <span style="color:#f92672">(</span>0.2.1<span style="color:#f92672">)</span>: Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>       
+</span></span><span style="display:flex;"><span>Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>       
+</span></span><span style="display:flex;"><span>Downloading <span style="color:#f92672">(</span>failed<span style="color:#f92672">)</span>    Failed to download zendframework/zend-config-aggregator from dist: The <span style="color:#e6db74">&#34;http://satis.lc:8181/dist/zendframework-zend-config-aggregator-633a0bf3030a68d2a71cb41a121ad930a52041ea-zip-84656d.zip&#34;</span> file could not be downloaded: failed to open stream: Connection refused
+</span></span><span style="display:flex;"><span>    Now trying to download from source
+</span></span><span style="display:flex;"><span>  - Installing zendframework/zend-config-aggregator <span style="color:#f92672">(</span>0.2.1<span style="color:#f92672">)</span>: Cloning 633a0bf303 from cache
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Generating autoload files
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>real	5m5.170s
+</span></span><span style="display:flex;"><span>user	0m22.544s
+</span></span><span style="display:flex;"><span>sys	0m4.496s
+</span></span></code></pre></div><p>Также есть возможность обновлять локальный кэш для композера по крону или вручную, больше подробностей и готовый проект есть на <a href="https://github.com/ealebed/satis">github</a>.</p>
                 </section>
             </article>
 
@@ -361,7 +361,7 @@ sys	0m4.496s
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,120 +103,120 @@
 <p>Считаем, что все хосты будущего кластера доступны друг для друга, в firewall открыты TCP порты 111, 24007-24050 и созданы все необходимы каталоги/точки монтирования.</p>
 <p><strong>Примечание.</strong> В нашем примере GlusterFS настраивается как <code>replicated volume</code> на 5 машинах с локальными ip-адресами 192.168.0.1, 192.168.0.3, 192.168.0.7, 192.168.0.13 и 192.168.0.14</p>
 <p><strong>Устанавливаем GlusterFS-server</strong> на всех серверах:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install -t wheezy-backports glusterfs-server
-</code></pre></div><p>Сразу после установки проверим состояние кластера:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer status
-Number of Peers: <span style="color:#ae81ff">0</span>
-</code></pre></div><p>Подключаемся на любой хост из нашего списка (например, 192.168.0.1) и создаем кластер:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer probe 192.168.0.3
-peer probe: success.
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer probe 192.168.0.7
-peer probe: failed: 192.168.0.7 is already part of another cluster
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer probe 192.168.0.13
-peer probe: success.
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer probe 192.168.0.14
-peer probe: success.
-</code></pre></div><p>Добавлять в список хостов кластера «самого себя» не нужно:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer probe 192.168.0.1
-peer probe: success. Probe on localhost not needed
-</code></pre></div><p>Если вы ошибетесь и попробуете добавить один и тот же сервер дважды, то увидите примерно следующее:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer probe 192.168.0.3
-peer probe: success. Host 192.168.0.3 port <span style="color:#ae81ff">24007</span> already in peer list
-</code></pre></div><p>Как вы наверняка заметили, что-то пошло не так при добавлении узла с ip-адресом 192.168.0.7. Проверяем состояние нашего кластера:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer status
-Number of Peers: <span style="color:#ae81ff">4</span>
-
-Hostname: 192.168.0.7
-Uuid: 1b138a89-64dc-4a5e-8095-8892abaaf0e5
-State: Accepted peer request <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
-
-Hostname: 192.168.0.3
-Uuid: b9789ef4-1f26-4320-a7ba-0902c3434d76
-State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
-
-Hostname: 192.168.0.13
-Uuid: c8618f71-fdb3-4f28-8266-9eebca69e4e2
-State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
-
-Hostname: 192.168.0.14
-Uuid: 92876551-847a-4a9d-9a86-07c23b3e91f0
-State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
-</code></pre></div><p>Мы не можем создать кластер, так как один из его узлов находится в состоянии <code>Accepted peer request</code>. В моем случае всему виной старые конфиги <strong>GlusterFS-server</strong> 3.2.7, поэтому делаем так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer detach 192.168.0.7
-peer detach: success
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer probe 192.168.0.7
-peer probe: success.
-</code></pre></div><p>Теперь состояние узлов соответствует нашим ожиданиям:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer status
-Number of Peers: <span style="color:#ae81ff">4</span>
-
-Hostname: 192.168.0.13
-Uuid: c8618f71-fdb3-4f28-8266-9eebca69e4e2
-State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
-
-Hostname: 192.168.0.3
-Uuid: b9789ef4-1f26-4320-a7ba-0902c3434d76
-State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
-
-Hostname: 192.168.0.14
-Uuid: 92876551-847a-4a9d-9a86-07c23b3e91f0
-State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
-
-Hostname: 192.168.0.7
-Uuid: 5837f180-6b00-403c-83ff-e993ef7bf4ef
-State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
-</code></pre></div><p>Можно сделать аналогичные проверки со всех хостов кластера. Теперь создадим реплицируемый том (<code>volume</code>):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume create www replica <span style="color:#ae81ff">5</span> transport tcp 192.168.0.1:/var/www/testsite 192.168.0.7:/var/www/testsite 192.168.0.3:/var/www/testsite 192.168.0.13:/var/www/testsite 192.168.0.14:/var/www/testsite
-volume create: www: success: please start the volume to access data
-</code></pre></div><p>Запускаем созданный том:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume start www
-volume start: www: success
-</code></pre></div><p>После чего проверим статус нашего тома:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume status
-Status of volume: www
-Gluster process						Port	Online	Pid
-------------------------------------------------------------------------------
-Brick 192.168.0.1:/var/www/testsite			49152	Y	<span style="color:#ae81ff">29660</span>
-Brick 192.168.0.7:/var/www/testsite			49152	Y	<span style="color:#ae81ff">13559</span>
-Brick 192.168.0.3:/var/www/testsite			49153	Y	<span style="color:#ae81ff">7743</span>
-Brick 192.168.0.13:/var/www/testsite			49152	Y	<span style="color:#ae81ff">28423</span>
-Brick 192.168.0.14:/var/www/testsite			49152	Y	<span style="color:#ae81ff">21147</span>
-NFS Server on localhost					2049	Y	<span style="color:#ae81ff">29674</span>
-Self-heal Daemon on localhost				N/A	Y	<span style="color:#ae81ff">29679</span>
-NFS Server on 192.168.0.14				2049	Y	<span style="color:#ae81ff">21161</span>
-Self-heal Daemon on 192.168.0.14			N/A	Y	<span style="color:#ae81ff">21167</span>
-NFS Server on 192.168.0.13				2049	Y	<span style="color:#ae81ff">28437</span>
-Self-heal Daemon on 192.168.0.13			N/A	Y	<span style="color:#ae81ff">28442</span>
-NFS Server on 192.168.0.3				2049	Y	<span style="color:#ae81ff">7761</span>
-Self-heal Daemon on 192.168.0.3				N/A	Y	<span style="color:#ae81ff">7766</span>
-NFS Server on 192.168.0.7				2049	Y	<span style="color:#ae81ff">13631</span>
-Self-heal Daemon on 192.168.0.7				N/A	Y	<span style="color:#ae81ff">13642</span>
-
-Task Status of Volume www
-------------------------------------------------------------------------------
-There are no active volume tasks
-</code></pre></div><p>Интересующую информацию о реплицируемом томе можно еще посмотреть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume info
-
-Volume Name: www
-Type: Replicate
-Volume ID: 782e8fd8-0a72-4966-9590-77c244bce3b6
-Status: Started
-Number of Bricks: <span style="color:#ae81ff">1</span> x 5 <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>
-Transport-type: tcp
-Bricks:
-Brick1: 192.168.0.1:/var/www/testsite
-Brick2: 192.168.0.7:/var/www/testsite
-Brick3: 192.168.0.3:/var/www/testsite
-Brick4: 192.168.0.13:/var/www/testsite
-Brick5: 192.168.0.14:/var/www/testsite
-</code></pre></div><p>Добавляем в <code>/etc/fstab</code> на первом узле (192.168.0.1) следующую строку:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-localhost:/www    /var/www/svnup             glusterfs rw,nosuid,nodev,exec,nouser,async,_netdev  0 0
-...
-</code></pre></div><p>Монтируем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mount /var/www/svnup
-</code></pre></div><p>Теперь можно &lsquo;заливать&rsquo; данные в каталог <code>/var/www/svnup</code> на первом узле кластера и они будут легко и просто реплицироваться на все 5 хостов к каталог <code>/var/www/testsite</code>. Это очень удобно, например, для распределения web-контента на бэкэндах.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>aptitude install -t wheezy-backports glusterfs-server
+</span></span></code></pre></div><p>Сразу после установки проверим состояние кластера:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer status
+</span></span><span style="display:flex;"><span>Number of Peers: <span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p>Подключаемся на любой хост из нашего списка (например, 192.168.0.1) и создаем кластер:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer probe 192.168.0.3
+</span></span><span style="display:flex;"><span>peer probe: success.
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer probe 192.168.0.7
+</span></span><span style="display:flex;"><span>peer probe: failed: 192.168.0.7 is already part of another cluster
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer probe 192.168.0.13
+</span></span><span style="display:flex;"><span>peer probe: success.
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer probe 192.168.0.14
+</span></span><span style="display:flex;"><span>peer probe: success.
+</span></span></code></pre></div><p>Добавлять в список хостов кластера «самого себя» не нужно:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer probe 192.168.0.1
+</span></span><span style="display:flex;"><span>peer probe: success. Probe on localhost not needed
+</span></span></code></pre></div><p>Если вы ошибетесь и попробуете добавить один и тот же сервер дважды, то увидите примерно следующее:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer probe 192.168.0.3
+</span></span><span style="display:flex;"><span>peer probe: success. Host 192.168.0.3 port <span style="color:#ae81ff">24007</span> already in peer list
+</span></span></code></pre></div><p>Как вы наверняка заметили, что-то пошло не так при добавлении узла с ip-адресом 192.168.0.7. Проверяем состояние нашего кластера:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer status
+</span></span><span style="display:flex;"><span>Number of Peers: <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hostname: 192.168.0.7
+</span></span><span style="display:flex;"><span>Uuid: 1b138a89-64dc-4a5e-8095-8892abaaf0e5
+</span></span><span style="display:flex;"><span>State: Accepted peer request <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hostname: 192.168.0.3
+</span></span><span style="display:flex;"><span>Uuid: b9789ef4-1f26-4320-a7ba-0902c3434d76
+</span></span><span style="display:flex;"><span>State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hostname: 192.168.0.13
+</span></span><span style="display:flex;"><span>Uuid: c8618f71-fdb3-4f28-8266-9eebca69e4e2
+</span></span><span style="display:flex;"><span>State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hostname: 192.168.0.14
+</span></span><span style="display:flex;"><span>Uuid: 92876551-847a-4a9d-9a86-07c23b3e91f0
+</span></span><span style="display:flex;"><span>State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Мы не можем создать кластер, так как один из его узлов находится в состоянии <code>Accepted peer request</code>. В моем случае всему виной старые конфиги <strong>GlusterFS-server</strong> 3.2.7, поэтому делаем так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer detach 192.168.0.7
+</span></span><span style="display:flex;"><span>peer detach: success
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer probe 192.168.0.7
+</span></span><span style="display:flex;"><span>peer probe: success.
+</span></span></code></pre></div><p>Теперь состояние узлов соответствует нашим ожиданиям:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer status
+</span></span><span style="display:flex;"><span>Number of Peers: <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hostname: 192.168.0.13
+</span></span><span style="display:flex;"><span>Uuid: c8618f71-fdb3-4f28-8266-9eebca69e4e2
+</span></span><span style="display:flex;"><span>State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hostname: 192.168.0.3
+</span></span><span style="display:flex;"><span>Uuid: b9789ef4-1f26-4320-a7ba-0902c3434d76
+</span></span><span style="display:flex;"><span>State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hostname: 192.168.0.14
+</span></span><span style="display:flex;"><span>Uuid: 92876551-847a-4a9d-9a86-07c23b3e91f0
+</span></span><span style="display:flex;"><span>State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Hostname: 192.168.0.7
+</span></span><span style="display:flex;"><span>Uuid: 5837f180-6b00-403c-83ff-e993ef7bf4ef
+</span></span><span style="display:flex;"><span>State: Peer in Cluster <span style="color:#f92672">(</span>Connected<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Можно сделать аналогичные проверки со всех хостов кластера. Теперь создадим реплицируемый том (<code>volume</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster volume create www replica <span style="color:#ae81ff">5</span> transport tcp 192.168.0.1:/var/www/testsite 192.168.0.7:/var/www/testsite 192.168.0.3:/var/www/testsite 192.168.0.13:/var/www/testsite 192.168.0.14:/var/www/testsite
+</span></span><span style="display:flex;"><span>volume create: www: success: please start the volume to access data
+</span></span></code></pre></div><p>Запускаем созданный том:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster volume start www
+</span></span><span style="display:flex;"><span>volume start: www: success
+</span></span></code></pre></div><p>После чего проверим статус нашего тома:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster volume status
+</span></span><span style="display:flex;"><span>Status of volume: www
+</span></span><span style="display:flex;"><span>Gluster process						Port	Online	Pid
+</span></span><span style="display:flex;"><span>------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Brick 192.168.0.1:/var/www/testsite			49152	Y	<span style="color:#ae81ff">29660</span>
+</span></span><span style="display:flex;"><span>Brick 192.168.0.7:/var/www/testsite			49152	Y	<span style="color:#ae81ff">13559</span>
+</span></span><span style="display:flex;"><span>Brick 192.168.0.3:/var/www/testsite			49153	Y	<span style="color:#ae81ff">7743</span>
+</span></span><span style="display:flex;"><span>Brick 192.168.0.13:/var/www/testsite			49152	Y	<span style="color:#ae81ff">28423</span>
+</span></span><span style="display:flex;"><span>Brick 192.168.0.14:/var/www/testsite			49152	Y	<span style="color:#ae81ff">21147</span>
+</span></span><span style="display:flex;"><span>NFS Server on localhost					2049	Y	<span style="color:#ae81ff">29674</span>
+</span></span><span style="display:flex;"><span>Self-heal Daemon on localhost				N/A	Y	<span style="color:#ae81ff">29679</span>
+</span></span><span style="display:flex;"><span>NFS Server on 192.168.0.14				2049	Y	<span style="color:#ae81ff">21161</span>
+</span></span><span style="display:flex;"><span>Self-heal Daemon on 192.168.0.14			N/A	Y	<span style="color:#ae81ff">21167</span>
+</span></span><span style="display:flex;"><span>NFS Server on 192.168.0.13				2049	Y	<span style="color:#ae81ff">28437</span>
+</span></span><span style="display:flex;"><span>Self-heal Daemon on 192.168.0.13			N/A	Y	<span style="color:#ae81ff">28442</span>
+</span></span><span style="display:flex;"><span>NFS Server on 192.168.0.3				2049	Y	<span style="color:#ae81ff">7761</span>
+</span></span><span style="display:flex;"><span>Self-heal Daemon on 192.168.0.3				N/A	Y	<span style="color:#ae81ff">7766</span>
+</span></span><span style="display:flex;"><span>NFS Server on 192.168.0.7				2049	Y	<span style="color:#ae81ff">13631</span>
+</span></span><span style="display:flex;"><span>Self-heal Daemon on 192.168.0.7				N/A	Y	<span style="color:#ae81ff">13642</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Task Status of Volume www
+</span></span><span style="display:flex;"><span>------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>There are no active volume tasks
+</span></span></code></pre></div><p>Интересующую информацию о реплицируемом томе можно еще посмотреть так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster volume info
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Volume Name: www
+</span></span><span style="display:flex;"><span>Type: Replicate
+</span></span><span style="display:flex;"><span>Volume ID: 782e8fd8-0a72-4966-9590-77c244bce3b6
+</span></span><span style="display:flex;"><span>Status: Started
+</span></span><span style="display:flex;"><span>Number of Bricks: <span style="color:#ae81ff">1</span> x 5 <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>Transport-type: tcp
+</span></span><span style="display:flex;"><span>Bricks:
+</span></span><span style="display:flex;"><span>Brick1: 192.168.0.1:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick2: 192.168.0.7:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick3: 192.168.0.3:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick4: 192.168.0.13:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick5: 192.168.0.14:/var/www/testsite
+</span></span></code></pre></div><p>Добавляем в <code>/etc/fstab</code> на первом узле (192.168.0.1) следующую строку:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>localhost:/www    /var/www/svnup             glusterfs rw,nosuid,nodev,exec,nouser,async,_netdev  0 0
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Монтируем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount /var/www/svnup
+</span></span></code></pre></div><p>Теперь можно &lsquo;заливать&rsquo; данные в каталог <code>/var/www/svnup</code> на первом узле кластера и они будут легко и просто реплицироваться на все 5 хостов к каталог <code>/var/www/testsite</code>. Это очень удобно, например, для распределения web-контента на бэкэндах.</p>
                 </section>
             </article>
 
@@ -308,7 +308,7 @@ localhost:/www    /var/www/svnup             glusterfs rw,nosuid,nodev,exec,nous
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

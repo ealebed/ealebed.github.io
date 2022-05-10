@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,7 +100,7 @@
                 <section id="post-body">
                     <p>На днях получил письмо из Федерального управления по информационной безопасности (<a href="https://www.bsi.bund.de/EN/TheBSI/thebsi_node.html">BSI</a>) о уязвимости на ряде серверов. Речь шла о NetBIOS, который потенциально мог использоваться при DDoS-атаках на сторонние сервисы — давайте разберемся!</p>
 <p>Важность данного уведомления показалась мне слегка преувеличенной, но тем не менее я решил принять меры. Для начала убедимся, что служба NetBIOS на серверах доступна для любого желающего в Интернете, для этого воспользуемся утилитой <code>nmblookup</code>:</p>
-<pre><code>nmblookup -A 89.184.80.162
+<pre tabindex="0"><code>nmblookup -A 89.184.80.162
 Looking up status of 89.184.80.162
 	WEB1            &lt;00&gt; -  B 
 	WEB1            &lt;03&gt; -  B 
@@ -110,23 +110,23 @@ Looking up status of 89.184.80.162
 
 	MAC Address = 00-00-00-00-00-00
 </code></pre><p>Если же служба недоступна/выключена (или ее просто нет), то ответ (после некоторой задержки) будет выглядеть следующим образом:</p>
-<pre><code>nmblookup -A 89.184.80.172
+<pre tabindex="0"><code>nmblookup -A 89.184.80.172
 Looking up status of 89.184.80.172
 No reply from 89.184.80.172
 </code></pre><p>Далее специалисты из управления информационной безопасности советуют либо отключить службу NetBIOS-over-TCP/IP (если она не используется), либо ограничить доступ для входящих соединений на порт 137/udp с помощью файрволла.</p>
 <p>В моем случае нужды в данном сервисе нет, поэтому я выбрал первый вариант. Подключаемся к удаленному хосту и проверяем используется ли указанный выше порт:</p>
-<pre><code>netstat -napl | grep 137
+<pre tabindex="0"><code>netstat -napl | grep 137
 udp        0      0 89.184.80.162:137       0.0.0.0:*                           1518/nmbd
 udp        0      0 89.184.80.163:137       0.0.0.0:*                           1518/nmbd
 udp        0      0 192.168.15.255:137      0.0.0.0:*                           1518/nmbd
 udp        0      0 192.168.15.21:137       0.0.0.0:*                           1518/nmbd
 udp        0      0 0.0.0.0:137             0.0.0.0:*                           1518/nmbd
 </code></pre><p>Останавливаем сервис <code>nmbd</code>:</p>
-<pre><code>systemctl stop nmdb.service
+<pre tabindex="0"><code>systemctl stop nmdb.service
 </code></pre><p>Проверяем использование порта еще раз:</p>
-<pre><code>netstat -napl | grep 137
+<pre tabindex="0"><code>netstat -napl | grep 137
 </code></pre><p>И «маскируем» сервис, чтобы он более не запускался:</p>
-<pre><code>systemctl mask nmbd.service
+<pre tabindex="0"><code>systemctl mask nmbd.service
 Created symlink from /etc/systemd/system/nmbd.service to /dev/null.
 </code></pre><p>Проделываем перечисленные действия для всех серверов с указанной уязвимостью (список в письме), благодарим сотрудников управления информационной безопасности и сообщаем что устранили уязвимость.</p>
                 </section>
@@ -220,7 +220,7 @@ Created symlink from /etc/systemd/system/nmbd.service to /dev/null.
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

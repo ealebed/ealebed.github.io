@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,67 +101,67 @@
                     <p>Ранее мы уже рассматривали варианты <a href="https://ealebed.github.io/posts/2016/nginx-%D0%BE%D0%B3%D1%80%D0%B0%D0%BD%D0%B8%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF%D0%B0/">ограничения доступа к сайту с помощью web-сервера Nginx</a>, но порой возникает необходимость блокировки доступа пользователям из определенных стран (чаще всего дальневосточных). Конечно, пользователи всегда смогут воспользоваться прокси и обойти запрет, но в большинстве случаев предлагаемого функционала будет вполне достаточно.</p>
 <p>Самый простой и быстрый способ сделать это на уровне web-сервера Nginx с использованием модуля GeoIP — давайте разберемся!</p>
 <p>Устанавливаем необходимые пакеты в системе:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get update <span style="color:#f92672">&amp;&amp;</span> apt-get install geoip-database libgeoip1
-</code></pre></div><p>Обновим базу GeoIP до актуальной версии:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mv /usr/share/GeoIP/GeoIP.dat /usr/share/GeoIP/GeoIP.dat_bak
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /usr/share/GeoIP/
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gunzip GeoIP.dat.gz
-</code></pre></div><p>Теперь, с помощью команды <code>nginx -V</code> убедимся, что наш web-сервер собран с параметром <code>--with-http_geoip_module</code>. Если нет — приступаем к самостоятельной сборке Nginx, благо мы это уже делали — <a href="https://ealebed.github.io/posts/2016/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-openssl-1.0.2-%D0%B4%D0%BB%D1%8F-http2.0/">раз</a>, <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">два</a>, <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-pagespeed/">три</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apt-get update <span style="color:#f92672">&amp;&amp;</span> apt-get install geoip-database libgeoip1
+</span></span></code></pre></div><p>Обновим базу GeoIP до актуальной версии:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mv /usr/share/GeoIP/GeoIP.dat /usr/share/GeoIP/GeoIP.dat_bak
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /usr/share/GeoIP/
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gunzip GeoIP.dat.gz
+</span></span></code></pre></div><p>Теперь, с помощью команды <code>nginx -V</code> убедимся, что наш web-сервер собран с параметром <code>--with-http_geoip_module</code>. Если нет — приступаем к самостоятельной сборке Nginx, благо мы это уже делали — <a href="https://ealebed.github.io/posts/2016/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-openssl-1.0.2-%D0%B4%D0%BB%D1%8F-http2.0/">раз</a>, <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">два</a>, <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-pagespeed/">три</a>.</p>
 <p>Скачиваем и распаковываем исходники <a href="http://nginx.org/">актуальной</a> версии Nginx:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /opt/ <span style="color:#f92672">&amp;&amp;</span> wget http://nginx.org/download/nginx-1.12.1.tar.gz <span style="color:#f92672">&amp;&amp;</span> tar xf nginx-1.12.1.tar.gz
-</code></pre></div><p>Скачиваем и распаковываем исходники <a href="https://www.openssl.org/source/">последней</a> стабильной версии OpenSSL:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget https://www.openssl.org/source/openssl-1.1.0f.tar.gz <span style="color:#f92672">&amp;&amp;</span> tar xf openssl-1.1.0f.tar.gz
-</code></pre></div><p>Получаем код модуля <code>ngx_brotli</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/google/ngx_brotli.git
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /opt/ngx_brotli <span style="color:#f92672">&amp;&amp;</span> git submodule update --init  <span style="color:#f92672">&amp;&amp;</span> cd /opt
-</code></pre></div><p>Переходим в каталог с исходниками Nginx, собираем и запускаем его:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /opt/nginx-1.12.1
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./configure <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--prefix<span style="color:#f92672">=</span>/etc/nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--sbin-path<span style="color:#f92672">=</span>/usr/sbin/nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--modules-path<span style="color:#f92672">=</span>/usr/lib/nginx/modules <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--conf-path<span style="color:#f92672">=</span>/etc/nginx/nginx.conf <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--error-log-path<span style="color:#f92672">=</span>/var/log/nginx/error.log <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--http-log-path<span style="color:#f92672">=</span>/var/log/nginx/access.log <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--pid-path<span style="color:#f92672">=</span>/var/run/nginx.pid <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--lock-path<span style="color:#f92672">=</span>/var/run/nginx.lock <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--http-client-body-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/client_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--http-proxy-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/proxy_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--http-fastcgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/fastcgi_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--http-uwsgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/uwsgi_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--http-scgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/scgi_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--user<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--group<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_ssl_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_realip_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_addition_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_sub_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_geoip_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_dav_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_flv_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_gunzip_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_gzip_static_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_random_index_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_secure_link_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_stub_status_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_auth_request_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-threads --with-stream <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-stream_ssl_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_slice_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-mail <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-mail_ssl_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-file-aio <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-http_v2_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-cc-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2&#39;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-ld-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed&#39;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--with-openssl<span style="color:#f92672">=</span>/opt/openssl-1.0.2f <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--add-module<span style="color:#f92672">=</span>/opt/ngx_brotli
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make install
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service nginx restart
-</code></pre></div><p>Каталоге с конфигурационными файлами web-сервера Nginx создадим файл <code>block.map.include</code> следующего содержания:</p>
-<pre><code>map $geoip_country_code $allowed_country {
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /opt/ <span style="color:#f92672">&amp;&amp;</span> wget http://nginx.org/download/nginx-1.12.1.tar.gz <span style="color:#f92672">&amp;&amp;</span> tar xf nginx-1.12.1.tar.gz
+</span></span></code></pre></div><p>Скачиваем и распаковываем исходники <a href="https://www.openssl.org/source/">последней</a> стабильной версии OpenSSL:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget https://www.openssl.org/source/openssl-1.1.0f.tar.gz <span style="color:#f92672">&amp;&amp;</span> tar xf openssl-1.1.0f.tar.gz
+</span></span></code></pre></div><p>Получаем код модуля <code>ngx_brotli</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/google/ngx_brotli.git
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /opt/ngx_brotli <span style="color:#f92672">&amp;&amp;</span> git submodule update --init  <span style="color:#f92672">&amp;&amp;</span> cd /opt
+</span></span></code></pre></div><p>Переходим в каталог с исходниками Nginx, собираем и запускаем его:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /opt/nginx-1.12.1
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./configure <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--prefix<span style="color:#f92672">=</span>/etc/nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--sbin-path<span style="color:#f92672">=</span>/usr/sbin/nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--modules-path<span style="color:#f92672">=</span>/usr/lib/nginx/modules <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--conf-path<span style="color:#f92672">=</span>/etc/nginx/nginx.conf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--error-log-path<span style="color:#f92672">=</span>/var/log/nginx/error.log <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--http-log-path<span style="color:#f92672">=</span>/var/log/nginx/access.log <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--pid-path<span style="color:#f92672">=</span>/var/run/nginx.pid <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--lock-path<span style="color:#f92672">=</span>/var/run/nginx.lock <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--http-client-body-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/client_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--http-proxy-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/proxy_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--http-fastcgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/fastcgi_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--http-uwsgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/uwsgi_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--http-scgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/scgi_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--user<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--group<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_ssl_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_realip_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_addition_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_sub_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_geoip_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_dav_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_flv_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_gunzip_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_gzip_static_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_random_index_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_secure_link_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_stub_status_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_auth_request_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-threads --with-stream <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-stream_ssl_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_slice_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-mail <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-mail_ssl_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-file-aio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-http_v2_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-cc-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-ld-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--with-openssl<span style="color:#f92672">=</span>/opt/openssl-1.0.2f <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--add-module<span style="color:#f92672">=</span>/opt/ngx_brotli
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make install
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>service nginx restart
+</span></span></code></pre></div><p>Каталоге с конфигурационными файлами web-сервера Nginx создадим файл <code>block.map.include</code> следующего содержания:</p>
+<pre tabindex="0"><code>map $geoip_country_code $allowed_country {
         default yes;
         CN no;
         VN no;
@@ -169,18 +169,18 @@
 }
 </code></pre><p>В данном примере мы запрещаем доступ к сайту пользователям из Китая, Вьетнама и Тайваня.</p>
 <p>В конфигурацонном файле <code>/etc/nginx/nginx.conf</code> в секции <code>http</code> добавляем следующую строку:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
         include include/block.map.include;
 ...
 </code></pre><p>После чего в настройках хоста (секция <code>server</code>) вставляем следующую конструкцию:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
         if ($allowed_country = no) {
             return 404;
         }
 ...
 </code></pre><p>Применяем изменения:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -s reload
-</code></pre></div><p>Если все сделано правильно, то пользователи из вышеназванных стран больше не будут вас беспокоить.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nginx -s reload
+</span></span></code></pre></div><p>Если все сделано правильно, то пользователи из вышеназванных стран больше не будут вас беспокоить.</p>
                 </section>
             </article>
 
@@ -272,7 +272,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

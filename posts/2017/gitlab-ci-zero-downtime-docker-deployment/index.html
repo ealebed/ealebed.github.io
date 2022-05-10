@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -112,188 +112,188 @@
 <li>полностью переписать скрипт деплоя.</li>
 </ul>
 <p>Начнем с первого пункта. Для всех сервисов, кроме <code>php-fpm</code> заменяем строки</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">volumes_from</span>:
-    - <span style="color:#ae81ff">applications</span>
-    - <span style="color:#ae81ff">applications1</span>
-</code></pre></div><p>на строки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">volumes_from</span>:
-    - <span style="color:#ae81ff">php-fpm</span>
-</code></pre></div><p>Строки вида</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">links</span>:
-    - <span style="color:#ae81ff">php-fpm</span>
-</code></pre></div><p>нам больше не понадобятся, удаляем.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">applications1</span>
+</span></span></code></pre></div><p>на строки:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">php-fpm</span>
+</span></span></code></pre></div><p>Строки вида</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">links</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">php-fpm</span>
+</span></span></code></pre></div><p>нам больше не понадобятся, удаляем.</p>
 <p>Также для сервиса <code>php-fpm</code> удаляем строку</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
-</code></pre></div><p>В итоге теперь наш конфигурационный файл <code>docker-compose-staging.yml</code> выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
-<span style="color:#f92672">services</span>:
-<span style="color:#75715e">### Applications Code Container #############################</span>
-    <span style="color:#f92672">applications</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:develop.sources.last</span>
-<span style="color:#75715e">### Applications1 Code Container ############################</span>
-    <span style="color:#f92672">applications1</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application1</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:docker.sources.last</span>
-<span style="color:#75715e">### PHP-FPM Container #######################################</span>
-    <span style="color:#f92672">php-fpm</span>:
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">applications</span>
-            - <span style="color:#ae81ff">applications1</span>
-        <span style="color:#f92672">expose</span>:
-            - <span style="color:#e6db74">&#34;9000&#34;</span>
-<span style="color:#75715e">### Nginx Server Container ##################################</span>
-    <span style="color:#f92672">nginx</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">nginx</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:nginx-ed-sq</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">php-fpm</span>
-        <span style="color:#f92672">depends_on</span>:
-            - <span style="color:#e6db74">&#34;websocket&#34;</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;${HTTP_PORT}:80&#34;</span>
-            - <span style="color:#e6db74">&#34;443:443&#34;</span>
-<span style="color:#75715e">### Redis Container #########################################</span>
-    <span style="color:#f92672">redis</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:redis-ed-sq</span>
-        <span style="color:#f92672">volumes</span>:
-            - <span style="color:#ae81ff">redis:/data</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;6379:6379&#34;</span>
-<span style="color:#75715e">### Memcached Container #####################################</span>
-    <span style="color:#f92672">memcached</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">memcached</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:memcached-ed-sq</span>
-        <span style="color:#f92672">volumes</span>:
-            - <span style="color:#ae81ff">memcached:/var/lib/memcached</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;11211:11211&#34;</span>
-<span style="color:#75715e">### Websocket Container ######################################</span>
-    <span style="color:#f92672">websocket</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">websocket</span>
-        <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:websocket-ed-sq</span>
-        <span style="color:#f92672">depends_on</span>:
-            - <span style="color:#e6db74">&#34;redis&#34;</span>
-        <span style="color:#f92672">environment</span>:
-            - <span style="color:#ae81ff">WS_PORT=${WS_PORT}</span>
-            - <span style="color:#ae81ff">REDIS_HOST=${REDIS_HOST}</span>
-            - <span style="color:#ae81ff">REDIS_PORT=${REDIS_PORT}</span>
-            - <span style="color:#ae81ff">REDIS_PASS=${REDIS_PASS}</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">php-fpm</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;${WS_PORT}:${WS_PORT}&#34;</span>
-<span style="color:#75715e">### SDCV Container ##########################################</span>
-    <span style="color:#f92672">sdcv</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">sdcv</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:sdcv-ed-sq</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;9095:9095&#34;</span>
-<span style="color:#75715e">### Volumes Setup ###########################################</span>
-<span style="color:#f92672">volumes</span>:
-    <span style="color:#f92672">memcached</span>:
-        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
-    <span style="color:#f92672">redis</span>:
-        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
-</code></pre></div><p>Правим конфигурационные файлы web-сервера Nginx. Ранее в настройках сайта, в локейшене (<code>location</code>) который занимается обработкой php, директива <code>fastcgi_pass</code> выглядела так:</p>
-<pre><code>...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
+</span></span></code></pre></div><p>В итоге теперь наш конфигурационный файл <code>docker-compose-staging.yml</code> выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Applications Code Container #############################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">applications</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:develop.sources.last</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Applications1 Code Container ############################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">applications1</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:docker.sources.last</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### PHP-FPM Container #######################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">php-fpm</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:php-fpm-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">expose</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;9000&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Nginx Server Container ##################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">nginx</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">nginx</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:nginx-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">php-fpm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">depends_on</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;websocket&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;${HTTP_PORT}:80&#34;</span>
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;443:443&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Redis Container #########################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:redis-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">redis:/data</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;6379:6379&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Memcached Container #####################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memcached</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">memcached</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:memcached-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">memcached:/var/lib/memcached</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;11211:11211&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Websocket Container ######################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">websocket</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">websocket</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:websocket-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">depends_on</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;redis&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">environment</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">WS_PORT=${WS_PORT}</span>
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">REDIS_HOST=${REDIS_HOST}</span>
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">REDIS_PORT=${REDIS_PORT}</span>
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">REDIS_PASS=${REDIS_PASS}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">php-fpm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;${WS_PORT}:${WS_PORT}&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### SDCV Container ##########################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">sdcv</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">sdcv</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed:sdcv-ed-sq</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;9095:9095&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Volumes Setup ###########################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memcached</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</span></span></code></pre></div><p>Правим конфигурационные файлы web-сервера Nginx. Ранее в настройках сайта, в локейшене (<code>location</code>) который занимается обработкой php, директива <code>fastcgi_pass</code> выглядела так:</p>
+<pre tabindex="0"><code>...
       fastcgi_pass php-fpm:9000;
 ...
 </code></pre><p>Меняем ее на такую:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
       fastcgi_pass backend;
 ...
 </code></pre><p>В основном конфигурационном файле (<code>nginx.conf</code>) в секции <code>http</code> добавляем строку:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
       include include/upstream.include;
 ...
 </code></pre><p>Создаем файл <code>include/upstream.include</code> следующего содержания:</p>
-<pre><code>upstream backend {
+<pre tabindex="0"><code>upstream backend {
       server docker_php-fpm_1:9000;
 }
 </code></pre><p>Создаем bash-скрипт (назовем его <code>update_upstream_directive.sh</code>), который будет по нашему требованию обновлять директиву <code>upstream</code> (содержимое файла <code>include/upstream.include</code>). Выглядеть он будет так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/bash
-</span><span style="color:#75715e"></span>NGINX_INCLUDE_PATH<span style="color:#f92672">=</span>/opt/nginx/include
- 
-echo <span style="color:#e6db74">&#34;Updating nginx upsteam directive...&#34;</span>
-<span style="color:#75715e"># change string of ip addresses separated by / into an array</span>
-IFS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/&#34;</span> read -r -a addresses <span style="color:#f92672">&lt;&lt;&lt;</span> $CONTAINERS
- 
-<span style="color:#75715e"># update the upsteam directive contained within the upstream.include file</span>
-echo <span style="color:#e6db74">&#34;upstream backend {&#34;</span> &gt; $NGINX_INCLUDE_PATH/upstream.include
-<span style="color:#66d9ef">for</span> container in $addresses; <span style="color:#66d9ef">do</span>
-  echo <span style="color:#e6db74">&#34;  server </span>$container<span style="color:#e6db74">:9000;&#34;</span> &gt;&gt; $NGINX_INCLUDE_PATH/upstream.include
-<span style="color:#66d9ef">done</span>
-echo <span style="color:#e6db74">&#34;}&#34;</span> &gt;&gt; $NGINX_INCLUDE_PATH/upstream.include
-</code></pre></div><p>Данный скрипт (как и новые конфиги) должен находиться внутри docker-контейнера, поэтому правим Dockerfile, добавляя в него строки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile">...<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./nginx.conf /opt/nginx/nginx.conf<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./conf.d/site.conf /opt/nginx/conf.d/site.conf<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./include/upstream.include /opt/nginx/include/upstream.include<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./update_upstream_directive.sh /usr/local/bin/<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> chmod +x /usr/local/bin/*.sh<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>...<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>После внесенных изменений пересобираем docker-контейнер и пушим его в локальный docker registry.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>NGINX_INCLUDE_PATH<span style="color:#f92672">=</span>/opt/nginx/include
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Updating nginx upsteam directive...&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># change string of ip addresses separated by / into an array</span>
+</span></span><span style="display:flex;"><span>IFS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/&#34;</span> read -r -a addresses <span style="color:#f92672">&lt;&lt;&lt;</span> $CONTAINERS
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># update the upsteam directive contained within the upstream.include file</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;upstream backend {&#34;</span> &gt; $NGINX_INCLUDE_PATH/upstream.include
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> container in $addresses; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;  server </span>$container<span style="color:#e6db74">:9000;&#34;</span> &gt;&gt; $NGINX_INCLUDE_PATH/upstream.include
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;}&#34;</span> &gt;&gt; $NGINX_INCLUDE_PATH/upstream.include
+</span></span></code></pre></div><p>Данный скрипт (как и новые конфиги) должен находиться внутри docker-контейнера, поэтому правим Dockerfile, добавляя в него строки:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span>...<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./nginx.conf /opt/nginx/nginx.conf<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./conf.d/site.conf /opt/nginx/conf.d/site.conf<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./include/upstream.include /opt/nginx/include/upstream.include<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./update_upstream_directive.sh /usr/local/bin/<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> chmod +x /usr/local/bin/*.sh<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>...<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>После внесенных изменений пересобираем docker-контейнер и пушим его в локальный docker registry.</p>
 <p>Наконец, переписываем скрипт деплоя <code>deploy.sh</code> (или, что лучше, создаем новый с именем <code>update_containers_staging.sh</code>). Выглядеть он будет так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/bash
-</span><span style="color:#75715e"></span>DIRECTORY<span style="color:#f92672">=</span>~/docker
-DC_FILE<span style="color:#f92672">=</span>docker-compose-staging.yml
-ENV_FILE<span style="color:#f92672">=</span>.env.staging.lc
-PROJECT_NETWORK<span style="color:#f92672">=</span>docker_default
-SERVICES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;applications applications1 php-fpm&#34;</span>
- 
-cd $DIRECTORY;
-set -o allexport; . $ENV_FILE;
-docker-compose -f $DC_FILE pull;
- 
-<span style="color:#66d9ef">for</span> service in $SERVICES; <span style="color:#66d9ef">do</span>
-  <span style="color:#75715e"># split needed container names that are already running into an array</span>
-  old_cont<span style="color:#f92672">=(</span><span style="color:#66d9ef">$(</span>docker-compose -f $DC_FILE ps $service | awk <span style="color:#e6db74">&#39;{ print $1 }&#39;</span> | tail -n +3<span style="color:#66d9ef">)</span><span style="color:#f92672">)</span>
- 
-  <span style="color:#75715e"># create the new containers with latest code changes</span>
-  docker-compose -f $DC_FILE up --scale $service<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span> -d --no-deps $service
- 
-  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$service<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;php-fpm&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-    <span style="color:#75715e"># create array with new containers only</span>
-    all_cont<span style="color:#f92672">=(</span><span style="color:#66d9ef">$(</span>docker-compose -f $DC_FILE ps $service | awk <span style="color:#e6db74">&#39;{ print $1 }&#39;</span> | tail -n +3<span style="color:#66d9ef">)</span><span style="color:#f92672">)</span>
-    new_cont<span style="color:#f92672">=(</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>old_cont[*]<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>all_cont[*]<span style="color:#e6db74">}</span> | tr <span style="color:#e6db74">&#39; &#39;</span> <span style="color:#e6db74">&#39;\n&#39;</span> | sort | uniq -u<span style="color:#66d9ef">)</span><span style="color:#f92672">)</span>
- 
-    <span style="color:#75715e"># loop through containers and get IP addresses separated by / so they can be exported below</span>
-    IP_ADDRESSES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-    <span style="color:#66d9ef">for</span> element in <span style="color:#e6db74">${</span>new_cont[*]<span style="color:#e6db74">}</span>; <span style="color:#66d9ef">do</span>
-      IP_ADDRESSES<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>docker inspect -f <span style="color:#f92672">{{</span>.NetworkSettings.Networks.$PROJECT_NETWORK.IPAddress<span style="color:#f92672">}}</span> $element<span style="color:#66d9ef">)</span><span style="color:#e6db74">/&#34;</span>
-    <span style="color:#66d9ef">done</span>
- 
-    <span style="color:#75715e"># run script to update the upstream.include file in nginx container</span>
-    docker-compose -f $DC_FILE exec -T nginx bash -c <span style="color:#e6db74">&#34;export CONTAINERS=</span>$IP_ADDRESSES<span style="color:#e6db74"> &amp;&amp; /usr/local/bin/update_upstream_directive.sh&#34;</span>
-    sleep <span style="color:#ae81ff">5</span>
-    <span style="color:#75715e"># Reload nginx service to update the upstream.include file in nginx container</span>
-    docker-compose -f $DC_FILE exec -T nginx bash -c <span style="color:#e6db74">&#34;nginx -s reload&#34;</span>
-  <span style="color:#66d9ef">fi</span>
-  <span style="color:#75715e"># stops the old containers</span>
-  <span style="color:#66d9ef">for</span> container in $old_cont; <span style="color:#66d9ef">do</span>
-    docker kill $container
-  <span style="color:#66d9ef">done</span>
- 
-  <span style="color:#75715e"># deletes the old containers</span>
-  docker rm <span style="color:#66d9ef">$(</span>docker ps -aqf status<span style="color:#f92672">=</span>exited<span style="color:#66d9ef">)</span>
- 
-  <span style="color:#75715e"># rename new containers to start at 1 and go up sequentially</span>
-  newly_started_cont<span style="color:#f92672">=(</span><span style="color:#66d9ef">$(</span>docker-compose -f $DC_FILE ps $service | awk <span style="color:#e6db74">&#39;{ print $1 }&#39;</span> | tail -n +3<span style="color:#66d9ef">)</span><span style="color:#f92672">)</span>
-  counter<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-  <span style="color:#66d9ef">while</span> <span style="color:#f92672">[</span> $counter -lt <span style="color:#e6db74">${#</span>newly_started_cont[*]<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">do</span>
-    <span style="color:#66d9ef">for</span> container in $newly_started_cont; <span style="color:#66d9ef">do</span>
-      new_name<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>container%?<span style="color:#e6db74">}</span><span style="color:#66d9ef">$((</span>$counter<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span><span style="color:#66d9ef">))</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
-      docker rename $container $new_name
-    <span style="color:#66d9ef">done</span>
-    let counter<span style="color:#f92672">=</span>counter+1
-  <span style="color:#66d9ef">done</span>
-<span style="color:#66d9ef">done</span>
-docker-compose -f $DC_FILE up -d --force-recreate --no-deps nginx
-</code></pre></div><p>Скрипт на первый взгляд выглядит страшно, но на самом деле здесь нет никакой магии — просто запускается еще один, обновленный экземпляр сервиса <code>php-fpm</code>, выясняется его ip-адрес, который затем используется для обновления директивы <code>upstream</code> в docker-контейнере Nginx. После проделанных действий более старый экземпляр сервиса <code>php-fpm</code> удаляется, а новый переименовывается.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>DIRECTORY<span style="color:#f92672">=</span>~/docker
+</span></span><span style="display:flex;"><span>DC_FILE<span style="color:#f92672">=</span>docker-compose-staging.yml
+</span></span><span style="display:flex;"><span>ENV_FILE<span style="color:#f92672">=</span>.env.staging.lc
+</span></span><span style="display:flex;"><span>PROJECT_NETWORK<span style="color:#f92672">=</span>docker_default
+</span></span><span style="display:flex;"><span>SERVICES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;applications applications1 php-fpm&#34;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>cd $DIRECTORY;
+</span></span><span style="display:flex;"><span>set -o allexport; . $ENV_FILE;
+</span></span><span style="display:flex;"><span>docker-compose -f $DC_FILE pull;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> service in $SERVICES; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># split needed container names that are already running into an array</span>
+</span></span><span style="display:flex;"><span>  old_cont<span style="color:#f92672">=(</span><span style="color:#66d9ef">$(</span>docker-compose -f $DC_FILE ps $service | awk <span style="color:#e6db74">&#39;{ print $1 }&#39;</span> | tail -n +3<span style="color:#66d9ef">)</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># create the new containers with latest code changes</span>
+</span></span><span style="display:flex;"><span>  docker-compose -f $DC_FILE up --scale $service<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span> -d --no-deps $service
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$service<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;php-fpm&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># create array with new containers only</span>
+</span></span><span style="display:flex;"><span>    all_cont<span style="color:#f92672">=(</span><span style="color:#66d9ef">$(</span>docker-compose -f $DC_FILE ps $service | awk <span style="color:#e6db74">&#39;{ print $1 }&#39;</span> | tail -n +3<span style="color:#66d9ef">)</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    new_cont<span style="color:#f92672">=(</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>old_cont[*]<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>all_cont[*]<span style="color:#e6db74">}</span> | tr <span style="color:#e6db74">&#39; &#39;</span> <span style="color:#e6db74">&#39;\n&#39;</span> | sort | uniq -u<span style="color:#66d9ef">)</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># loop through containers and get IP addresses separated by / so they can be exported below</span>
+</span></span><span style="display:flex;"><span>    IP_ADDRESSES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> element in <span style="color:#e6db74">${</span>new_cont[*]<span style="color:#e6db74">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>      IP_ADDRESSES<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>docker inspect -f <span style="color:#f92672">{{</span>.NetworkSettings.Networks.$PROJECT_NETWORK.IPAddress<span style="color:#f92672">}}</span> $element<span style="color:#66d9ef">)</span><span style="color:#e6db74">/&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># run script to update the upstream.include file in nginx container</span>
+</span></span><span style="display:flex;"><span>    docker-compose -f $DC_FILE exec -T nginx bash -c <span style="color:#e6db74">&#34;export CONTAINERS=</span>$IP_ADDRESSES<span style="color:#e6db74"> &amp;&amp; /usr/local/bin/update_upstream_directive.sh&#34;</span>
+</span></span><span style="display:flex;"><span>    sleep <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Reload nginx service to update the upstream.include file in nginx container</span>
+</span></span><span style="display:flex;"><span>    docker-compose -f $DC_FILE exec -T nginx bash -c <span style="color:#e6db74">&#34;nginx -s reload&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># stops the old containers</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> container in $old_cont; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    docker kill $container
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># deletes the old containers</span>
+</span></span><span style="display:flex;"><span>  docker rm <span style="color:#66d9ef">$(</span>docker ps -aqf status<span style="color:#f92672">=</span>exited<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># rename new containers to start at 1 and go up sequentially</span>
+</span></span><span style="display:flex;"><span>  newly_started_cont<span style="color:#f92672">=(</span><span style="color:#66d9ef">$(</span>docker-compose -f $DC_FILE ps $service | awk <span style="color:#e6db74">&#39;{ print $1 }&#39;</span> | tail -n +3<span style="color:#66d9ef">)</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  counter<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> <span style="color:#f92672">[</span> $counter -lt <span style="color:#e6db74">${#</span>newly_started_cont[*]<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> container in $newly_started_cont; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>      new_name<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>container%?<span style="color:#e6db74">}</span><span style="color:#66d9ef">$((</span>$counter<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span><span style="color:#66d9ef">))</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>      docker rename $container $new_name
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>    let counter<span style="color:#f92672">=</span>counter+1
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>docker-compose -f $DC_FILE up -d --force-recreate --no-deps nginx
+</span></span></code></pre></div><p>Скрипт на первый взгляд выглядит страшно, но на самом деле здесь нет никакой магии — просто запускается еще один, обновленный экземпляр сервиса <code>php-fpm</code>, выясняется его ip-адрес, который затем используется для обновления директивы <code>upstream</code> в docker-контейнере Nginx. После проделанных действий более старый экземпляр сервиса <code>php-fpm</code> удаляется, а новый переименовывается.</p>
 <p>Таким образом, пусть и не самым элегантным способом, можно избавиться от простоя (downtime) при деплое docker-контейнеров.</p>
                 </section>
             </article>
@@ -386,7 +386,7 @@ docker-compose -f $DC_FILE up -d --force-recreate --no-deps nginx
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

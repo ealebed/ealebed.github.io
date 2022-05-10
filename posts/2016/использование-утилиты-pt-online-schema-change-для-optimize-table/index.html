@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -113,16 +113,16 @@
 <li>сделать резервную копию базы данных продакшн-сервера и проверить ее.</li>
 </ul>
 <p>Синтаксис использования следующий:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pt-online-schema-change <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> DSN
-</code></pre></div><p>Полный список поддерживаемых опций можно найти <a href="https://www.percona.com/doc/percona-toolkit/2.2/pt-online-schema-change.html">тут</a>, в нашем примере мы будем использовать только некоторые из них.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pt-online-schema-change <span style="color:#f92672">[</span>OPTIONS<span style="color:#f92672">]</span> DSN
+</span></span></code></pre></div><p>Полный список поддерживаемых опций можно найти <a href="https://www.percona.com/doc/percona-toolkit/2.2/pt-online-schema-change.html">тут</a>, в нашем примере мы будем использовать только некоторые из них.</p>
 <p>Итак, требуется выполнить <code>OPTIMIZE TABLE</code> на таблице, в которой хранятся сессии пользователей (session_new).</p>
 <p>Просмотрим физический размер таблицы перед началом работ:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -lah | grep session_new
--rw-rw---- <span style="color:#ae81ff">1</span> mysql mysql 8.5K Jun  <span style="color:#ae81ff">3</span>  <span style="color:#ae81ff">2013</span> session_new.frm
--rw-rw---- <span style="color:#ae81ff">1</span> mysql mysql 8.8G Dec <span style="color:#ae81ff">24</span> 18:11 session_new.ibd
-</code></pre></div><p>Из командной строки запускаем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pt-online-schema-change --critical-load Threads_running<span style="color:#f92672">=</span><span style="color:#ae81ff">150</span> --alter <span style="color:#e6db74">&#34;ENGINE=InnoDB&#34;</span> D<span style="color:#f92672">=</span>work-utf,t<span style="color:#f92672">=</span>session_new,u<span style="color:#f92672">=</span>&lt;ПОЛЬЗОВАТЕЛЬ&gt;,p<span style="color:#f92672">=</span>&lt;ПАРОЛЬ&gt; --execute
-</code></pre></div><p>Используемые параметры:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -lah | grep session_new
+</span></span><span style="display:flex;"><span>-rw-rw---- <span style="color:#ae81ff">1</span> mysql mysql 8.5K Jun  <span style="color:#ae81ff">3</span>  <span style="color:#ae81ff">2013</span> session_new.frm
+</span></span><span style="display:flex;"><span>-rw-rw---- <span style="color:#ae81ff">1</span> mysql mysql 8.8G Dec <span style="color:#ae81ff">24</span> 18:11 session_new.ibd
+</span></span></code></pre></div><p>Из командной строки запускаем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pt-online-schema-change --critical-load Threads_running<span style="color:#f92672">=</span><span style="color:#ae81ff">150</span> --alter <span style="color:#e6db74">&#34;ENGINE=InnoDB&#34;</span> D<span style="color:#f92672">=</span>work-utf,t<span style="color:#f92672">=</span>session_new,u<span style="color:#f92672">=</span>&lt;ПОЛЬЗОВАТЕЛЬ&gt;,p<span style="color:#f92672">=</span>&lt;ПАРОЛЬ&gt; --execute
+</span></span></code></pre></div><p>Используемые параметры:</p>
 <ul>
 <li><code>--critical-load</code> — значение, при котором прерывается выполнение запроса. Берется из <code>SHOW GLOBAL STATUS</code>;</li>
 <li><code>--alter</code> — запрос, который необходимо выполнить без ключевых слов <code>ALTER TABLE</code>;</li>
@@ -133,46 +133,46 @@
 <li><code>--execute</code> — подтверждение выполнения операции (говорит о том, что вы прочитали документацию и понимаете, что делаете).</li>
 </ul>
 <p>В нашем примере значение параметра <code>--critical-load</code> Threads_running установлено в 150, вместо 50 по умолчанию. Параметр был изменен после того, как при первом запуске команды была получена ошибка:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span> was not altered.
-	<span style="color:#f92672">(</span>in cleanup<span style="color:#f92672">)</span> 2015-12-24T18:50:47 Error copying rows from <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span> to <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>_session_new_new<span style="color:#e6db74">`</span>: Threads_running<span style="color:#f92672">=</span><span style="color:#ae81ff">55</span> exceeds its critical threshold <span style="color:#ae81ff">50</span>
-</code></pre></div><p>Во время выполнения команды в консоли можно увидеть примерно следующее:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">No slaves found.  See --recursion-method <span style="color:#66d9ef">if</span> host db1 has slaves.
-Not checking slave lag because no slaves were found and --check-slave-lag was not specified.
-Operation, tries, wait:
-  copy_rows, 10, 0.25
-  create_triggers, 10, <span style="color:#ae81ff">1</span>
-  drop_triggers, 10, <span style="color:#ae81ff">1</span>
-  swap_tables, 10, <span style="color:#ae81ff">1</span>
-  update_foreign_keys, 10, <span style="color:#ae81ff">1</span>
-Altering <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>...
-Creating new table...
-Created new table work-utf._session_new_new OK.
-Altering new table...
-Altered <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>_session_new_new<span style="color:#e6db74">`</span> OK.
-2015-12-24T19:07:20 Creating triggers...
-2015-12-24T19:07:20 Created triggers OK.
-2015-12-24T19:07:20 Copying approximately <span style="color:#ae81ff">12224345</span> rows...
-Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:   0% 02:14:03 remain
-Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:   0% 01:41:11 remain
-Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:   1% 01:38:07 remain
-Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:   2% 01:36:12 remain
-...
-Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:  98% 01:13 remain
-Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:  99% 00:23 remain
-Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:  99% 00:03 remain
-2015-12-24T20:45:28 Copied rows OK.
-2015-12-24T20:45:28 Swapping tables...
-2015-12-24T20:45:28 Swapped original and new tables OK.
-2015-12-24T20:45:28 Dropping old table...
-2015-12-24T20:45:31 Dropped old table <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>_session_new_old<span style="color:#e6db74">`</span> OK.
-2015-12-24T20:45:31 Dropping triggers...
-2015-12-24T20:45:31 Dropped triggers OK.
-Successfully altered <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>.
-</code></pre></div><p>Просмотрим физический размер таблицы после выполнения <code>OPTIMIZE TABLE</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -lah | grep session_new
--rw-rw---- <span style="color:#ae81ff">1</span> mysql mysql 8.5K Dec <span style="color:#ae81ff">24</span> 19:07 session_new.frm
--rw-rw---- <span style="color:#ae81ff">1</span> mysql mysql 6.6G Dec <span style="color:#ae81ff">25</span> 20:51 session_new.ibd
-</code></pre></div><p>В данном примере физический размер таблицы после выполнения <code>OPTIMIZE TABLE</code> уменьшился на 2,2 ГБ.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span> was not altered.
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">(</span>in cleanup<span style="color:#f92672">)</span> 2015-12-24T18:50:47 Error copying rows from <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span> to <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>_session_new_new<span style="color:#e6db74">`</span>: Threads_running<span style="color:#f92672">=</span><span style="color:#ae81ff">55</span> exceeds its critical threshold <span style="color:#ae81ff">50</span>
+</span></span></code></pre></div><p>Во время выполнения команды в консоли можно увидеть примерно следующее:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>No slaves found.  See --recursion-method <span style="color:#66d9ef">if</span> host db1 has slaves.
+</span></span><span style="display:flex;"><span>Not checking slave lag because no slaves were found and --check-slave-lag was not specified.
+</span></span><span style="display:flex;"><span>Operation, tries, wait:
+</span></span><span style="display:flex;"><span>  copy_rows, 10, 0.25
+</span></span><span style="display:flex;"><span>  create_triggers, 10, <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  drop_triggers, 10, <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  swap_tables, 10, <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  update_foreign_keys, 10, <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>Altering <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>...
+</span></span><span style="display:flex;"><span>Creating new table...
+</span></span><span style="display:flex;"><span>Created new table work-utf._session_new_new OK.
+</span></span><span style="display:flex;"><span>Altering new table...
+</span></span><span style="display:flex;"><span>Altered <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>_session_new_new<span style="color:#e6db74">`</span> OK.
+</span></span><span style="display:flex;"><span>2015-12-24T19:07:20 Creating triggers...
+</span></span><span style="display:flex;"><span>2015-12-24T19:07:20 Created triggers OK.
+</span></span><span style="display:flex;"><span>2015-12-24T19:07:20 Copying approximately <span style="color:#ae81ff">12224345</span> rows...
+</span></span><span style="display:flex;"><span>Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:   0% 02:14:03 remain
+</span></span><span style="display:flex;"><span>Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:   0% 01:41:11 remain
+</span></span><span style="display:flex;"><span>Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:   1% 01:38:07 remain
+</span></span><span style="display:flex;"><span>Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:   2% 01:36:12 remain
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:  98% 01:13 remain
+</span></span><span style="display:flex;"><span>Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:  99% 00:23 remain
+</span></span><span style="display:flex;"><span>Copying <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>:  99% 00:03 remain
+</span></span><span style="display:flex;"><span>2015-12-24T20:45:28 Copied rows OK.
+</span></span><span style="display:flex;"><span>2015-12-24T20:45:28 Swapping tables...
+</span></span><span style="display:flex;"><span>2015-12-24T20:45:28 Swapped original and new tables OK.
+</span></span><span style="display:flex;"><span>2015-12-24T20:45:28 Dropping old table...
+</span></span><span style="display:flex;"><span>2015-12-24T20:45:31 Dropped old table <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>_session_new_old<span style="color:#e6db74">`</span> OK.
+</span></span><span style="display:flex;"><span>2015-12-24T20:45:31 Dropping triggers...
+</span></span><span style="display:flex;"><span>2015-12-24T20:45:31 Dropped triggers OK.
+</span></span><span style="display:flex;"><span>Successfully altered <span style="color:#e6db74">`</span>work-utf<span style="color:#e6db74">`</span>.<span style="color:#e6db74">`</span>session_new<span style="color:#e6db74">`</span>.
+</span></span></code></pre></div><p>Просмотрим физический размер таблицы после выполнения <code>OPTIMIZE TABLE</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -lah | grep session_new
+</span></span><span style="display:flex;"><span>-rw-rw---- <span style="color:#ae81ff">1</span> mysql mysql 8.5K Dec <span style="color:#ae81ff">24</span> 19:07 session_new.frm
+</span></span><span style="display:flex;"><span>-rw-rw---- <span style="color:#ae81ff">1</span> mysql mysql 6.6G Dec <span style="color:#ae81ff">25</span> 20:51 session_new.ibd
+</span></span></code></pre></div><p>В данном примере физический размер таблицы после выполнения <code>OPTIMIZE TABLE</code> уменьшился на 2,2 ГБ.</p>
                 </section>
             </article>
 
@@ -264,7 +264,7 @@ Successfully altered <span style="color:#e6db74">`</span>work-utf<span style="co
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

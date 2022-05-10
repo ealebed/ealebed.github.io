@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,66 +106,66 @@
                 <section id="post-body">
                     <p>О создании резервных копий баз данных (бекапов) с помощью <strong>утилиты Percona XtraBackup</strong> я уже писал <a href="https://ealebed.github.io/posts/2015/%D1%80%D0%B5%D0%B7%D0%B5%D1%80%D0%B2%D0%BD%D0%BE%D0%B5-%D0%BA%D0%BE%D0%BF%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B1%D0%B0%D0%B7%D1%8B-%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-percona-xtrabackup/">ранее</a>, теперь выкладываю пример готового скрипта, которым пользуюсь и в настоящее время.</p>
 <p>Скрипт предназначен для <strong>создания резервных копий баз данных</strong> (в субботу — полная резервная копия, в остальные дни — инкрементальные).</p>
-<pre><code>#!/bin/bash
+<pre tabindex="0"><code>#!/bin/bash
 # Скрипт делает резервную копию БД
 # если сервер MySQL не запущен, то выходим
  
-MYADMIN=&quot;/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf&quot;
+MYADMIN=&#34;/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf&#34;
 ping_output=`$MYADMIN ping 2&gt;&amp;1`; ping_alive=$(( ! $? ))
  
 if [ $ping_alive = 0 ]; then
-    logger -t mysql-backup 'MYADMIN ping FAIL'
+    logger -t mysql-backup &#39;MYADMIN ping FAIL&#39;
     exit
 fi
  
-BACKUP=&quot;/usr/bin/innobackupex-1.5.1 --no-lock&quot;
-workdir=&quot;/usr/local/tmp/&quot;
+BACKUP=&#34;/usr/bin/innobackupex-1.5.1 --no-lock&#34;
+workdir=&#34;/usr/local/tmp/&#34;
  
-DofW=`date +'%u'`
+DofW=`date +&#39;%u&#39;`
 full=0
 incr=0
 # если суббота - делаем полный бекап, иначе инкрементальный
-if [ &quot;$DofW&quot; = &quot;6&quot; ];
+if [ &#34;$DofW&#34; = &#34;6&#34; ];
 then
     full=1
-    logger -t mysql_backup 'make full backup'
+    logger -t mysql_backup &#39;make full backup&#39;
 else
     incr=1
-    logger -t mysql_backup 'make incremental backup'
+    logger -t mysql_backup &#39;make incremental backup&#39;
 fi
  
-if [ $full == '1' ];
+if [ $full == &#39;1&#39; ];
 then
-    logger -t mysql_backup 'start mysql full backup'
-    dump=&quot;mysql&quot;`date +%Y%m%d`&quot;full.tar&quot;
-    ext=&quot;.gz&quot;
+    logger -t mysql_backup &#39;start mysql full backup&#39;
+    dump=&#34;mysql&#34;`date +%Y%m%d`&#34;full.tar&#34;
+    ext=&#34;.gz&#34;
 # при распаковке использовать ключ -i, например tar -ixvf backup.tar
     $BACKUP --user=USER --password=PASSWORD --stream=tar ./ | pigz -p 5 &gt; ${workdir}${dump}${ext}
-    logger -t mysql_backup 'finish mysql full backup, start rsync'
+    logger -t mysql_backup &#39;finish mysql full backup, start rsync&#39;
 # с помощью rsync копируем резервную копию на удаленный сервер
     rsync --bwlimit=5000 ${workdir}${dump}${ext} 192.168.0.4::backup
-    logger -t mysql_backup 'finish rsync'
+    logger -t mysql_backup &#39;finish rsync&#39;
     rm -f ${workdir}/mysql*
 fi
  
-if [ $incr == '1' ];
+if [ $incr == &#39;1&#39; ];
 then
-    logger -t mysql_backup 'start mysql incremental backup'
+    logger -t mysql_backup &#39;start mysql incremental backup&#39;
 # получаем значение LSN из последнего лога бекапа
-    LSN=`cat /usr/local/sbin/innobackupex.log | grep &quot;The latest check point (for incremental):&quot; | awk -F&quot;'&quot; '{print $2}' | tail -n 1`
+    LSN=`cat /usr/local/sbin/innobackupex.log | grep &#34;The latest check point (for incremental):&#34; | awk -F&#34;&#39;&#34; &#39;{print $2}&#39; | tail -n 1`
     echo $LSN &gt; /usr/local/sbin/lsn
-    dump=&quot;mysql&quot;`date +%Y%m%d`&quot;incr&quot;
-    archiv=&quot;mysql&quot;`date +%Y%m%d`&quot;incr.tar.gz&quot;
-    ext=&quot;.tar.gz&quot;
+    dump=&#34;mysql&#34;`date +%Y%m%d`&#34;incr&#34;
+    archiv=&#34;mysql&#34;`date +%Y%m%d`&#34;incr.tar.gz&#34;
+    ext=&#34;.tar.gz&#34;
     $BACKUP --user=USER --password=PASSWORD --incremental --incremental-lsn=$LSN --stream=xbstream ./ &gt; ${workdir}${dump}.xbstream
-    logger -t mysql_backup 'finish mysql incremental backup, start tar'
+    logger -t mysql_backup &#39;finish mysql incremental backup, start tar&#39;
     cd ${workdir}
     `tar -czf $archiv $dump.xbstream`
     rm -f ${workdir}/*.xbstream
-    logger -t mysql_backup 'finish tar, start rsync'
+    logger -t mysql_backup &#39;finish tar, start rsync&#39;
 # с помощью rsync копируем резервную копию на удаленный сервер
     rsync --bwlimit=5000 ${workdir}${dump}${ext} 192.168.0.4::backup
-    logger -t mysql_backup 'finish rsync'
+    logger -t mysql_backup &#39;finish rsync&#39;
     rm -f ${workdir}/mysql*
 fi
 </code></pre><p>Подробнее о развертывании полных или инкрементальных резервных копий читайте <a href="https://ealebed.github.io/posts/2015/%D1%80%D0%B0%D0%B7%D0%B2%D0%B5%D1%80%D1%82%D1%8B%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B1%D0%B5%D0%BA%D0%B0%D0%BF%D0%BE%D0%B2-%D0%B1%D0%B4-%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-percona-xtrabackup/">здесь</a>.</p>
@@ -260,7 +260,7 @@ fi
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

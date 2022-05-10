@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -107,27 +107,27 @@
 <p><em>DO NOT run this with a lot of keys on a production master database. <code>Keys *</code> will block for a long time and cause timeouts</em></p>
 <p>Мы прислушаемся к его совету и запустим redis в docker-контейнере на локальном компьютере, предварительно «подсунув» ему файл <code>dump.rdb</code> c «живой» базы. При старте контейнера <code>redis</code> восстановит данные из файла в память и ними можно будет работать.</p>
 <p>Файл <code>docker-compose.yml</code> будет выглядеть так:</p>
-<pre><code>version: '3.1'
+<pre tabindex="0"><code>version: &#39;3.1&#39;
 services:
   rds:
     container_name: rds
     image: redis:4.0-alpine
     command:
-      - 'redis-server'
-      - '--loglevel warning'
-      - '--databases 2'
-      - '--maxmemory 800mb'
-      - '--requirepass password'
+      - &#39;redis-server&#39;
+      - &#39;--loglevel warning&#39;
+      - &#39;--databases 2&#39;
+      - &#39;--maxmemory 800mb&#39;
+      - &#39;--requirepass password&#39;
     volumes:
       - ./db:/data
     ports:
-      - &quot;6379:6379&quot;
+      - &#34;6379:6379&#34;
 </code></pre><p>В папку db, находящуюся в одном каталоге с конфигурационным файлом <code>docker-compose.yml</code> ложим дамп базы (<code>dump.rdb</code>) и запускаем контейнер командой:</p>
-<pre><code>docker-compose up -d
+<pre tabindex="0"><code>docker-compose up -d
 </code></pre><p>Устанавливаем утилиту согласно инструкции в <a href="https://github.com/snmaynard/redis-audit/blob/master/README.md">Readme.md</a> проекта и запускаем анализатор с помощью команды (в опциях передаем хост / порт / пароль / номер БД / максимальное кол-во ключей в БД):</p>
-<pre><code>./redis-audit.rb -h 192.168.0.34 -p 6379 -a password -d 0 -s 2900606
+<pre tabindex="0"><code>./redis-audit.rb -h 192.168.0.34 -p 6379 -a password -d 0 -s 2900606
 </code></pre><p>Прогресс и результат выполнения команды в консоли будет выглядеть примерно так (вывод сокращен):</p>
-<pre><code>Auditing 192.168.0.34:6379 dbnum:0 sampling 2900606 keys
+<pre tabindex="0"><code>Auditing 192.168.0.34:6379 dbnum:0 sampling 2900606 keys
 Getting a list of all 2899366 keys...
 Auditing 2899366 keys...
 289936 keys sampled - 10% complete - 2017-12-04 14:36:00 +0200
@@ -163,25 +163,25 @@ global_settings_banner                             | 0.0%         | 0.0%        
 ---------------------------------------------------+--------------+-------------------+---------------------------------------------------
 </code></pre><p>Вторая утилита называется <a href="https://github.com/sripathikrishnan/redis-rdb-tools">redis-rdb-tools</a> и она анализирует непосредственно дамп БД (файл <code>dump.rdb</code>) и выводит результат в формате <code>*.csv</code> (еще утилита умеет конвертировать дамп БД в JSON формат и сравнивать два дампа, но этот функционал сейчас нас не интересует).</p>
 <p>Устанавливаем утилиту согласно инструкциям в <a href="https://github.com/sripathikrishnan/redis-rdb-tools/blob/master/README.md">Readme.md</a> и запускаем анализатор командой:</p>
-<pre><code>rdb -c memory /home/e.lebed/20171201dump.rdb -f /home/e.lebed/redismemory.csv
+<pre tabindex="0"><code>rdb -c memory /home/e.lebed/20171201dump.rdb -f /home/e.lebed/redismemory.csv
 </code></pre><p>После завершения анализа (стоит отметить, что процесс этот небыстрый) в указанном месте (<code>/home/e.lebed/</code>) появится файл (<code>redismemory.csv</code>). Содержимое файла выглядит примерно так:</p>
-<pre><code>database,type,key,size_in_bytes,encoding,num_elements,len_largest_element
+<pre tabindex="0"><code>database,type,key,size_in_bytes,encoding,num_elements,len_largest_element
 0,string,session_60f8b00e9be37602048a11d36b5287b5,504,string,336,336
 0,string,session_e9bd5f90b9df52488e3dcd159fb0c526,280,string,150,150
 0,string,ebook:sid-14197:lid-39,96,string,8,8
 0,string,session_791cd03862862a047a4f6278dcb3fe9f,280,string,152,152
 ...
 </code></pre><p>Как видим, у нас получились поля <code>Database Number</code>, <code>Data Type</code>, <code>Key</code>, <code>Memory Used in bytes</code> и т. д. разделенные запятыми. Из данного набора нас интересуют только поля <code>Key</code> и <code>Memory Used in bytes</code> — вырезаем их и записываем в другой файл:</p>
-<pre><code>cat redismemory.csv | cut -d ',' -f3,4 &gt; redis2fields.txt
+<pre tabindex="0"><code>cat redismemory.csv | cut -d &#39;,&#39; -f3,4 &gt; redis2fields.txt
 </code></pre><p>В результате получаем файл с таким содержимым:</p>
-<pre><code>key,size_in_bytes
+<pre tabindex="0"><code>key,size_in_bytes
 session_60f8b00e9be37602048a11d36b5287b5,504
 session_e9bd5f90b9df52488e3dcd159fb0c526,280
 ebook:sid-14197:lid-39,96
 session_791cd03862862a047a4f6278dcb3fe9f,280
 ...
 </code></pre><p>Далее с помощью утилит <code>grep</code> и <code>awk</code> очень легко подсчитать сумму значений во втором столбце (<code>size_in_bytes</code>) по каждой группе ключей, например:</p>
-<pre><code>grep 'user_lesson_*' redis2fields.txt | awk -F ',' 'BEGIN {s = 0} {s += $2;} END {print s}'
+<pre tabindex="0"><code>grep &#39;user_lesson_*&#39; redis2fields.txt | awk -F &#39;,&#39; &#39;BEGIN {s = 0} {s += $2;} END {print s}&#39;
 93669256
 </code></pre><p>После этого можно внести полученные данные в Excel / Google таблицы, перевести полученные байты в мегабайты и построить диаграмму. Обе утилиты показывают примерно одинаковый результат — больше всего в БД <code>redis</code> занимают ключи вида <code>session_*</code>.</p>
                 </section>
@@ -275,7 +275,7 @@ session_791cd03862862a047a4f6278dcb3fe9f,280
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,21 +102,21 @@
 <p>Эти сообщения — последствия фикса уязвимости CVE-2016-1531, о котором подробнее можно почитать <a href="https://lists.exim.org/lurker/message/20160302.191005.a72d8433.en.html">здесь</a>. Там же предлагается два варианта решения возникшей проблемы — не обращать внимания на <code>warning</code>&lsquo;и и ждать следующей версии или добавить в конфигурационный файл exim‘а новые переменные <code>keep_environment =</code> и <code>add_environment =</code> с подходящими параметрами.</p>
 <p><strong>Примечание.</strong> Правда, мало кто упоминает, что при втором варианте можно вообще сломать почтовый сервер.</p>
 <p>Проверим значения этих переменных в конфиге exim‘а:</p>
-<pre><code>exim4 -bP | grep environment
+<pre tabindex="0"><code>exim4 -bP | grep environment
 LOG: MAIN
   Warning: purging the environment.
 Suggested action: use keep_environment.
 add_environment =
 keep_environment =
 </code></pre><p>Добавим в конфигурационный файл <code>/etc/exim/exim4.conf</code> следующие строки:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 keep_environment = X-SOURCE : X-SOURCE-ARGS : X-SOURCE-DIR
 add_environment = PATH=/usr/local/sbin::/usr/local/bin::/sbin::/bin::/usr/sbin::/usr/bin::/sbin::/bin
 ...
 </code></pre><p>Перезапустим почтовый сервер:</p>
-<pre><code>/etc/init.d/exim4 restart
+<pre tabindex="0"><code>/etc/init.d/exim4 restart
 </code></pre><p>Проверка:</p>
-<pre><code>exim4 -bP | grep environment
+<pre tabindex="0"><code>exim4 -bP | grep environment
 add_environment = PATH=/usr/local/sbin::/usr/local/bin::/sbin::/bin::/usr/sbin::/usr/bin::/sbin::/bin
 keep_environment = X-SOURCE : X-SOURCE-ARGS : X-SOURCE-DIR
 </code></pre><p>После проделанных действий в логах warning’а <code>Warning: purging the environment. Suggested action: use keep_environment</code> быть не должно.</p>
@@ -211,7 +211,7 @@ keep_environment = X-SOURCE : X-SOURCE-ARGS : X-SOURCE-DIR
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

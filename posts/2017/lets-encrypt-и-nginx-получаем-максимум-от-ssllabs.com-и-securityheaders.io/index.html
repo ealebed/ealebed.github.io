@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -112,10 +112,10 @@
 </ul>
 <p>Итак, приступим. Ранее мы договаривались для удобства настройки хранить все специфические для SSL параметры в конфигурационном файле <code>/etc/nginx/ssl/ssl.conf</code> и с помощью директивы <code>include</code> подключать эти настройки в блоках server.</p>
 <p>Сейчас конфигурационный файл <code>/etc/nginx/ssl/ssl.conf</code> выглядит следующим образом:</p>
-<pre><code>ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+<pre tabindex="0"><code>ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
 ssl_prefer_server_ciphers on;
 ssl_dhparam /etc/nginx/ssl/dhparam.pem;
-ssl_ciphers &quot;EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4&quot;;
+ssl_ciphers &#34;EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4&#34;;
 ssl_session_timeout 1h;
 ssl_session_cache shared:SSL:128m;
 ssl_stapling on;
@@ -124,23 +124,23 @@ ssl_stapling_verify on;
 resolver 127.0.0.1 valid=300s;
 resolver_timeout 10s;
 </code></pre><p>Перед тем, как добавить новые параметры в этот файл, давайте изменим два уже существующих. Параметр <code>ssl_protocols</code> меняем на:</p>
-<pre><code>ssl_protocols TLSv1.2;
+<pre tabindex="0"><code>ssl_protocols TLSv1.2;
 </code></pre><p>а параметр <code>ssl_ciphers</code> заменим на:</p>
-<pre><code>ssl_ciphers EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
+<pre tabindex="0"><code>ssl_ciphers EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
 </code></pre><p>Этими действиями мы усилили безопасность нашего сайта, но и запретили доступ к нему из старых браузеров (<a href="https://en.wikipedia.org/wiki/Template:TLS/SSL_support_history_of_web_browsers">подробнее о поддержке браузеров</a>). Следует хорошо изучить вопрос и точно знать, какую часть аудитории вы отсекаете такими настройками.</p>
 <p>Далее добавим несколько новых параметров — заголовков, которые будет добавлять Nginx, при ответе клиенту:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
     add_header Strict-Transport-Security max-age=15768000;
-    add_header Content-Security-Policy &quot;default-src 'self'; script-src https: 'self' 'unsafe-inline' 'unsafe-eval'; object-src https: 'self'; style-src https: 'self' 'unsafe-inline'; connect-src https: 'self'; frame-src https:; font-src https: data:; img-src data: *;&quot;;
-    add_header Public-Key-Pins 'pin-sha256=&quot;LQNaYu41ymuFBkht845oLTrkb4cPSaCIPphbJsZD8zk=&quot;; pin-sha256=&quot;SCq+r/MQCGRX6c/8OAszCPvJNITAJK//ekrlXOO7pcY=&quot;; pin-sha256=&quot;nGgctXlFLbcmoOfWZ7pQE0fB3q7GWa+FNGYkoKgkhoU=&quot;; max-age=5184000';
-    add_header X-Frame-Options &quot;SAMEORIGIN&quot; always;
-    add_header X-Xss-Protection &quot;1; mode=block&quot; always;
-    add_header X-Content-Type-Options &quot;nosniff&quot; always;
+    add_header Content-Security-Policy &#34;default-src &#39;self&#39;; script-src https: &#39;self&#39; &#39;unsafe-inline&#39; &#39;unsafe-eval&#39;; object-src https: &#39;self&#39;; style-src https: &#39;self&#39; &#39;unsafe-inline&#39;; connect-src https: &#39;self&#39;; frame-src https:; font-src https: data:; img-src data: *;&#34;;
+    add_header Public-Key-Pins &#39;pin-sha256=&#34;LQNaYu41ymuFBkht845oLTrkb4cPSaCIPphbJsZD8zk=&#34;; pin-sha256=&#34;SCq+r/MQCGRX6c/8OAszCPvJNITAJK//ekrlXOO7pcY=&#34;; pin-sha256=&#34;nGgctXlFLbcmoOfWZ7pQE0fB3q7GWa+FNGYkoKgkhoU=&#34;; max-age=5184000&#39;;
+    add_header X-Frame-Options &#34;SAMEORIGIN&#34; always;
+    add_header X-Xss-Protection &#34;1; mode=block&#34; always;
+    add_header X-Content-Type-Options &#34;nosniff&#34; always;
 ...
 </code></pre><p>Подробности и нюансы использования данных заголовков великолепно описал <a href="https://securityheaders.io/about/">Scott Helme</a>, от себя могу добавить только что самым неоднозначным и непростым в настройке из них является <code>add_header Public-Key-Pins ...</code> — в его правильной настройке мне помогли материалы из блогов <a href="https://www.rivy.org/2015/12/hpkp-letsencrypt/">Thomas Elsen</a>, <a href="https://ithenrik.com/blog/posts/activating-http-public-key-pinning-hpkp-on-lets-encrypt">Henrik Lilleengen</a> и <a href="https://jkphl.is/articles/certbot-http-public-key-pinning-hpkp/">Joschi Kuphal</a>, а после получения максимальной оценки от <a href="https://securityheaders.io/">securityheaders.io</a> я временно отключил его.</p>
 <p>После внесенных изменений перечитываем конфигурацию Nginx:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -s reload
-</code></pre></div><p>И проверяем сайт на ресурсах, указанных в начале статьи. На <a href="https://securityheaders.io/">securityheaders.io</a> вполне можно получить и оценку A+, если в заголовке <code>add_header Content-Security-Policy</code> убрать значение <code>'unsafe-inline'</code> из секции <code>script-src</code>, но тогда возникают проблемы с отображением рекламных баннеров на сайте.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nginx -s reload
+</span></span></code></pre></div><p>И проверяем сайт на ресурсах, указанных в начале статьи. На <a href="https://securityheaders.io/">securityheaders.io</a> вполне можно получить и оценку A+, если в заголовке <code>add_header Content-Security-Policy</code> убрать значение <code>'unsafe-inline'</code> из секции <code>script-src</code>, но тогда возникают проблемы с отображением рекламных баннеров на сайте.</p>
                 </section>
             </article>
 
@@ -232,7 +232,7 @@ resolver_timeout 10s;
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

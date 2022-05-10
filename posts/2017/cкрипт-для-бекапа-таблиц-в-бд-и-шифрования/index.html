@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,47 +104,47 @@
 <p>Но как поступить, если нужна резервная копия не всей БД, а лишь одной таблицы? Давайте разберемся!</p>
 <p>Скрипт выполняет резервное копирование БД (кроме test | information_schema | performance_schema) и отдельных таблиц в этих БД с помощью утилиты <code>mysqldump</code>. Дамп таблиц сжимается сначала в <code>.gz</code>, потом в <code>.bz2</code> (при этом архив <code>.gz</code> удаляется). Созданный архив <code>.bz2</code> <a href="https://ealebed.github.io/posts/2017/openssl-%D0%BF%D1%80%D0%BE%D1%81%D1%82%D0%BE%D0%B5-%D1%88%D0%B8%D1%84%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D1%84%D0%B0%D0%B9%D0%BB%D0%BE%D0%B2-%D1%81-%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5%D0%BC-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D1%8F/">шифруется с помощью <code>openssl</code></a> с последующим удалением незашифрованного архива.
 Хранится 5 резервных копий, более старые — удаляются.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/bash
-</span><span style="color:#75715e"></span> 
-date<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>date +%Y-%m-%d<span style="color:#e6db74">`</span>
-MYSQL<span style="color:#f92672">=</span>/usr/bin/mysql
-DUMP<span style="color:#f92672">=</span>/usr/bin/mysqldump
-DUMPOPTIONS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-ceqQ --single-transaction --add-drop-table --allow-keywords --events&#34;</span>
-ACCOUNT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--defaults-file=/root/.my.cnf&#34;</span> <span style="color:#75715e"># данные для подключения к MySQL</span>
-PASS<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>cat /root/bin/.pass<span style="color:#e6db74">`</span> <span style="color:#75715e"># пароль для шифрования архива</span>
-BKPDIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/backup/sync/mysql/&#34;</span>
-DBASES_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$BKPDIR<span style="color:#e6db74">/</span>$date<span style="color:#e6db74">/db&#34;</span>
-TABLES_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$BKPDIR<span style="color:#e6db74">/</span>$date<span style="color:#e6db74">/tables&#34;</span>
-DATABASES<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>$MYSQL $ACCOUNT -Bse <span style="color:#e6db74">&#39;show databases&#39;</span>|grep -vP <span style="color:#e6db74">&#39;information_schema|performance_schema&#39;</span><span style="color:#e6db74">`</span>
-mkdir -p $DBASES_DIR
-<span style="color:#66d9ef">for</span> i in $DATABASES; <span style="color:#66d9ef">do</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$i<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;test&#34;</span> <span style="color:#f92672">]</span>;
-    <span style="color:#66d9ef">then</span>
-        <span style="color:#66d9ef">continue</span>
-    <span style="color:#66d9ef">fi</span>
-    echo $DATABASES:;
-    <span style="color:#f92672">[</span> ! -d $TABLES_DIR/$i <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> mkdir -p $TABLES_DIR/$i
-    schem<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;\`</span>$i<span style="color:#e6db74">\`&#34;</span>
-    TABLES<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>$MYSQL $ACCOUNT -Bse <span style="color:#e6db74">&#34;show tables from </span>$schem<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">`</span>
-    <span style="color:#66d9ef">for</span> j in $TABLES;<span style="color:#66d9ef">do</span>
-        echo $i ___ $j ;
-        $DUMP $ACCOUNT $DUMPOPTIONS $i $j | gzip -1 &gt; $TABLES_DIR/$i/$j.sql.gz
-        zcat $TABLES_DIR/$i/$j.sql.gz | bzip2 -c | tee -a $DBASES_DIR/$i.sql.bz2 &gt; $TABLES_DIR/$i/$j.sql.bz2 <span style="color:#f92672">&amp;&amp;</span> rm -f $TABLES_DIR/$i/$j.sql.gz
-        openssl enc -aes-256-cbc -salt -pass pass:$PASS -in $TABLES_DIR/$i/$j.sql.bz2 -out $TABLES_DIR/$i/$j.sql.bz2.enc
-        rm -f $TABLES_DIR/$i/$j.sql.bz2
-    <span style="color:#66d9ef">done</span>
-<span style="color:#66d9ef">done</span>
-  
-arh<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>
-<span style="color:#66d9ef">for</span> cusr in <span style="color:#e6db74">`</span>ls $BKPDIR --full-time -t | awk <span style="color:#e6db74">&#39;{print $9}&#39;</span><span style="color:#e6db74">`</span>;
-    <span style="color:#66d9ef">do</span>
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span><span style="color:#e6db74">&#34;</span>$arh<span style="color:#e6db74">&#34;</span> &lt; 1<span style="color:#f92672">))</span>
-    <span style="color:#66d9ef">then</span>
-        <span style="color:#e6db74">`</span>rm -fr $BKPDIR/$cusr<span style="color:#e6db74">`</span>
-    <span style="color:#66d9ef">fi</span>
-    let <span style="color:#e6db74">&#34;arh -= 1&#34;</span>
-<span style="color:#66d9ef">done</span>
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> 
+</span></span><span style="display:flex;"><span>date<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>date +%Y-%m-%d<span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>MYSQL<span style="color:#f92672">=</span>/usr/bin/mysql
+</span></span><span style="display:flex;"><span>DUMP<span style="color:#f92672">=</span>/usr/bin/mysqldump
+</span></span><span style="display:flex;"><span>DUMPOPTIONS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-ceqQ --single-transaction --add-drop-table --allow-keywords --events&#34;</span>
+</span></span><span style="display:flex;"><span>ACCOUNT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--defaults-file=/root/.my.cnf&#34;</span> <span style="color:#75715e"># данные для подключения к MySQL</span>
+</span></span><span style="display:flex;"><span>PASS<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>cat /root/bin/.pass<span style="color:#e6db74">`</span> <span style="color:#75715e"># пароль для шифрования архива</span>
+</span></span><span style="display:flex;"><span>BKPDIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/backup/sync/mysql/&#34;</span>
+</span></span><span style="display:flex;"><span>DBASES_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$BKPDIR<span style="color:#e6db74">/</span>$date<span style="color:#e6db74">/db&#34;</span>
+</span></span><span style="display:flex;"><span>TABLES_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$BKPDIR<span style="color:#e6db74">/</span>$date<span style="color:#e6db74">/tables&#34;</span>
+</span></span><span style="display:flex;"><span>DATABASES<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>$MYSQL $ACCOUNT -Bse <span style="color:#e6db74">&#39;show databases&#39;</span>|grep -vP <span style="color:#e6db74">&#39;information_schema|performance_schema&#39;</span><span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>mkdir -p $DBASES_DIR
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i in $DATABASES; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$i<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;test&#34;</span> <span style="color:#f92672">]</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    echo $DATABASES:;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> ! -d $TABLES_DIR/$i <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> mkdir -p $TABLES_DIR/$i
+</span></span><span style="display:flex;"><span>    schem<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;\`</span>$i<span style="color:#e6db74">\`&#34;</span>
+</span></span><span style="display:flex;"><span>    TABLES<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>$MYSQL $ACCOUNT -Bse <span style="color:#e6db74">&#34;show tables from </span>$schem<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> j in $TABLES;<span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        echo $i ___ $j ;
+</span></span><span style="display:flex;"><span>        $DUMP $ACCOUNT $DUMPOPTIONS $i $j | gzip -1 &gt; $TABLES_DIR/$i/$j.sql.gz
+</span></span><span style="display:flex;"><span>        zcat $TABLES_DIR/$i/$j.sql.gz | bzip2 -c | tee -a $DBASES_DIR/$i.sql.bz2 &gt; $TABLES_DIR/$i/$j.sql.bz2 <span style="color:#f92672">&amp;&amp;</span> rm -f $TABLES_DIR/$i/$j.sql.gz
+</span></span><span style="display:flex;"><span>        openssl enc -aes-256-cbc -salt -pass pass:$PASS -in $TABLES_DIR/$i/$j.sql.bz2 -out $TABLES_DIR/$i/$j.sql.bz2.enc
+</span></span><span style="display:flex;"><span>        rm -f $TABLES_DIR/$i/$j.sql.bz2
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>arh<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> cusr in <span style="color:#e6db74">`</span>ls $BKPDIR --full-time -t | awk <span style="color:#e6db74">&#39;{print $9}&#39;</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span><span style="color:#e6db74">&#34;</span>$arh<span style="color:#e6db74">&#34;</span> &lt; 1<span style="color:#f92672">))</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">`</span>rm -fr $BKPDIR/$cusr<span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    let <span style="color:#e6db74">&#34;arh -= 1&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -236,7 +236,7 @@ arh<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

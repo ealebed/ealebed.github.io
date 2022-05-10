@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,17 +102,17 @@
                 <section id="post-body">
                     <p>Ранее мы уже рассматривали вопрос <a href="https://ealebed.github.io/posts/2015/%D0%B7%D0%B0%D1%89%D0%B8%D1%82%D0%B0-asterisk-11-%D0%BE%D1%82-%D0%BF%D0%BE%D0%B4%D0%B1%D0%BE%D1%80%D0%B0-%D0%BF%D0%B0%D1%80%D0%BE%D0%BB%D0%B5%D0%B9-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-fail2ban/">защиты Asterisk от подбора паролей средствами Fail2Ban</a>, но при плановом просмотре лога <code>/var/log/asterisk/messages</code> была обнаружена новая угроза. Давайте разберемся!</p>
 <p>В предыдущий раз мы настраивали <strong>Fail2Ban</strong> на анализ лога <code>/var/log/asterisk/security</code> и он успешно работает до сих пор. Однако сегодня совершенно случайно в логе <code>/var/log/asterisk/messages</code> я обнаружил множество записей вида:</p>
-<pre><code>...
-[2016-11-23 07:23:59] NOTICE[22012] manager.c: 149.56.250.122 tried to authenticate with nonexistent user 'event'
-[2016-11-23 07:23:59] NOTICE[22012] manager.c: 149.56.250.122 failed to authenticate as 'event'
-[2016-11-23 07:24:01] NOTICE[22013] manager.c: 149.56.250.122 tried to authenticate with nonexistent user 'manager'
-[2016-11-23 07:24:01] NOTICE[22013] manager.c: 149.56.250.122 failed to authenticate as 'manager'
-[2016-11-23 07:24:03] NOTICE[22014] manager.c: 149.56.250.122 tried to authenticate with nonexistent user 'manager'
-[2016-11-23 07:24:03] NOTICE[22014] manager.c: 149.56.250.122 failed to authenticate as 'manager'
+<pre tabindex="0"><code>...
+[2016-11-23 07:23:59] NOTICE[22012] manager.c: 149.56.250.122 tried to authenticate with nonexistent user &#39;event&#39;
+[2016-11-23 07:23:59] NOTICE[22012] manager.c: 149.56.250.122 failed to authenticate as &#39;event&#39;
+[2016-11-23 07:24:01] NOTICE[22013] manager.c: 149.56.250.122 tried to authenticate with nonexistent user &#39;manager&#39;
+[2016-11-23 07:24:01] NOTICE[22013] manager.c: 149.56.250.122 failed to authenticate as &#39;manager&#39;
+[2016-11-23 07:24:03] NOTICE[22014] manager.c: 149.56.250.122 tried to authenticate with nonexistent user &#39;manager&#39;
+[2016-11-23 07:24:03] NOTICE[22014] manager.c: 149.56.250.122 failed to authenticate as &#39;manager&#39;
 ...
 </code></pre><p>Такие логи появляются при неудачных попытках авторизироваться в <strong>Asterisk Management Interface</strong> (AMI), который используется на нашем проекте. Для устранения этого досадного недоразумения нужно выполнить пару действий.</p>
 <p>Во-первых, открываем конфигурационный файл <code>/etc/fail2ban/jail.local</code>, находим секцию, которая отвечает за настройки <code>jail</code>&lsquo;а Asterisk и добавляем параметру <code>logpath</code> еще одно значение для анализа логов:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 [asterisk-iptables]
 enabled  = true
 filter   = asterisk
@@ -124,39 +124,39 @@ maxretry = 5
 bantime = 259200
 ...
 </code></pre><p>Далее в конфигурационный файл <code>/etc/fail2ban/filter.d/asterisk.conf</code> добавляем еще один регэксп:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 ^(%(__prefix_line)s|\[\]\s*)%(log_prefix)s &lt;HOST&gt; tried to authenticate with nonexistent user
 ...
 </code></pre><p>Для применения изменений перезапускаем <strong>Fail2Ban</strong> командой:</p>
-<pre><code>/etc/init.d/fail2ban restart
+<pre tabindex="0"><code>/etc/init.d/fail2ban restart
 </code></pre><p>Проверить результат анализа лога <code>/var/log/asterisk/messages</code> на соответствие заданным регулярным выражениям можно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">fail2ban-regex /var/log/asterisk/messages /etc/fail2ban/filter.d/asterisk.conf
-
-Running tests
-<span style="color:#f92672">=============</span>
-
-Use   failregex file : /etc/fail2ban/filter.d/asterisk.conf
-Use         log file : /var/log/asterisk/messages
-
-
-Results
-<span style="color:#f92672">=======</span>
-
-Failregex: <span style="color:#ae81ff">1409</span> total
-|-  <span style="color:#75715e">#) [# of hits] regular expression</span>
-|  10<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>1409<span style="color:#f92672">]</span> ^<span style="color:#f92672">(</span><span style="color:#ae81ff">\s</span>*<span style="color:#f92672">(</span>&lt;<span style="color:#f92672">[</span>^.<span style="color:#f92672">]</span>+<span style="color:#ae81ff">\.</span><span style="color:#f92672">[</span>^.<span style="color:#f92672">]</span>+&gt;<span style="color:#f92672">)</span>?<span style="color:#ae81ff">\s</span>*<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\S</span>+ <span style="color:#f92672">)</span>?<span style="color:#f92672">(</span>?:kernel: <span style="color:#ae81ff">\[</span> *<span style="color:#ae81ff">\d</span>+<span style="color:#ae81ff">\.\d</span>+<span style="color:#ae81ff">\]</span> <span style="color:#f92672">)</span>?<span style="color:#f92672">(</span>?:@vserver_<span style="color:#ae81ff">\S</span>+ <span style="color:#f92672">)</span>?<span style="color:#f92672">(</span>?:<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\[\d</span>+<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>?:<span style="color:#ae81ff">\s</span>+<span style="color:#f92672">[</span><span style="color:#ae81ff">\[\(</span><span style="color:#f92672">]</span>?asterisk<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\(\S</span>+<span style="color:#ae81ff">\)</span><span style="color:#f92672">)</span>?<span style="color:#f92672">[</span><span style="color:#ae81ff">\]\)</span><span style="color:#f92672">]</span>?:?|<span style="color:#f92672">[</span><span style="color:#ae81ff">\[\(</span><span style="color:#f92672">]</span>?asterisk<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\(\S</span>+<span style="color:#ae81ff">\)</span><span style="color:#f92672">)</span>?<span style="color:#f92672">[</span><span style="color:#ae81ff">\]\)</span><span style="color:#f92672">]</span>?:?<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\[\d</span>+<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>?:?<span style="color:#f92672">)</span>?<span style="color:#ae81ff">\s</span><span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\[</span>ID <span style="color:#ae81ff">\d</span>+ <span style="color:#ae81ff">\S</span>+<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>?<span style="color:#ae81ff">\s</span>*|<span style="color:#ae81ff">\[\]\s</span>*<span style="color:#f92672">)(</span>?:NOTICE|SECURITY<span style="color:#f92672">)(</span>?:<span style="color:#ae81ff">\[\d</span>+<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>:?<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\[</span>C-<span style="color:#f92672">[</span><span style="color:#ae81ff">\d</span>a-f<span style="color:#f92672">]</span>*<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>? <span style="color:#ae81ff">\S</span>+:<span style="color:#ae81ff">\d</span>*<span style="color:#f92672">(</span> in <span style="color:#ae81ff">\w</span>+:<span style="color:#f92672">)</span>?  tried to authenticate with nonexistent user
-<span style="color:#e6db74">`</span>-
-
-Ignoreregex: <span style="color:#ae81ff">0</span> total
-
-Date template hits:
-|- <span style="color:#f92672">[</span><span style="color:#75715e"># of hits] date format</span>
-|  <span style="color:#f92672">[</span>3109<span style="color:#f92672">]</span> Year-Month-Day Hour:Minute:Second
-<span style="color:#e6db74">`</span>-
-
-Lines: <span style="color:#ae81ff">3132</span> lines, <span style="color:#ae81ff">0</span> ignored, <span style="color:#ae81ff">1409</span> matched, <span style="color:#ae81ff">1723</span> missed
-Missed line<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span>: too many to print.  Use --print-all-missed to print all <span style="color:#ae81ff">1723</span> lines
-</code></pre></div><p>Теперь логи будут чище, а сон немного спокойнее!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>fail2ban-regex /var/log/asterisk/messages /etc/fail2ban/filter.d/asterisk.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Running tests
+</span></span><span style="display:flex;"><span><span style="color:#f92672">=============</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Use   failregex file : /etc/fail2ban/filter.d/asterisk.conf
+</span></span><span style="display:flex;"><span>Use         log file : /var/log/asterisk/messages
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Results
+</span></span><span style="display:flex;"><span><span style="color:#f92672">=======</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Failregex: <span style="color:#ae81ff">1409</span> total
+</span></span><span style="display:flex;"><span>|-  <span style="color:#75715e">#) [# of hits] regular expression</span>
+</span></span><span style="display:flex;"><span>|  10<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>1409<span style="color:#f92672">]</span> ^<span style="color:#f92672">(</span><span style="color:#ae81ff">\s</span>*<span style="color:#f92672">(</span>&lt;<span style="color:#f92672">[</span>^.<span style="color:#f92672">]</span>+<span style="color:#ae81ff">\.</span><span style="color:#f92672">[</span>^.<span style="color:#f92672">]</span>+&gt;<span style="color:#f92672">)</span>?<span style="color:#ae81ff">\s</span>*<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\S</span>+ <span style="color:#f92672">)</span>?<span style="color:#f92672">(</span>?:kernel: <span style="color:#ae81ff">\[</span> *<span style="color:#ae81ff">\d</span>+<span style="color:#ae81ff">\.\d</span>+<span style="color:#ae81ff">\]</span> <span style="color:#f92672">)</span>?<span style="color:#f92672">(</span>?:@vserver_<span style="color:#ae81ff">\S</span>+ <span style="color:#f92672">)</span>?<span style="color:#f92672">(</span>?:<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\[\d</span>+<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>?:<span style="color:#ae81ff">\s</span>+<span style="color:#f92672">[</span><span style="color:#ae81ff">\[\(</span><span style="color:#f92672">]</span>?asterisk<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\(\S</span>+<span style="color:#ae81ff">\)</span><span style="color:#f92672">)</span>?<span style="color:#f92672">[</span><span style="color:#ae81ff">\]\)</span><span style="color:#f92672">]</span>?:?|<span style="color:#f92672">[</span><span style="color:#ae81ff">\[\(</span><span style="color:#f92672">]</span>?asterisk<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\(\S</span>+<span style="color:#ae81ff">\)</span><span style="color:#f92672">)</span>?<span style="color:#f92672">[</span><span style="color:#ae81ff">\]\)</span><span style="color:#f92672">]</span>?:?<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\[\d</span>+<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>?:?<span style="color:#f92672">)</span>?<span style="color:#ae81ff">\s</span><span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\[</span>ID <span style="color:#ae81ff">\d</span>+ <span style="color:#ae81ff">\S</span>+<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>?<span style="color:#ae81ff">\s</span>*|<span style="color:#ae81ff">\[\]\s</span>*<span style="color:#f92672">)(</span>?:NOTICE|SECURITY<span style="color:#f92672">)(</span>?:<span style="color:#ae81ff">\[\d</span>+<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>:?<span style="color:#f92672">(</span>?:<span style="color:#ae81ff">\[</span>C-<span style="color:#f92672">[</span><span style="color:#ae81ff">\d</span>a-f<span style="color:#f92672">]</span>*<span style="color:#ae81ff">\]</span><span style="color:#f92672">)</span>? <span style="color:#ae81ff">\S</span>+:<span style="color:#ae81ff">\d</span>*<span style="color:#f92672">(</span> in <span style="color:#ae81ff">\w</span>+:<span style="color:#f92672">)</span>?  tried to authenticate with nonexistent user
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">`</span>-
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Ignoreregex: <span style="color:#ae81ff">0</span> total
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Date template hits:
+</span></span><span style="display:flex;"><span>|- <span style="color:#f92672">[</span><span style="color:#75715e"># of hits] date format</span>
+</span></span><span style="display:flex;"><span>|  <span style="color:#f92672">[</span>3109<span style="color:#f92672">]</span> Year-Month-Day Hour:Minute:Second
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">`</span>-
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Lines: <span style="color:#ae81ff">3132</span> lines, <span style="color:#ae81ff">0</span> ignored, <span style="color:#ae81ff">1409</span> matched, <span style="color:#ae81ff">1723</span> missed
+</span></span><span style="display:flex;"><span>Missed line<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span>: too many to print.  Use --print-all-missed to print all <span style="color:#ae81ff">1723</span> lines
+</span></span></code></pre></div><p>Теперь логи будут чище, а сон немного спокойнее!</p>
                 </section>
             </article>
 
@@ -248,7 +248,7 @@ Missed line<span style="color:#f92672">(</span>s<span style="color:#f92672">)</s
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

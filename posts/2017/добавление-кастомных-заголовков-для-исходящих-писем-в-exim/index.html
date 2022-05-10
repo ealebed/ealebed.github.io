@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,7 +100,7 @@
                 <section id="post-body">
                     <p>Иногда в целях отладки или облегчения поиска в логах почтового сервера exim требуется добавить кастомный заголовок (custom header). Давайте разберемся, как это сделать для всех почтовых сообщений, отправляемых с сервера!</p>
 <p>Как оказалось, добавить кастомный заголовок для исходящих писем довольно легко. Считаем, что конфигурация почтового сервера находится в одном файле (<code>/etc/exim/exim.conf</code>). Версия <code>exim</code>:</p>
-<pre><code>exim --version
+<pre tabindex="0"><code>exim --version
 Exim version 4.84_2 #1 built 09-Oct-2016 12:33:06
 Copyright (c) University of Cambridge, 1995 - 2014
 (c) The Exim Maintainers and contributors in ACKNOWLEDGMENTS file, 2007 - 2014
@@ -114,7 +114,7 @@ Fixed never_users: 0
 Size of off_t: 8
 Configuration file is /etc/exim/exim.conf
 </code></pre><p>Добавлять кастомный заголовок будем с помощью <code>acl</code>. Для начала в секции <code>MAIN CONFIGURATION SETTINGS</code> находим следующие строки:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 acl_smtp_rcpt = acl_check_rcpt
 acl_smtp_data = acl_check_data
 acl_smtp_mime = acl_check_mime
@@ -122,11 +122,11 @@ acl_smtp_mime = acl_check_mime
 # You should not change those settings until you understand how ACLs work.
 ...
 </code></pre><p>и добавляем к ним еще одну:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 acl_not_smtp = acl_check_data
 </code></pre><p>Здесь <code>acl_not_smtp</code> — ACL для не-SMTP сообщений (генерируемых локально с точки зрения <code>exim</code>), подробнее <a href="http://www.lissyara.su/doc/exim/4.62/access_control_lists/">здесь</a>.</p>
 <p>Далее уже в секции <code>ACL CONFIGURATION</code> находим блок <code>acl_check_data</code> и в самом его конце (перед <code>accept</code>) добавляем такую строку:</p>
-<pre><code>    warn    logwrite   = DEBUG MESSAGE Subject: $h_subject: Custom-User-Email: $h_Custom-User-Email: Campaign-Id: $h_Campaign-Id:
+<pre tabindex="0"><code>    warn    logwrite   = DEBUG MESSAGE Subject: $h_subject: Custom-User-Email: $h_Custom-User-Email: Campaign-Id: $h_Campaign-Id:
 </code></pre><p>Этим самым для всех исходящих писем будет срабатывать предупреждение (<code>warn</code>), которому мы применяем модификатор <code>logwrite</code> (писать в лог), а далее уточняем, что именно писать в лог: фразу <code>DEBUG MESSAGE</code> и три дополнительных заголовка, необходимых мне для отладки (<code>$h_subject</code>, <code>$h_Custom-User-Email</code> и <code>$h_Campaign-Id</code>).</p>
                 </section>
             </article>
@@ -219,7 +219,7 @@ acl_not_smtp = acl_check_data
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

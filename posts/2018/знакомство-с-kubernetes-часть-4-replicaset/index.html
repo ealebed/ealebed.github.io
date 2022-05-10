@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -111,88 +111,88 @@
 <p>При описании <code>ReplicaSet</code> стоит указать, сколько экземпляров подов должно работать одновременно (а иначе какой смысл в использовании <code>ReplicaSet</code>), установив параметр <code>.spec.replicas</code>. Если этого не сделать, то будет запущен только один экземпляр пода -  <code>.spec.replicas</code> по умолчанию равно единице.</p>
 <p><code>ReplicaSet</code> может сам иметь метки - они должны быть установлены в разделе <code>.metadata.labels</code>. Как правило, их нужно устанавливать по аналогии с установкой меток в секции <code>.spec.template.metadata.labels</code>, но сами метки могут быть разными, потому что <code>.metadata.labels</code> не влияют на поведение <code>ReplicaSet</code>.</p>
 <p>Пример описания <code>ReplicaSet</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">apps/v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ReplicaSet</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">frontend</span>
-  <span style="color:#f92672">labels</span>:
-    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">guestbook</span>
-    <span style="color:#f92672">tier</span>: <span style="color:#ae81ff">frontend</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">3</span>
-  <span style="color:#f92672">selector</span>:
-    <span style="color:#f92672">matchLabels</span>:
-      <span style="color:#f92672">tier</span>: <span style="color:#ae81ff">frontend</span>
-    <span style="color:#f92672">matchExpressions</span>:
-      - {<span style="color:#f92672">key: tier, operator: In, values</span>: [<span style="color:#ae81ff">frontend]}</span>
-  <span style="color:#f92672">template</span>:
-    <span style="color:#f92672">metadata</span>:
-      <span style="color:#f92672">labels</span>:
-        <span style="color:#f92672">app</span>: <span style="color:#ae81ff">guestbook</span>
-        <span style="color:#f92672">tier</span>: <span style="color:#ae81ff">frontend</span>
-    <span style="color:#f92672">spec</span>:
-      <span style="color:#f92672">containers</span>:
-      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">php-redis</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">gcr.io/google_samples/gb-frontend:v3</span>
-        <span style="color:#f92672">resources</span>:
-          <span style="color:#f92672">requests</span>:
-            <span style="color:#f92672">cpu</span>: <span style="color:#ae81ff">100m</span>
-            <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">100Mi</span>
-        <span style="color:#f92672">env</span>:
-        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">GET_HOSTS_FROM</span>
-          <span style="color:#f92672">value</span>: <span style="color:#ae81ff">env</span>
-        <span style="color:#f92672">ports</span>:
-        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">80</span>
-</code></pre></div><p>Предложенный манифест можно сохранить в файл <code>frontend.yaml</code> и запустить в кластере <code>Kubernetes</code> с помощью утилиты командной строки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f frontend.yaml
-</code></pre></div><p>Просмотреть детальное состояние запущенного выше <code>ReplicaSet</code> можно с помощью команды <code>kubectl describe rs/frontend</code>, результат выполнения команды будет примерно следующим:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Name:		frontend
-Namespace:	default
-Selector:	tier<span style="color:#f92672">=</span>frontend,tier in <span style="color:#f92672">(</span>frontend<span style="color:#f92672">)</span>
-Labels:		app<span style="color:#f92672">=</span>guestbook
-		tier<span style="color:#f92672">=</span>frontend
-Annotations:	&lt;none&gt;
-Replicas:	<span style="color:#ae81ff">3</span> current / <span style="color:#ae81ff">3</span> desired
-Pods Status:	<span style="color:#ae81ff">3</span> Running / <span style="color:#ae81ff">0</span> Waiting / <span style="color:#ae81ff">0</span> Succeeded / <span style="color:#ae81ff">0</span> Failed
-Pod Template:
-  Labels:       app<span style="color:#f92672">=</span>guestbook
-                tier<span style="color:#f92672">=</span>frontend
-  Containers:
-   php-redis:
-    Image:      gcr.io/google_samples/gb-frontend:v3
-    Port:       80/TCP
-    Requests:
-      cpu:      100m
-      memory:   100Mi
-    Environment:
-      GET_HOSTS_FROM:   env
-    Mounts:             &lt;none&gt;
-  Volumes:              &lt;none&gt;
-Events:
-  FirstSeen    LastSeen    Count    From                SubobjectPath    Type        Reason            Message
-  ---------    --------    -----    ----                -------------    --------    ------            -------
-  1m           1m          <span style="color:#ae81ff">1</span>        <span style="color:#f92672">{</span>replicaset-controller <span style="color:#f92672">}</span>             Normal      SuccessfulCreate  Created pod: frontend-qhloh
-  1m           1m          <span style="color:#ae81ff">1</span>        <span style="color:#f92672">{</span>replicaset-controller <span style="color:#f92672">}</span>             Normal      SuccessfulCreate  Created pod: frontend-dnjpy
-  1m           1m          <span style="color:#ae81ff">1</span>        <span style="color:#f92672">{</span>replicaset-controller <span style="color:#f92672">}</span>             Normal      SuccessfulCreate  Created pod: frontend-9si5l
-</code></pre></div><p>Для удаления <code>ReplicaSet</code> и всех его подов, нужно использовать команду <code>kubectl delete ...</code>. При этом <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-15-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-kubectl/">утилита <code>kubectl</code></a> выполнит масштабирование количества реплик до нуля, дождется удаления каждого пода и удалит сам <code>ReplicaSet</code>. При использовании REST API все три шага нужно выполнять отдельно и в правильной очередности.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">apps/v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ReplicaSet</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">labels</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">app</span>: <span style="color:#ae81ff">guestbook</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">tier</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">selector</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">matchLabels</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">tier</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">matchExpressions</span>:
+</span></span><span style="display:flex;"><span>      - {<span style="color:#f92672">key: tier, operator: In, values</span>: [<span style="color:#ae81ff">frontend]}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">template</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">labels</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">app</span>: <span style="color:#ae81ff">guestbook</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">tier</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">containers</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">php-redis</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">gcr.io/google_samples/gb-frontend:v3</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">resources</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">requests</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">cpu</span>: <span style="color:#ae81ff">100m</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">100Mi</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">env</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">GET_HOSTS_FROM</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">value</span>: <span style="color:#ae81ff">env</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">containerPort</span>: <span style="color:#ae81ff">80</span>
+</span></span></code></pre></div><p>Предложенный манифест можно сохранить в файл <code>frontend.yaml</code> и запустить в кластере <code>Kubernetes</code> с помощью утилиты командной строки:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl create -f frontend.yaml
+</span></span></code></pre></div><p>Просмотреть детальное состояние запущенного выше <code>ReplicaSet</code> можно с помощью команды <code>kubectl describe rs/frontend</code>, результат выполнения команды будет примерно следующим:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Name:		frontend
+</span></span><span style="display:flex;"><span>Namespace:	default
+</span></span><span style="display:flex;"><span>Selector:	tier<span style="color:#f92672">=</span>frontend,tier in <span style="color:#f92672">(</span>frontend<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Labels:		app<span style="color:#f92672">=</span>guestbook
+</span></span><span style="display:flex;"><span>		tier<span style="color:#f92672">=</span>frontend
+</span></span><span style="display:flex;"><span>Annotations:	&lt;none&gt;
+</span></span><span style="display:flex;"><span>Replicas:	<span style="color:#ae81ff">3</span> current / <span style="color:#ae81ff">3</span> desired
+</span></span><span style="display:flex;"><span>Pods Status:	<span style="color:#ae81ff">3</span> Running / <span style="color:#ae81ff">0</span> Waiting / <span style="color:#ae81ff">0</span> Succeeded / <span style="color:#ae81ff">0</span> Failed
+</span></span><span style="display:flex;"><span>Pod Template:
+</span></span><span style="display:flex;"><span>  Labels:       app<span style="color:#f92672">=</span>guestbook
+</span></span><span style="display:flex;"><span>                tier<span style="color:#f92672">=</span>frontend
+</span></span><span style="display:flex;"><span>  Containers:
+</span></span><span style="display:flex;"><span>   php-redis:
+</span></span><span style="display:flex;"><span>    Image:      gcr.io/google_samples/gb-frontend:v3
+</span></span><span style="display:flex;"><span>    Port:       80/TCP
+</span></span><span style="display:flex;"><span>    Requests:
+</span></span><span style="display:flex;"><span>      cpu:      100m
+</span></span><span style="display:flex;"><span>      memory:   100Mi
+</span></span><span style="display:flex;"><span>    Environment:
+</span></span><span style="display:flex;"><span>      GET_HOSTS_FROM:   env
+</span></span><span style="display:flex;"><span>    Mounts:             &lt;none&gt;
+</span></span><span style="display:flex;"><span>  Volumes:              &lt;none&gt;
+</span></span><span style="display:flex;"><span>Events:
+</span></span><span style="display:flex;"><span>  FirstSeen    LastSeen    Count    From                SubobjectPath    Type        Reason            Message
+</span></span><span style="display:flex;"><span>  ---------    --------    -----    ----                -------------    --------    ------            -------
+</span></span><span style="display:flex;"><span>  1m           1m          <span style="color:#ae81ff">1</span>        <span style="color:#f92672">{</span>replicaset-controller <span style="color:#f92672">}</span>             Normal      SuccessfulCreate  Created pod: frontend-qhloh
+</span></span><span style="display:flex;"><span>  1m           1m          <span style="color:#ae81ff">1</span>        <span style="color:#f92672">{</span>replicaset-controller <span style="color:#f92672">}</span>             Normal      SuccessfulCreate  Created pod: frontend-dnjpy
+</span></span><span style="display:flex;"><span>  1m           1m          <span style="color:#ae81ff">1</span>        <span style="color:#f92672">{</span>replicaset-controller <span style="color:#f92672">}</span>             Normal      SuccessfulCreate  Created pod: frontend-9si5l
+</span></span></code></pre></div><p>Для удаления <code>ReplicaSet</code> и всех его подов, нужно использовать команду <code>kubectl delete ...</code>. При этом <a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-15-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-kubectl/">утилита <code>kubectl</code></a> выполнит масштабирование количества реплик до нуля, дождется удаления каждого пода и удалит сам <code>ReplicaSet</code>. При использовании REST API все три шага нужно выполнять отдельно и в правильной очередности.</p>
 <p>Есть возможность удалить <code>ReplicaSet</code>, не затрагивая ни один из его подов, для этого следует использовать <code>kubectl delete</code> с дополнительным параметром <code>--cascade=false</code>.</p>
 <p>Поды (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) могут быть удалены из набора <code>ReplicaSet</code> путем изменения их меток - этот вариант может пригодиться при отладке, восстановлении данных и т. д. Поды, которые удаляются таким образом, будут автоматически заменены (при условии, что количество реплик в наборе <code>ReplicaSet</code> также не изменяется).</p>
 <p><code>ReplicaSet</code> можно легко масштабировать (вверх или вниз), просто меняя значение поля <code>.spec.replicas</code>.</p>
 <p>Стоит отметить, что наборы <code>ReplicaSet</code> могут использоваться для горизонтального масштабирования подов (автоскейлинга, <a href="https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/">HPA</a>). Пример настройки такого масштабирования (в зависимости от использования CPU) для созданного ранее <code>ReplicaSet</code> будет выглядеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">autoscaling/v1</span>
-<span style="color:#f92672">kind</span>: <span style="color:#ae81ff">HorizontalPodAutoscaler</span>
-<span style="color:#f92672">metadata</span>:
-  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">frontend-scaler</span>
-<span style="color:#f92672">spec</span>:
-  <span style="color:#f92672">scaleTargetRef</span>:
-    <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ReplicaSet</span>
-    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">frontend</span>
-  <span style="color:#f92672">minReplicas</span>: <span style="color:#ae81ff">3</span>
-  <span style="color:#f92672">maxReplicas</span>: <span style="color:#ae81ff">10</span>
-  <span style="color:#f92672">targetCPUUtilizationPercentage</span>: <span style="color:#ae81ff">50</span>
-</code></pre></div><p>Сохраняем предложенный манифест в файл <code>hpa-rs.yaml</code> и запускаем его в кластере <code>Kubernetes</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kubectl create -f hpa-rs.yaml
-</code></pre></div><p>Альтернативы использования <code>ReplicaSet</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">autoscaling/v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">HorizontalPodAutoscaler</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">frontend-scaler</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">scaleTargetRef</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ReplicaSet</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">frontend</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">minReplicas</span>: <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">maxReplicas</span>: <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">targetCPUUtilizationPercentage</span>: <span style="color:#ae81ff">50</span>
+</span></span></code></pre></div><p>Сохраняем предложенный манифест в файл <code>hpa-rs.yaml</code> и запускаем его в кластере <code>Kubernetes</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl create -f hpa-rs.yaml
+</span></span></code></pre></div><p>Альтернативы использования <code>ReplicaSet</code>:</p>
 <ul>
 <li>Deployment (рекомендуемый);</li>
 <li>Job (для подов, которые должны &ldquo;завершаться&rdquo; самостоятельно после выполнения определенной задачи);</li>
@@ -290,7 +290,7 @@ Events:
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

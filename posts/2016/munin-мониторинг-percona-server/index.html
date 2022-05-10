@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,62 +104,62 @@
                 <section id="post-body">
                     <p>Давайте разберемся, как <strong>отслеживать важные параметры Percona Server</strong> и отображать их на графиках в <strong>системе мониторинга Munin</strong>!</p>
 <p>Считаем, что у нас уже установлен Munin со всеми необходимыми зависимостями и Percona Server. Как уже упоминалось <a href="https://ealebed.github.io/posts/2016/missing-dependency-cache-cache-at-etc-munin-plugins-mysql_/">ранее</a>, настройки плагинов <code>mysql*</code> находятся в файле <code>/etc/munin/plugin-conf.d/munin-node</code> и имеют примерно следующий вид:</p>
-<pre><code>[mysql*]
+<pre tabindex="0"><code>[mysql*]
 user root
 env.mysqlopts --defaults-file=/etc/mysql/debian.cnf
 env.mysqluser munin
 env.mysqlpassword &lt;Очень_сложный_пароль&gt;
 env.mysqlconnection DBI:mysql:mysql;host=127.0.0.1;port=3306
 </code></pre><p>Не забываем создать соответствующего пользователя в базе данных с помощью следующих запросов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">USER</span> munin<span style="color:#f92672">@</span><span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span> IDENTIFIED <span style="color:#66d9ef">BY</span> <span style="color:#e6db74">&#39;&lt; Очень_сложный_пароль &gt;&#39;</span>;
-<span style="color:#66d9ef">GRANT</span> SUPER,PROCESS <span style="color:#66d9ef">ON</span> <span style="color:#f92672">*</span>.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> munin<span style="color:#f92672">@</span><span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span>;
-<span style="color:#66d9ef">GRANT</span> <span style="color:#66d9ef">SELECT</span> <span style="color:#66d9ef">ON</span> mysql.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> munin<span style="color:#f92672">@</span><span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span>;
-FLUSH <span style="color:#66d9ef">PRIVILEGES</span>;
-</code></pre></div><p>Просмотрим все доступные для использования плагины мониторинга баз данных MySQL командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">munin-node-configure --suggest 2&gt;&amp;<span style="color:#ae81ff">1</span> | grep mysql
-</code></pre></div><p>Результат выполнения команды выглядит примерно так:</p>
-<pre><code>mysql_                     | yes  | yes (innodb_bpool innodb_bpool_act innodb_io tmp_tables +bin_relay_log +commands +connections +files_tables +innodb_insert_buf +innodb_io_pend +innodb_log +innodb_rows +innodb_semaphores +innodb_tnx +myisam_indexes +network_traffic +qcache +qcache_mem +replication +select_types +slow +sorts +table_locks)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">USER</span> munin<span style="color:#f92672">@</span><span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span> IDENTIFIED <span style="color:#66d9ef">BY</span> <span style="color:#e6db74">&#39;&lt; Очень_сложный_пароль &gt;&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">GRANT</span> SUPER,PROCESS <span style="color:#66d9ef">ON</span> <span style="color:#f92672">*</span>.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> munin<span style="color:#f92672">@</span><span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">GRANT</span> <span style="color:#66d9ef">SELECT</span> <span style="color:#66d9ef">ON</span> mysql.<span style="color:#f92672">*</span> <span style="color:#66d9ef">TO</span> munin<span style="color:#f92672">@</span><span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>FLUSH <span style="color:#66d9ef">PRIVILEGES</span>;
+</span></span></code></pre></div><p>Просмотрим все доступные для использования плагины мониторинга баз данных MySQL командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>munin-node-configure --suggest 2&gt;&amp;<span style="color:#ae81ff">1</span> | grep mysql
+</span></span></code></pre></div><p>Результат выполнения команды выглядит примерно так:</p>
+<pre tabindex="0"><code>mysql_                     | yes  | yes (innodb_bpool innodb_bpool_act innodb_io tmp_tables +bin_relay_log +commands +connections +files_tables +innodb_insert_buf +innodb_io_pend +innodb_log +innodb_rows +innodb_semaphores +innodb_tnx +myisam_indexes +network_traffic +qcache +qcache_mem +replication +select_types +slow +sorts +table_locks)
 </code></pre><p>Для создания симлинков на все плагины в директории <code>/etc/munin/plugins/</code> запускаем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">munin-node-configure --shell 2&gt;&amp;<span style="color:#ae81ff">1</span> | grep mysql | /bin/bash
-</code></pre></div><p><strong>Примечание.</strong> Гораздо лучше из списка доступных выбрать только действительно необходимые плагины и включить их вручную.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>munin-node-configure --shell 2&gt;&amp;<span style="color:#ae81ff">1</span> | grep mysql | /bin/bash
+</span></span></code></pre></div><p><strong>Примечание.</strong> Гораздо лучше из списка доступных выбрать только действительно необходимые плагины и включить их вручную.</p>
 <p>Проверим корректность работы плагина с помощью <code>munin-run</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">munin-run mysql_innodb_bpool_act
-Unknown section: Main thread process no. 4159, id 140055130330880, state: sleeping at /etc/munin/plugins/mysql_innodb_bpool_act line 1098.
-</code></pre></div><p>Получаем сообщение об ошибке, которое можно довольно легко исправить. Открываем на редактирование файл <code>/usr/share/munin/plugins/mysql_</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano /usr/share/munin/plugins/mysql_
-</code></pre></div><p>Находим процедуру <code>update_innodb</code> (в моем случае это 965 строка) и в ней после строки <code>$sth-&gt;finish();</code> добавляем еще одну <code>$status =~ s/-----------------\nMain thread//g;</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>munin-run mysql_innodb_bpool_act
+</span></span><span style="display:flex;"><span>Unknown section: Main thread process no. 4159, id 140055130330880, state: sleeping at /etc/munin/plugins/mysql_innodb_bpool_act line 1098.
+</span></span></code></pre></div><p>Получаем сообщение об ошибке, которое можно довольно легко исправить. Открываем на редактирование файл <code>/usr/share/munin/plugins/mysql_</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano /usr/share/munin/plugins/mysql_
+</span></span></code></pre></div><p>Находим процедуру <code>update_innodb</code> (в моем случае это 965 строка) и в ней после строки <code>$sth-&gt;finish();</code> добавляем еще одну <code>$status =~ s/-----------------\nMain thread//g;</code></p>
 <p>В результате эта процедура будет выглядеть следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-py" data-lang="py"><span style="color:#f92672">...</span>
-sub update_innodb {
-    my (<span style="color:#960050;background-color:#1e0010">$</span>dbh) <span style="color:#f92672">=</span> <span style="color:#a6e22e">@_</span>;
- 
-    my <span style="color:#960050;background-color:#1e0010">$</span>sth <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">$</span>dbh<span style="color:#f92672">-&gt;</span>prepare(<span style="color:#e6db74">&#39;SHOW /*!50000 ENGINE*/ INNODB STATUS&#39;</span>);
-    eval {
-  <span style="color:#960050;background-color:#1e0010">$</span>sth<span style="color:#f92672">-&gt;</span>execute();
-    };
-    <span style="color:#66d9ef">if</span> (<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#f92672">@</span>) {
-  <span style="color:#66d9ef">if</span> (<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#f92672">@</span> <span style="color:#f92672">=~</span> <span style="color:#f92672">/</span>Unknown (storage<span style="color:#f92672">|</span>table) engine <span style="color:#e6db74">&#39;INNODB&#39;</span><span style="color:#f92672">|</span>Cannot call SHOW INNODB STATUS because skip<span style="color:#f92672">-</span>innodb <span style="color:#f92672">is</span> defined<span style="color:#f92672">/</span>i) {
-      <span style="color:#960050;background-color:#1e0010">$</span>data<span style="color:#f92672">-&gt;</span>{_innodb_disabled} <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
-      <span style="color:#66d9ef">return</span>;
-  }
-  die <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#f92672">@</span>;
-    }
-    my <span style="color:#960050;background-color:#1e0010">$</span>row <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">$</span>sth<span style="color:#f92672">-&gt;</span>fetchrow_hashref();
-    my <span style="color:#960050;background-color:#1e0010">$</span>status <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">$</span>row<span style="color:#f92672">-&gt;</span>{<span style="color:#e6db74">&#39;status&#39;</span>};
-    <span style="color:#960050;background-color:#1e0010">$</span>sth<span style="color:#f92672">-&gt;</span>finish();
-    <span style="color:#960050;background-color:#1e0010">$</span>status <span style="color:#f92672">=~</span> s<span style="color:#f92672">/-----------------</span>\nMain thread<span style="color:#f92672">//</span>g;
-    parse_innodb_status(<span style="color:#960050;background-color:#1e0010">$</span>status);
-}
-<span style="color:#f92672">...</span>
-</code></pre></div><p>Еще раз проверим работоспособность плагина:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">munin-run mysql_innodb_bpool
-ib_bpool_size.value <span style="color:#ae81ff">4194303</span>
-ib_bpool_dbpages.value <span style="color:#ae81ff">3527649</span>
-ib_bpool_free.value <span style="color:#ae81ff">0</span>
-ib_bpool_modpages.value <span style="color:#ae81ff">30115</span>
-</code></pre></div><p>Не забываем перезапустить <code>munin-node</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/munin-node restart
-</code></pre></div><p>Спустя несколько минут графики появятся в web-интерфейсе системы мониторинга.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>sub update_innodb {
+</span></span><span style="display:flex;"><span>    my (<span style="color:#960050;background-color:#1e0010">$</span>dbh) <span style="color:#f92672">=</span> <span style="color:#a6e22e">@_</span>;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    my <span style="color:#960050;background-color:#1e0010">$</span>sth <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">$</span>dbh<span style="color:#f92672">-&gt;</span>prepare(<span style="color:#e6db74">&#39;SHOW /*!50000 ENGINE*/ INNODB STATUS&#39;</span>);
+</span></span><span style="display:flex;"><span>    eval {
+</span></span><span style="display:flex;"><span>  <span style="color:#960050;background-color:#1e0010">$</span>sth<span style="color:#f92672">-&gt;</span>execute();
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#f92672">@</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#f92672">@</span> <span style="color:#f92672">=~</span> <span style="color:#f92672">/</span>Unknown (storage<span style="color:#f92672">|</span>table) engine <span style="color:#e6db74">&#39;INNODB&#39;</span><span style="color:#f92672">|</span>Cannot call SHOW INNODB STATUS because skip<span style="color:#f92672">-</span>innodb <span style="color:#f92672">is</span> defined<span style="color:#f92672">/</span>i) {
+</span></span><span style="display:flex;"><span>      <span style="color:#960050;background-color:#1e0010">$</span>data<span style="color:#f92672">-&gt;</span>{_innodb_disabled} <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  die <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#f92672">@</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    my <span style="color:#960050;background-color:#1e0010">$</span>row <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">$</span>sth<span style="color:#f92672">-&gt;</span>fetchrow_hashref();
+</span></span><span style="display:flex;"><span>    my <span style="color:#960050;background-color:#1e0010">$</span>status <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">$</span>row<span style="color:#f92672">-&gt;</span>{<span style="color:#e6db74">&#39;status&#39;</span>};
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">$</span>sth<span style="color:#f92672">-&gt;</span>finish();
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">$</span>status <span style="color:#f92672">=~</span> s<span style="color:#f92672">/-----------------</span>\nMain thread<span style="color:#f92672">//</span>g;
+</span></span><span style="display:flex;"><span>    parse_innodb_status(<span style="color:#960050;background-color:#1e0010">$</span>status);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span></code></pre></div><p>Еще раз проверим работоспособность плагина:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>munin-run mysql_innodb_bpool
+</span></span><span style="display:flex;"><span>ib_bpool_size.value <span style="color:#ae81ff">4194303</span>
+</span></span><span style="display:flex;"><span>ib_bpool_dbpages.value <span style="color:#ae81ff">3527649</span>
+</span></span><span style="display:flex;"><span>ib_bpool_free.value <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>ib_bpool_modpages.value <span style="color:#ae81ff">30115</span>
+</span></span></code></pre></div><p>Не забываем перезапустить <code>munin-node</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/munin-node restart
+</span></span></code></pre></div><p>Спустя несколько минут графики появятся в web-интерфейсе системы мониторинга.</p>
                 </section>
             </article>
 
@@ -251,7 +251,7 @@ ib_bpool_modpages.value <span style="color:#ae81ff">30115</span>
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

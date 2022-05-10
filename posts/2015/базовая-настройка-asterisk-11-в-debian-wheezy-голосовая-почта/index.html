@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,14 +102,14 @@
                 <section id="post-body">
                     <p>В <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%BE%D0%B1%D1%81%D0%BB%D1%83%D0%B6%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B2%D0%BD%D1%83%D1%82%D1%80%D0%B5%D0%BD%D0%BD%D0%B8%D1%85-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%BE%D0%B2/">предыдущей</a> статье мы успешно настроили Asterisk для обслуживания внутренних звонков, теперь давайте разберемся с <strong>настройкой голосовой почты в Asterisk 11</strong>.</p>
 <p>Прежде всего, нужно отредактировать конфигурационный файл <code>/etc/asterisk/extensions.conf</code> и привести его к следующему виду:</p>
-<pre><code>[office]
+<pre tabindex="0"><code>[office]
 ; внутренние 3-х значные номера, начинаются с 1
 exten =&gt; _1XX,1,Set(TARGETNO=${EXTEN})
 exten =&gt; _1XX,n,Set(fname=${STRFTIME(${EPOCH},,%Y%m%d)}-${UNIQUEID})
 exten =&gt; _1XX,n,MixMonitor(/var/spool/asterisk/monitor/${fname}.wav)
 exten =&gt; _1XX,n,Set(AUDIOHOOK_INHERIT(MixMonitor)=yes)
 exten =&gt; _1XX,n,Dial(SIP/${EXTEN},15,mg)
-exten =&gt; _1XX,n,Log(NOTICE, &quot;DIALSTATUS = ${DIALSTATUS}&quot;)
+exten =&gt; _1XX,n,Log(NOTICE, &#34;DIALSTATUS = ${DIALSTATUS}&#34;)
 exten =&gt; _1XX,n,Goto(s-${DIALSTATUS},1)
  
 exten =&gt; s-BUSY,1,Goto(voicemail,1)
@@ -129,7 +129,7 @@ exten =&gt; voicemail,n,Hangup
 <ul>
 <li>в секции <code>[general]</code> должны быть раскомментированы следующие строки:</li>
 </ul>
-<pre><code>[general]
+<pre tabindex="0"><code>[general]
 format=wav
 serveremail=asterisk
 attach=yes
@@ -137,14 +137,14 @@ attach=yes
 <ul>
 <li>создадим секцию <code>[office]</code> такого вида:</li>
 </ul>
-<pre><code>[office]
+<pre tabindex="0"><code>[office]
 101 =&gt; ,&lt;Имя&gt; &lt;Фамилия&gt;,&lt;почтовый_ящик&gt;
 102 =&gt; ,&lt;Имя&gt; &lt;Фамилия&gt;,&lt;почтовый_ящик&gt;
 103 =&gt; ,&lt;Имя&gt; &lt;Фамилия&gt;,&lt;почтовый_ящик&gt;
 ...
 </code></pre><p>Здесь мы настраиваем ящики голосовой почты (без пароля). При поступлении нового голосового сообщения пользователю будет отправляться письмо с вложением на указанный почтовый ящик. Во вложении письма будет присутствовать само голосовое сообщение в формате <code>*.wav</code>.</p>
 <p>После внесения изменений в конфигурационные файлы не забываем выполнить:</p>
-<pre><code>/etc/init.d/asterisk reload
+<pre tabindex="0"><code>/etc/init.d/asterisk reload
 </code></pre><p>На этом <strong>базовая настройка голосовой почты в Asterisk’е</strong> закончена, далее рассмотрим <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%B2%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B8-%D0%B8%D1%81%D1%85%D0%BE%D0%B4%D1%8F%D1%89%D0%B8%D0%B5-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%B8/">настройку входящих и исходящих звонков</a>.</p>
                 </section>
             </article>
@@ -237,7 +237,7 @@ attach=yes
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

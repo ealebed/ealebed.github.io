@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -131,29 +131,28 @@
 <script type="application/javascript" src="https://gist.github.com/ealebed/494ad37566c0db949da9370939bd6282.js?file=FlywayMigrationTest.java"></script>
 
 <p>Как видим, для начала создается PostgreSQL контейнер с заданными параметрами:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#f92672">...</span>
-    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> PostgreSQLContainer container <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> PostgreSQLContainer<span style="color:#f92672">&lt;&gt;(</span>DOCKER_IMAGE<span style="color:#f92672">)</span>
-            <span style="color:#f92672">.</span><span style="color:#a6e22e">withDatabaseName</span><span style="color:#f92672">(</span>DB_NAME<span style="color:#f92672">)</span>
-            <span style="color:#f92672">.</span><span style="color:#a6e22e">withUsername</span><span style="color:#f92672">(</span>USERNAME<span style="color:#f92672">)</span>
-            <span style="color:#f92672">.</span><span style="color:#a6e22e">withPassword</span><span style="color:#f92672">(</span>PASSWORD<span style="color:#f92672">)</span>
-            <span style="color:#f92672">.</span><span style="color:#a6e22e">withInitScript</span><span style="color:#f92672">(</span>INIT_SCRIPT_PATH<span style="color:#f92672">);</span>
-<span style="color:#f92672">...</span>
-</code></pre></div><p>после чего он используется в двух тестах (валидации миграций на две БД):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">runDB1Migrations</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-        container<span style="color:#f92672">.</span><span style="color:#a6e22e">withDatabaseName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;database_01&#34;</span><span style="color:#f92672">);</span>
-        var flyway <span style="color:#f92672">=</span> Flyway<span style="color:#f92672">.</span><span style="color:#a6e22e">configure</span><span style="color:#f92672">()</span>
-                <span style="color:#f92672">.</span><span style="color:#a6e22e">locations</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;migrations/database_01/&#34;</span><span style="color:#f92672">)</span>
-                <span style="color:#f92672">.</span><span style="color:#a6e22e">schemas</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;public&#34;</span><span style="color:#f92672">)</span>
-                <span style="color:#f92672">.</span><span style="color:#a6e22e">dataSource</span><span style="color:#f92672">(</span>container<span style="color:#f92672">.</span><span style="color:#a6e22e">getJdbcUrl</span><span style="color:#f92672">(),</span> container<span style="color:#f92672">.</span><span style="color:#a6e22e">getUsername</span><span style="color:#f92672">(),</span> container<span style="color:#f92672">.</span><span style="color:#a6e22e">getPassword</span><span style="color:#f92672">())</span>
-                <span style="color:#f92672">.</span><span style="color:#a6e22e">load</span><span style="color:#f92672">();</span>
-        flyway<span style="color:#f92672">.</span><span style="color:#a6e22e">info</span><span style="color:#f92672">();</span>
-        flyway<span style="color:#f92672">.</span><span style="color:#a6e22e">migrate</span><span style="color:#f92672">();</span>
-    <span style="color:#f92672">}</span>
-
-</code></pre></div><p>Тесты между собой отличаются только конфигураций flyway (путь к миграциям - <code>locations(&quot;migrations/database_01/&quot;)</code>) и переключением на нужную БД в контейнере - <code>container.withDatabaseName(&quot;database_01&quot;);</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> PostgreSQLContainer container <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> PostgreSQLContainer<span style="color:#f92672">&lt;&gt;(</span>DOCKER_IMAGE<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">.</span><span style="color:#a6e22e">withDatabaseName</span><span style="color:#f92672">(</span>DB_NAME<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">.</span><span style="color:#a6e22e">withUsername</span><span style="color:#f92672">(</span>USERNAME<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">.</span><span style="color:#a6e22e">withPassword</span><span style="color:#f92672">(</span>PASSWORD<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">.</span><span style="color:#a6e22e">withInitScript</span><span style="color:#f92672">(</span>INIT_SCRIPT_PATH<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span></code></pre></div><p>после чего он используется в двух тестах (валидации миграций на две БД):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">runDB1Migrations</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        container<span style="color:#f92672">.</span><span style="color:#a6e22e">withDatabaseName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;database_01&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        var flyway <span style="color:#f92672">=</span> Flyway<span style="color:#f92672">.</span><span style="color:#a6e22e">configure</span><span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">.</span><span style="color:#a6e22e">locations</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;migrations/database_01/&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">.</span><span style="color:#a6e22e">schemas</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;public&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">.</span><span style="color:#a6e22e">dataSource</span><span style="color:#f92672">(</span>container<span style="color:#f92672">.</span><span style="color:#a6e22e">getJdbcUrl</span><span style="color:#f92672">(),</span> container<span style="color:#f92672">.</span><span style="color:#a6e22e">getUsername</span><span style="color:#f92672">(),</span> container<span style="color:#f92672">.</span><span style="color:#a6e22e">getPassword</span><span style="color:#f92672">())</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">.</span><span style="color:#a6e22e">load</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        flyway<span style="color:#f92672">.</span><span style="color:#a6e22e">info</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        flyway<span style="color:#f92672">.</span><span style="color:#a6e22e">migrate</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Тесты между собой отличаются только конфигураций flyway (путь к миграциям - <code>locations(&quot;migrations/database_01/&quot;)</code>) и переключением на нужную БД в контейнере - <code>container.withDatabaseName(&quot;database_01&quot;);</code></p>
 <p>Если все сделано правильно, то после запуска в консоли команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./gradlew test --info
-</code></pre></div><p>Можно увидеть примерно следующий результат:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./gradlew test --info
+</span></span></code></pre></div><p>Можно увидеть примерно следующий результат:</p>
 <script type="application/javascript" src="https://gist.github.com/ealebed/494ad37566c0db949da9370939bd6282.js?file=task_output"></script>
 
 <p>Далее можно <a href="https://docs.docker.com/engine/reference/commandline/commit/">&ldquo;закоммитить&rdquo;</a> контейнер с уже примененнными миграциями и использовать новый образ в других тестах - если миграций много и количество тестов исчисляется сотнями, можно существенно ускорить процесс тестирования - но об этом уже в отдельной статье.</p>
@@ -250,7 +249,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

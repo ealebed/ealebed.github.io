@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,16 +100,16 @@
                 <section id="post-body">
                     <p>Чтобы <code>Kubernetes</code> смог максимально эффективно использовать доступную инфраструктуру и корректно выделить ресурсы, необходимые для работы вашего приложения, вам следует указать требования в ресурсам каждого контейнера. В данный момент есть возможность задавать два типа требований (<code>requests</code> и <code>limits</code>) для двух типов ресурсов - памяти (<code>memory</code>) и процессора (<code>CPU</code>). В данной статье рассмотрим <code>requests</code> и <code>limits</code> применительно к памяти - давайте разберемся!</p>
 <p>При описании пода (<a href="https://ealebed.github.io/posts/2018/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-kubernetes-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-pods/"><code>Pods</code></a>) для каждого из его контейнеров могут быть заданы требования к ресурсам в следующем формате:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
-<span style="color:#f92672">resources</span>:
-  <span style="color:#f92672">limits</span>:
-    <span style="color:#f92672">cpu</span>: <span style="color:#e6db74">&#34;2&#34;</span>
-    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">2Gi</span>
-  <span style="color:#f92672">requests</span>:
-    <span style="color:#f92672">cpu</span>: <span style="color:#e6db74">&#34;2&#34;</span>
-    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">2Gi</span>
-...
-</code></pre></div><p>Тип требований <code>requests</code> используется в <code>Kubernetes</code> планировщиком для корректного размещения и запуска подов в существующей инфраструктуре, как бы говоря &ldquo;запусти контейнеры данного пода там, где есть достаточное количество запрощенных ресурсов&rdquo;. <code>Limits</code> - жесткое ограничение ресурсов, доступных контейнеру и среде его выполнения (тут и далее имеется в виду Docker container runtime). Превышение указанных лимитов (<code>limits</code>) ресурсов зачастую приводит к троттлингу или остановке (termination) контейнера.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">resources</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">limits</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">cpu</span>: <span style="color:#e6db74">&#34;2&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">2Gi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">requests</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">cpu</span>: <span style="color:#e6db74">&#34;2&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">2Gi</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Тип требований <code>requests</code> используется в <code>Kubernetes</code> планировщиком для корректного размещения и запуска подов в существующей инфраструктуре, как бы говоря &ldquo;запусти контейнеры данного пода там, где есть достаточное количество запрощенных ресурсов&rdquo;. <code>Limits</code> - жесткое ограничение ресурсов, доступных контейнеру и среде его выполнения (тут и далее имеется в виду Docker container runtime). Превышение указанных лимитов (<code>limits</code>) ресурсов зачастую приводит к троттлингу или остановке (termination) контейнера.</p>
 <p>Если значение <code>requests</code> для контейнера не указано, то по умолчанию будет использоваться значение установленное в <code>limits</code>. Если же не указано значение <code>limits</code>, то по умолчанию это значение будет равно 0 (если верить документации - неограниченно. На самом деле ограничивается ресурсами узла, на котором запускается под).</p>
 <p>Возникает вопрос, стоит ли указывать значения <code>limits</code> больше, чем <code>requests</code>? Если ваше приложение стабильно использует предсказуемый объем оперативной памяти, то устанавливать разные значения параметров <code>requests</code> и <code>limits</code> для памяти нет смысла. В случае с CPU, разница между заданными значениями <code>requests</code> и <code>limits</code> может не устанавливаться (при условии, что эти же ресурсы не используются другими контейнерами и их не нужно &ldquo;делить&rdquo;).</p>
 <p>Если вы новичок в <code>Kubernetes</code>, для начала лучше всего использовать значения <code>limits</code> точно такие же как и <code>requests</code> - это обеспечит так называемый &ldquo;гарантированный класс качества сервиса&rdquo; (<code>Guaranteed QoS</code> class, об этих классах чуть ниже). С другой стороны, класс <code>Burstable QoS</code> потенциально позволяет более эффективно использовать ресурсы инфраструктуры, правда, за счет большей непредсказуемости - например, рост CPU-latency может повлиять на остальные поды/контейнеры, запущенные на том же рабочем узле (ноде).</p>
@@ -220,7 +220,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

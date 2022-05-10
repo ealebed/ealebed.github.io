@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,68 +106,68 @@
 <p>Давайте разберемся со <strong>сбором и анализом логов web-сервера Nginx с помощью Graylog2</strong>!</p>
 <p>Для «быстрого развертывания» будем использовать docker-контейнеры, поэтому считаем что на вашем хосте уже установлен <code>docker</code> (например, <a href="https://ealebed.github.io/posts/2017/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-docker-%D0%B2-ubuntu-16.04/">так</a>) и <code>docker-compose</code>.</p>
 <p>Если же нет — выполняем следующие шаги для установки docker’а:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo add-apt-repository <span style="color:#e6db74">&#34;deb [arch=amd64] https://download.docker.com/linux/ubuntu </span><span style="color:#66d9ef">$(</span>lsb_release -cs<span style="color:#66d9ef">)</span><span style="color:#e6db74"> stable&#34;</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get update
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get install docker-ce
-</code></pre></div><p>Для установки последней версии <code>docker-compose</code> (версию смотрим <a href="https://ealebed.github.io/posts/2017/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-docker-%D0%B2-ubuntu-16.04/">здесь</a>) используем следующие команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export dockerComposeVersion<span style="color:#f92672">=</span>1.14.0
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -L https://github.com/docker/compose/releases/download/$dockerComposeVersion/docker-compose-<span style="color:#e6db74">`</span>uname -s<span style="color:#e6db74">`</span>-<span style="color:#e6db74">`</span>uname -m<span style="color:#e6db74">`</span> &gt; /usr/local/bin/docker-compose
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod +x /usr/local/bin/docker-compose
-</code></pre></div><p>Создаем файл <code>docker-compose.yml</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
-<span style="color:#f92672">services</span>:
-  <span style="color:#f92672">mongo</span>:
-    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">mongo</span>
-    <span style="color:#f92672">image</span>: <span style="color:#e6db74">&#34;mongo:3&#34;</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">/srv/graylog/data/mongo:/data/db</span>
-  <span style="color:#f92672">elasticsearch</span>:
-    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">elasticsearch</span>
-    <span style="color:#f92672">image</span>: <span style="color:#e6db74">&#34;elasticsearch:2&#34;</span>
-    <span style="color:#f92672">command</span>: <span style="color:#e6db74">&#34;elasticsearch -Des.cluster.name=&#39;graylog&#39;&#34;</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">/srv/graylog/data/elasticsearch:/usr/share/elasticsearch/data</span>
-  <span style="color:#f92672">graylog</span>:
-    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
-    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">graylog</span>
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">graylog2/server:2.2.3-1</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">/srv/graylog/data/journal:/usr/share/graylog/data/journal</span>
-      - <span style="color:#ae81ff">/srv/graylog/config:/usr/share/graylog/data/config</span>
-    <span style="color:#f92672">environment</span>:
-      <span style="color:#f92672">GRAYLOG_PASSWORD_SECRET</span>: <span style="color:#ae81ff">somepasswordpepper</span>
-      <span style="color:#f92672">GRAYLOG_ROOT_PASSWORD_SHA2</span>: <span style="color:#ae81ff">8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918</span>
-      <span style="color:#f92672">GRAYLOG_WEB_ENDPOINT_URI</span>: <span style="color:#ae81ff">http://graylog.lc:9911/api/</span>
-    <span style="color:#f92672">depends_on</span>:
-      - <span style="color:#ae81ff">mongo</span>
-      - <span style="color:#ae81ff">elasticsearch</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#e6db74">&#34;9911:9000&#34;</span>
-      - <span style="color:#e6db74">&#34;12201:12201/udp&#34;</span>
-      - <span style="color:#e6db74">&#34;1514:1514/udp&#34;</span>
-      - <span style="color:#e6db74">&#34;12301:12301/udp&#34;</span>
-      - <span style="color:#e6db74">&#34;12302:12302/udp&#34;</span>
-</code></pre></div><p>Находясь в каталоге с только что созданным файлом выполняем команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
-</code></pre></div><p>После запуска контейнеров необходимо подождать пару минут (при первом запуске Graylog2 стартует дольше), после чего можно залогиниться в web-интерфейс (в нашем примере — по адресу <a href="http://graylog.lc:9911">http://graylog.lc:9911</a>) используя стандартный логин и пароль: admin/admin.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo add-apt-repository <span style="color:#e6db74">&#34;deb [arch=amd64] https://download.docker.com/linux/ubuntu </span><span style="color:#66d9ef">$(</span>lsb_release -cs<span style="color:#66d9ef">)</span><span style="color:#e6db74"> stable&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt-get update
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt-get install docker-ce
+</span></span></code></pre></div><p>Для установки последней версии <code>docker-compose</code> (версию смотрим <a href="https://ealebed.github.io/posts/2017/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-docker-%D0%B2-ubuntu-16.04/">здесь</a>) используем следующие команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export dockerComposeVersion<span style="color:#f92672">=</span>1.14.0
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -L https://github.com/docker/compose/releases/download/$dockerComposeVersion/docker-compose-<span style="color:#e6db74">`</span>uname -s<span style="color:#e6db74">`</span>-<span style="color:#e6db74">`</span>uname -m<span style="color:#e6db74">`</span> &gt; /usr/local/bin/docker-compose
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x /usr/local/bin/docker-compose
+</span></span></code></pre></div><p>Создаем файл <code>docker-compose.yml</code> следующего содержания:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">mongo</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">mongo</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#e6db74">&#34;mongo:3&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">/srv/graylog/data/mongo:/data/db</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">elasticsearch</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">elasticsearch</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#e6db74">&#34;elasticsearch:2&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">command</span>: <span style="color:#e6db74">&#34;elasticsearch -Des.cluster.name=&#39;graylog&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">/srv/graylog/data/elasticsearch:/usr/share/elasticsearch/data</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">graylog</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">always</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">graylog</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">graylog2/server:2.2.3-1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">/srv/graylog/data/journal:/usr/share/graylog/data/journal</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">/srv/graylog/config:/usr/share/graylog/data/config</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">environment</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">GRAYLOG_PASSWORD_SECRET</span>: <span style="color:#ae81ff">somepasswordpepper</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">GRAYLOG_ROOT_PASSWORD_SHA2</span>: <span style="color:#ae81ff">8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">GRAYLOG_WEB_ENDPOINT_URI</span>: <span style="color:#ae81ff">http://graylog.lc:9911/api/</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">depends_on</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">mongo</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">elasticsearch</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;9911:9000&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;12201:12201/udp&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;1514:1514/udp&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;12301:12301/udp&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;12302:12302/udp&#34;</span>
+</span></span></code></pre></div><p>Находясь в каталоге с только что созданным файлом выполняем команду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose up -d
+</span></span></code></pre></div><p>После запуска контейнеров необходимо подождать пару минут (при первом запуске Graylog2 стартует дольше), после чего можно залогиниться в web-интерфейс (в нашем примере — по адресу <a href="http://graylog.lc:9911">http://graylog.lc:9911</a>) используя стандартный логин и пароль: admin/admin.</p>
 <p>Далее скачиваем контент-пак в json-формате по <a href="https://raw.githubusercontent.com/Graylog2/graylog-contentpack-nginx/master/content_pack.json">этой ссылке</a>, в web-интерфейсе грейлога переходим на вкладку &ldquo;System/Content Packs&rdquo;, выбираем пункт &ldquo;Import content pack&rdquo; и загружаем скачанный json-файл.</p>
 <p>После успешной загрузки контент пак nginx появится в пункте меню &ldquo;Web Servers&rdquo;, где можно ознакомиться с его описанием и обязательно нажать кнопку &ldquo;Apply content&rdquo;.</p>
 <p>Также необходимо внести минимальное количество правок в конфигурационный(е) файл web-сервера Nginx. В конфигурационные файлы сайтов (секция <code>server</code>) необходимо добавить следующие директивы:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-        access_log syslog:server=127.0.0.1:12301 graylog2_format;
-        error_log syslog:server=127.0.0.1:12302;
-...
-</code></pre></div><p>Формат лога (<code>graylog2_format</code>) определяется в основном конфигурационном файле (<code>nginx.conf</code>) и выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-log_format  graylog2_format  &#39;$remote_addr - $remote_user [$time_local] &#34;$request&#34; $status $body_bytes_sent &#34;$http_referer&#34; &#39;
-        &#39;&#34;$http_user_agent&#34; &#34;$http_x_forwarded_for&#34; &lt;msec=$msec|connection=$connection|connection_requests=$connection_requests|millis=$request_time&gt;&#39;;
-...
-</code></pre></div><p>Перечитываете конфиг Nginx командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx -s reload
-</code></pre></div><p>и логи начинают поступать в Graylog2, где с ними можно очень удобно работать.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>        access_log syslog:server=127.0.0.1:12301 graylog2_format;
+</span></span><span style="display:flex;"><span>        error_log syslog:server=127.0.0.1:12302;
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Формат лога (<code>graylog2_format</code>) определяется в основном конфигурационном файле (<code>nginx.conf</code>) и выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>log_format  graylog2_format  &#39;$remote_addr - $remote_user [$time_local] &#34;$request&#34; $status $body_bytes_sent &#34;$http_referer&#34; &#39;
+</span></span><span style="display:flex;"><span>        &#39;&#34;$http_user_agent&#34; &#34;$http_x_forwarded_for&#34; &lt;msec=$msec|connection=$connection|connection_requests=$connection_requests|millis=$request_time&gt;&#39;;
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Перечитываете конфиг Nginx командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nginx -s reload
+</span></span></code></pre></div><p>и логи начинают поступать в Graylog2, где с ними можно очень удобно работать.</p>
 <p>Кроме того, в составе установленного контент пака есть уже готовый дашборд с основными метриками web-сервера, а именно:</p>
 <ul>
 <li>количество запросов за последние 24 часа (общее число + график, на котором видно динамику изменения кол-ва запросов);</li>
@@ -268,7 +268,7 @@ log_format  graylog2_format  &#39;$remote_addr - $remote_user [$time_local] &#34
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

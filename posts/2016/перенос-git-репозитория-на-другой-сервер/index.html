@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,21 +100,21 @@
                 <section id="post-body">
                     <p>Порой возникает необходимость <strong>переноса git-репозитория на другой сервер</strong>, например, в случае замены/апгрейда серверов. Давайте разберемся как это сделать!</p>
 <p>Считаем, что все необходимые пакеты установлены на обоих серверах. Для начала на новом сервере создаем пользователя <code>git</code>, у которого будут все необходимые права для работы с репозиторием:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">useradd -m git
-</code></pre></div><p>Копируем файл <code>/home/git/.ssh/authorized_keys</code> со старого сервера на новый, выставляем права командами:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chown -R git:git /home/git/
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod <span style="color:#ae81ff">600</span> /home/git/.ssh/authorized_keys
-</code></pre></div><p>Находясь на новом сервере выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone --bare ssh://git@192.168.0.13/home/git/dhcp.git
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone --bare ssh://git@192.168.0.13/home/git/tftp.git
-</code></pre></div><p><strong>Примечание.</strong> В данном примере переносим два репозитория (<code>dhcp.git</code> и <code>tftp.git</code>), 192.168.0.13 — ip-адрес старого сервера.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>useradd -m git
+</span></span></code></pre></div><p>Копируем файл <code>/home/git/.ssh/authorized_keys</code> со старого сервера на новый, выставляем права командами:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chown -R git:git /home/git/
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod <span style="color:#ae81ff">600</span> /home/git/.ssh/authorized_keys
+</span></span></code></pre></div><p>Находясь на новом сервере выполняем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone --bare ssh://git@192.168.0.13/home/git/dhcp.git
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone --bare ssh://git@192.168.0.13/home/git/tftp.git
+</span></span></code></pre></div><p><strong>Примечание.</strong> В данном примере переносим два репозитория (<code>dhcp.git</code> и <code>tftp.git</code>), 192.168.0.13 — ip-адрес старого сервера.</p>
 <p>Переходим на старый сервер и выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git push --mirror ssh://git@192.168.0.34/home/git/tftp.git
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git push --mirror ssh://git@192.168.0.34/home/git/dhcp.git
-</code></pre></div><p><strong>Примечание.</strong> Здесь 192.168.0.34 — ip-адрес нового сервера.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git push --mirror ssh://git@192.168.0.34/home/git/tftp.git
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git push --mirror ssh://git@192.168.0.34/home/git/dhcp.git
+</span></span></code></pre></div><p><strong>Примечание.</strong> Здесь 192.168.0.34 — ip-адрес нового сервера.</p>
 <p>В завершение не забываем изменить ссылки на новый репозиторий:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git config remote.origin.url ssh://git@192.168.0.34:~/dhcp.git
-</code></pre></div><p>Для проверки правильности переноса git-репозитория рекомендуется сделать тестовый коммит.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git config remote.origin.url ssh://git@192.168.0.34:~/dhcp.git
+</span></span></code></pre></div><p>Для проверки правильности переноса git-репозитория рекомендуется сделать тестовый коммит.</p>
                 </section>
             </article>
 
@@ -206,7 +206,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,21 +106,21 @@
 <p>После логина нужно создать проект (или использовать существующий, если он у вас есть), далее в выпадающем меню слева найти пункт Storage.</p>
 <p>В выбранной секции Storage нужно создать новое «ведро» (bucket) — ввести имя (например, test-backup) и выбрать тип хранилища (в нашем примере используется тип Nearline). После создания хранилища вы уже можете заливать в него нужные данные через браузер, но мы планируем работать с Google Cloud Storage в консоли Linux с помощью утилиты <code>gsutil</code>.</p>
 <p>Рекомендуемый способ установки <code>gsutil</code> — ее установка вместе с Google Cloud SDK. Для операционной системы Debian/Ubuntu процесс установки будет выглядеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">export CLOUD_SDK_REPO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;cloud-sdk-</span><span style="color:#66d9ef">$(</span>lsb_release -c -s<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">echo <span style="color:#e6db74">&#34;deb https://packages.cloud.google.com/apt </span>$CLOUD_SDK_REPO<span style="color:#e6db74"> main&#34;</span> | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">apt-get update <span style="color:#f92672">&amp;&amp;</span> sudo apt-get install google-cloud-sdk
-</code></pre></div><p>После успешной установки запускаем команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gcloud init
-</code></pre></div><p>и следуем инструкциям — потребуется ввести ваши учетные данные для доступа к проекту на Google Cloud, перейти по предложенной ссылке (открыть в браузере) для подтверждения действий и ввести verification code (появится в браузере после перехода по ссылке).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export CLOUD_SDK_REPO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;cloud-sdk-</span><span style="color:#66d9ef">$(</span>lsb_release -c -s<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;deb https://packages.cloud.google.com/apt </span>$CLOUD_SDK_REPO<span style="color:#e6db74"> main&#34;</span> | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apt-get update <span style="color:#f92672">&amp;&amp;</span> sudo apt-get install google-cloud-sdk
+</span></span></code></pre></div><p>После успешной установки запускаем команду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcloud init
+</span></span></code></pre></div><p>и следуем инструкциям — потребуется ввести ваши учетные данные для доступа к проекту на Google Cloud, перейти по предложенной ссылке (открыть в браузере) для подтверждения действий и ввести verification code (появится в браузере после перехода по ссылке).</p>
 <p>Для синхронизации каталога <code>/home/e.lebed/google-storage</code> локального хранилища в хранилище test-backup на Google Storage нужно использовать команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gsutil rsync /home/e.lebed/google-storage gs://test-backup
-</code></pre></div><p>Обратите внимание, что синхронизировать нужно именно каталоги, при попытке загрузить отдельный файл будет следующая ошибка:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gsutil rsync /home/e.lebed/smart_stats.sh gs://test-backup
- 
-CommandException: arg <span style="color:#f92672">(</span>/home/e.lebed/smart_stats.sh<span style="color:#f92672">)</span> does not name a directory, bucket, or bucket subdir.
-gsutil rsync /home/e.lebed/smart_stats.sh gs://test-backup/
-</code></pre></div><p>Отдельно следует сказать об опциях <code>-r</code> и <code>-d</code>, которые также можно использовать при запуске синхронизации.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gsutil rsync /home/e.lebed/google-storage gs://test-backup
+</span></span></code></pre></div><p>Обратите внимание, что синхронизировать нужно именно каталоги, при попытке загрузить отдельный файл будет следующая ошибка:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gsutil rsync /home/e.lebed/smart_stats.sh gs://test-backup
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>CommandException: arg <span style="color:#f92672">(</span>/home/e.lebed/smart_stats.sh<span style="color:#f92672">)</span> does not name a directory, bucket, or bucket subdir.
+</span></span><span style="display:flex;"><span>gsutil rsync /home/e.lebed/smart_stats.sh gs://test-backup/
+</span></span></code></pre></div><p>Отдельно следует сказать об опциях <code>-r</code> и <code>-d</code>, которые также можно использовать при запуске синхронизации.</p>
 <p>Первая из них позволяет синхронизировать все вложенные каталоги (<code>-r</code> — <code>recursive</code>) из каталога источника. В случае, если у вас в каталоге-источнике есть вложенные каталоги, но вы не используете опцию <code>-r</code>, на Google Cloud Storage попадут только файлы (не директории) из источника.</p>
 <p>Вторая опция позволяет удалять на Google Cloud Storage данные, которых больше нет в каталоге-источнике (<code>-d</code> — <code>delete</code>), но за ранее удаление данных из Google Storage (&lt; 3 месяцев) снимается дополнительная плата - будьте аккуратны с этой опцией. Весь список команд и параметров утилиты <code>gsutil</code> доступен <a href="https://cloud.google.com/storage/docs/gsutil/commands/rsync">здесь</a>.</p>
                 </section>
@@ -214,7 +214,7 @@ gsutil rsync /home/e.lebed/smart_stats.sh gs://test-backup/
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

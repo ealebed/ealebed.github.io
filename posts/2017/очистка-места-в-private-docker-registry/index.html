@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,13 +103,13 @@
 <p>Выяснилось, что в веб-интерфейсе <strong>Gitlab</strong> на вкладке Registry при нажатии на кнопку «удалить» на самом деле происходит удаление только тэга образа, а сами данные никуда не деваются и продолжают занимать место на жестком диске.</p>
 <p>Аналогичная проблема наблюдается если docker-образ создается с одним и тем же тэгом (например, <code>latest</code>) — а это обычное дело для процесса CI. В этом случае, при сборке нового образа старый не удаляется (как ожидается), у него просто пропадает тэг (<code>latest</code>).</p>
 <p>Например, у образа <code>master/lebed/test:latest</code> на самом деле на жестком диске хранится 2 версии:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -la /srv/gitlab/shared/registry/docker/registry/v2/repositories/master/lebed/test/_manifests/tags/latest/index/sha256
-total <span style="color:#ae81ff">16</span>
-drwxr-xr-x <span style="color:#ae81ff">4</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 12:20 .
-drwxr-xr-x <span style="color:#ae81ff">3</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 09:25 ..
-drwxr-xr-x <span style="color:#ae81ff">2</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 12:20 694a3871d67d64d5c59d3f6943be3cfc0d11aae2082261735e87b1c3c58bd66b
-drwxr-xr-x <span style="color:#ae81ff">2</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 09:25 e1f5741ced3f0280bd372baa6ca293d1033dfefc7db021cd81ca1527d2f1c08e
-</code></pre></div><p>При частых сборках docker-образов отведенное место в docker-registry может закончиться — при этом невозможно будет пушить в него новые образы и весь процесс CI перестанет работать.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -la /srv/gitlab/shared/registry/docker/registry/v2/repositories/master/lebed/test/_manifests/tags/latest/index/sha256
+</span></span><span style="display:flex;"><span>total <span style="color:#ae81ff">16</span>
+</span></span><span style="display:flex;"><span>drwxr-xr-x <span style="color:#ae81ff">4</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 12:20 .
+</span></span><span style="display:flex;"><span>drwxr-xr-x <span style="color:#ae81ff">3</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 09:25 ..
+</span></span><span style="display:flex;"><span>drwxr-xr-x <span style="color:#ae81ff">2</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 12:20 694a3871d67d64d5c59d3f6943be3cfc0d11aae2082261735e87b1c3c58bd66b
+</span></span><span style="display:flex;"><span>drwxr-xr-x <span style="color:#ae81ff">2</span> root root <span style="color:#ae81ff">4096</span> Jun <span style="color:#ae81ff">15</span> 09:25 e1f5741ced3f0280bd372baa6ca293d1033dfefc7db021cd81ca1527d2f1c08e
+</span></span></code></pre></div><p>При частых сборках docker-образов отведенное место в docker-registry может закончиться — при этом невозможно будет пушить в него новые образы и весь процесс CI перестанет работать.</p>
 <p>Для очистки места в приватном docker-registry необходимо выполнить следующие действия:</p>
 <ul>
 <li>удалить старые версии тегов docker-образа;</li>
@@ -122,27 +122,27 @@ drwxr-xr-x <span style="color:#ae81ff">2</span> root root <span style="color:#ae
 <p>Смотрим содержимое каталога с ревизиями интересующего нас docker-образа <code>/srv/gitlab/shared/registry/docker/registry/v2/repositories/{имя_докер_образа}/_manifests/revisions/sha256</code>
 В нем должны также быть вложены директории с именами вида <code>e1f5741ced3f0280bd372baa6ca293d1033dfefc7db021cd81ca1527d2f1c08e</code> — точно такие же, как и в предыдущем шаге. Удаляем более старые (ориентируемся по дате создания), оставляя только один каталог.</p>
 <p>После удаления вышеуказанных файлов запускаем процесс «уборки мусора» командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it <span style="color:#f92672">{</span>имя_контейнера_c_registry<span style="color:#f92672">}</span> bin/registry garbage-collect <span style="color:#f92672">{</span>путь_к_конфигу_внутри_контейнера<span style="color:#f92672">}</span> 
-</code></pre></div><p>В нашем случае команда выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
-</code></pre></div><p>Для чистки места также можно использовать скрипт <code>clean_docker_registry.sh</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/sh
-</span><span style="color:#75715e"></span>REPOPATH<span style="color:#f92672">=</span>/srv/gitlab/shared/registry/docker/registry/v2/repositories/
-echo Docker image name is $1
-echo Docker image tag is $2
-echo <span style="color:#e6db74">&#34;\n&#34;</span>;
-TAGPATH<span style="color:#f92672">=</span>$REPOPATH$1/_manifests/tags/$2/index/sha256
-REVPATH<span style="color:#f92672">=</span>$REPOPATH$1/_manifests/revisions/sha256
-  
-<span style="color:#66d9ef">for</span> hash in <span style="color:#66d9ef">$(</span>ls $TAGPATH -t | tail -n +2<span style="color:#66d9ef">)</span>
-<span style="color:#66d9ef">do</span>
-  rm -rf $TAGPATH/$hash;
-  rm -rf $REVPATH/$hash;
-<span style="color:#66d9ef">done</span>
-docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
-</code></pre></div><p>Запускаем скрипт с параметрами, первый из которых — имя docker-образа, второй — тэг docker-образа, например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./clean_docker_registry.sh master/lebed/test latest
-</code></pre></div><p>Не забывайте также освобождать место от неиспользуемых более docker-образов и томов, как описано <a href="https://ealebed.github.io/posts/2017/%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0-%D0%BC%D0%B5%D1%81%D1%82%D0%B0-%D0%BD%D0%B0-%D0%B4%D0%B8%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D1%81%D0%BB%D0%B5-docker/">здесь</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker exec -it <span style="color:#f92672">{</span>имя_контейнера_c_registry<span style="color:#f92672">}</span> bin/registry garbage-collect <span style="color:#f92672">{</span>путь_к_конфигу_внутри_контейнера<span style="color:#f92672">}</span> 
+</span></span></code></pre></div><p>В нашем случае команда выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
+</span></span></code></pre></div><p>Для чистки места также можно использовать скрипт <code>clean_docker_registry.sh</code> следующего содержания:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>REPOPATH<span style="color:#f92672">=</span>/srv/gitlab/shared/registry/docker/registry/v2/repositories/
+</span></span><span style="display:flex;"><span>echo Docker image name is $1
+</span></span><span style="display:flex;"><span>echo Docker image tag is $2
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;\n&#34;</span>;
+</span></span><span style="display:flex;"><span>TAGPATH<span style="color:#f92672">=</span>$REPOPATH$1/_manifests/tags/$2/index/sha256
+</span></span><span style="display:flex;"><span>REVPATH<span style="color:#f92672">=</span>$REPOPATH$1/_manifests/revisions/sha256
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> hash in <span style="color:#66d9ef">$(</span>ls $TAGPATH -t | tail -n +2<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  rm -rf $TAGPATH/$hash;
+</span></span><span style="display:flex;"><span>  rm -rf $REVPATH/$hash;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registry/config.yml
+</span></span></code></pre></div><p>Запускаем скрипт с параметрами, первый из которых — имя docker-образа, второй — тэг docker-образа, например:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./clean_docker_registry.sh master/lebed/test latest
+</span></span></code></pre></div><p>Не забывайте также освобождать место от неиспользуемых более docker-образов и томов, как описано <a href="https://ealebed.github.io/posts/2017/%D0%BE%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0-%D0%BC%D0%B5%D1%81%D1%82%D0%B0-%D0%BD%D0%B0-%D0%B4%D0%B8%D1%81%D0%BA%D0%B5-%D0%BF%D0%BE%D1%81%D0%BB%D0%B5-docker/">здесь</a>.</p>
                 </section>
             </article>
 
@@ -234,7 +234,7 @@ docker exec -it docker-registry bin/registry garbage-collect /etc/docker/registr
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

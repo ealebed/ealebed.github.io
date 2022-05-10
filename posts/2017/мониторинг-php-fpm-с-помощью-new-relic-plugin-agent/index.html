@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -122,166 +122,166 @@
 <li>uWSGI.</li>
 </ul>
 <p>Как видим, в этом списке присутствует <code>php-fpm</code> — то, что нам нужно! Устанавливаем агент следующей командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pip install newrelic-plugin-agent
-</code></pre></div><p>Создаем необходимые для работы агента каталоги:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /var/log/newrelic
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /var/run/newrelic
-</code></pre></div><p><strong>Примечание.</strong> Пользователь, определенный в конфигурационном файле, должен иметь право записи в это каталоги.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install newrelic-plugin-agent
+</span></span></code></pre></div><p>Создаем необходимые для работы агента каталоги:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p /var/log/newrelic
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p /var/run/newrelic
+</span></span></code></pre></div><p><strong>Примечание.</strong> Пользователь, определенный в конфигурационном файле, должен иметь право записи в это каталоги.</p>
 <p>Копируем пример конфигурационного файла агента в каталог <code>/etc/newrelic/</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp /opt/newrelic-plugin-agent/newrelic-plugin-agent.cfg /etc/newrelic/newrelic-plugin-agent.cfg
-</code></pre></div><p>И изменяем под свои нужды — вводим лицензионный ключ и определяем сервисы, которые нужно мониторить. В мое случае конфиг выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#ae81ff">%YAML 1.2</span>
----
-<span style="color:#f92672">Application</span>:
-  <span style="color:#f92672">license_key</span>: <span style="color:#ae81ff">ed36507db6a10fb33429637793735933e9a477aa</span>
-  <span style="color:#f92672">wake_interval</span>: <span style="color:#ae81ff">60</span>
- 
-  <span style="color:#f92672">nginx</span>:
-    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">web1.employer.cz</span>
-    <span style="color:#f92672">scheme</span>: <span style="color:#ae81ff">http</span>
-    <span style="color:#f92672">host</span>: <span style="color:#ae81ff">127.0.0.1</span>
-    <span style="color:#f92672">port</span>: <span style="color:#ae81ff">80</span>
-    <span style="color:#f92672">verify_ssl_cert</span>: <span style="color:#66d9ef">true</span>
-    <span style="color:#f92672">path</span>: <span style="color:#ae81ff">/nginx_status</span>
- 
-  <span style="color:#f92672">php_fpm</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">letsclearitup</span>
-      <span style="color:#f92672">scheme</span>: <span style="color:#ae81ff">https</span>
-      <span style="color:#f92672">host</span>: <span style="color:#ae81ff">letsclearitup.com.ua</span>
-      <span style="color:#f92672">port</span>: <span style="color:#ae81ff">443</span>
-      <span style="color:#f92672">path</span>: <span style="color:#ae81ff">/status</span>
-      <span style="color:#f92672">query</span>: <span style="color:#ae81ff">json</span>
-    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">animania</span>
-      <span style="color:#f92672">scheme</span>: <span style="color:#ae81ff">http</span>
-      <span style="color:#f92672">host</span>: <span style="color:#ae81ff">animania.dp.ua</span>
-      <span style="color:#f92672">port</span>: <span style="color:#ae81ff">80</span>
-      <span style="color:#f92672">path</span>: <span style="color:#ae81ff">/status</span>
-      <span style="color:#f92672">query</span>: <span style="color:#ae81ff">json</span>
- 
-<span style="color:#f92672">Daemon</span>:
-  <span style="color:#f92672">user</span>: <span style="color:#ae81ff">newrelic</span>
-  <span style="color:#f92672">pidfile</span>: <span style="color:#ae81ff">/var/run/newrelic/newrelic-plugin-agent.pid</span>
- 
-<span style="color:#f92672">Logging</span>:
-  <span style="color:#f92672">formatters</span>:
-    <span style="color:#f92672">verbose</span>:
-      <span style="color:#f92672">format: &#39;%(levelname) -10s %(asctime)s %(process)-6d %(processName) -15s %(threadName)-10s %(name) -45s %(funcName) -25s L%(lineno)-6d</span>: <span style="color:#ae81ff">%(message)s&#39;</span>
-  <span style="color:#f92672">handlers</span>:
-    <span style="color:#f92672">file</span>:
-      <span style="color:#f92672">class </span>: <span style="color:#ae81ff">logging.handlers.RotatingFileHandler</span>
-      <span style="color:#f92672">formatter</span>: <span style="color:#ae81ff">verbose</span>
-      <span style="color:#f92672">filename</span>: <span style="color:#ae81ff">/var/log/newrelic/newrelic-plugin-agent.log</span>
-      <span style="color:#f92672">maxBytes</span>: <span style="color:#ae81ff">10485760</span>
-      <span style="color:#f92672">backupCount</span>: <span style="color:#ae81ff">3</span>
-  <span style="color:#f92672">loggers</span>:
-    <span style="color:#f92672">newrelic_plugin_agent</span>:
-      <span style="color:#f92672">level</span>: <span style="color:#ae81ff">INFO</span>
-      <span style="color:#f92672">propagate</span>: <span style="color:#66d9ef">True</span>
-      <span style="color:#f92672">handlers</span>: [<span style="color:#ae81ff">console, file]</span>
-    <span style="color:#f92672">requests</span>:
-      <span style="color:#f92672">level</span>: <span style="color:#ae81ff">ERROR</span>
-      <span style="color:#f92672">propagate</span>: <span style="color:#66d9ef">True</span>
-      <span style="color:#f92672">handlers</span>: [<span style="color:#ae81ff">console, file]</span>
-</code></pre></div><p>Далее следует запустить <strong>New Relic Plugin Agent</strong>, в инструкции предлагается делать это следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">newrelic-plugin-agent -c PATH-TO-CONF-FILE <span style="color:#f92672">[</span>-f<span style="color:#f92672">]</span>
-</code></pre></div><p>На мой взгляд это не самый удобный способ, поэтому для управления агентом в каталоге <code>/etc/init.d/</code> создаем init-скрипт <code>newrelic_plugin_agent</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#! /bin/sh
-</span><span style="color:#75715e"></span> 
-<span style="color:#75715e">### BEGIN INIT INFO</span>
-<span style="color:#75715e"># Provides:          newrelic_plugin_agent</span>
-<span style="color:#75715e"># Required-Start:    $network $local_fs $remote_fs</span>
-<span style="color:#75715e"># Required-Stop:     $remote_fs</span>
-<span style="color:#75715e"># Should-Start:      $named</span>
-<span style="color:#75715e"># Should-Stop:</span>
-<span style="color:#75715e"># Default-Start:     2 3 4 5</span>
-<span style="color:#75715e"># Default-Stop:      0 1 6</span>
-<span style="color:#75715e"># Short-Description: The New Relic Plugin Agent</span>
-<span style="color:#75715e"># Description:       The New Relic Plugin Agent</span>
-<span style="color:#75715e">### END INIT INFO</span>
- 
-NAME<span style="color:#f92672">=</span>newrelic_plugin_agent
-CONFIG<span style="color:#f92672">=</span>/etc/newrelic/newrelic-plugin-agent.cfg
-DAEMON<span style="color:#f92672">=</span>/usr/local/bin/newrelic-plugin-agent
-DAEMON_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-c </span>$CONFIG<span style="color:#e6db74">&#34;</span>
-DESC<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;New Relic Plugin Agent&#34;</span>
- 
-<span style="color:#75715e"># define LSB log_* functions.</span>
-. /lib/lsb/init-functions
- 
-check_daemon<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -x $DAEMON <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-    log_action_msg <span style="color:#e6db74">&#34;</span>$DAEMON<span style="color:#e6db74"> not found&#34;</span> <span style="color:#f92672">||</span> true
-    log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
-    exit <span style="color:#ae81ff">1</span>
-  <span style="color:#66d9ef">fi</span>
-<span style="color:#f92672">}</span>
- 
-check_config<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -e $CONFIG <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-    log_action_msg <span style="color:#e6db74">&#34;Configuration file </span>$CONFIG<span style="color:#e6db74"> not found&#34;</span> <span style="color:#f92672">||</span> true
-    log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
-    exit <span style="color:#ae81ff">1</span>
-  <span style="color:#66d9ef">fi</span>
-<span style="color:#f92672">}</span>
- 
-check_pid<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -d /var/run/newrelic <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-    install -m <span style="color:#ae81ff">777</span> -o newrelic -g newrelic -d /var/run/newrelic
-    log_action_msg <span style="color:#e6db74">&#34;PID directory was not found and created&#34;</span> <span style="color:#f92672">||</span> true
-  <span style="color:#66d9ef">fi</span>;
-<span style="color:#f92672">}</span>
- 
-PIDFILE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sed -n -e <span style="color:#e6db74">&#39;s/^[ ]*pidfile[ ]*:[ ]*//p&#39;</span> -e <span style="color:#e6db74">&#39;s/[ ]*$//&#39;</span> $CONFIG<span style="color:#66d9ef">)</span>
- 
-export PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PATH:+$PATH:<span style="color:#e6db74">}</span><span style="color:#e6db74">/usr/sbin:/sbin/:usr/local/sbin:/usr/local/bin&#34;</span>
- 
-<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> in
-  start<span style="color:#f92672">)</span>
-    log_daemon_msg <span style="color:#e6db74">&#34;Starting </span>$DESC<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$NAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
-    check_daemon
-    check_config
-    check_pid
- 
-    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -s $PIDFILE <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> kill -0 <span style="color:#66d9ef">$(</span>cat $PIDFILE<span style="color:#66d9ef">)</span> &gt; /dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
-      log_action_msg <span style="color:#e6db74">&#34;apparently already running&#34;</span> <span style="color:#f92672">||</span> true
-      log_end_msg <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> true
-      exit <span style="color:#ae81ff">0</span>
-    <span style="color:#66d9ef">fi</span>
- 
-    <span style="color:#66d9ef">if</span> start-stop-daemon --oknodo --start --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS; <span style="color:#66d9ef">then</span>
-      log_end_msg <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> true
-    <span style="color:#66d9ef">else</span>
-      log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
-    <span style="color:#66d9ef">fi</span>
-  ;;
-  stop<span style="color:#f92672">)</span>
-    log_daemon_msg <span style="color:#e6db74">&#34;Stopping </span>$DESC<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$NAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
-    check_daemon
- 
-    <span style="color:#66d9ef">if</span> start-stop-daemon --oknodo --stop --pidfile $PIDFILE; <span style="color:#66d9ef">then</span>
-      log_end_msg <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> true
-    <span style="color:#66d9ef">else</span>
-      log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
-    <span style="color:#66d9ef">fi</span>
-  ;;
-  status<span style="color:#f92672">)</span>
-   status_of_proc -p $PIDFILE $DAEMON $NAME <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> exit $?
-   ;;
-  restart|force-reload<span style="color:#f92672">)</span>
-  $0 stop
-  $0 start
-  ;;
-  *<span style="color:#f92672">)</span>
-    echo <span style="color:#e6db74">&#34;Usage: /etc/init.d/</span>$NAME<span style="color:#e6db74"> {start|stop|restart|force-reload}&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
-  exit <span style="color:#ae81ff">1</span>
-  ;;
-<span style="color:#66d9ef">esac</span>
- 
-exit <span style="color:#ae81ff">0</span>
-</code></pre></div><p>Включаем и запускаем созданный сервис:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">systemctl enable newrelic_plugin_agent.service
-systemctl start newrelic_plugin_agent.service
-</code></pre></div><p>Если все настроено верно, то через некоторое время графики появятся с <strong>системе мониторинга New Relic</strong> (вкладка PLUGINS).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp /opt/newrelic-plugin-agent/newrelic-plugin-agent.cfg /etc/newrelic/newrelic-plugin-agent.cfg
+</span></span></code></pre></div><p>И изменяем под свои нужды — вводим лицензионный ключ и определяем сервисы, которые нужно мониторить. В мое случае конфиг выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#ae81ff">%YAML 1.2</span>
+</span></span><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span><span style="color:#f92672">Application</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">license_key</span>: <span style="color:#ae81ff">ed36507db6a10fb33429637793735933e9a477aa</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">wake_interval</span>: <span style="color:#ae81ff">60</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">nginx</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">web1.employer.cz</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">scheme</span>: <span style="color:#ae81ff">http</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">host</span>: <span style="color:#ae81ff">127.0.0.1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">port</span>: <span style="color:#ae81ff">80</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">verify_ssl_cert</span>: <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">path</span>: <span style="color:#ae81ff">/nginx_status</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">php_fpm</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">letsclearitup</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">scheme</span>: <span style="color:#ae81ff">https</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">host</span>: <span style="color:#ae81ff">letsclearitup.com.ua</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">port</span>: <span style="color:#ae81ff">443</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">path</span>: <span style="color:#ae81ff">/status</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">query</span>: <span style="color:#ae81ff">json</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">animania</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">scheme</span>: <span style="color:#ae81ff">http</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">host</span>: <span style="color:#ae81ff">animania.dp.ua</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">port</span>: <span style="color:#ae81ff">80</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">path</span>: <span style="color:#ae81ff">/status</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">query</span>: <span style="color:#ae81ff">json</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">Daemon</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">user</span>: <span style="color:#ae81ff">newrelic</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">pidfile</span>: <span style="color:#ae81ff">/var/run/newrelic/newrelic-plugin-agent.pid</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">Logging</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">formatters</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">verbose</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">format: &#39;%(levelname) -10s %(asctime)s %(process)-6d %(processName) -15s %(threadName)-10s %(name) -45s %(funcName) -25s L%(lineno)-6d</span>: <span style="color:#ae81ff">%(message)s&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">handlers</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">file</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">class </span>: <span style="color:#ae81ff">logging.handlers.RotatingFileHandler</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">formatter</span>: <span style="color:#ae81ff">verbose</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">filename</span>: <span style="color:#ae81ff">/var/log/newrelic/newrelic-plugin-agent.log</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">maxBytes</span>: <span style="color:#ae81ff">10485760</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">backupCount</span>: <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">loggers</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">newrelic_plugin_agent</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">level</span>: <span style="color:#ae81ff">INFO</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">propagate</span>: <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">handlers</span>: [<span style="color:#ae81ff">console, file]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">requests</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">level</span>: <span style="color:#ae81ff">ERROR</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">propagate</span>: <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">handlers</span>: [<span style="color:#ae81ff">console, file]</span>
+</span></span></code></pre></div><p>Далее следует запустить <strong>New Relic Plugin Agent</strong>, в инструкции предлагается делать это следующим образом:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>newrelic-plugin-agent -c PATH-TO-CONF-FILE <span style="color:#f92672">[</span>-f<span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>На мой взгляд это не самый удобный способ, поэтому для управления агентом в каталоге <code>/etc/init.d/</code> создаем init-скрипт <code>newrelic_plugin_agent</code> следующего содержания:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#! /bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### BEGIN INIT INFO</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Provides:          newrelic_plugin_agent</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Required-Start:    $network $local_fs $remote_fs</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Required-Stop:     $remote_fs</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Should-Start:      $named</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Should-Stop:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Default-Start:     2 3 4 5</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Default-Stop:      0 1 6</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Short-Description: The New Relic Plugin Agent</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Description:       The New Relic Plugin Agent</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### END INIT INFO</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>NAME<span style="color:#f92672">=</span>newrelic_plugin_agent
+</span></span><span style="display:flex;"><span>CONFIG<span style="color:#f92672">=</span>/etc/newrelic/newrelic-plugin-agent.cfg
+</span></span><span style="display:flex;"><span>DAEMON<span style="color:#f92672">=</span>/usr/local/bin/newrelic-plugin-agent
+</span></span><span style="display:flex;"><span>DAEMON_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-c </span>$CONFIG<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>DESC<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;New Relic Plugin Agent&#34;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># define LSB log_* functions.</span>
+</span></span><span style="display:flex;"><span>. /lib/lsb/init-functions
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>check_daemon<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -x $DAEMON <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    log_action_msg <span style="color:#e6db74">&#34;</span>$DAEMON<span style="color:#e6db74"> not found&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>check_config<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -e $CONFIG <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    log_action_msg <span style="color:#e6db74">&#34;Configuration file </span>$CONFIG<span style="color:#e6db74"> not found&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>check_pid<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -d /var/run/newrelic <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    install -m <span style="color:#ae81ff">777</span> -o newrelic -g newrelic -d /var/run/newrelic
+</span></span><span style="display:flex;"><span>    log_action_msg <span style="color:#e6db74">&#34;PID directory was not found and created&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>PIDFILE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sed -n -e <span style="color:#e6db74">&#39;s/^[ ]*pidfile[ ]*:[ ]*//p&#39;</span> -e <span style="color:#e6db74">&#39;s/[ ]*$//&#39;</span> $CONFIG<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>export PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PATH:+$PATH:<span style="color:#e6db74">}</span><span style="color:#e6db74">/usr/sbin:/sbin/:usr/local/sbin:/usr/local/bin&#34;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>  start<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    log_daemon_msg <span style="color:#e6db74">&#34;Starting </span>$DESC<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$NAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    check_daemon
+</span></span><span style="display:flex;"><span>    check_config
+</span></span><span style="display:flex;"><span>    check_pid
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -s $PIDFILE <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> kill -0 <span style="color:#66d9ef">$(</span>cat $PIDFILE<span style="color:#66d9ef">)</span> &gt; /dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      log_action_msg <span style="color:#e6db74">&#34;apparently already running&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>      log_end_msg <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>      exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> start-stop-daemon --oknodo --start --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_OPTS; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      log_end_msg <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>      log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  ;;
+</span></span><span style="display:flex;"><span>  stop<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    log_daemon_msg <span style="color:#e6db74">&#34;Stopping </span>$DESC<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$NAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    check_daemon
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> start-stop-daemon --oknodo --stop --pidfile $PIDFILE; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      log_end_msg <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>      log_end_msg <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> false
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  ;;
+</span></span><span style="display:flex;"><span>  status<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>   status_of_proc -p $PIDFILE $DAEMON $NAME <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> exit $?
+</span></span><span style="display:flex;"><span>   ;;
+</span></span><span style="display:flex;"><span>  restart|force-reload<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  $0 stop
+</span></span><span style="display:flex;"><span>  $0 start
+</span></span><span style="display:flex;"><span>  ;;
+</span></span><span style="display:flex;"><span>  *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Usage: /etc/init.d/</span>$NAME<span style="color:#e6db74"> {start|stop|restart|force-reload}&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>exit <span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p>Включаем и запускаем созданный сервис:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable newrelic_plugin_agent.service
+</span></span><span style="display:flex;"><span>systemctl start newrelic_plugin_agent.service
+</span></span></code></pre></div><p>Если все настроено верно, то через некоторое время графики появятся с <strong>системе мониторинга New Relic</strong> (вкладка PLUGINS).</p>
                 </section>
             </article>
 
@@ -373,7 +373,7 @@ systemctl start newrelic_plugin_agent.service
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

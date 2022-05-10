@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,20 +104,20 @@
                 <section id="post-body">
                     <p>Давайте разберемся, как отслеживать нагрузку на web-сервер с несколькими сайтами, работающими на <code>php-fpm</code> и отображать собранные метрики на графиках в <strong>системе мониторинга Munin</strong>!</p>
 <p>Считаем, что у нас уже установлен и настроен <strong>Munin</strong> и все необходимые зависимости. Действия производятся на:</p>
-<pre><code>lsb_release -a
+<pre tabindex="0"><code>lsb_release -a
 No LSB modules are available.
 Distributor ID:	Debian
 Description:	Debian GNU/Linux 8.6 (jessie)
 Release:	8.6
 Codename:	jessie
 </code></pre><p>Версия <code>php</code>:</p>
-<pre><code>php -v
+<pre tabindex="0"><code>php -v
 PHP 7.0.12-1~dotdeb+8.1 (cli) ( NTS )
 Copyright (c) 1997-2016 The PHP Group
 Zend Engine v3.0.0, Copyright (c) 1998-2016 Zend Technologies
     with Zend OPcache v7.0.12-1~dotdeb+8.1, Copyright (c) 1999-2016, by Zend Technologies
 </code></pre><p>Для каждого сайта в каталоге <code>/etc/php/7.0/fpm/pool.d</code> должен быть создан отдельный конфиг примерно следующего содержания:</p>
-<pre><code>[letsclearitup]
+<pre tabindex="0"><code>[letsclearitup]
 user = www-data
 group = www-data
 listen = /run/php/$pool.sock
@@ -134,13 +134,13 @@ ping.path = /ping
 request_terminate_timeout = 5
 request_slowlog_timeout = 3
 access.log = /var/log/php/$pool.access.log
-access.format = &quot;%{REMOTE_ADDR}e %{%Y.%m.%d %H:%M:%S}t \&quot;%m %{REQUEST_URI}e%Q%q\&quot; %s %{mili}d %{kilo}M %C%%&quot;
+access.format = &#34;%{REMOTE_ADDR}e %{%Y.%m.%d %H:%M:%S}t \&#34;%m %{REQUEST_URI}e%Q%q\&#34; %s %{mili}d %{kilo}M %C%%&#34;
 slowlog = /var/log/php/$pool.log.slow
 security.limit_extensions = .php .inc
 </code></pre><p>Значения параметров выставляем в соответствии со своими требованиями, главное — чтобы присутствовал параметр <code>pm.status_path = /status</code>. После внесения необходимых изменений в конфигурационные файлы выполняем:</p>
-<pre><code>service php7.0-fpm restart
+<pre tabindex="0"><code>service php7.0-fpm restart
 </code></pre><p>Далее вносим изменения в конфиги сайтов на Nginx, например для сайта <a href="https://letsclearitup.com.ua">letsclearitup.com.ua</a> в файле <code>/etc/nginx/conf.d/letsclearitup.conf</code> добавляем:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
     location /status {
         fastcgi_pass unix:/run/php/letsclearitup.sock;
         include fastcgi.conf;
@@ -149,22 +149,22 @@ security.limit_extensions = .php .inc
     }
 ...
 </code></pre><p>и перечитываем конфигурацию:</p>
-<pre><code>nginx -s reload
+<pre tabindex="0"><code>nginx -s reload
 </code></pre><p>Устанавливаем необходимые плагины для мониторинга <code>php-fpm</code>, для этого переходим в каталог с предустановленными плагинами и скачиваем их:</p>
-<pre><code>cd /usr/share/munin/plugins
-</code></pre><pre><code>git clone git://github.com/tjstein/php5-fpm-munin-plugins.git
+<pre tabindex="0"><code>cd /usr/share/munin/plugins
+</code></pre><pre tabindex="0"><code>git clone git://github.com/tjstein/php5-fpm-munin-plugins.git
 </code></pre><p>Делаем плагины исполняемыми:</p>
-<pre><code>chmod +x php5-fpm-munin-plugins/phpfpm_*
+<pre tabindex="0"><code>chmod +x php5-fpm-munin-plugins/phpfpm_*
 </code></pre><p>Подключаем нужные плагины (например, я подключал только 3 из 5) для каждого сайта, который хотим мониторить:</p>
-<pre><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_connections /etc/munin/plugins/phpfpm_letsclearitup_connections
-</code></pre><pre><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_status /etc/munin/plugins/phpfpm_letsclearitup_status
-</code></pre><pre><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_processes /etc/munin/plugins/phpfpm_letsclearitup_processes
+<pre tabindex="0"><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_connections /etc/munin/plugins/phpfpm_letsclearitup_connections
+</code></pre><pre tabindex="0"><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_status /etc/munin/plugins/phpfpm_letsclearitup_status
+</code></pre><pre tabindex="0"><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_processes /etc/munin/plugins/phpfpm_letsclearitup_processes
 </code></pre><p>и</p>
-<pre><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_connections /etc/munin/plugins/phpfpm_animania_connections
-</code></pre><pre><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_status /etc/munin/plugins/phpfpm_animania_status
-</code></pre><pre><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_processes /etc/munin/plugins/phpfpm_animania_processes
+<pre tabindex="0"><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_connections /etc/munin/plugins/phpfpm_animania_connections
+</code></pre><pre tabindex="0"><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_status /etc/munin/plugins/phpfpm_animania_status
+</code></pre><pre tabindex="0"><code>ln -s /usr/share/munin/plugins/php5-fpm-munin-plugins/phpfpm_processes /etc/munin/plugins/phpfpm_animania_processes
 </code></pre><p>Правим <code>/etc/munin/plugin-conf.d/munin-node</code>, добавляем следующие секции:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 [phpfpm_letsclearitup_*]
 env.phpbin php-fpm
 env.phppool letsclearitup
@@ -175,7 +175,7 @@ env.phpbin php-fpm
 env.phppool animania
 env.url http://animania.dp.ua/status
 </code></pre><p>И перезапускаем <code>munin-node</code>:</p>
-<pre><code>service munin-node restart
+<pre tabindex="0"><code>service munin-node restart
 </code></pre><p>Спустя некоторое время графики появятся в web-интерфейсе системы мониторинга.</p>
                 </section>
             </article>
@@ -268,7 +268,7 @@ env.url http://animania.dp.ua/status
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -117,7 +117,7 @@
 </ul>
 <p>В вашей ОС должен быть установлен пакет <code>urllib2</code> (<a href="https://docs.python.org/2/howto/urllib2.html">подробности</a>), а web-сервер Nginx должен быть собран с параметром <code>--with-http_stub_status_module</code></p>
 <p>Страница статуса Nginx’а (status page) должна быть включена. Например, так:</p>
-<pre><code>server {
+<pre tabindex="0"><code>server {
     listen 127.0.0.1:8080;
     server_name localhost;
     location /status_page {
@@ -128,30 +128,30 @@
 }
 </code></pre><p>В данном примере страница статуса доступна только с того сервера, где запущен Nginx и открывается на порту 8080. Измените данные параметры под ваши нужды.</p>
 <p>Проверить корректность настройки страницы статуса можно с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget -qO- http://127.0.0.1:8080/status_page
-</code></pre></div><p>Для включения плагина необходимо открыть конфигурационный файл <code>/etc/nixstats.ini</code> и добавить (раскомментировать) следующие строки:</p>
-<pre><code>[nginx] 
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget -qO- http://127.0.0.1:8080/status_page
+</span></span></code></pre></div><p>Для включения плагина необходимо открыть конфигурационный файл <code>/etc/nixstats.ini</code> и добавить (раскомментировать) следующие строки:</p>
+<pre tabindex="0"><code>[nginx] 
 enabled = yes
 status_page_url = http://127.0.0.1:8080/status_page
 </code></pre><p>Убедимся, что все настроено верно, выполнив команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nixstatsagent --test nginx
-</code></pre></div><p>Результат выполнения должен быть примерно следующим:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nginx:
-<span style="color:#f92672">{</span>
-    <span style="color:#e6db74">&#34;accepts&#34;</span>: 505768,
-    <span style="color:#e6db74">&#34;accepts_per_second&#34;</span>: 0.0,
-    <span style="color:#e6db74">&#34;active_connections&#34;</span>: 198,
-    <span style="color:#e6db74">&#34;handled&#34;</span>: 505768,
-    <span style="color:#e6db74">&#34;handled_per_second&#34;</span>: 0.0,
-    <span style="color:#e6db74">&#34;reading&#34;</span>: 0,
-    <span style="color:#e6db74">&#34;requests&#34;</span>: 8335225,
-    <span style="color:#e6db74">&#34;requests_per_second&#34;</span>: 0.0,
-    <span style="color:#e6db74">&#34;waiting&#34;</span>: 196,
-    <span style="color:#e6db74">&#34;writing&#34;</span>: <span style="color:#ae81ff">2</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Перезапускаем агент мониторинга с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service nixstatsagent restart
-</code></pre></div><p>Через пару минут новые метрики будут доступны в веб-интерфейсе системы мониторинга.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nixstatsagent --test nginx
+</span></span></code></pre></div><p>Результат выполнения должен быть примерно следующим:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nginx:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;accepts&#34;</span>: 505768,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;accepts_per_second&#34;</span>: 0.0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;active_connections&#34;</span>: 198,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;handled&#34;</span>: 505768,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;handled_per_second&#34;</span>: 0.0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;reading&#34;</span>: 0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;requests&#34;</span>: 8335225,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;requests_per_second&#34;</span>: 0.0,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;waiting&#34;</span>: 196,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;writing&#34;</span>: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Перезапускаем агент мониторинга с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>service nixstatsagent restart
+</span></span></code></pre></div><p>Через пару минут новые метрики будут доступны в веб-интерфейсе системы мониторинга.</p>
                 </section>
             </article>
 
@@ -243,7 +243,7 @@ status_page_url = http://127.0.0.1:8080/status_page
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,297 +104,297 @@
 <p>Однако при использовании команды <code>docker stack deploy</code> для развертывания стека сервисов из файла <code>docker-compose.yml</code> переменные окружения заменяются пустыми значениями, хотя при использовании команды <code>docker-compose up -d</code> все работает, как ожидается. Давайте разберемся!</p>
 <p>В данной статье не рассматривается установка и настройка полноценного кластера Docker Swarm — работаем только с одной нодой и решаем только вопрос проброса переменных окружения при деплое стека.</p>
 <p>Считаем, что у вас уже установлен <code>docker</code> и <code>docker-compose</code> необходимых версий и включен режим роя (<code>swarm</code>). В данном примере используются:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker info
-Containers: <span style="color:#ae81ff">16</span>
- Running: <span style="color:#ae81ff">16</span>
- Paused: <span style="color:#ae81ff">0</span>
- Stopped: <span style="color:#ae81ff">0</span>
-Images: <span style="color:#ae81ff">181</span>
-Server Version: 17.06.0-ce
-Storage Driver: aufs
- Root Dir: /var/lib/docker/aufs
- Backing Filesystem: extfs
- Dirs: <span style="color:#ae81ff">280</span>
- Dirperm1 Supported: true
-Logging Driver: json-file
-Cgroup Driver: cgroupfs
-Plugins: 
- Volume: local
- Network: bridge host ipvlan macvlan null overlay
- Log: awslogs fluentd gcplogs gelf journald json-file logentries splunk syslog
-Swarm: active
- NodeID: udow4edogefqxcfs6gzkkgh6w
- Is Manager: true
- ClusterID: ut8uvfxdk1ldgguazc7snuc6u
- Managers: <span style="color:#ae81ff">1</span>
- Nodes: <span style="color:#ae81ff">1</span>
- Orchestration:
-  Task History Retention Limit: <span style="color:#ae81ff">5</span>
- Raft:
-  Snapshot Interval: <span style="color:#ae81ff">10000</span>
-  Number of Old Snapshots to Retain: <span style="color:#ae81ff">0</span>
-  Heartbeat Tick: <span style="color:#ae81ff">1</span>
-  Election Tick: <span style="color:#ae81ff">3</span>
- Dispatcher:
-  Heartbeat Period: <span style="color:#ae81ff">5</span> seconds
- CA Configuration:
-  Expiry Duration: <span style="color:#ae81ff">3</span> months
-  Force Rotate: <span style="color:#ae81ff">0</span>
- Root Rotation In Progress: false
- Node Address: 192.168.0.34
- Manager Addresses:
-  192.168.0.34:2377
-Runtimes: runc
-Default Runtime: runc
-Init Binary: docker-init
-containerd version: cfb82a876ecc11b5ca0977d1733adbe58599088a
-runc version: 2d41c047c83e09a6d61d464906feb2a2f3c52aa4
-init version: 949e6fa
-Security Options:
- apparmor
- seccomp
-  Profile: default
-Kernel Version: 4.4.0-91-generic
-Operating System: Ubuntu 16.04.2 LTS
-OSType: linux
-Architecture: x86_64
-CPUs: <span style="color:#ae81ff">4</span>
-Total Memory: 7.67GiB
-Name: e-lebed.lc
-ID: 7VNW:YUXN:EOH2:3JRQ:V7AX:O5OQ:EYJ3:UT7H:JNM3:SGTK:BRIP:DHKB
-Docker Root Dir: /var/lib/docker
-Debug Mode <span style="color:#f92672">(</span>client<span style="color:#f92672">)</span>: false
-Debug Mode <span style="color:#f92672">(</span>server<span style="color:#f92672">)</span>: false
-Username: ealebed
-Registry: https://index.docker.io/v1/
-Experimental: true
-Insecure Registries:
- 127.0.0.0/8
-Live Restore Enabled: false
-
-WARNING: No swap limit support
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose version
-docker-compose version 1.14.0, build c7bdf9e
-docker-py version: 2.3.0
-CPython version: 2.7.13
-OpenSSL version: OpenSSL 1.0.1t  <span style="color:#ae81ff">3</span> May <span style="color:#ae81ff">2016</span>
-</code></pre></div><p>После инициализации режима роя следует переписать файл <code>docker-compose.yml</code> минимум на 3-ю версию для развертывания сервисов через команду <code>deploy</code>. К примеру, ранее мы использовали файл второй версии:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
-<span style="color:#f92672">services</span>:
-<span style="color:#75715e">### Applications Code Container #############################</span>
-    <span style="color:#f92672">applications</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
-<span style="color:#75715e">### PHP-FPM Container #######################################</span>
-    <span style="color:#f92672">php-fpm</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">applications</span>
-        <span style="color:#f92672">expose</span>:
-            - <span style="color:#e6db74">&#34;9000&#34;</span>
-        <span style="color:#f92672">logging</span>:
-          <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
-          <span style="color:#f92672">options</span>:
-            <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
-            <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;php-fpm&#34;</span>
-<span style="color:#75715e">### Nginx Server Container ##################################</span>
-    <span style="color:#f92672">nginx</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">nginx</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest</span>
-        <span style="color:#f92672">volumes_from</span>:
-            - <span style="color:#ae81ff">applications</span>
-        <span style="color:#f92672">depends_on</span>:
-            - <span style="color:#e6db74">&#34;php-fpm&#34;</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;80:80&#34;</span>
-            - <span style="color:#e6db74">&#34;443:443&#34;</span>
-<span style="color:#75715e">### Redis Container #########################################</span>
-    <span style="color:#f92672">redis</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/redis-ed-sq:latest</span>
-        <span style="color:#f92672">volumes</span>:
-            - <span style="color:#ae81ff">redis:/data</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;${REDIS_PORT}:6379&#34;</span>
-        <span style="color:#f92672">logging</span>:
-          <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
-          <span style="color:#f92672">options</span>:
-            <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
-            <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;redis&#34;</span>
-<span style="color:#75715e">### Memcached Container #####################################</span>
-    <span style="color:#f92672">memcached</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">memcached</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/memcached-ed-sq:latest</span>
-        <span style="color:#f92672">volumes</span>:
-            - <span style="color:#ae81ff">memcached:/var/lib/memcached</span>
-        <span style="color:#f92672">ports</span>:
-            - <span style="color:#e6db74">&#34;${MEMCACHED_PORT}:11211&#34;</span>
-        <span style="color:#f92672">logging</span>:
-          <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
-          <span style="color:#f92672">options</span>:
-            <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
-            <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;memcached&#34;</span>
-<span style="color:#75715e">### Volumes Setup ###########################################</span>
-<span style="color:#f92672">volumes</span>:
-    <span style="color:#f92672">memcached</span>:
-        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
-    <span style="color:#f92672">redis</span>:
-        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
-</code></pre></div><p>То теперь файл третьей версии будет выглядеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3.1&#39;</span>
-<span style="color:#f92672">services</span>:
-<span style="color:#75715e">### Code from branch develop #############################################</span>
-  <span style="color:#f92672">applications</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
-    <span style="color:#f92672">deploy</span>:
-      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">1</span>
-      <span style="color:#f92672">update_config</span>:
-        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
-        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
-      <span style="color:#f92672">restart_policy</span>:
-        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
-      <span style="color:#f92672">placement</span>:
-        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
-<span style="color:#75715e">### PHP-FPM ##############################################################</span>
-  <span style="color:#f92672">php-fpm</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
-    <span style="color:#f92672">deploy</span>:
-      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
-      <span style="color:#f92672">update_config</span>:
-        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
-        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
-      <span style="color:#f92672">restart_policy</span>:
-        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
-      <span style="color:#f92672">placement</span>:
-        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
-    <span style="color:#f92672">logging</span>:
-      <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
-      <span style="color:#f92672">options</span>:
-        <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
-        <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;php-fpm&#34;</span>
-<span style="color:#75715e">### Nginx ################################################################</span>
-  <span style="color:#f92672">nginx</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:staging</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#e6db74">&#34;80:80&#34;</span>
-      - <span style="color:#e6db74">&#34;443:443&#34;</span>
-    <span style="color:#f92672">deploy</span>:
-      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
-      <span style="color:#f92672">update_config</span>:
-        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
-        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
-      <span style="color:#f92672">restart_policy</span>:
-        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
-      <span style="color:#f92672">placement</span>:
-        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
-<span style="color:#75715e">### Redis ################################################################</span>
-  <span style="color:#f92672">redis</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/redis-ed-sq:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">redis:/data</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#e6db74">&#34;${REDIS_PORT}:6379&#34;</span>
-    <span style="color:#f92672">deploy</span>:
-      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
-      <span style="color:#f92672">update_config</span>:
-        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
-        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
-      <span style="color:#f92672">restart_policy</span>:
-        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
-      <span style="color:#f92672">placement</span>:
-        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
-    <span style="color:#f92672">logging</span>:
-      <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
-      <span style="color:#f92672">options</span>:
-        <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
-        <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;redis&#34;</span>
-<span style="color:#75715e">### Memcached ############################################################</span>
-  <span style="color:#f92672">memcached</span>:
-    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/memcached-ed-sq:latest</span>
-    <span style="color:#f92672">volumes</span>:
-      - <span style="color:#ae81ff">memcached:/var/lib/memcached</span>
-    <span style="color:#f92672">ports</span>:
-      - <span style="color:#e6db74">&#34;${MEMCACHED_PORT}:11211&#34;</span>
-    <span style="color:#f92672">deploy</span>:
-      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
-      <span style="color:#f92672">update_config</span>:
-        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
-        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
-      <span style="color:#f92672">restart_policy</span>:
-        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
-      <span style="color:#f92672">placement</span>:
-        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
-    <span style="color:#f92672">logging</span>:
-      <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
-      <span style="color:#f92672">options</span>:
-        <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
-        <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;memcached&#34;</span>
-<span style="color:#75715e">### Volumes Setup ########################################################</span>
-<span style="color:#f92672">volumes</span>:
-  <span style="color:#f92672">developcode</span>:
-  <span style="color:#f92672">memcached</span>:
-    <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
-  <span style="color:#f92672">redis</span>:
-    <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
-</code></pre></div><p>Из самого важного — мы больше не можем использовать конструкцию <code>volumes_from</code> для монтирования данных из Data Only контейнеров, приходится выкручиваться с именованными томами (<code>named volumes</code>), об этом <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-%D0%B8%D0%BC%D0%B5%D0%BD%D0%BE%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D0%B5-%D1%82%D0%BE%D0%BC%D0%B0/">отдельная подробная статья</a>. Также в режиме роя больше не нужны имена контейнеров (они генерируются автоматически и выглядят примерно так: <code>test-stack_nginx.1.kut1gjutr9zdbo1wdf1biuvti</code>), не нужно делать <code>expose</code> для портов, доступных только между контейнерами и появилась большая и гибкая секция <code>deploy</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker info
+</span></span><span style="display:flex;"><span>Containers: <span style="color:#ae81ff">16</span>
+</span></span><span style="display:flex;"><span> Running: <span style="color:#ae81ff">16</span>
+</span></span><span style="display:flex;"><span> Paused: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> Stopped: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>Images: <span style="color:#ae81ff">181</span>
+</span></span><span style="display:flex;"><span>Server Version: 17.06.0-ce
+</span></span><span style="display:flex;"><span>Storage Driver: aufs
+</span></span><span style="display:flex;"><span> Root Dir: /var/lib/docker/aufs
+</span></span><span style="display:flex;"><span> Backing Filesystem: extfs
+</span></span><span style="display:flex;"><span> Dirs: <span style="color:#ae81ff">280</span>
+</span></span><span style="display:flex;"><span> Dirperm1 Supported: true
+</span></span><span style="display:flex;"><span>Logging Driver: json-file
+</span></span><span style="display:flex;"><span>Cgroup Driver: cgroupfs
+</span></span><span style="display:flex;"><span>Plugins: 
+</span></span><span style="display:flex;"><span> Volume: local
+</span></span><span style="display:flex;"><span> Network: bridge host ipvlan macvlan null overlay
+</span></span><span style="display:flex;"><span> Log: awslogs fluentd gcplogs gelf journald json-file logentries splunk syslog
+</span></span><span style="display:flex;"><span>Swarm: active
+</span></span><span style="display:flex;"><span> NodeID: udow4edogefqxcfs6gzkkgh6w
+</span></span><span style="display:flex;"><span> Is Manager: true
+</span></span><span style="display:flex;"><span> ClusterID: ut8uvfxdk1ldgguazc7snuc6u
+</span></span><span style="display:flex;"><span> Managers: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span> Nodes: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span> Orchestration:
+</span></span><span style="display:flex;"><span>  Task History Retention Limit: <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span> Raft:
+</span></span><span style="display:flex;"><span>  Snapshot Interval: <span style="color:#ae81ff">10000</span>
+</span></span><span style="display:flex;"><span>  Number of Old Snapshots to Retain: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  Heartbeat Tick: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  Election Tick: <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span> Dispatcher:
+</span></span><span style="display:flex;"><span>  Heartbeat Period: <span style="color:#ae81ff">5</span> seconds
+</span></span><span style="display:flex;"><span> CA Configuration:
+</span></span><span style="display:flex;"><span>  Expiry Duration: <span style="color:#ae81ff">3</span> months
+</span></span><span style="display:flex;"><span>  Force Rotate: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> Root Rotation In Progress: false
+</span></span><span style="display:flex;"><span> Node Address: 192.168.0.34
+</span></span><span style="display:flex;"><span> Manager Addresses:
+</span></span><span style="display:flex;"><span>  192.168.0.34:2377
+</span></span><span style="display:flex;"><span>Runtimes: runc
+</span></span><span style="display:flex;"><span>Default Runtime: runc
+</span></span><span style="display:flex;"><span>Init Binary: docker-init
+</span></span><span style="display:flex;"><span>containerd version: cfb82a876ecc11b5ca0977d1733adbe58599088a
+</span></span><span style="display:flex;"><span>runc version: 2d41c047c83e09a6d61d464906feb2a2f3c52aa4
+</span></span><span style="display:flex;"><span>init version: 949e6fa
+</span></span><span style="display:flex;"><span>Security Options:
+</span></span><span style="display:flex;"><span> apparmor
+</span></span><span style="display:flex;"><span> seccomp
+</span></span><span style="display:flex;"><span>  Profile: default
+</span></span><span style="display:flex;"><span>Kernel Version: 4.4.0-91-generic
+</span></span><span style="display:flex;"><span>Operating System: Ubuntu 16.04.2 LTS
+</span></span><span style="display:flex;"><span>OSType: linux
+</span></span><span style="display:flex;"><span>Architecture: x86_64
+</span></span><span style="display:flex;"><span>CPUs: <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>Total Memory: 7.67GiB
+</span></span><span style="display:flex;"><span>Name: e-lebed.lc
+</span></span><span style="display:flex;"><span>ID: 7VNW:YUXN:EOH2:3JRQ:V7AX:O5OQ:EYJ3:UT7H:JNM3:SGTK:BRIP:DHKB
+</span></span><span style="display:flex;"><span>Docker Root Dir: /var/lib/docker
+</span></span><span style="display:flex;"><span>Debug Mode <span style="color:#f92672">(</span>client<span style="color:#f92672">)</span>: false
+</span></span><span style="display:flex;"><span>Debug Mode <span style="color:#f92672">(</span>server<span style="color:#f92672">)</span>: false
+</span></span><span style="display:flex;"><span>Username: ealebed
+</span></span><span style="display:flex;"><span>Registry: https://index.docker.io/v1/
+</span></span><span style="display:flex;"><span>Experimental: true
+</span></span><span style="display:flex;"><span>Insecure Registries:
+</span></span><span style="display:flex;"><span> 127.0.0.0/8
+</span></span><span style="display:flex;"><span>Live Restore Enabled: false
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>WARNING: No swap limit support
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose version
+</span></span><span style="display:flex;"><span>docker-compose version 1.14.0, build c7bdf9e
+</span></span><span style="display:flex;"><span>docker-py version: 2.3.0
+</span></span><span style="display:flex;"><span>CPython version: 2.7.13
+</span></span><span style="display:flex;"><span>OpenSSL version: OpenSSL 1.0.1t  <span style="color:#ae81ff">3</span> May <span style="color:#ae81ff">2016</span>
+</span></span></code></pre></div><p>После инициализации режима роя следует переписать файл <code>docker-compose.yml</code> минимум на 3-ю версию для развертывания сервисов через команду <code>deploy</code>. К примеру, ранее мы использовали файл второй версии:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Applications Code Container #############################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">applications</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">application</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### PHP-FPM Container #######################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">php-fpm</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">php-fpm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">expose</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;9000&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">logging</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">options</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;php-fpm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Nginx Server Container ##################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">nginx</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">nginx</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes_from</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">applications</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">depends_on</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;php-fpm&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;80:80&#34;</span>
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;443:443&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Redis Container #########################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">redis</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/redis-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">redis:/data</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;${REDIS_PORT}:6379&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">logging</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">options</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;redis&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Memcached Container #####################################</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memcached</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#ae81ff">memcached</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/memcached-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">memcached:/var/lib/memcached</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#e6db74">&#34;${MEMCACHED_PORT}:11211&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">logging</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">options</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;memcached&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Volumes Setup ###########################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memcached</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</span></span></code></pre></div><p>То теперь файл третьей версии будет выглядеть так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;3.1&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Code from branch develop #############################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">applications</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/develop.sources:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">deploy</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">update_config</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restart_policy</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">placement</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### PHP-FPM ##############################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">php-fpm</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/php-fpm-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">deploy</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">update_config</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restart_policy</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">placement</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">logging</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">options</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;php-fpm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Nginx ################################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">nginx</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/nginx-ed-sq:staging</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">developcode:/var/www/develop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;80:80&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;443:443&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">deploy</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">update_config</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restart_policy</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">placement</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Redis ################################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/redis-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">redis:/data</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;${REDIS_PORT}:6379&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">deploy</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">update_config</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restart_policy</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">placement</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">logging</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">options</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;redis&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Memcached ############################################################</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">memcached</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.gitlab.lc:5000/develop/ed/memcached-ed-sq:latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#ae81ff">memcached:/var/lib/memcached</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;${MEMCACHED_PORT}:11211&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">deploy</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">update_config</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">parallelism</span>: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">delay</span>: <span style="color:#ae81ff">5s</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restart_policy</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">condition</span>: <span style="color:#66d9ef">on</span>-<span style="color:#ae81ff">failure</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">placement</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">constraints</span>: [<span style="color:#ae81ff">node.role == manager]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">logging</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">driver</span>: <span style="color:#ae81ff">gelf</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">options</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">gelf-address</span>: <span style="color:#e6db74">&#34;udp://${GRAYLOG_ADDR}:12201&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">tag</span>: <span style="color:#e6db74">&#34;memcached&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Volumes Setup ########################################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">developcode</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">memcached</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">driver</span>: <span style="color:#e6db74">&#34;local&#34;</span>
+</span></span></code></pre></div><p>Из самого важного — мы больше не можем использовать конструкцию <code>volumes_from</code> для монтирования данных из Data Only контейнеров, приходится выкручиваться с именованными томами (<code>named volumes</code>), об этом <a href="https://ealebed.github.io/posts/2017/docker-swarm-stack-deploy-%D0%B8-%D0%B8%D0%BC%D0%B5%D0%BD%D0%BE%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D0%B5-%D1%82%D0%BE%D0%BC%D0%B0/">отдельная подробная статья</a>. Также в режиме роя больше не нужны имена контейнеров (они генерируются автоматически и выглядят примерно так: <code>test-stack_nginx.1.kut1gjutr9zdbo1wdf1biuvti</code>), не нужно делать <code>expose</code> для портов, доступных только между контейнерами и появилась большая и гибкая секция <code>deploy</code>.</p>
 <p>В каталоге с вышеприведенным файлом <code>docker-compose.yml</code> находится также файл с переменными окружения <code>.env</code> с таким содержимым:</p>
-<pre><code>### Graylog ##############################################################
+<pre tabindex="0"><code>### Graylog ##############################################################
 GRAYLOG_ADDR=graylog.lc
 ### Redis ################################################################
 REDIS_PORT=6379
 ### Memcached ############################################################
 MEMCACHED_PORT=11211
 </code></pre><p>При использовании команды <code>docker-compose up -d</code> переменные читаются из файла и подставляются при старте контейнеров — можно в этом убедиться выполнив <code>docker inspect &lt;имя_контейнера&gt;</code>, например (вывод сокращен):</p>
-<pre><code>...
-        &quot;HostConfig&quot;: {
-            &quot;Binds&quot;: [],
-            &quot;ContainerIDFile&quot;: &quot;&quot;,
-            &quot;LogConfig&quot;: {
-                &quot;Type&quot;: &quot;gelf&quot;,
-                &quot;Config&quot;: {
-                    &quot;gelf-address&quot;: &quot;udp://graylog.lc:12201&quot;,
-                    &quot;tag&quot;: &quot;redis&quot;
+<pre tabindex="0"><code>...
+        &#34;HostConfig&#34;: {
+            &#34;Binds&#34;: [],
+            &#34;ContainerIDFile&#34;: &#34;&#34;,
+            &#34;LogConfig&#34;: {
+                &#34;Type&#34;: &#34;gelf&#34;,
+                &#34;Config&#34;: {
+                    &#34;gelf-address&#34;: &#34;udp://graylog.lc:12201&#34;,
+                    &#34;tag&#34;: &#34;redis&#34;
 ...
-            &quot;Env&quot;: [
-                &quot;REDIS_PORT=6379&quot;,
-                &quot;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&quot;,
-                &quot;REDIS_VERSION=3.2.8&quot;,
-                &quot;REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-3.2.8.tar.gz&quot;,
-                &quot;REDIS_DOWNLOAD_SHA1=6780d1abb66f33a97aad0edbe020403d0a15b67f&quot;
+            &#34;Env&#34;: [
+                &#34;REDIS_PORT=6379&#34;,
+                &#34;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&#34;,
+                &#34;REDIS_VERSION=3.2.8&#34;,
+                &#34;REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-3.2.8.tar.gz&#34;,
+                &#34;REDIS_DOWNLOAD_SHA1=6780d1abb66f33a97aad0edbe020403d0a15b67f&#34;
             ],
 ...
 </code></pre><p>Однако, если мы попробуем развернуть данный стек сервисов с помощью команды <code>deploy</code>, например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker stack deploy --with-registry-auth --compose-file docker-compose.yml test-stack
-</code></pre></div><p>то вместо ожидаемых значений переменных из файла <code>.env</code> мы увидим пустоту:</p>
-<pre><code>...
-        &quot;HostConfig&quot;: {
-            &quot;Binds&quot;: [],
-            &quot;ContainerIDFile&quot;: &quot;&quot;,
-            &quot;LogConfig&quot;: {
-                &quot;Type&quot;: &quot;gelf&quot;,
-                &quot;Config&quot;: {
-                    &quot;gelf-address&quot;: &quot;udp://:12201&quot;,
-                    &quot;tag&quot;: &quot;redis&quot;
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker stack deploy --with-registry-auth --compose-file docker-compose.yml test-stack
+</span></span></code></pre></div><p>то вместо ожидаемых значений переменных из файла <code>.env</code> мы увидим пустоту:</p>
+<pre tabindex="0"><code>...
+        &#34;HostConfig&#34;: {
+            &#34;Binds&#34;: [],
+            &#34;ContainerIDFile&#34;: &#34;&#34;,
+            &#34;LogConfig&#34;: {
+                &#34;Type&#34;: &#34;gelf&#34;,
+                &#34;Config&#34;: {
+                    &#34;gelf-address&#34;: &#34;udp://:12201&#34;,
+                    &#34;tag&#34;: &#34;redis&#34;
 ...
-            &quot;Env&quot;: [
-                &quot;REDIS_PORT=&quot;,
-                &quot;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&quot;,
-                &quot;REDIS_VERSION=3.2.8&quot;,
-                &quot;REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-3.2.8.tar.gz&quot;,
-                &quot;REDIS_DOWNLOAD_SHA1=6780d1abb66f33a97aad0edbe020403d0a15b67f&quot;
+            &#34;Env&#34;: [
+                &#34;REDIS_PORT=&#34;,
+                &#34;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&#34;,
+                &#34;REDIS_VERSION=3.2.8&#34;,
+                &#34;REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-3.2.8.tar.gz&#34;,
+                &#34;REDIS_DOWNLOAD_SHA1=6780d1abb66f33a97aad0edbe020403d0a15b67f&#34;
             ],
 ...
 </code></pre><p>Точно такой же результат будет если передавать значения в контейнер с помощью секции <code>environment</code>, о чем пишут <a href="https://github.com/moby/moby/issues/30251">здесь</a>.</p>
 <p>Один из вариантов решения — не использовать переменные и сразу захардкодить все в <code>docker-compose.yml</code>, но иногда вследствие архитектурных решений обойтись без переменных нельзя. В таком случае предлагаю использовать следующий «велосипед» (надежный и проверенный):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">env <span style="color:#66d9ef">$(</span>cat .env | grep ^<span style="color:#f92672">[</span>A-Z<span style="color:#f92672">]</span> | xargs<span style="color:#66d9ef">)</span> docker stack deploy --with-registry-auth --compose-file docker-compose.yml test-stack
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>env <span style="color:#66d9ef">$(</span>cat .env | grep ^<span style="color:#f92672">[</span>A-Z<span style="color:#f92672">]</span> | xargs<span style="color:#66d9ef">)</span> docker stack deploy --with-registry-auth --compose-file docker-compose.yml test-stack
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -486,7 +486,7 @@ MEMCACHED_PORT=11211
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

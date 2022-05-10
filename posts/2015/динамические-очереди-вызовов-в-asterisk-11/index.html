@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,22 +104,22 @@
 <p>При использовании последнего варианта появляется возможность хранить настройки во внешней базе данных (например, MySQL), что дает возможность моментально применять изменения без перезагрузки Asterisk. Давайте разберемся с динамическими очередями!</p>
 <p>Настройкой <a href="https://ealebed.github.io/posts/2015/%D0%B1%D0%B0%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-asterisk-11-%D0%B2-debian-wheezy-%D0%BE%D1%87%D0%B5%D1%80%D0%B5%D0%B4%D0%B8-%D0%B7%D0%B2%D0%BE%D0%BD%D0%BA%D0%BE%D0%B2/">статических очередей вызовов в Asterisk</a> с помощью конфига queues.conf мы уже занимались, в этой статье рассмотрим как настроить <strong>динамические очереди вызовов в Asterisk</strong> (<code>RealTime Queue</code>).</p>
 <p>Открываем на редактирование конфигурационный файл <code>/etc/asterisk/extconfig.conf</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nano /etc/asterisk/extconfig.conf
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano /etc/asterisk/extconfig.conf
+</span></span></code></pre></div><ul>
 <li>добавляем в конец файла следующие строки:</li>
 </ul>
-<pre><code>...
+<pre tabindex="0"><code>...
 queues =&gt; mysql,general,queue_table
 queue_members =&gt; mysql,general,queue_member_table
 </code></pre><p><strong>Примечание.</strong> В данном примере используется MySQL, но можно использовать и другие драйверы <code>realtime</code> (например, ODBC). <code>general</code> — настройки базы данных (описаны ниже), <code>queue_table</code> и <code>queue_member_table</code> соответственно таблицы для очередей вызовов и для агентов, их обрабатывающих.</p>
 <ul>
 <li>открываем на редактирование конфигурационный файл <code>/etc/asterisk/res_config_mysql.conf</code>:</li>
 </ul>
-<pre><code>nano /etc/asterisk/res_config_mysql.conf
+<pre tabindex="0"><code>nano /etc/asterisk/res_config_mysql.conf
 </code></pre><ul>
 <li>приведем секцию <code>[general]</code> к следующему виду:</li>
 </ul>
-<pre><code>[general]
+<pre tabindex="0"><code>[general]
 dbhost=localhost
 dbname=asterisk
 dbuser=asterisk
@@ -128,46 +128,46 @@ dbport = 3306
 dbsock = /var/run/mysqld/mysqld.sock
 </code></pre><p><strong>Примечание.</strong> Возможно, в вашем случае вместо конфигурационного файла <code>res_config_mysql.conf</code> будет конфиг <code>res_mysql.conf</code>.</p>
 <p>Для применения изменений выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">asterisk -rx <span style="color:#e6db74">&#39;core reload&#39;</span>
-</code></pre></div><p>Проверяем текущее состояние:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">asterisk -rx <span style="color:#e6db74">&#39;realtime mysql status&#39;</span>
-general connected to asterisk@localhost, port <span style="color:#ae81ff">3306</span> with username asterisk <span style="color:#66d9ef">for</span> <span style="color:#ae81ff">3</span> minutes.
-</code></pre></div><p>Теперь необходимо создать таблицы <code>queue_table</code> и <code>queue_member_table</code> в нашей базе MySQL. Для этого подключаемся к MySQL-серверу и выполняем следующие запросы:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> queue_table (
-name VARCHAR(<span style="color:#ae81ff">128</span>) <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span>,
-musiconhold VARCHAR(<span style="color:#ae81ff">128</span>),
-timeout INT(<span style="color:#ae81ff">11</span>),
-strategy VARCHAR(<span style="color:#ae81ff">128</span>)
-);
-<span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> queue_member_table (
-uniqueid INT(<span style="color:#ae81ff">10</span>) UNSIGNED <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> AUTO_INCREMENT,
-queue_name varchar(<span style="color:#ae81ff">128</span>),
-interface varchar(<span style="color:#ae81ff">128</span>),
-);
-</code></pre></div><p>Для проверки работы добавим очередь в таблицу <code>queue_table</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> queue_table (name, musiconhold, timeout, strategy)
-<span style="color:#66d9ef">VALUES</span> (<span style="color:#e6db74">&#34;test&#34;</span>, <span style="color:#e6db74">&#34;default&#34;</span>, <span style="color:#e6db74">&#34;15&#34;</span>, <span style="color:#e6db74">&#34;ringall&#34;</span>);
-</code></pre></div><p>Проверим, появилась ли новая очередь:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">asterisk -rx <span style="color:#e6db74">&#39;queue show test&#39;</span>
-test has <span style="color:#ae81ff">0</span> calls <span style="color:#f92672">(</span>max unlimited<span style="color:#f92672">)</span> in <span style="color:#e6db74">&#39;ringall&#39;</span> strategy <span style="color:#f92672">(</span>0s holdtime, 0s talktime<span style="color:#f92672">)</span>, W:0, C:0, A:0, SL:0.0% within 0s
-   No Members
-   No Callers
-</code></pre></div><p>Добавим нескольких агентов (операторов) для обработки очереди вызовов test:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> queue_member_table (uniqueid, queue_name, interface)
-<span style="color:#66d9ef">VALUES</span> (<span style="color:#66d9ef">NULL</span>,  <span style="color:#e6db74">&#34;test&#34;</span>,  <span style="color:#e6db74">&#34;SIP/113&#34;</span>);
-<span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> queue_member_table (uniqueid, queue_name, interface)
-<span style="color:#66d9ef">VALUES</span> (<span style="color:#66d9ef">NULL</span>,  <span style="color:#e6db74">&#34;test&#34;</span>,  <span style="color:#e6db74">&#34;SIP/121&#34;</span>);
-<span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> queue_member_table (uniqueid, queue_name, interface)
-<span style="color:#66d9ef">VALUES</span> (<span style="color:#66d9ef">NULL</span>,  <span style="color:#e6db74">&#34;test&#34;</span>,  <span style="color:#e6db74">&#34;SIP/123&#34;</span>);
-</code></pre></div><p>Проверим новую очередь на наличие агентов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">asterisk -rx <span style="color:#e6db74">&#39;queue show test&#39;</span>
-test has <span style="color:#ae81ff">0</span> calls <span style="color:#f92672">(</span>max unlimited<span style="color:#f92672">)</span> in <span style="color:#e6db74">&#39;ringall&#39;</span> strategy <span style="color:#f92672">(</span>0s holdtime, 0s talktime<span style="color:#f92672">)</span>, W:0, C:0, A:0, SL:0.0% within 0s
-   Members: 
-      SIP/121 <span style="color:#f92672">(</span>ringinuse enabled<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>realtime<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>Unavailable<span style="color:#f92672">)</span> has taken no calls yet
-      SIP/113 <span style="color:#f92672">(</span>ringinuse enabled<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>realtime<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>Unavailable<span style="color:#f92672">)</span> has taken no calls yet
-      SIP/123 <span style="color:#f92672">(</span>ringinuse enabled<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>realtime<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>Unavailable<span style="color:#f92672">)</span> has taken no calls yet
-   No Callers
-</code></pre></div><p>Созданная очередь уже доступна для обработки входящих вызовов с помощью <code>Queue()</code> в плане набора. На этом <strong>настройка динамических очередей вызовов в Asterisk 11</strong> завершена, все работает как и было задумано.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>asterisk -rx <span style="color:#e6db74">&#39;core reload&#39;</span>
+</span></span></code></pre></div><p>Проверяем текущее состояние:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>asterisk -rx <span style="color:#e6db74">&#39;realtime mysql status&#39;</span>
+</span></span><span style="display:flex;"><span>general connected to asterisk@localhost, port <span style="color:#ae81ff">3306</span> with username asterisk <span style="color:#66d9ef">for</span> <span style="color:#ae81ff">3</span> minutes.
+</span></span></code></pre></div><p>Теперь необходимо создать таблицы <code>queue_table</code> и <code>queue_member_table</code> в нашей базе MySQL. Для этого подключаемся к MySQL-серверу и выполняем следующие запросы:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> queue_table (
+</span></span><span style="display:flex;"><span>name VARCHAR(<span style="color:#ae81ff">128</span>) <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span>,
+</span></span><span style="display:flex;"><span>musiconhold VARCHAR(<span style="color:#ae81ff">128</span>),
+</span></span><span style="display:flex;"><span>timeout INT(<span style="color:#ae81ff">11</span>),
+</span></span><span style="display:flex;"><span>strategy VARCHAR(<span style="color:#ae81ff">128</span>)
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> queue_member_table (
+</span></span><span style="display:flex;"><span>uniqueid INT(<span style="color:#ae81ff">10</span>) UNSIGNED <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>queue_name varchar(<span style="color:#ae81ff">128</span>),
+</span></span><span style="display:flex;"><span>interface varchar(<span style="color:#ae81ff">128</span>),
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p>Для проверки работы добавим очередь в таблицу <code>queue_table</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> queue_table (name, musiconhold, timeout, strategy)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">VALUES</span> (<span style="color:#e6db74">&#34;test&#34;</span>, <span style="color:#e6db74">&#34;default&#34;</span>, <span style="color:#e6db74">&#34;15&#34;</span>, <span style="color:#e6db74">&#34;ringall&#34;</span>);
+</span></span></code></pre></div><p>Проверим, появилась ли новая очередь:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>asterisk -rx <span style="color:#e6db74">&#39;queue show test&#39;</span>
+</span></span><span style="display:flex;"><span>test has <span style="color:#ae81ff">0</span> calls <span style="color:#f92672">(</span>max unlimited<span style="color:#f92672">)</span> in <span style="color:#e6db74">&#39;ringall&#39;</span> strategy <span style="color:#f92672">(</span>0s holdtime, 0s talktime<span style="color:#f92672">)</span>, W:0, C:0, A:0, SL:0.0% within 0s
+</span></span><span style="display:flex;"><span>   No Members
+</span></span><span style="display:flex;"><span>   No Callers
+</span></span></code></pre></div><p>Добавим нескольких агентов (операторов) для обработки очереди вызовов test:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> queue_member_table (uniqueid, queue_name, interface)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">VALUES</span> (<span style="color:#66d9ef">NULL</span>,  <span style="color:#e6db74">&#34;test&#34;</span>,  <span style="color:#e6db74">&#34;SIP/113&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> queue_member_table (uniqueid, queue_name, interface)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">VALUES</span> (<span style="color:#66d9ef">NULL</span>,  <span style="color:#e6db74">&#34;test&#34;</span>,  <span style="color:#e6db74">&#34;SIP/121&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> queue_member_table (uniqueid, queue_name, interface)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">VALUES</span> (<span style="color:#66d9ef">NULL</span>,  <span style="color:#e6db74">&#34;test&#34;</span>,  <span style="color:#e6db74">&#34;SIP/123&#34;</span>);
+</span></span></code></pre></div><p>Проверим новую очередь на наличие агентов:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>asterisk -rx <span style="color:#e6db74">&#39;queue show test&#39;</span>
+</span></span><span style="display:flex;"><span>test has <span style="color:#ae81ff">0</span> calls <span style="color:#f92672">(</span>max unlimited<span style="color:#f92672">)</span> in <span style="color:#e6db74">&#39;ringall&#39;</span> strategy <span style="color:#f92672">(</span>0s holdtime, 0s talktime<span style="color:#f92672">)</span>, W:0, C:0, A:0, SL:0.0% within 0s
+</span></span><span style="display:flex;"><span>   Members: 
+</span></span><span style="display:flex;"><span>      SIP/121 <span style="color:#f92672">(</span>ringinuse enabled<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>realtime<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>Unavailable<span style="color:#f92672">)</span> has taken no calls yet
+</span></span><span style="display:flex;"><span>      SIP/113 <span style="color:#f92672">(</span>ringinuse enabled<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>realtime<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>Unavailable<span style="color:#f92672">)</span> has taken no calls yet
+</span></span><span style="display:flex;"><span>      SIP/123 <span style="color:#f92672">(</span>ringinuse enabled<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>realtime<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>Unavailable<span style="color:#f92672">)</span> has taken no calls yet
+</span></span><span style="display:flex;"><span>   No Callers
+</span></span></code></pre></div><p>Созданная очередь уже доступна для обработки входящих вызовов с помощью <code>Queue()</code> в плане набора. На этом <strong>настройка динамических очередей вызовов в Asterisk 11</strong> завершена, все работает как и было задумано.</p>
                 </section>
             </article>
 
@@ -259,7 +259,7 @@ test has <span style="color:#ae81ff">0</span> calls <span style="color:#f92672">
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

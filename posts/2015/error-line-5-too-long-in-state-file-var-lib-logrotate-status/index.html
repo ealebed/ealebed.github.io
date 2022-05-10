@@ -32,7 +32,7 @@ error: could not read state file, will not attempt to write into it
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,39 +104,39 @@ error: could not read state file, will not attempt to write into it
                 </header>
                 <section id="post-body">
                     <p>Осенним утром с одного из серверов начали приходить письма следующего содержания:</p>
-<pre><code>error: line 5 too long in state file /var/lib/logrotate/status
+<pre tabindex="0"><code>error: line 5 too long in state file /var/lib/logrotate/status
 error: could not read state file, will not attempt to write into it
 </code></pre><p>Давайте разберемся и устраним проблему!</p>
 <p>Короче говоря не ротейтятся логи — как минимум, неприятная ситуация. Подключаемся к проблемному серверу и проверяем файл <code>/var/lib/logrotate/status</code>:</p>
-<pre><code>cat /var/lib/logrotate/status
+<pre tabindex="0"><code>cat /var/lib/logrotate/status
 </code></pre><p>и видим результат:</p>
-<pre><code>logrotate state -- version 2
-&quot;/var/log/exim4/mainlog.monthly&quot; 2015-9-9
-&quot;/var/log/exim4/mainlog.weekly&quot; 2015-9-9
-&quot;/var/log/exim4/mainlog&quot; 2015-9-9
-log/apache2/access-partner.log&quot; 2015-9-5
+<pre tabindex="0"><code>logrotate state -- version 2
+&#34;/var/log/exim4/mainlog.monthly&#34; 2015-9-9
+&#34;/var/log/exim4/mainlog.weekly&#34; 2015-9-9
+&#34;/var/log/exim4/mainlog&#34; 2015-9-9
+log/apache2/access-partner.log&#34; 2015-9-5
 </code></pre><p>Более наглядный результат получится если открыть этот файл в редакторе <code>nano</code>:</p>
-<pre><code>nano /var/lib/logrotate/status
+<pre tabindex="0"><code>nano /var/lib/logrotate/status
 </code></pre><p>Действительно, как и было написано в письме <code>line 5 too long in state file /var/lib/logrotate/status</code>:</p>
-<pre><code>logrotate state -- version 2
-&quot;/var/log/exim4/mainlog.monthly&quot; 2015-9-9
-&quot;/var/log/exim4/mainlog.weekly&quot; 2015-9-9
-&quot;/var/log/exim4/mainlog&quot; 2015-9-9
-@^@^@^...@^@^@^@^@^@log/apache2/access-partner.log&quot; 2015-9-5
+<pre tabindex="0"><code>logrotate state -- version 2
+&#34;/var/log/exim4/mainlog.monthly&#34; 2015-9-9
+&#34;/var/log/exim4/mainlog.weekly&#34; 2015-9-9
+&#34;/var/log/exim4/mainlog&#34; 2015-9-9
+@^@^@^...@^@^@^@^@^@log/apache2/access-partner.log&#34; 2015-9-5
 </code></pre><p><strong>Примечание.</strong> Я заменил довольно длинную последовательность символов <code>@^</code> на троеточие.</p>
 <p>Исправить ошибку <code>Error: line 5 too long in state file /var/lib/logrotate/status</code> можно следующим образом:</p>
 <ul>
 <li>сделаем резервную копию файла <code>/var/lib/logrotate/status</code> переименовав его:</li>
 </ul>
-<pre><code>mv /var/lib/logrotate/status /var/lib/logrotate/status.bak
+<pre tabindex="0"><code>mv /var/lib/logrotate/status /var/lib/logrotate/status.bak
 </code></pre><ul>
 <li>запустим ротацию всех логов согласно конфигам, описанным в <code>/etc/logrotate.d/</code>:</li>
 </ul>
-<pre><code>logrotate /etc/logrotate.d/*
+<pre tabindex="0"><code>logrotate /etc/logrotate.d/*
 </code></pre><ul>
 <li>убедимся что создался новый файл <code>/var/lib/logrotate/status</code>:</li>
 </ul>
-<pre><code>ls -l /var/lib/logrotate/status
+<pre tabindex="0"><code>ls -l /var/lib/logrotate/status
 </code></pre><p><strong>Примечание.</strong> Также можно запустить <code>logrotate</code> с параметром <code>-f</code> (force).</p>
 <p>После проделанных действий логи ротейтятся в штатном режиме и писем с ошибками <code>Error: line 5 too long in state file /var/lib/logrotate/status</code> больше нет.</p>
                 </section>
@@ -230,7 +230,7 @@ log/apache2/access-partner.log&quot; 2015-9-5
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

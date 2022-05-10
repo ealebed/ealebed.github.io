@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -113,30 +113,30 @@
 <li>собственная разработка (типа <a href="https://github.com/flant/loghouse">loghouse</a>).</li>
 </ul>
 <p>В нашем случае было решено использовать стек EFK, во многом из-за простоты развертывания и наличия опыта работы с elasticsearch, однако <strong>Fluentd</strong> мы заменили на <strong>Fluent Bit</strong>. Причина такого решения вполне очевидна, если взглянуть на рекомендуемые значения <code>.resources</code> в манифестах для обоих утилит:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e">#Fluentd</span>
-<span style="color:#f92672">resources</span>:
-  <span style="color:#f92672">limits</span>:
-    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">500Mi</span>
-  <span style="color:#f92672">requests</span>:
-    <span style="color:#f92672">cpu</span>: <span style="color:#ae81ff">100m</span>
-    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">200Mi</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e">#Fluent Bit</span>
-<span style="color:#f92672">resources</span>:
-  <span style="color:#f92672">requests</span>:
-    <span style="color:#f92672">cpu</span>: <span style="color:#ae81ff">5m</span>
-    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">10Mi</span>
-  <span style="color:#f92672">limits</span>:
-    <span style="color:#f92672">cpu</span>: <span style="color:#ae81ff">50m</span>
-    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">60Mi</span>
-</code></pre></div><p>Казалось бы, есть вполне пригодная <a href="https://docs.fluentbit.io/manual/filter/kubernetes">документация</a> и масса примеров установки данного стека, что же может пойти не так и зачем эта статья?</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e">#Fluentd</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">resources</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">limits</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">500Mi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">requests</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">cpu</span>: <span style="color:#ae81ff">100m</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">200Mi</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e">#Fluent Bit</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">resources</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">requests</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">cpu</span>: <span style="color:#ae81ff">5m</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">10Mi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">limits</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">cpu</span>: <span style="color:#ae81ff">50m</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">60Mi</span>
+</span></span></code></pre></div><p>Казалось бы, есть вполне пригодная <a href="https://docs.fluentbit.io/manual/filter/kubernetes">документация</a> и масса примеров установки данного стека, что же может пойти не так и зачем эта статья?</p>
 <p>Дело в том, что все доступные материалы и примеры годятся только если ваш <code>Kubernetes</code> кластер использует в качестве исполняемой среды контейнеров (<em>container runtimes</em>) <strong>Docker</strong>, который долгое время оставался runtime&rsquo;ом по умолчанию (а у некоторых облачных провайдеров остается и по сей день) и требовался для функционирования кластера. В нашем же случае используется <strong><a href="https://containerd.io/">containerd</a></strong> - независимая реализация runtime&rsquo;а для <code>Kubernetes</code> через (Container Runtime Interface - <a href="https://github.com/cri-o/cri-o">CRI</a>), и, как оказалось, без &ldquo;велосипедов&rdquo; не обойтись.</p>
 <p>Задача: необходимо собирать логи из десятков java-приложений (особое внимание уделить стектрейсам) и доставлять их в elasticsearch. Причем, вариант просмотра логов через <code>kubectl logs ...</code> также должен остаться.</p>
 <p>Fluent Bit с помощью input-плагина <code>tail</code> может читать файлы (например, <code>/var/log/containers/*_default_*.log</code>), обрабатывать их содержимое и помощью парсеров и фильтров отправлять в output (в нашем случае это кластер elasticsearch).</p>
 <p><strong>Проблема первая:</strong> формат логов у docker и containerd существенно отличается (первый вообще пишет в json). К счастью, после данного <a href="https://github.com/fluent/fluent-bit/pull/667">PR</a> в github-репозитории она легко решается через изменение формата парсера.</p>
 <p><strong>Проблема вторая:</strong> java-стектрейсы попадают в лог-файл (<code>/var/log/containers/*_default_*.log</code>) так же, как вы можете их видеть с помощью команды <code>kubectl logs ...</code> - при этом каждая отдельная строка становится отдельным лог-сообщением, и попадает в elasticsearch тоже отдельно. Как правило, в java-приложениях для логов используется Logback или Log4j, поэтому вторую проблему можно устранить изменением формата логов - вполне достаточно будет заменить символ переноса строки (LF, <code>\n</code>) на символ разделителя строк (LS, <code>\u2028</code>).</p>
 <p>В нашем случае было решено во всех java-приложениях использовать следующий формат логов:</p>
-<pre><code>...
-%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{40} - %msg %replace(%xException){'\n','\u2028'}%nopex %n
+<pre tabindex="0"><code>...
+%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{40} - %msg %replace(%xException){&#39;\n&#39;,&#39;\u2028&#39;}%nopex %n
 ...
 </code></pre><p><strong>Проблема третья:</strong> появилась после решения второй - в elasticsearch теперь логи попадают хоть и одним сообщением, но стектрейсы становятся нечитабельными из-за символов <code>\u2028</code>. К счастью, это тоже можно решить с помощью <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/pipeline.html">elastic pipelines</a> - перед вставкой сообщения в мы выполним обратную замену символов <code>\u2028</code> на <code>\n</code> (ну и попутно удалим несколько ненужных полей).</p>
 <p><code>Kubernetes</code> манифест со всеми необходимыми объектами (Namespace, ServiceAccount, ConfigMap, &hellip;) для тестирования fluent bit будет выглядеть так:</p>
@@ -147,8 +147,8 @@
 <script type="application/javascript" src="https://gist.github.com/ealebed/ae884bf825897f7a9fc89b4f3e00ff0e.js?file=00-java-logs-pipeline.json"></script>
 
 <p>Данный пайплайн добавляется с помощью следующей команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl -k -XPUT -u user:passw0rd -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> -d @00-java-logs-pipeline.json <span style="color:#e6db74">&#34;https://elasticsearch:9200/_ingest/pipeline/java-logs-pipeline&#34;</span>
-</code></pre></div><p>Если у вас нет под рукой подходящего java-приложения для тестирования, можете воспользоваться <a href="https://github.com/fabianlee/spring-music">этим</a>, например с таким манифестом:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -k -XPUT -u user:passw0rd -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> -d @00-java-logs-pipeline.json <span style="color:#e6db74">&#34;https://elasticsearch:9200/_ingest/pipeline/java-logs-pipeline&#34;</span>
+</span></span></code></pre></div><p>Если у вас нет под рукой подходящего java-приложения для тестирования, можете воспользоваться <a href="https://github.com/fabianlee/spring-music">этим</a>, например с таким манифестом:</p>
 <script type="application/javascript" src="https://gist.github.com/ealebed/ae884bf825897f7a9fc89b4f3e00ff0e.js?file=00-java-log-test.yaml"></script>
 
 <p>По результатам могу сказать, что сбор логов из кластера <code>Kubernetes</code> с первого взгляда выглядит простой задачей, но вовсе таковой не является. Важно помнить, что:</p>
@@ -249,7 +249,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,20 +104,20 @@
 <p>В <strong>GitLab</strong> начиная с версии 9.5 включена <strong>поддержка подписей коммитов GPG</strong>. Свой публичный ключ можно загрузить в меню &ldquo;Settings → GPG Keys&rdquo;, после чего коммиты будут отображаться в <strong>GitLab</strong> как «подтвержденные».</p>
 <p>Если у вас нет GPG ключа, то его легко можно создать. Прежде всего, установите утилиту <a href="https://www.gnupg.org/download/index.html">GPG</a> если ее нет в вашей ОС.
 Генерируем пару (приватный/публичный) ключей командой (в процессе нужно будет отвечать на вопросы):</p>
-<pre><code>gpg --gen-key
+<pre tabindex="0"><code>gpg --gen-key
 </code></pre><p>На первом шаге нужно выбрать алгоритм шифрования:</p>
-<pre><code>Please select what kind of key you want:
+<pre tabindex="0"><code>Please select what kind of key you want:
    (1) RSA and RSA (default)
    (2) DSA and Elgamal
    (3) DSA (sign only)
    (4) RSA (sign only)
 Your selection? 1
 </code></pre><p>Далее вводим желаемую длину ключа:</p>
-<pre><code>RSA keys may be between 1024 and 4096 bits long.
+<pre tabindex="0"><code>RSA keys may be between 1024 and 4096 bits long.
 What keysize do you want? (2048) 4096
 Requested keysize is 4096 bits
 </code></pre><p>Определяем срок действия ключей (в данном примере — ключи бессрочные):</p>
-<pre><code>Please specify how long the key should be valid.
+<pre tabindex="0"><code>Please specify how long the key should be valid.
          0 = key does not expire
       &lt;n&gt;  = key expires in n days
       &lt;n&gt;w = key expires in n weeks
@@ -126,33 +126,33 @@ Requested keysize is 4096 bits
 Key is valid for? (0) 0
 Key does not expire at all
 </code></pre><p>Подтверждаем введенные данные:</p>
-<pre><code>Is this correct? (y/N) y
+<pre tabindex="0"><code>Is this correct? (y/N) y
 </code></pre><p>Вводим имя, email-адрес (должен соответствовать основному email-адресу в <strong>GitLab</strong>) и комментарий (опционально):</p>
-<pre><code>GnuPG needs to construct a user ID to identify your key.
+<pre tabindex="0"><code>GnuPG needs to construct a user ID to identify your key.
  
 Real name: Evgen Lebed
 Email address: ealebed@gmail.com
 Comment:
 You selected this USER-ID:
-    &quot;Evgen Lebed &lt;ealebed@gmail.com&gt;&quot;
+    &#34;Evgen Lebed &lt;ealebed@gmail.com&gt;&#34;
  
 Change (N)ame, (C)omment, (E)mail or (O)kay/(Q)uit? O
 </code></pre><p>На следующем шаге дважды вводим пароль (его нужно будет вводить при каждом коммите изменений в git-репозиторий).</p>
 <p>С помощью следующей команды получаем информацию о приватной части созданного GPG ключа:</p>
-<pre><code>gpg --list-secret-keys ealebed@gmail.com
+<pre tabindex="0"><code>gpg --list-secret-keys ealebed@gmail.com
 </code></pre><p>Вывод будет примерно следующим:</p>
-<pre><code>sec   4096R/435A8DF5 2017-09-06
+<pre tabindex="0"><code>sec   4096R/435A8DF5 2017-09-06
 uid                  Evgen Lebed (DevOps) &lt;ealebed@gmail.com&gt;
 ssb   4096R/BEC4F3BC 2017-09-06
 </code></pre><p>Копируем ID GPG ключа из первой строки (в данном примере это 435A8DF5) и получаем публичную часть ключа с помощью команды:</p>
-<pre><code>gpg --armor --export 435A8DF5
+<pre tabindex="0"><code>gpg --armor --export 435A8DF5
 </code></pre><p>Полученный вывод копируем и вставляем в web-интерфейсе <strong>GitLab</strong> в меню &ldquo;Settings → GPG Keys&rdquo;.</p>
 <p>Указываем в настройках <code>git</code> какой GPG ключ использовать для подписи коммитов:</p>
-<pre><code>git config --global user.signingkey 435A8DF5
+<pre tabindex="0"><code>git config --global user.signingkey 435A8DF5
 </code></pre><p>Теперь для коммита изменений с GPG подписью нужно использовать флаг <code>-S</code>:</p>
-<pre><code>git commit -S -m &quot;My commit msg&quot;
+<pre tabindex="0"><code>git commit -S -m &#34;My commit msg&#34;
 </code></pre><p>на мой взгляд добавлять флаг <code>-S</code> при каждом коммите утомительно, поэтому попросим <code>git</code> подписывать все коммиты автоматически:</p>
-<pre><code>git config --global commit.gpgsign true
+<pre tabindex="0"><code>git config --global commit.gpgsign true
 </code></pre><p>При следующем коммите/пуше изменений в git-репозиторий коммит будет отображаться в списке как «подтвержденный».</p>
                 </section>
             </article>
@@ -245,7 +245,7 @@ ssb   4096R/BEC4F3BC 2017-09-06
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

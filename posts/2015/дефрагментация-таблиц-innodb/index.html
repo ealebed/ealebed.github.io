@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -114,42 +114,42 @@
 <p>Разработчики советуют использовать <code>OPTIMIZE TABLE tbl_name</code> после добавления, удаления и обновления большого количества записей в таблице. Следует помнить, что <code>OPTIMIZE TABLE tbl_name</code> работает только с MyISAM, InnoDB и ARCHIVE таблицами.</p>
 <p>Для <strong>движка базы данных InnoDB</strong> операция <code>OPTIMIZE TABLE tbl_name</code> — то же самое, что и <code>ALTER TABLE tbl_name ENGINE=InnoDB</code>. Следовательно, выполнение <code>OPTIMIZE TABLE tbl_name</code> будет блокировать таблицу.</p>
 <p>В своих проектах для <strong>дефрагментации таблиц InnoDB</strong> я использую следующий скрипт:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">#!/usr/bin/php
-</span><span style="color:#75715e"></span><span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
-$host<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;имя_хоста&gt;&#39;</span>;
-$database<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;имя_базы_данных&gt;&#39;</span>;
-$user<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;имя_пользователя_бд&gt;&#39;</span>;
-$pwd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;очень_сложный_пароль&gt;&#39;</span>;
-$tables<span style="color:#f92672">=</span><span style="color:#66d9ef">array</span>(
-    <span style="color:#e6db74">&#34;&lt;имя_таблицы_1&gt;&#34;</span>,
-    <span style="color:#e6db74">&#34;имя_таблицы_2&#34;</span>,
-    <span style="color:#e6db74">&#34;имя_таблицы_3&#34;</span>);
- 
-$c_mysql <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_connect</span>($host, $user, $pwd);
-<span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>$c_mysql)
-{
-    <span style="color:#66d9ef">echo</span>(<span style="color:#e6db74">&#39;Cannot connect to mysql server&#39;</span>);
-}
- 
-$db <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_select_db</span>($database, $c_mysql);
-<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>$db)
-{
-    <span style="color:#66d9ef">echo</span>(<span style="color:#e6db74">&#39;Cannot connect to database&#39;</span>);
-}
- 
-$rec <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_query</span>(<span style="color:#e6db74">&#39;SHOW TABLE STATUS&#39;</span>);
-<span style="color:#66d9ef">while</span> ($data <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_fetch_object</span>($rec))
-    <span style="color:#66d9ef">if</span> ($data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Engine</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;InnoDB&#39;</span>)
-  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">in_array</span>($data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Name</span>, $tables))
-  {
-      <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#39;Processing &#39;</span>, $data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Name</span>, <span style="color:#e6db74">&#39; ... &#39;</span>; 
-      <span style="color:#a6e22e">flush</span>();
-      <span style="color:#a6e22e">mysql_query</span>(<span style="color:#e6db74">&#34;ALTER TABLE </span><span style="color:#e6db74">{</span>$data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Name</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> ENGINE=InnoDB&#34;</span>);
-      <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;done.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
-  }
-<span style="color:#a6e22e">mysql_free_result</span>($rec);
-<span style="color:#a6e22e">mysql_close</span>();
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/php
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
+</span></span><span style="display:flex;"><span>$host<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;имя_хоста&gt;&#39;</span>;
+</span></span><span style="display:flex;"><span>$database<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;имя_базы_данных&gt;&#39;</span>;
+</span></span><span style="display:flex;"><span>$user<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;имя_пользователя_бд&gt;&#39;</span>;
+</span></span><span style="display:flex;"><span>$pwd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&lt;очень_сложный_пароль&gt;&#39;</span>;
+</span></span><span style="display:flex;"><span>$tables<span style="color:#f92672">=</span><span style="color:#66d9ef">array</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&lt;имя_таблицы_1&gt;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;имя_таблицы_2&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;имя_таблицы_3&#34;</span>);
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>$c_mysql <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_connect</span>($host, $user, $pwd);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>$c_mysql)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">echo</span>(<span style="color:#e6db74">&#39;Cannot connect to mysql server&#39;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>$db <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_select_db</span>($database, $c_mysql);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>$db)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">echo</span>(<span style="color:#e6db74">&#39;Cannot connect to database&#39;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>$rec <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_query</span>(<span style="color:#e6db74">&#39;SHOW TABLE STATUS&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> ($data <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_fetch_object</span>($rec))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ($data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Engine</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;InnoDB&#39;</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">in_array</span>($data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Name</span>, $tables))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#39;Processing &#39;</span>, $data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Name</span>, <span style="color:#e6db74">&#39; ... &#39;</span>; 
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">flush</span>();
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">mysql_query</span>(<span style="color:#e6db74">&#34;ALTER TABLE </span><span style="color:#e6db74">{</span>$data<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">Name</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> ENGINE=InnoDB&#34;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;done.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">mysql_free_result</span>($rec);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">mysql_close</span>();
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -241,7 +241,7 @@ $rec <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_quer
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

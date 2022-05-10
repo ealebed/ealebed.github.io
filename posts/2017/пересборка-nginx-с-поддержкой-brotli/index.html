@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -105,74 +105,74 @@
 <p>В двух словах: <strong>Brotli</strong> — алгоритм сжатия данных, основанный на более современном варианте алгоритма LZ77. <strong>Brotli</strong> был разработан и представлен компанией Google в 2015 году как специализированный алгоритм для сжатия веб-шрифтов. В дальнейшем была представлена версия <code>brotli</code>, которая содержала улучшения направленные на сжатие всего интернет-трафика (HTML, CSS, JS). Поддержка данного алгоритма по умолчанию включена в Chrome 49+, Firefox 44+, Opera 36+ и мобильном Chrome. Больше информации и сравнение с остальными алгоритмами сжатия можно найти <a href="https://blog.cloudflare.com/results-experimenting-brotli/">тут</a>.</p>
 <p><strong>Примечание.</strong> Важное дополнение: так как <code>brotli</code> несовместим с <code>gzip</code>, он поддерживается только для HTTPS-ресурсов, чтобы всякие тупые прокси не побили контент.</p>
 <p>Проверить поддержку <code>brotli</code> клиентом легко: в заголовке запроса <code>accept-encoding</code> должно быть <code>br</code> (что означает <code>brotli</code>), например так:</p>
-<pre><code>accept-encoding: gzip, deflate, sdch, br
+<pre tabindex="0"><code>accept-encoding: gzip, deflate, sdch, br
 </code></pre><p>На сегодняшний день официального <strong>модуля для поддержки Brotli в Nginx</strong> нет, поэтому будем все делать руками.</p>
 <p>Сначала стоит определиться, как будем использовать <code>brotli</code>: в статическом варианте (<code>brotli_static</code>, файлы сжаты заранее и отдаются Nginx как есть) или в динамическом (<code>brotli</code>, сжатие на лету). Собрать модуль в статическом режиме проще, поэтому мы рассмотрим сборку модуля для динамического режима работы.</p>
 <p>Скачиваем и распаковываем исходники актуальной версии Nginx:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /opt/
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget https://nginx.org/download/nginx-1.11.9.tar.gz
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar xf nginx-1.11.9.tar.gz
-</code></pre></div><p>Получаем код модуля <code>ngx_brotli</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/google/ngx_brotli.git
-</code></pre></div><p>Далее выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /opt/ngx_brotli <span style="color:#f92672">&amp;&amp;</span> git submodule update --init <span style="color:#f92672">&amp;&amp;</span> cd /opt/nginx-1.11.9
-</code></pre></div><p>иначе при сборке Nginx столкнемся с ошибкой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
-adding module in /opt/ngx_brotli
-
-./configure: error: Brotli library is missing from the /opt/ngx_brotli/deps/brotli directory.
-...
-</code></pre></div><p>Находясь в каталоге с исходниками Nginx собираем его (не забываем про поддержку APLN):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./configure <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --prefix<span style="color:#f92672">=</span>/etc/nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --sbin-path<span style="color:#f92672">=</span>/usr/sbin/nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --modules-path<span style="color:#f92672">=</span>/usr/lib/nginx/modules <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --conf-path<span style="color:#f92672">=</span>/etc/nginx/nginx.conf <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --error-log-path<span style="color:#f92672">=</span>/var/log/nginx/error.log <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-log-path<span style="color:#f92672">=</span>/var/log/nginx/access.log <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --pid-path<span style="color:#f92672">=</span>/var/run/nginx.pid <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --lock-path<span style="color:#f92672">=</span>/var/run/nginx.lock <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-client-body-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/client_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-proxy-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/proxy_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-fastcgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/fastcgi_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-uwsgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/uwsgi_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-scgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/scgi_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --user<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --group<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_ssl_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_realip_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_addition_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_sub_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_dav_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_flv_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_gunzip_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_gzip_static_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_random_index_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_secure_link_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_stub_status_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_auth_request_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-threads <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-stream <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-stream_ssl_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_slice_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-mail <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-mail_ssl_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-file-aio <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-http_v2_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-cc-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2&#39;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-ld-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed&#39;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --with-openssl<span style="color:#f92672">=</span>/opt/openssl-1.0.2j <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --add-module<span style="color:#f92672">=</span>/opt/ngx_brotli
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">make install
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service nginx restart
-</code></pre></div><p>Теперь, когда у нас собран Nginx с поддержкой <code>brotli</code>, необходимо внести несколько изменений в конфигурационные файлы web-сервера. Если вы решили использовать <code>brotli</code> в статическом режиме, то для его активации достаточно добавить одну директиву в секции <code>http</code> конфига <code>/etc/nginx/nginx.conf</code>:</p>
-<pre><code>...
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /opt/
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget https://nginx.org/download/nginx-1.11.9.tar.gz
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tar xf nginx-1.11.9.tar.gz
+</span></span></code></pre></div><p>Получаем код модуля <code>ngx_brotli</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/google/ngx_brotli.git
+</span></span></code></pre></div><p>Далее выполняем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /opt/ngx_brotli <span style="color:#f92672">&amp;&amp;</span> git submodule update --init <span style="color:#f92672">&amp;&amp;</span> cd /opt/nginx-1.11.9
+</span></span></code></pre></div><p>иначе при сборке Nginx столкнемся с ошибкой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>adding module in /opt/ngx_brotli
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>./configure: error: Brotli library is missing from the /opt/ngx_brotli/deps/brotli directory.
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Находясь в каталоге с исходниками Nginx собираем его (не забываем про поддержку APLN):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./configure <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --prefix<span style="color:#f92672">=</span>/etc/nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --sbin-path<span style="color:#f92672">=</span>/usr/sbin/nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --modules-path<span style="color:#f92672">=</span>/usr/lib/nginx/modules <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --conf-path<span style="color:#f92672">=</span>/etc/nginx/nginx.conf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --error-log-path<span style="color:#f92672">=</span>/var/log/nginx/error.log <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-log-path<span style="color:#f92672">=</span>/var/log/nginx/access.log <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --pid-path<span style="color:#f92672">=</span>/var/run/nginx.pid <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --lock-path<span style="color:#f92672">=</span>/var/run/nginx.lock <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-client-body-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/client_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-proxy-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/proxy_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-fastcgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/fastcgi_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-uwsgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/uwsgi_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-scgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/scgi_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --user<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --group<span style="color:#f92672">=</span>nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_ssl_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_realip_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_addition_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_sub_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_dav_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_flv_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_gunzip_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_gzip_static_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_random_index_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_secure_link_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_stub_status_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_auth_request_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-threads <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-stream <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-stream_ssl_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_slice_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-mail <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-mail_ssl_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-file-aio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-http_v2_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-cc-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-ld-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --with-openssl<span style="color:#f92672">=</span>/opt/openssl-1.0.2j <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --add-module<span style="color:#f92672">=</span>/opt/ngx_brotli
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make install
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>service nginx restart
+</span></span></code></pre></div><p>Теперь, когда у нас собран Nginx с поддержкой <code>brotli</code>, необходимо внести несколько изменений в конфигурационные файлы web-сервера. Если вы решили использовать <code>brotli</code> в статическом режиме, то для его активации достаточно добавить одну директиву в секции <code>http</code> конфига <code>/etc/nginx/nginx.conf</code>:</p>
+<pre tabindex="0"><code>...
 brotli_static on;
 ...
 </code></pre><p>Теперь Nginx будет искать версию файла с суффиксом <code>.br</code>, если клиент поддерживает <code>brotli</code>, а если не найдёт, то будет работать модуль <code>gzip_static</code> (если включён).</p>
 <p>В нашем случае <code>brotli</code> используется в динамическом режиме (сжатие на лету), поэтому директив будет чуть больше:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 brotli    on; # включаем brotli
 brotli_comp_level 6; # уровень компрессии от 1 до 11
 brotli_types  text/plain
@@ -273,7 +273,7 @@ brotli_types  text/plain
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

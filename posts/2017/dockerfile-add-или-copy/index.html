@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,30 +101,30 @@
                     <p>В данной статье рассмотрим разницу между двумя очень похожими инструкциями, которые используются при сборке docker-образов из Dockerfile — <code>ADD</code> и <code>COPY</code>, а также определимся, какую из них лучше использовать.</p>
 <p>Давайте разберемся! <strong>TL;DR:</strong> если вас не интересуют нюансы и нужен быстрый ответ — используйте <code>COPY</code>.</p>
 <p>При сборке docker-образов из Dockerfile можно использовать две инструкции для добавления каталогов/файлов в собираемый образ: <code>ADD</code> и <code>COPY</code>. Обе эти инструкции выглядят одинаково и, на первый взгляд, выполняют те же действия:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">ADD</span> &lt;источник&gt;... &lt;приемник&gt;<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">COPY</span> &lt;источник&gt;... &lt;приемник&gt;<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>В обоих случаях, каталоги или файлы из источника будут добавлены в файловую систему контейнера по адресу приемника. Казалось бы, зачем две идентичные инструкции?</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">ADD</span> &lt;источник&gt;... &lt;приемник&gt;<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">COPY</span> &lt;источник&gt;... &lt;приемник&gt;<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>В обоих случаях, каталоги или файлы из источника будут добавлены в файловую систему контейнера по адресу приемника. Казалось бы, зачем две идентичные инструкции?</p>
 <p>Следует упомянуть, что инструкция <code>COPY</code> появилась несколько позже, в то время как инструкция <code>ADD</code> была частью докера с самого начала. При сборке образов <code>ADD</code> поддерживает несколько дополнительных возможностей, например, вы можете указать в качестве источника URL-адрес:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">ADD</span> http://foo.com/bar.go /tmp/main.go<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>В этом случае в момент сборки docker-образа файл будет скачан и добавлен в файловую систему контейнера по адресу <code>/tmp/main.go</code>. Можно также использовать следующую форму инструкции:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">ADD</span> http://foo.com/bar.go /tmp/<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>При такой записи файл будет скачан и добавлен в файловую систему контейнера по адресу <code>/tmp/bar.go</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">ADD</span> http://foo.com/bar.go /tmp/main.go<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>В этом случае в момент сборки docker-образа файл будет скачан и добавлен в файловую систему контейнера по адресу <code>/tmp/main.go</code>. Можно также использовать следующую форму инструкции:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">ADD</span> http://foo.com/bar.go /tmp/<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>При такой записи файл будет скачан и добавлен в файловую систему контейнера по адресу <code>/tmp/bar.go</code>.</p>
 <p>Второй особенностью инструкции <code>ADD</code> является возможность автоматической распаковки архивов. Например, если аргумент-источник будет распознан как сжатый формат (<code>tar</code>, <code>gzip</code>, <code>bzip2</code>, и т. д.) он будет распакован по адресу приемника в файловую систему контейнера:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">ADD</span> /foo.tar.gz /tmp/<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>В этом примере содержимое архива <code>foo.tar.gz</code> будет распаковано в каталог <code>/tmp</code> внутри контейнера.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">ADD</span> /foo.tar.gz /tmp/<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>В этом примере содержимое архива <code>foo.tar.gz</code> будет распаковано в каталог <code>/tmp</code> внутри контейнера.</p>
 <p><strong>Примечание.</strong> К сожалению, использовать обе эти возможности (скачать архив и распаковать его) одновременно нельзя.</p>
 <p>Инструкция <code>ADD</code> выглядит «магической» — поддерживает слишком широкую функциональность и не всегда ведет себя так, как ожидает пользователь (<a href="https://github.com/moby/moby/issues/3050">пример</a>). Поэтому начиная с версии docker 1.0 была добавлена инструкция <code>COPY</code>, которая не поддерживает URL-адреса в качестве источника, не умеет распаковывать архивы, все делает предельно просто и без сюрпризов — копирует файлы из локального контекста сборки (тот же каталог, где находится Dockerfile) внутрь контейнера.</p>
 <p>Разработчики docker советуют использовать для добавления каталогов/файлов внутрь контейнера именно инструкцию <code>COPY</code>. Если же вам просто необходимо скачивать и распаковывать архивы, то можно воспользоваться утилитами <code>curl</code> или <code>wget</code> (конечно же, они должны быть предварительно установлены).</p>
 <p>Например, следующую конструкцию:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">ADD</span> http://foo.com/package.tar.bz2 /tmp/<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> tar -xjf /tmp/package.tar.bz2 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> make -C /tmp/package <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> rm /tmp/package.tar.bz2<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>гораздо проще и оптимальнее (<a href="https://ealebed.github.io/posts/2017/%D0%BE%D0%BF%D1%82%D0%B8%D0%BC%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-docker-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%BE%D0%B2/">как мы упоминали ранее</a>) заменить на следующую:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">RUN</span> curl http://foo.com/package.tar.bz2 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  | tar -xjf /tmp/package <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> make -C /tmp/package<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>Конечно, никто не запрещает вам использовать инструкции <code>ADD</code> при сборке образов, но это будут скорее частные случаи и личные предпочтения.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">ADD</span> http://foo.com/package.tar.bz2 /tmp/<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> tar -xjf /tmp/package.tar.bz2 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> make -C /tmp/package <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> rm /tmp/package.tar.bz2<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>гораздо проще и оптимальнее (<a href="https://ealebed.github.io/posts/2017/%D0%BE%D0%BF%D1%82%D0%B8%D0%BC%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-docker-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%BE%D0%B2/">как мы упоминали ранее</a>) заменить на следующую:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">RUN</span> curl http://foo.com/package.tar.bz2 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  | tar -xjf /tmp/package <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#f92672">&amp;&amp;</span> make -C /tmp/package<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>Конечно, никто не запрещает вам использовать инструкции <code>ADD</code> при сборке образов, но это будут скорее частные случаи и личные предпочтения.</p>
                 </section>
             </article>
 
@@ -216,7 +216,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

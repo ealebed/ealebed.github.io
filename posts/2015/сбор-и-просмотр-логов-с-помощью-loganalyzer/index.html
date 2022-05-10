@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,76 +103,76 @@
                     <p>Порой возникает необходимость создать сервер для централизованного сбора, анализа и просмотра логов.</p>
 <p><code>LogAnalyzer</code> от Adiscon предоставляет удобный веб-интерфейс для просмотра логов, полученных с нескольких серверов — давайте разберемся с его установкой и настройкой!</p>
 <p>Устанавливать <code>LogAnalyzer</code> будем на:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
-Distributor ID:	Debian
-Description:	Debian GNU/Linux 7.9 <span style="color:#f92672">(</span>wheezy<span style="color:#f92672">)</span>
-Release:	7.9
-Codename:	wheezy
-</code></pre></div><p>В файле <code>/etc/rsyslog.conf</code> должны быть раскоментированы следующие строки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">...
-$ModLoad imudp
-$UDPServerAddress 192.168.0.13
-$UDPServerRun <span style="color:#ae81ff">514</span>
-$AllowedSender UDP, 192.168.0.0/24
-...
-</code></pre></div><p><strong>Примечание.</strong> В данном примере директива <code>$UDPServerAddress</code> определяет адрес сервера сбора логов, а директива <code>$AllowedSender UDP</code> список хостов, с которых разрешено принимать логи.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsb_release -a
+</span></span><span style="display:flex;"><span>Distributor ID:	Debian
+</span></span><span style="display:flex;"><span>Description:	Debian GNU/Linux 7.9 <span style="color:#f92672">(</span>wheezy<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Release:	7.9
+</span></span><span style="display:flex;"><span>Codename:	wheezy
+</span></span></code></pre></div><p>В файле <code>/etc/rsyslog.conf</code> должны быть раскоментированы следующие строки:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>$ModLoad imudp
+</span></span><span style="display:flex;"><span>$UDPServerAddress 192.168.0.13
+</span></span><span style="display:flex;"><span>$UDPServerRun <span style="color:#ae81ff">514</span>
+</span></span><span style="display:flex;"><span>$AllowedSender UDP, 192.168.0.0/24
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p><strong>Примечание.</strong> В данном примере директива <code>$UDPServerAddress</code> определяет адрес сервера сбора логов, а директива <code>$AllowedSender UDP</code> список хостов, с которых разрешено принимать логи.</p>
 <p>Перезапускаем <code>rsyslog</code> командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/rsyslog restart
-</code></pre></div><p>После этого наш сервер может принимать логи с удаленных хостов по протоколу UDP.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/rsyslog restart
+</span></span></code></pre></div><p>После этого наш сервер может принимать логи с удаленных хостов по протоколу UDP.</p>
 <p>Устанавливаем необходимые пакеты:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install mysql-server php5-mysql libapache2-mod-php5 rsyslog-mysql
-</code></pre></div><p><strong>Примечание.</strong> Во время установки нужно будет ввести пароль пользователя <code>root</code> сервера MySQL, а также установить пароль для <code>rsyslog-mysql</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>aptitude install mysql-server php5-mysql libapache2-mod-php5 rsyslog-mysql
+</span></span></code></pre></div><p><strong>Примечание.</strong> Во время установки нужно будет ввести пароль пользователя <code>root</code> сервера MySQL, а также установить пароль для <code>rsyslog-mysql</code>.</p>
 <p>Настройки <code>rsyslog-mysql</code> хранятся в файле <code>/etc/rsyslog.d/mysql.conf</code> и могут быть изменены с помощью текстового редактора.</p>
 <p>По умолчанию настройки в <code>/etc/rsyslog.d/mysql.conf</code> выглядят так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">### Configuration file for rsyslog-mysql
-### Changes are preserved
- 
-$ModLoad ommysql
-*.* :ommysql:localhost,Syslog,rsyslog,password
-</code></pre></div><p><strong>Примечание.</strong> <code>Syslog</code> — имя базы, в которую будут записываться логи, <code>rsyslog</code> — имя пользователя этой базы, <code>password</code> — введенный пароль при установке <code>rsyslog-mysql</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>### Configuration file for rsyslog-mysql
+</span></span><span style="display:flex;"><span>### Changes are preserved
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>$ModLoad ommysql
+</span></span><span style="display:flex;"><span>*.* :ommysql:localhost,Syslog,rsyslog,password
+</span></span></code></pre></div><p><strong>Примечание.</strong> <code>Syslog</code> — имя базы, в которую будут записываться логи, <code>rsyslog</code> — имя пользователя этой базы, <code>password</code> — введенный пароль при установке <code>rsyslog-mysql</code>.</p>
 <p>На серверах, с которых будем принимать логи, также редактируем файл <code>/etc/rsyslog.conf</code> добавляя несколько строк в секцию <code>RULES</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">###############
-#### RULES ####
-###############
- 
-#
-# First some standard log files.  Log by facility.
-#
-auth,authpriv.*     /var/log/auth.log
-*.*;auth,authpriv.none    -/var/log/syslog
-cron.*        /var/log/cron.log
-daemon.*      -/var/log/daemon.log
-kern.*        -/var/log/kern.log
-lpr.*       -/var/log/lpr.log
-mail.*        -/var/log/mail.log
-auth,authpriv.*                 @192.168.0.13
-user.*                          @192.168.0.13
-kern.*                          @192.168.0.13
- 
-...
-</code></pre></div><p><strong>Примечание.</strong> Логи, поступающие в каналы <code>auth,authpriv.*</code>, <code>user.*</code> и <code>kern.*</code> будут передаваться по UDP на сервер 192.168.0.13. Это лишь пример возможной настройки, в каждом конкретном случае нужно самостоятельно решить какие логи вы хотите просматривать.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>###############
+</span></span><span style="display:flex;"><span>#### RULES ####
+</span></span><span style="display:flex;"><span>###############
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>#
+</span></span><span style="display:flex;"><span># First some standard log files.  Log by facility.
+</span></span><span style="display:flex;"><span>#
+</span></span><span style="display:flex;"><span>auth,authpriv.*     /var/log/auth.log
+</span></span><span style="display:flex;"><span>*.*;auth,authpriv.none    -/var/log/syslog
+</span></span><span style="display:flex;"><span>cron.*        /var/log/cron.log
+</span></span><span style="display:flex;"><span>daemon.*      -/var/log/daemon.log
+</span></span><span style="display:flex;"><span>kern.*        -/var/log/kern.log
+</span></span><span style="display:flex;"><span>lpr.*       -/var/log/lpr.log
+</span></span><span style="display:flex;"><span>mail.*        -/var/log/mail.log
+</span></span><span style="display:flex;"><span>auth,authpriv.*                 @192.168.0.13
+</span></span><span style="display:flex;"><span>user.*                          @192.168.0.13
+</span></span><span style="display:flex;"><span>kern.*                          @192.168.0.13
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p><strong>Примечание.</strong> Логи, поступающие в каналы <code>auth,authpriv.*</code>, <code>user.*</code> и <code>kern.*</code> будут передаваться по UDP на сервер 192.168.0.13. Это лишь пример возможной настройки, в каждом конкретном случае нужно самостоятельно решить какие логи вы хотите просматривать.</p>
 <p>Не забываем перезапустить <code>rsyslog</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/rsyslog restart
-</code></pre></div><p>Для пользователя <code>rsyslog</code> нужные права на базу <code>Syslog</code> должны быть установлены автоматически, если это не так, то подключаемся к MySQL-серверу:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mysql -u debian-sys-maint -p&lt;пароль_суперпользователя&gt;
-</code></pre></div><p>и выставляем права доступа:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">grant</span> <span style="color:#66d9ef">all</span> <span style="color:#66d9ef">on</span> Syslog.<span style="color:#f92672">*</span> <span style="color:#66d9ef">to</span> <span style="color:#960050;background-color:#1e0010">‘</span>rsyslog<span style="color:#960050;background-color:#1e0010">’</span><span style="color:#f92672">@</span><span style="color:#960050;background-color:#1e0010">’</span>localhost<span style="color:#960050;background-color:#1e0010">’</span> identified <span style="color:#66d9ef">by</span> <span style="color:#960050;background-color:#1e0010">‘</span>password<span style="color:#960050;background-color:#1e0010">’</span>;
-Query OK, <span style="color:#ae81ff">0</span> <span style="color:#66d9ef">rows</span> affected (<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">00</span> sec)
-</code></pre></div><p>Правим конфигурационный файл <code>/etc/apache2/sites-enabled/default</code>, добавляя в него:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-    Alias /loga &#34;/var/www/loga&#34;
-...
-</code></pre></div><p>С <a href="http://loganalyzer.adiscon.com/downloads/">сайта разработчиков</a> качаем последнюю стабильную версию <code>LogAnalyzer</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget http://download.adiscon.com/loganalyzer/loganalyzer-3.6.6.tar.gz
-</code></pre></div><p>Распаковываем скачанный архив:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tar xpf loganalyzer-3.6.6.tar.gz
-</code></pre></div><p>Рекурсивно копируем содержимое директории <code>src</code> в директорию <code>/var/www/loga</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp -R loganalyzer-3.6.6/src/* /var/www/loga
-</code></pre></div><p>Далее переходим в каталог <code>/var/www/loga</code> и создаем пустой файл конфигурации (его заполнит мастер установки):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /var/www/loga
-touch config.php
-chmod <span style="color:#ae81ff">666</span> config.php
-</code></pre></div><p>Далее настраиваем <code>LogAnalyzer</code> — открываем в браузере страницу 192.168.0.13/loga/install.php и следуем инструкциям мастера установки.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/rsyslog restart
+</span></span></code></pre></div><p>Для пользователя <code>rsyslog</code> нужные права на базу <code>Syslog</code> должны быть установлены автоматически, если это не так, то подключаемся к MySQL-серверу:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mysql -u debian-sys-maint -p&lt;пароль_суперпользователя&gt;
+</span></span></code></pre></div><p>и выставляем права доступа:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">grant</span> <span style="color:#66d9ef">all</span> <span style="color:#66d9ef">on</span> Syslog.<span style="color:#f92672">*</span> <span style="color:#66d9ef">to</span> <span style="color:#960050;background-color:#1e0010">‘</span>rsyslog<span style="color:#960050;background-color:#1e0010">’</span><span style="color:#f92672">@</span><span style="color:#960050;background-color:#1e0010">’</span>localhost<span style="color:#960050;background-color:#1e0010">’</span> identified <span style="color:#66d9ef">by</span> <span style="color:#960050;background-color:#1e0010">‘</span>password<span style="color:#960050;background-color:#1e0010">’</span>;
+</span></span><span style="display:flex;"><span>Query OK, <span style="color:#ae81ff">0</span> <span style="color:#66d9ef">rows</span> affected (<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">00</span> sec)
+</span></span></code></pre></div><p>Правим конфигурационный файл <code>/etc/apache2/sites-enabled/default</code>, добавляя в него:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>    Alias /loga &#34;/var/www/loga&#34;
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>С <a href="http://loganalyzer.adiscon.com/downloads/">сайта разработчиков</a> качаем последнюю стабильную версию <code>LogAnalyzer</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget http://download.adiscon.com/loganalyzer/loganalyzer-3.6.6.tar.gz
+</span></span></code></pre></div><p>Распаковываем скачанный архив:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tar xpf loganalyzer-3.6.6.tar.gz
+</span></span></code></pre></div><p>Рекурсивно копируем содержимое директории <code>src</code> в директорию <code>/var/www/loga</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -R loganalyzer-3.6.6/src/* /var/www/loga
+</span></span></code></pre></div><p>Далее переходим в каталог <code>/var/www/loga</code> и создаем пустой файл конфигурации (его заполнит мастер установки):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /var/www/loga
+</span></span><span style="display:flex;"><span>touch config.php
+</span></span><span style="display:flex;"><span>chmod <span style="color:#ae81ff">666</span> config.php
+</span></span></code></pre></div><p>Далее настраиваем <code>LogAnalyzer</code> — открываем в браузере страницу 192.168.0.13/loga/install.php и следуем инструкциям мастера установки.</p>
                 </section>
             </article>
 
@@ -264,7 +264,7 @@ chmod <span style="color:#ae81ff">666</span> config.php
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

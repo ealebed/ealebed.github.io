@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,47 +103,47 @@
                     <p>В ядре Linux 19-го октября была обнаружена опасная 0-day уязвимость, связанная с обработкой подсистемой памяти ядра механизма <code>copy-on-write</code> (COW). Давайте разберемся <strong>как пофиксить данную уязвимость, уже получившую имя Dirty COW</strong>!</p>
 <p>Данная уязвимость уже почти десять лет присутствует в ядре Linux (начиная с 2.6.22) и относится к privilege escalation. Эксплуатируя данную уязвимость неавторизованный локальный пользователь может получить доступ к <code>memory mappings</code> с правом записи, хотя доступ должен быть ограничен только чтением.</p>
 <p>На практике проблема позволяет выполнить запись данных в область памяти, находящуюся в режиме только для чтения. Например, в прототипе <a href="https://github.com/dirtycow/dirtycow.github.io/blob/master/dirtyc0w.c">эксплоита</a> показано как использовать данную проблему для изменения содержимого файла, принадлежащего пользователю root и доступного только на чтение:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo -s
-echo this is not a test &gt; foo
-chmod <span style="color:#ae81ff">0404</span> foo
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ls -lah foo
--r-----r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">19</span> Oct <span style="color:#ae81ff">20</span> 15:23 foo
-cat foo
-this is not a test
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gcc -lpthread dirtyc0w.c -o dirtyc0w
-./dirtyc0w foo m00000000000000000
-mmap <span style="color:#ae81ff">56123000</span>
-madvise <span style="color:#ae81ff">0</span>
-procselfmem <span style="color:#ae81ff">1800000000</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ cat foo
-m00000000000000000
-</code></pre></div><p>C помощью такого метода атаки непривилегированный пользователь может изменить исполняемые системные файлы, обойдя штатные механизмы управления доступом.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo -s
+</span></span><span style="display:flex;"><span>echo this is not a test &gt; foo
+</span></span><span style="display:flex;"><span>chmod <span style="color:#ae81ff">0404</span> foo
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -lah foo
+</span></span><span style="display:flex;"><span>-r-----r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">19</span> Oct <span style="color:#ae81ff">20</span> 15:23 foo
+</span></span><span style="display:flex;"><span>cat foo
+</span></span><span style="display:flex;"><span>this is not a test
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -lpthread dirtyc0w.c -o dirtyc0w
+</span></span><span style="display:flex;"><span>./dirtyc0w foo m00000000000000000
+</span></span><span style="display:flex;"><span>mmap <span style="color:#ae81ff">56123000</span>
+</span></span><span style="display:flex;"><span>madvise <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>procselfmem <span style="color:#ae81ff">1800000000</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ cat foo
+</span></span><span style="display:flex;"><span>m00000000000000000
+</span></span></code></pre></div><p>C помощью такого метода атаки непривилегированный пользователь может изменить исполняемые системные файлы, обойдя штатные механизмы управления доступом.</p>
 <p>Уже на следующий день были выпущены обновления для версий Linux 4.8, 4.7 и 4.4 LTS, исправляющие <strong>уязвимость Dirty COW (CVE-2016-5195)</strong>. Для устранения уязвимости необходимо выполнить несколько несложных действий:</p>
 <ol>
 <li>Проверить версию ядра, установленную в операционной системе:</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">uname -rv
-</code></pre></div><p>Результат выполнения команды будет примерно следующим:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">3.16.0-4-amd64 <span style="color:#75715e">#1 SMP Debian 3.16.36-1+deb8u1 (2016-09-03)</span>
-</code></pre></div><p>Обязательно обновляемся, если версия ядра ниже, чем в этом списке:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">4.8.0-26.28 <span style="color:#66d9ef">for</span> Ubuntu 16.10
-4.4.0-45.66 <span style="color:#66d9ef">for</span> Ubuntu 16.04 LTS
-3.13.0-100.147 <span style="color:#66d9ef">for</span> Ubuntu 14.04 LTS
-3.2.0-113.155 <span style="color:#66d9ef">for</span> Ubuntu 12.04 LTS
-3.16.36-1+deb8u2 <span style="color:#66d9ef">for</span> Debian <span style="color:#ae81ff">8</span>
-3.2.82-1 <span style="color:#66d9ef">for</span> Debian <span style="color:#ae81ff">7</span>
-4.7.8-1 <span style="color:#66d9ef">for</span> Debian unstable
-</code></pre></div><ol start="2">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -rv
+</span></span></code></pre></div><p>Результат выполнения команды будет примерно следующим:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>3.16.0-4-amd64 <span style="color:#75715e">#1 SMP Debian 3.16.36-1+deb8u1 (2016-09-03)</span>
+</span></span></code></pre></div><p>Обязательно обновляемся, если версия ядра ниже, чем в этом списке:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>4.8.0-26.28 <span style="color:#66d9ef">for</span> Ubuntu 16.10
+</span></span><span style="display:flex;"><span>4.4.0-45.66 <span style="color:#66d9ef">for</span> Ubuntu 16.04 LTS
+</span></span><span style="display:flex;"><span>3.13.0-100.147 <span style="color:#66d9ef">for</span> Ubuntu 14.04 LTS
+</span></span><span style="display:flex;"><span>3.2.0-113.155 <span style="color:#66d9ef">for</span> Ubuntu 12.04 LTS
+</span></span><span style="display:flex;"><span>3.16.36-1+deb8u2 <span style="color:#66d9ef">for</span> Debian <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>3.2.82-1 <span style="color:#66d9ef">for</span> Debian <span style="color:#ae81ff">7</span>
+</span></span><span style="display:flex;"><span>4.7.8-1 <span style="color:#66d9ef">for</span> Debian unstable
+</span></span></code></pre></div><ol start="2">
 <li>В ОС Debian/Ubuntu выполняем следующую команду:</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt-get update <span style="color:#f92672">&amp;&amp;</span> sudo apt-get dist-upgrade
-</code></pre></div><p>В ОС Centos делаем так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo yum update kernel
-</code></pre></div><ol start="3">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt-get update <span style="color:#f92672">&amp;&amp;</span> sudo apt-get dist-upgrade
+</span></span></code></pre></div><p>В ОС Centos делаем так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yum update kernel
+</span></span></code></pre></div><ol start="3">
 <li>После обновления перезагружаемся:</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo reboot
-</code></pre></div><p>После обновлений можно еще раз выполнить тест с помощью <a href="https://github.com/dirtycow/dirtycow.github.io/blob/master/dirtyc0w.c">эксплоита</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo reboot
+</span></span></code></pre></div><p>После обновлений можно еще раз выполнить тест с помощью <a href="https://github.com/dirtycow/dirtycow.github.io/blob/master/dirtyc0w.c">эксплоита</a>.</p>
                 </section>
             </article>
 
@@ -235,7 +235,7 @@ m00000000000000000
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

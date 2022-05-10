@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -114,138 +114,138 @@
 <p>Все команды необходимо вводить на хосте под управлением ESXI, на котором будут делаться бэкапы.</p>
 <p><strong>Примечание.</strong> На ESXI должна быть включена служба SSH.</p>
 <p>Подключаемся к консоли ESXI по ssh и вводим команды из письма для установки Xsibackup (повторяем данную процедуру на всех гипервизорах):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /vmfs/volumes/datastore1/xsi-dir 2&gt;/dev/null <span style="color:#f92672">||</span> mkdir /vmfs/volumes/datastore1/xsi-dir <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>&gt; cd /vmfs/volumes/datastore1/xsi-dir <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>&gt; esxcli network firewall unload <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>&gt; wget http://a.33hops.com/downloads/?key<span style="color:#f92672">=</span> -O xsibackup.zip <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>&gt; unzip -o xsibackup.zip <span style="color:#f92672">||</span> cat xsibackup.zip <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>&gt; chmod -R <span style="color:#ae81ff">0700</span> xsibackup* bin <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>&gt; rm -rf xsibackup.zip <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>&gt; esxcli network firewall load
-Connecting to a.33hops.com <span style="color:#f92672">(</span>188.165.2.135:80<span style="color:#f92672">)</span>
-xsibackup.zip        100% |*************************************************************************************************|   546k  0:00:00 ETA
-Archive:  xsibackup.zip
-   creating: src/
-  inflating: src/borg
-  inflating: src/custimg
-  inflating: src/esxbackup
-  inflating: src/events
-  inflating: src/onediff
-  inflating: src/restore
-  inflating: src/smartinfo
-  inflating: src/xsitools
-  inflating: EULA
-  inflating: README.txt
-  inflating: xsibackup
-   creating: bin/
-  inflating: bin/xsibackup-rsync
-</code></pre></div><p>Создаем каталог для хранения резервных копий:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir /vmfs/volumes/datastore2/backup
-</code></pre></div><p>Проверим возможность создания бекапов локально:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./xsibackup --backup-point<span style="color:#f92672">=</span>/vmfs/volumes/datastore2/backup --backup-type<span style="color:#f92672">=</span>running --test-mode<span style="color:#f92672">=</span>true
-
-<span style="color:#75715e">#####################################################################################</span>
-<span style="color:#75715e">#                                                                                   #</span>
-<span style="color:#75715e">#  (c) XSIBACKUP-FREE 9.0.1 | Backup for (c) VMWARE ESXi Hypervisor by 33hops.com   #</span>
-<span style="color:#75715e">#                                                                                   #</span>
-<span style="color:#75715e">#####################################################################################</span>
-
-XSIBackup PID: <span style="color:#ae81ff">76601024</span>                                            99.your-server.de
-Sat, <span style="color:#ae81ff">04</span> Mar <span style="color:#ae81ff">2017</span> 17:30:34 +0000                 IPv4: 31.42.119.138/255.255.255.224
-VMware ESXi 5.5.0 build-3568722                   <span style="color:#f92672">(</span>c<span style="color:#f92672">)</span> Rsync 3.1.0 as opt. dependency
-
----------------------------------------------------------------------------------------------------------
-Found --backup-point at <span style="color:#f92672">[</span> /vmfs/volumes/datastore2/backup <span style="color:#f92672">]</span>
----------------------------------------------------------------------------------------------------------
-Getting list of all VMs...
----------------------------------------------------------------------------------------------------------
-<span style="color:#ae81ff">1</span>      db1       <span style="color:#f92672">[</span>datastore1<span style="color:#f92672">]</span> db1/db1.vmx           otherLinux64Guest   vmx-08
-<span style="color:#ae81ff">2</span>      web1      <span style="color:#f92672">[</span>datastore2<span style="color:#f92672">]</span> web1/web1.vmx         otherLinux64Guest   vmx-08
-<span style="color:#ae81ff">3</span>      mercury   <span style="color:#f92672">[</span>datastore1<span style="color:#f92672">]</span> mercury/mercury.vmx   otherLinux64Guest   vmx-08
----------------------------------------------------------------------------------------------------------
-VMs to backup:
----------------------------------------------------------------------------------------------------------
-<span style="color:#ae81ff">1</span>      db1       <span style="color:#f92672">[</span>datastore1<span style="color:#f92672">]</span> db1/db1.vmx           otherLinux64Guest   vmx-08
-<span style="color:#ae81ff">2</span>      web1      <span style="color:#f92672">[</span>datastore2<span style="color:#f92672">]</span> web1/web1.vmx         otherLinux64Guest   vmx-08
-<span style="color:#ae81ff">3</span>      mercury   <span style="color:#f92672">[</span>datastore1<span style="color:#f92672">]</span> mercury/mercury.vmx   otherLinux64Guest   vmx-08
----------------------------------------------------------------------------------------------------------
-Needed room: <span style="color:#ae81ff">81</span> Gb.
-Available room: <span style="color:#ae81ff">1823</span> Gb.
----------------------------------------------------------------------------------------------------------
-Excerpt
----------------------------------------------------------------------------------------------------------
-Hot backup selected <span style="color:#66d9ef">for</span> VM: <span style="color:#f92672">[</span>db1<span style="color:#f92672">]</span>, will not be switched off
----------------------------------------------------------------------------------------------------------
-Test mode activated VMs will not be cloned, please remove --test-mode<span style="color:#f92672">=</span>true to allow backups
-Excerpt
----------------------------------------------------------------------------------------------------------
-Hot backup selected <span style="color:#66d9ef">for</span> VM: <span style="color:#f92672">[</span>web1<span style="color:#f92672">]</span>, will not be switched off
----------------------------------------------------------------------------------------------------------
-Test mode activated VMs will not be cloned, please remove --test-mode<span style="color:#f92672">=</span>true to allow backups
-Excerpt
----------------------------------------------------------------------------------------------------------
-Hot backup selected <span style="color:#66d9ef">for</span> VM: <span style="color:#f92672">[</span>mercury<span style="color:#f92672">]</span>, will not be switched off
----------------------------------------------------------------------------------------------------------
-Test mode activated VMs will not be cloned, please remove --test-mode<span style="color:#f92672">=</span>true to allow backups
----------------------------------------------------------------------------------------------------------
-No errors detected in backup
----------------------------------------------------------------------------------------------------------
-Backup finished
-Tip: no chained backups scheduled, set --on-success and/or --on-error arguments to chain a backup
-Killed
-</code></pre></div><p>Тест успешен, для того чтобы сделать резервную копию всех запущенных виртуальных машин запускаем команду еще раз, но без опции <code>--test-mode=true</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./xsibackup --backup-point<span style="color:#f92672">=</span>/vmfs/volumes/datastore2/backup --backup-type<span style="color:#f92672">=</span>running
-</code></pre></div><p>Если же необходимо сделать бекап только одной виртуальной машины, то команда будет выглядеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./xsibackup --backup-point<span style="color:#f92672">=</span>/vmfs/volumes/datastore2/backup --backup-type<span style="color:#f92672">=</span>custom --backup-vms<span style="color:#f92672">=</span>web1
-</code></pre></div><p>Если планируем хранить резервные копии на другом хосте ESXI (или переносить виртуальные машины), то хосты необходимо «связать». Для этого нужно убедиться, что на гипервизоре в настройках файрвола включено правило «SSH Client» (открывает 22 порт для исходящих соединений), после чего в консоли выполнить:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./xsibackup --link-srv<span style="color:#f92672">=</span>31.42.119.138
-
-<span style="color:#75715e">#####################################################################################</span>
-<span style="color:#75715e">#                                                                                   #</span>
-<span style="color:#75715e">#  (c) XSIBACKUP-FREE 9.0.1 | Backup for (c) VMWARE ESXi Hypervisor by 33hops.com   #</span>
-<span style="color:#75715e">#                                                                                   #</span>
-<span style="color:#75715e">#####################################################################################</span>
-
-XSIBackup PID: <span style="color:#ae81ff">8542898</span>                                           100.your-server.de
-No RSA public key found, we will generate one...
-The RSA key has been generated.
-Enter the remote server root password when prompted.
-The authenticity of host <span style="color:#e6db74">&#39;31.42.119.138 (31.42.119.138)&#39;</span> can<span style="color:#e6db74">&#39;t be established.
-</span><span style="color:#e6db74">RSA key fingerprint is SHA256:EH2yP2n6LTC63GfU9QewzEP9N8Gfhhoq2e7SRQpR8f8.
-</span><span style="color:#e6db74">Are you sure you want to continue connecting (yes/no)? yes
-</span><span style="color:#e6db74">Warning: Permanently added &#39;</span>31.42.119.138<span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#f92672">(</span>RSA<span style="color:#f92672">)</span> to the list of known hosts.
-Password:
-Password:
-The RSA key has been added to the authorized_keys file at 31.42.119.138.
-Rebooting local SSH service...
-SSH login disabled
-SSH login enabled
-Rebooting remote SSH service...
-SSH login disabled
-SSH login enabled
-Killed
-</code></pre></div><p>Теперь можно выполнять резервное копирование виртуальных машин на удаленный хост, для этого используем следующую команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./xsibackup --backup-point<span style="color:#f92672">=</span>31.42.119.138:22:/vmfs/volumes/datastore2/backup --backup-type<span style="color:#f92672">=</span>running
-</code></pre></div><p>Для настройки крона сначала нужно его установить командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">./xsibackup --install-cron
-
-<span style="color:#75715e">#####################################################################################</span>
-<span style="color:#75715e">#                                                                                   #</span>
-<span style="color:#75715e">#  (c) XSIBACKUP-FREE 9.0.1 | Backup for (c) VMWARE ESXi Hypervisor by 33hops.com   #</span>
-<span style="color:#75715e">#                                                                                   #</span>
-<span style="color:#75715e">#####################################################################################</span>
-
-XSIBackup PID: <span style="color:#ae81ff">8544019</span>                                           100.your-server.de
-This command will install XSIBackup cron to your ESXi &gt; 5.1 BOX
-xsibackup-cron will be installed to the current working directory
-You should cd to the desired directory before installing the cron
-Do you wish to <span style="color:#66d9ef">continue</span>? <span style="color:#f92672">(</span>y/n<span style="color:#f92672">)</span> y
-Removing cron info...
-Adding new cron info...
-The local cron service will be restarted
-You might need to reboot the ESXi server <span style="color:#66d9ef">for</span> the changes to take effect...
-cron service restarted
-</code></pre></div><p>Подробнейшая инструкция по настройке периодичного резервного копирования находится <a href="https://33hops.com/xsibackup-cron-how-to.html">тут</a>, а полный список доступных опций и примеры их использования можно посмотреть <a href="https://33hops.com/xsibackup-help-man-page.html">здесь</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /vmfs/volumes/datastore1/xsi-dir 2&gt;/dev/null <span style="color:#f92672">||</span> mkdir /vmfs/volumes/datastore1/xsi-dir <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>&gt; cd /vmfs/volumes/datastore1/xsi-dir <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>&gt; esxcli network firewall unload <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>&gt; wget http://a.33hops.com/downloads/?key<span style="color:#f92672">=</span> -O xsibackup.zip <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>&gt; unzip -o xsibackup.zip <span style="color:#f92672">||</span> cat xsibackup.zip <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>&gt; chmod -R <span style="color:#ae81ff">0700</span> xsibackup* bin <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>&gt; rm -rf xsibackup.zip <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>&gt; esxcli network firewall load
+</span></span><span style="display:flex;"><span>Connecting to a.33hops.com <span style="color:#f92672">(</span>188.165.2.135:80<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>xsibackup.zip        100% |*************************************************************************************************|   546k  0:00:00 ETA
+</span></span><span style="display:flex;"><span>Archive:  xsibackup.zip
+</span></span><span style="display:flex;"><span>   creating: src/
+</span></span><span style="display:flex;"><span>  inflating: src/borg
+</span></span><span style="display:flex;"><span>  inflating: src/custimg
+</span></span><span style="display:flex;"><span>  inflating: src/esxbackup
+</span></span><span style="display:flex;"><span>  inflating: src/events
+</span></span><span style="display:flex;"><span>  inflating: src/onediff
+</span></span><span style="display:flex;"><span>  inflating: src/restore
+</span></span><span style="display:flex;"><span>  inflating: src/smartinfo
+</span></span><span style="display:flex;"><span>  inflating: src/xsitools
+</span></span><span style="display:flex;"><span>  inflating: EULA
+</span></span><span style="display:flex;"><span>  inflating: README.txt
+</span></span><span style="display:flex;"><span>  inflating: xsibackup
+</span></span><span style="display:flex;"><span>   creating: bin/
+</span></span><span style="display:flex;"><span>  inflating: bin/xsibackup-rsync
+</span></span></code></pre></div><p>Создаем каталог для хранения резервных копий:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir /vmfs/volumes/datastore2/backup
+</span></span></code></pre></div><p>Проверим возможность создания бекапов локально:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./xsibackup --backup-point<span style="color:#f92672">=</span>/vmfs/volumes/datastore2/backup --backup-type<span style="color:#f92672">=</span>running --test-mode<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#####################################################################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#                                                                                   #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  (c) XSIBACKUP-FREE 9.0.1 | Backup for (c) VMWARE ESXi Hypervisor by 33hops.com   #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#                                                                                   #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#####################################################################################</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>XSIBackup PID: <span style="color:#ae81ff">76601024</span>                                            99.your-server.de
+</span></span><span style="display:flex;"><span>Sat, <span style="color:#ae81ff">04</span> Mar <span style="color:#ae81ff">2017</span> 17:30:34 +0000                 IPv4: 31.42.119.138/255.255.255.224
+</span></span><span style="display:flex;"><span>VMware ESXi 5.5.0 build-3568722                   <span style="color:#f92672">(</span>c<span style="color:#f92672">)</span> Rsync 3.1.0 as opt. dependency
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Found --backup-point at <span style="color:#f92672">[</span> /vmfs/volumes/datastore2/backup <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Getting list of all VMs...
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span>      db1       <span style="color:#f92672">[</span>datastore1<span style="color:#f92672">]</span> db1/db1.vmx           otherLinux64Guest   vmx-08
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>      web1      <span style="color:#f92672">[</span>datastore2<span style="color:#f92672">]</span> web1/web1.vmx         otherLinux64Guest   vmx-08
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>      mercury   <span style="color:#f92672">[</span>datastore1<span style="color:#f92672">]</span> mercury/mercury.vmx   otherLinux64Guest   vmx-08
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>VMs to backup:
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span>      db1       <span style="color:#f92672">[</span>datastore1<span style="color:#f92672">]</span> db1/db1.vmx           otherLinux64Guest   vmx-08
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>      web1      <span style="color:#f92672">[</span>datastore2<span style="color:#f92672">]</span> web1/web1.vmx         otherLinux64Guest   vmx-08
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>      mercury   <span style="color:#f92672">[</span>datastore1<span style="color:#f92672">]</span> mercury/mercury.vmx   otherLinux64Guest   vmx-08
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Needed room: <span style="color:#ae81ff">81</span> Gb.
+</span></span><span style="display:flex;"><span>Available room: <span style="color:#ae81ff">1823</span> Gb.
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Excerpt
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Hot backup selected <span style="color:#66d9ef">for</span> VM: <span style="color:#f92672">[</span>db1<span style="color:#f92672">]</span>, will not be switched off
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Test mode activated VMs will not be cloned, please remove --test-mode<span style="color:#f92672">=</span>true to allow backups
+</span></span><span style="display:flex;"><span>Excerpt
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Hot backup selected <span style="color:#66d9ef">for</span> VM: <span style="color:#f92672">[</span>web1<span style="color:#f92672">]</span>, will not be switched off
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Test mode activated VMs will not be cloned, please remove --test-mode<span style="color:#f92672">=</span>true to allow backups
+</span></span><span style="display:flex;"><span>Excerpt
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Hot backup selected <span style="color:#66d9ef">for</span> VM: <span style="color:#f92672">[</span>mercury<span style="color:#f92672">]</span>, will not be switched off
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Test mode activated VMs will not be cloned, please remove --test-mode<span style="color:#f92672">=</span>true to allow backups
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>No errors detected in backup
+</span></span><span style="display:flex;"><span>---------------------------------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Backup finished
+</span></span><span style="display:flex;"><span>Tip: no chained backups scheduled, set --on-success and/or --on-error arguments to chain a backup
+</span></span><span style="display:flex;"><span>Killed
+</span></span></code></pre></div><p>Тест успешен, для того чтобы сделать резервную копию всех запущенных виртуальных машин запускаем команду еще раз, но без опции <code>--test-mode=true</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./xsibackup --backup-point<span style="color:#f92672">=</span>/vmfs/volumes/datastore2/backup --backup-type<span style="color:#f92672">=</span>running
+</span></span></code></pre></div><p>Если же необходимо сделать бекап только одной виртуальной машины, то команда будет выглядеть так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./xsibackup --backup-point<span style="color:#f92672">=</span>/vmfs/volumes/datastore2/backup --backup-type<span style="color:#f92672">=</span>custom --backup-vms<span style="color:#f92672">=</span>web1
+</span></span></code></pre></div><p>Если планируем хранить резервные копии на другом хосте ESXI (или переносить виртуальные машины), то хосты необходимо «связать». Для этого нужно убедиться, что на гипервизоре в настройках файрвола включено правило «SSH Client» (открывает 22 порт для исходящих соединений), после чего в консоли выполнить:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./xsibackup --link-srv<span style="color:#f92672">=</span>31.42.119.138
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#####################################################################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#                                                                                   #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  (c) XSIBACKUP-FREE 9.0.1 | Backup for (c) VMWARE ESXi Hypervisor by 33hops.com   #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#                                                                                   #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#####################################################################################</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>XSIBackup PID: <span style="color:#ae81ff">8542898</span>                                           100.your-server.de
+</span></span><span style="display:flex;"><span>No RSA public key found, we will generate one...
+</span></span><span style="display:flex;"><span>The RSA key has been generated.
+</span></span><span style="display:flex;"><span>Enter the remote server root password when prompted.
+</span></span><span style="display:flex;"><span>The authenticity of host <span style="color:#e6db74">&#39;31.42.119.138 (31.42.119.138)&#39;</span> can<span style="color:#e6db74">&#39;t be established.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">RSA key fingerprint is SHA256:EH2yP2n6LTC63GfU9QewzEP9N8Gfhhoq2e7SRQpR8f8.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Are you sure you want to continue connecting (yes/no)? yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Warning: Permanently added &#39;</span>31.42.119.138<span style="color:#960050;background-color:#1e0010">&#39;</span> <span style="color:#f92672">(</span>RSA<span style="color:#f92672">)</span> to the list of known hosts.
+</span></span><span style="display:flex;"><span>Password:
+</span></span><span style="display:flex;"><span>Password:
+</span></span><span style="display:flex;"><span>The RSA key has been added to the authorized_keys file at 31.42.119.138.
+</span></span><span style="display:flex;"><span>Rebooting local SSH service...
+</span></span><span style="display:flex;"><span>SSH login disabled
+</span></span><span style="display:flex;"><span>SSH login enabled
+</span></span><span style="display:flex;"><span>Rebooting remote SSH service...
+</span></span><span style="display:flex;"><span>SSH login disabled
+</span></span><span style="display:flex;"><span>SSH login enabled
+</span></span><span style="display:flex;"><span>Killed
+</span></span></code></pre></div><p>Теперь можно выполнять резервное копирование виртуальных машин на удаленный хост, для этого используем следующую команду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./xsibackup --backup-point<span style="color:#f92672">=</span>31.42.119.138:22:/vmfs/volumes/datastore2/backup --backup-type<span style="color:#f92672">=</span>running
+</span></span></code></pre></div><p>Для настройки крона сначала нужно его установить командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./xsibackup --install-cron
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#####################################################################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#                                                                                   #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  (c) XSIBACKUP-FREE 9.0.1 | Backup for (c) VMWARE ESXi Hypervisor by 33hops.com   #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#                                                                                   #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#####################################################################################</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>XSIBackup PID: <span style="color:#ae81ff">8544019</span>                                           100.your-server.de
+</span></span><span style="display:flex;"><span>This command will install XSIBackup cron to your ESXi &gt; 5.1 BOX
+</span></span><span style="display:flex;"><span>xsibackup-cron will be installed to the current working directory
+</span></span><span style="display:flex;"><span>You should cd to the desired directory before installing the cron
+</span></span><span style="display:flex;"><span>Do you wish to <span style="color:#66d9ef">continue</span>? <span style="color:#f92672">(</span>y/n<span style="color:#f92672">)</span> y
+</span></span><span style="display:flex;"><span>Removing cron info...
+</span></span><span style="display:flex;"><span>Adding new cron info...
+</span></span><span style="display:flex;"><span>The local cron service will be restarted
+</span></span><span style="display:flex;"><span>You might need to reboot the ESXi server <span style="color:#66d9ef">for</span> the changes to take effect...
+</span></span><span style="display:flex;"><span>cron service restarted
+</span></span></code></pre></div><p>Подробнейшая инструкция по настройке периодичного резервного копирования находится <a href="https://33hops.com/xsibackup-cron-how-to.html">тут</a>, а полный список доступных опций и примеры их использования можно посмотреть <a href="https://33hops.com/xsibackup-help-man-page.html">здесь</a>.</p>
                 </section>
             </article>
 
@@ -337,7 +337,7 @@ cron service restarted
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

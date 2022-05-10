@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -111,43 +111,43 @@
 <li>сделать клик правой кнопкой мыши и выбрать пункт &ldquo;Remove from inventory&rdquo;;</li>
 <li>подключиться к гипервизору по ssh и перейти в каталог с виртуальной машиной, например:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd /vmfs/volumes/DatastoreName/originalname
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /vmfs/volumes/DatastoreName/originalname
+</span></span></code></pre></div><ul>
 <li>переименовать вирутальный диск (VMDK) используя команду <code>vmkfstools -E</code> например:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">vmkfstools -E <span style="color:#e6db74">&#34;originalname.vmdk&#34;</span> <span style="color:#e6db74">&#34;newname.vmdk&#34;</span>
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vmkfstools -E <span style="color:#e6db74">&#34;originalname.vmdk&#34;</span> <span style="color:#e6db74">&#34;newname.vmdk&#34;</span>
+</span></span></code></pre></div><ul>
 <li>скопировать файл конфигурации виртуальной машины (<code>.vmx</code>) командой:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cp <span style="color:#e6db74">&#34;originalname.vmx&#34;</span> <span style="color:#e6db74">&#34;newname.vmx&#34;</span>
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp <span style="color:#e6db74">&#34;originalname.vmx&#34;</span> <span style="color:#e6db74">&#34;newname.vmx&#34;</span>
+</span></span></code></pre></div><ul>
 <li>открыть новый файл конфигурации с помощью текстового редактора:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">vi <span style="color:#e6db74">&#34;newname.vmx&#34;</span>
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vi <span style="color:#e6db74">&#34;newname.vmx&#34;</span>
+</span></span></code></pre></div><ul>
 <li>заменить в файле все вхождения старого названия на новое, (включая все диски и <code>swap</code>-файл) например:</li>
 </ul>
-<pre><code>nvram = &quot; newname.nvram&quot;
-displayName = &quot; newname &quot;
-extendedConfigFile = &quot; newname .vmxf&quot;
-scsi0:0.fileName = &quot; newname .vmdk&quot;
+<pre tabindex="0"><code>nvram = &#34; newname.nvram&#34;
+displayName = &#34; newname &#34;
+extendedConfigFile = &#34; newname .vmxf&#34;
+scsi0:0.fileName = &#34; newname .vmdk&#34;
 [...]
-migrate.hostlog = &quot;./ newname -UUID.hlog&quot;
+migrate.hostlog = &#34;./ newname -UUID.hlog&#34;
 [...]
-scsi0:1.fileName = &quot; newname _1.vmdk&quot;
-scsi0:2.fileName = &quot; newname _2.vmdk&quot;
+scsi0:1.fileName = &#34; newname _1.vmdk&#34;
+scsi0:2.fileName = &#34; newname _2.vmdk&#34;
 [...]
-sched.swap.derivedName = &quot;/vmfs/volumes/DatastoreUUID/ newname/ newname-UUID.vswp
+sched.swap.derivedName = &#34;/vmfs/volumes/DatastoreUUID/ newname/ newname-UUID.vswp
 </code></pre><ul>
 <li>переименовать все оставшиеся файлы (кроме файла конфигурации <code>.vmx</code>):</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mv <span style="color:#e6db74">&#34;originalname.nvram&#34;</span> <span style="color:#e6db74">&#34;newname.nvram&#34;</span>
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mv <span style="color:#e6db74">&#34;originalname.nvram&#34;</span> <span style="color:#e6db74">&#34;newname.nvram&#34;</span>
+</span></span></code></pre></div><ul>
 <li>перейти в родительский каталог и переименовать каталог, в котором находится виртуальная машина:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd ..
-mv <span style="color:#e6db74">&#34;originalname&#34;</span> <span style="color:#e6db74">&#34;newname&#34;</span>
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ..
+</span></span><span style="display:flex;"><span>mv <span style="color:#e6db74">&#34;originalname&#34;</span> <span style="color:#e6db74">&#34;newname&#34;</span>
+</span></span></code></pre></div><ul>
 <li>вернуться в VMware vSphere Client и перейти в каталог, где находится переименованная виртуальная машина;</li>
 <li>сделать клик правой кнопкой мыши по новому файлу конфигурации виртуальной машины (<code>newname.vmx</code>) и выбрать &ldquo;Add to inventory&rdquo;;</li>
 </ul>
@@ -250,7 +250,7 @@ mv <span style="color:#e6db74">&#34;originalname&#34;</span> <span style="color:
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

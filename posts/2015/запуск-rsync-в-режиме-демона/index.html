@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,9 +104,9 @@
 <p>Кроме синхронизации файлов и каталогов, данная утилита часто используется в схемах резервного копирования — давайте разберемся с <strong>запуском <code>rsync</code> в режиме демона</strong>!</p>
 <p>В данном примере с помощью утилиты <code>rsync</code> будем копировать резервные копии с нескольких серверов в одно хранилище.</p>
 <p>Прежде всего, на сервере-хранилище создаем (или редактируем, если такой файл уже есть) конфигурационный файл <code>/etc/rsyncd.conf</code>:</p>
-<pre><code>touch /etc/rsyncd.conf
+<pre tabindex="0"><code>touch /etc/rsyncd.conf
 </code></pre><p>Пример содержимого файла следующий:</p>
-<pre><code>uid = admin 
+<pre tabindex="0"><code>uid = admin 
 gid = root
 max connections = 50
 pid file = /var/run/rsyncd.pid
@@ -161,17 +161,17 @@ pid file = /var/run/rsyncd.pid
 </ul>
 <p><strong>Примечание.</strong> Для более безопасного использования утилиты можно с помощью параметра <code>secrets file</code> указать путь к файлу, в котором хранятся пары вида <code>username:password</code> для аутентификации подключений к модулю.</p>
 <p>Создадим необходимые каталоги:</p>
-<pre><code>mkdir /backups/web1
-</code></pre><pre><code>mkdir /backups/web2
-</code></pre><pre><code>mkdir /backups/db1
-</code></pre><pre><code>mkdir /backups/db2
+<pre tabindex="0"><code>mkdir /backups/web1
+</code></pre><pre tabindex="0"><code>mkdir /backups/web2
+</code></pre><pre tabindex="0"><code>mkdir /backups/db1
+</code></pre><pre tabindex="0"><code>mkdir /backups/db2
 </code></pre><p>В конфигурационном файле <code>/etc/default/rsync</code> установим параметр <code>RSYNC_ENABLE</code> в:</p>
-<pre><code>RSYNC_ENABLE=true
+<pre tabindex="0"><code>RSYNC_ENABLE=true
 </code></pre><p>После этого <strong>запускаем <code>rsync</code> в режиме демона</strong> командой:</p>
-<pre><code>/etc/init.d/rsync start
+<pre tabindex="0"><code>/etc/init.d/rsync start
 </code></pre><p><strong>Примечание.</strong> По умолчанию, <code>rsync</code>-демон для клиентских подключений использует порт 873.</p>
 <p>Теперь для копирования в хранилище резервных копий с сервера web1, на сервере достаточно запустить команду:</p>
-<pre><code>rsync -a --bwlimit=3000 /var/backup/ storage.com.ua::web1
+<pre tabindex="0"><code>rsync -a --bwlimit=3000 /var/backup/ storage.com.ua::web1
 </code></pre><p>Резервные копии, которые находятся в каталоге <code>/var/backup/</code> на сервере web1 будут скопированы на сервер storage.com.ua, в каталог <code>/backups/web1</code> (именно этот каталог доступен по имени модуля web1) с ограничением скорости 24 Mbps.</p>
 <p><strong>Примечание.</strong> Параметр <code>--bwlimit</code> позволяет задать скорость передачи в килобайтах за секунду, 3000 kB/s = 24 Mbps</p>
 <p>Далее на каждом сервере эту команду следует добавить отдельным заданием в <code>cron</code> или дописать в скрипт, выполняющий резервное копирование.</p>
@@ -266,7 +266,7 @@ pid file = /var/run/rsyncd.pid
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

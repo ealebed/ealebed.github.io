@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -105,106 +105,106 @@
                     <p><a href="https://nixstats.com/">Nixstats</a> — бесплатный сервис для мониторинга, отображения статистики сервера и оповещения о проблемах. По заверениям автора сервис находится в процессе разработки, поэтому он пока бесплатен.</p>
 <p>Давайте разберемся с настройкой мониторинга сервера и рассмотрим простой пример отправки оповещений о проблемах!</p>
 <p>Для мониторинга сервера необходимо зарегистрироваться на сервисе и установить агент на сервер. Сделать это можно командой:</p>
-<pre><code>wget --no-check-certificate -N https://www.nixstats.com/nixstatsagent.sh &amp;&amp; bash nixstatsagent.sh your_token_id
+<pre tabindex="0"><code>wget --no-check-certificate -N https://www.nixstats.com/nixstatsagent.sh &amp;&amp; bash nixstatsagent.sh your_token_id
 </code></pre><p>Токен придет в письме после регистрации, и будет выглядеть примерно так: <code>535cae83389a4b05f304185b</code>. Через несколько минут после установки агента данные уже будут доступны в web-интерфейсе сервиса Nixstats.</p>
 <p>Далее можно настроить мониторинг домена (вкладка Monitors) и страницу статуса, но самое главное — необходимо создать <a href="https://nixstats.com/settings/contacts">контакт</a> для получения оповещений о проблемах. На момент написания статьи доступны следующие варианты уведомлений: e-mail, sms (бесплатный лимит 5 шт/мес), pushover, pushbullet, webhook, hipchat и slack. Стоит отметить, что у меня не заработал вариант с оповещением о проблемах через sms — на мой взгляд, самый важный и полезный вариант уведомлений.</p>
 <p>Nixstats передает данные для вебхука в следующем формате:</p>
-<pre><code>{
-    &quot;server_id&quot;: &quot;server_id&quot;,
-    &quot;notification_id&quot;: &quot;notification_id&quot;,
-    &quot;alert_id&quot;: &quot;alert_id&quot;,
-    &quot;server_name&quot;: &quot;web-server&quot;,
-    &quot;metric&quot;: &quot;pct-cpu&quot;,
-    &quot;status&quot;: “open”,
-    &quot;value&quot;: 99.928,
-    &quot;subject&quot;: &quot;CPU overall higher 99% - currently: 100 %&quot;,
-    &quot;threshold&quot;: 99,
-    &quot;start_time&quot;: 1491992292,
-    &quot;time&quot;: 1491992322
+<pre tabindex="0"><code>{
+    &#34;server_id&#34;: &#34;server_id&#34;,
+    &#34;notification_id&#34;: &#34;notification_id&#34;,
+    &#34;alert_id&#34;: &#34;alert_id&#34;,
+    &#34;server_name&#34;: &#34;web-server&#34;,
+    &#34;metric&#34;: &#34;pct-cpu&#34;,
+    &#34;status&#34;: “open”,
+    &#34;value&#34;: 99.928,
+    &#34;subject&#34;: &#34;CPU overall higher 99% - currently: 100 %&#34;,
+    &#34;threshold&#34;: 99,
+    &#34;start_time&#34;: 1491992292,
+    &#34;time&#34;: 1491992322
 }
-</code></pre><pre><code>{
-    &quot;domain_id&quot;: &quot;554be6e94303ed9c2d8b4568&quot;,
-    &quot;notification_id&quot;: &quot;58eb5d0d22607e0791308ac5&quot;,
-    &quot;name&quot;: &quot;uptimetest.nixstats.com&quot;,
-    &quot;status&quot;: &quot;close&quot;,
-    &quot;subject&quot;: &quot;Monitor uptimetest.nixstats.com is back online&quot;,
-    &quot;start_time&quot;: 1491819789,
-    &quot;end_time&quot;: 1492187938,
-    &quot;time&quot;: 1492187938
+</code></pre><pre tabindex="0"><code>{
+    &#34;domain_id&#34;: &#34;554be6e94303ed9c2d8b4568&#34;,
+    &#34;notification_id&#34;: &#34;58eb5d0d22607e0791308ac5&#34;,
+    &#34;name&#34;: &#34;uptimetest.nixstats.com&#34;,
+    &#34;status&#34;: &#34;close&#34;,
+    &#34;subject&#34;: &#34;Monitor uptimetest.nixstats.com is back online&#34;,
+    &#34;start_time&#34;: 1491819789,
+    &#34;end_time&#34;: 1492187938,
+    &#34;time&#34;: 1492187938
 }
 </code></pre><p>Для отправки уведомлений о проблемах на сервере в Telegram, необходимо создать бота (как это сделать <a href="https://core.telegram.org/bots#creating-a-new-bot">здесь</a>) и выяснить ваш chat_id (<a href="https://telegram.me/myidbot">подробнее</a>). Напомню, чтобы бот заработал, необходимо первым отправить ему сообщение (любого содержания).</p>
 <p>Далее создаем файл <code>webhook.php</code> следующего содержания:</p>
-<pre><code>&lt;?php
-$telegrambot = &quot;123456789:SCR8NwQtqFoD3dPSmu99z8um8vN8jfQNYps&quot;;
-$telegramchatid = &quot;12345678&quot;;
+<pre tabindex="0"><code>&lt;?php
+$telegrambot = &#34;123456789:SCR8NwQtqFoD3dPSmu99z8um8vN8jfQNYps&#34;;
+$telegramchatid = &#34;12345678&#34;;
 $timezone = 2; // 2 for UTC+2
  
 function telegram($message)
 {
   global $telegrambot, $telegramchatid;
-  $url = 'https://api.telegram.org/bot'.$telegrambot.'/sendMessage';
-  $data = array('chat_id' =&gt; $telegramchatid, 'text' =&gt; $message, 'disable_web_page_preview' =&gt; 1);
-  $options = array('http' =&gt; array('method' =&gt; 'POST', 'header' =&gt; &quot;Content-Type:application/x-www-form-urlencoded\r\n&quot;, 'content' =&gt; http_build_query($data)));
+  $url = &#39;https://api.telegram.org/bot&#39;.$telegrambot.&#39;/sendMessage&#39;;
+  $data = array(&#39;chat_id&#39; =&gt; $telegramchatid, &#39;text&#39; =&gt; $message, &#39;disable_web_page_preview&#39; =&gt; 1);
+  $options = array(&#39;http&#39; =&gt; array(&#39;method&#39; =&gt; &#39;POST&#39;, &#39;header&#39; =&gt; &#34;Content-Type:application/x-www-form-urlencoded\r\n&#34;, &#39;content&#39; =&gt; http_build_query($data)));
   $context = stream_context_create($options);
   $result = file_get_contents($url, false, $context);
   return $result;
 }
  
-if(isset($_POST['payload']))
+if(isset($_POST[&#39;payload&#39;]))
 {
-  $data = json_decode($_POST['payload'], true);
+  $data = json_decode($_POST[&#39;payload&#39;], true);
  
-  if(empty($data['domain_id']))
+  if(empty($data[&#39;domain_id&#39;]))
   {
-    $server_id = $data['server_id'];
-    $notification_id = $data['notification_id'];
-    $alert_id = $data['alert_id'];
-    $server_name = $data['server_name'];
-    $metric = $data['metric'];
-    $status = $data['status'];
-    $value = $data['value'];
-    $subject = $data['subject'];
-    $threshold = $data['threshold'];
-    $start_time = date('Y-m-d H:i:s', $data['start_time']+($timezone*3600));
-    $time = date('Y-m-d H:i:s', $data['time']+($timezone*3600));
+    $server_id = $data[&#39;server_id&#39;];
+    $notification_id = $data[&#39;notification_id&#39;];
+    $alert_id = $data[&#39;alert_id&#39;];
+    $server_name = $data[&#39;server_name&#39;];
+    $metric = $data[&#39;metric&#39;];
+    $status = $data[&#39;status&#39;];
+    $value = $data[&#39;value&#39;];
+    $subject = $data[&#39;subject&#39;];
+    $threshold = $data[&#39;threshold&#39;];
+    $start_time = date(&#39;Y-m-d H:i:s&#39;, $data[&#39;start_time&#39;]+($timezone*3600));
+    $time = date(&#39;Y-m-d H:i:s&#39;, $data[&#39;time&#39;]+($timezone*3600));
      
-    if($status == &quot;open&quot;)
+    if($status == &#34;open&#34;)
     {
-      telegram($subject.&quot;\n&quot;.$start_time.&quot;\nView server statistics on https://nixstats.com/server/&quot;.$server_id);
+      telegram($subject.&#34;\n&#34;.$start_time.&#34;\nView server statistics on https://nixstats.com/server/&#34;.$server_id);
     }
     else
     {
-      telegram($subject.&quot;\n&quot;.$time.&quot;\nView server statistics on https://nixstats.com/server/&quot;.$server_id);
+      telegram($subject.&#34;\n&#34;.$time.&#34;\nView server statistics on https://nixstats.com/server/&#34;.$server_id);
     }
   }
   else
   {
-    $domain_id = $data['domain_id'];
-    $notification_id = $data['notification_id'];
-    $name = $data['name'];
-    $status = strtoupper($data['status']);
-    $subject = $data['subject'];
-    $start_time = date('Y-m-d H:i:s', $data['start_time']+($timezone*3600));
-    $end_time = date('Y-m-d H:i:s', $data['end_time']+($timezone*3600));
+    $domain_id = $data[&#39;domain_id&#39;];
+    $notification_id = $data[&#39;notification_id&#39;];
+    $name = $data[&#39;name&#39;];
+    $status = strtoupper($data[&#39;status&#39;]);
+    $subject = $data[&#39;subject&#39;];
+    $start_time = date(&#39;Y-m-d H:i:s&#39;, $data[&#39;start_time&#39;]+($timezone*3600));
+    $end_time = date(&#39;Y-m-d H:i:s&#39;, $data[&#39;end_time&#39;]+($timezone*3600));
      
-    if($status == &quot;OPEN&quot;)
+    if($status == &#34;OPEN&#34;)
     {
-      telegram($status.&quot; - &quot;.$name.&quot; &quot;.$subject.&quot;\n&quot;.$start_time.&quot;\nView domain statistics on https://nixstats.com/domain/&quot;.$domain_id);
+      telegram($status.&#34; - &#34;.$name.&#34; &#34;.$subject.&#34;\n&#34;.$start_time.&#34;\nView domain statistics on https://nixstats.com/domain/&#34;.$domain_id);
     }
     else
     {
-      telegram($status.&quot; - &quot;.$name.&quot; &quot;.$subject.&quot;\n&quot;.$end_time.&quot;\nView domain statistics on https://nixstats.com/domain/&quot;.$domain_id);
+      telegram($status.&#34; - &#34;.$name.&#34; &#34;.$subject.&#34;\n&#34;.$end_time.&#34;\nView domain statistics on https://nixstats.com/domain/&#34;.$domain_id);
     }
   }
 }
 </code></pre><p>Этот же webhook можно доработать, и слать с его помощью sms-оповещения. В качестве провайдера будем использовать шлюз TURBOSMS (выбран исключительно за низкую стоимость услуг) — естественно, сначала регистрируемся и пополняем счет. Функция отправки sms будет выглядеть так:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 function sms($message)
 {
-        $client = new SoapClient ('http://turbosms.in.ua/api/wsdl.html');
-        $auth = array('login' =&gt; 'mylogin', 'password' =&gt; 'myverystrongpassword');
+        $client = new SoapClient (&#39;http://turbosms.in.ua/api/wsdl.html&#39;);
+        $auth = array(&#39;login&#39; =&gt; &#39;mylogin&#39;, &#39;password&#39; =&gt; &#39;myverystrongpassword&#39;);
         $result = $client-&gt;Auth ($auth);
-        $sms = Array ('sender' =&gt; 'NIXStats','destination' =&gt; '+380XXXXXXXXX','text' =&gt; $message);
+        $sms = Array (&#39;sender&#39; =&gt; &#39;NIXStats&#39;,&#39;destination&#39; =&gt; &#39;+380XXXXXXXXX&#39;,&#39;text&#39; =&gt; $message);
         $result = $client-&gt;SendSMS ($sms);
         return $result;
 }
@@ -302,7 +302,7 @@ function sms($message)
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

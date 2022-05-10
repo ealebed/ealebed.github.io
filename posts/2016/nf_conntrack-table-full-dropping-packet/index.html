@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -107,23 +107,23 @@
 <li><code>INVALID</code> — остальные пакеты.</li>
 </ul>
 <p>Просмотреть атрибуты активных подключений можно так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/net/nf_conntrack
-</code></pre></div><p>Так как <code>nf_conntrack</code> хранит данные о соединениях в таблицах, сообщение <code>nf_conntrack: table full, dropping packet</code> совершенно очевидно говорит, что эти самые таблицы переполнены. Соединения, которые не помещаются в эту таблицу будут просто сброшены.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/net/nf_conntrack
+</span></span></code></pre></div><p>Так как <code>nf_conntrack</code> хранит данные о соединениях в таблицах, сообщение <code>nf_conntrack: table full, dropping packet</code> совершенно очевидно говорит, что эти самые таблицы переполнены. Соединения, которые не помещаются в эту таблицу будут просто сброшены.</p>
 <p>Проверим текущие значения в <code>sysctl</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -a | grep conntrack_max
-net.ipv4.netfilter.ip_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">65536</span>
-net.netfilter.nf_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">65536</span>
-net.nf_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">65536</span>
-</code></pre></div><p>Увеличиваем размер таблиц (в данном примере в 16 раз):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">echo <span style="color:#e6db74">&#34;net.netfilter.nf_conntrack_max=1048576&#34;</span> &gt;&gt; /etc/sysctl.conf
-</code></pre></div><p>и применяем изменения:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -p
-</code></pre></div><p>Проверим значения после изменений:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -a | grep conntrack_max
-net.netfilter.nf_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">1048576</span>
-net.ipv4.netfilter.ip_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">1048576</span>
-net.nf_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">1048576</span>
-</code></pre></div><p>После данных изменений в логах должно исчезнуть сообщение <code>nf_conntrack: table full, dropping packet</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sysctl -a | grep conntrack_max
+</span></span><span style="display:flex;"><span>net.ipv4.netfilter.ip_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">65536</span>
+</span></span><span style="display:flex;"><span>net.netfilter.nf_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">65536</span>
+</span></span><span style="display:flex;"><span>net.nf_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">65536</span>
+</span></span></code></pre></div><p>Увеличиваем размер таблиц (в данном примере в 16 раз):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;net.netfilter.nf_conntrack_max=1048576&#34;</span> &gt;&gt; /etc/sysctl.conf
+</span></span></code></pre></div><p>и применяем изменения:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sysctl -p
+</span></span></code></pre></div><p>Проверим значения после изменений:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sysctl -a | grep conntrack_max
+</span></span><span style="display:flex;"><span>net.netfilter.nf_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">1048576</span>
+</span></span><span style="display:flex;"><span>net.ipv4.netfilter.ip_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">1048576</span>
+</span></span><span style="display:flex;"><span>net.nf_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae81ff">1048576</span>
+</span></span></code></pre></div><p>После данных изменений в логах должно исчезнуть сообщение <code>nf_conntrack: table full, dropping packet</code>.</p>
                 </section>
             </article>
 
@@ -215,7 +215,7 @@ net.nf_conntrack_max <span style="color:#f92672">=</span> <span style="color:#ae
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

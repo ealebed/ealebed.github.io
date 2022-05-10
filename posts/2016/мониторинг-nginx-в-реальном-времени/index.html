@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,55 +103,55 @@
                     <p>Для сбора и отображения метрик веб-сервера Nginx часто используются Munin, Zabbix, Nagios и другие системы мониторинга.</p>
 <p>Большинство из них приходится «допиливать» под свои нужды, так как «из коробки» доступно довольно мало информации. Давайте разберемся с утилитой <code>Ngxtop</code> для <strong>мониторинга Nginx в реальном времени</strong>!</p>
 <p>Утилита <code>Ngxtop</code> парсит <code>access</code>-логи веб-сервера Nginx и выводит их в консоль в удобном (<code>top-like</code>) виде. Установка выполняется следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pip install ngxtop
-</code></pre></div><p>Синтаксис использования утилиты:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span>
-ngxtop <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span> <span style="color:#f92672">(</span>print|top|avg|sum<span style="color:#f92672">)</span> 
-</code></pre></div><p>Список всех доступных опций можно посмотреть командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop --help
-</code></pre></div><p>По умолчанию, <code>Ngxtop</code> самостоятельно определяет местоположение <code>access</code>-лога Nginx из конфигурационного файла <code>/etc/nginx/nginx.conf</code>. Если таких логов несколько, необходимо будет выбрать с каким именно логом работать:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop
-Multiple access logs detected in configuration:
-1. /var/log/nginx/access502.log
-2. /var/log/nginx/access.api.log
-3. /var/log/nginx/access.img.log
-4. /var/log/nginx/access.log
-5. /var/log/nginx/access404.log
-</code></pre></div><p>Чтобы посмотреть запросы со статусом 404 можно воспользоваться командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop -i <span style="color:#e6db74">&#39;status == 404&#39;</span> print request status
-</code></pre></div><p>результат выполнения в моем случае выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">running <span style="color:#66d9ef">for</span> <span style="color:#ae81ff">130</span> seconds, <span style="color:#ae81ff">150</span> records processed: 1.15 req/sec
-
-request, status:
-|request                                              |   status |
-|-----------------------------------------------------+----------|
-| GET /browserconfig.xml HTTP/1.1                     |  <span style="color:#ae81ff">404</span>     |
-| GET /employer/my/archive/2107569/98483600/ HTTP/1.1 |  <span style="color:#ae81ff">404</span>     |
-| GET /employer/my/archive/2107569/98483867/ HTTP/1.1 |  <span style="color:#ae81ff">404</span>     |
-| GET /jobs/1045534/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
-| GET /jobs/1230564/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
-| GET /jobs/1254320/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
-| GET /jobs/1304769/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
-| GET /jobs/1326496/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
-</code></pre></div><p>Посмотреть IP-адреса, с которых приходит больше всего запросов можно командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ngxtop top remote_addr
-</code></pre></div><p>результат выполнения:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">running <span style="color:#66d9ef">for</span> <span style="color:#ae81ff">8</span> seconds, <span style="color:#ae81ff">1759</span> records processed: 217.15 req/sec
-
-top remote_addr
-| remote_addr     |   count |
-|-----------------+---------|
-| 92.60.184.91    |      <span style="color:#ae81ff">45</span> |
-| 66.249.78.10    |      <span style="color:#ae81ff">42</span> |
-| 77.120.121.122  |      <span style="color:#ae81ff">42</span> |
-| 66.249.89.63    |      <span style="color:#ae81ff">28</span> |
-| 91.206.201.152  |      <span style="color:#ae81ff">19</span> |
-| 37.229.17.176   |      <span style="color:#ae81ff">17</span> |
-| 77.87.193.40    |      <span style="color:#ae81ff">17</span> |
-| 157.55.39.7     |      <span style="color:#ae81ff">16</span> |
-| 188.115.135.245 |      <span style="color:#ae81ff">16</span> |
-| 89.184.80.168   |      <span style="color:#ae81ff">16</span> |
-</code></pre></div><p>Однако не следует забывать, что в каждом конкретном случае нужно применять соответствующий инструмент. <code>Ngxtop</code> может быть очень полезен для сравнительно небольших сайтов, но использование данной утилиты на высоконагруженных проектах (с десятками тысяч запросов в секунду) может быть неразумно.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install ngxtop
+</span></span></code></pre></div><p>Синтаксис использования утилиты:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ngxtop <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>ngxtop <span style="color:#f92672">[</span>options<span style="color:#f92672">]</span> <span style="color:#f92672">(</span>print|top|avg|sum<span style="color:#f92672">)</span> 
+</span></span></code></pre></div><p>Список всех доступных опций можно посмотреть командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ngxtop --help
+</span></span></code></pre></div><p>По умолчанию, <code>Ngxtop</code> самостоятельно определяет местоположение <code>access</code>-лога Nginx из конфигурационного файла <code>/etc/nginx/nginx.conf</code>. Если таких логов несколько, необходимо будет выбрать с каким именно логом работать:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ngxtop
+</span></span><span style="display:flex;"><span>Multiple access logs detected in configuration:
+</span></span><span style="display:flex;"><span>1. /var/log/nginx/access502.log
+</span></span><span style="display:flex;"><span>2. /var/log/nginx/access.api.log
+</span></span><span style="display:flex;"><span>3. /var/log/nginx/access.img.log
+</span></span><span style="display:flex;"><span>4. /var/log/nginx/access.log
+</span></span><span style="display:flex;"><span>5. /var/log/nginx/access404.log
+</span></span></code></pre></div><p>Чтобы посмотреть запросы со статусом 404 можно воспользоваться командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ngxtop -i <span style="color:#e6db74">&#39;status == 404&#39;</span> print request status
+</span></span></code></pre></div><p>результат выполнения в моем случае выглядит так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>running <span style="color:#66d9ef">for</span> <span style="color:#ae81ff">130</span> seconds, <span style="color:#ae81ff">150</span> records processed: 1.15 req/sec
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>request, status:
+</span></span><span style="display:flex;"><span>|request                                              |   status |
+</span></span><span style="display:flex;"><span>|-----------------------------------------------------+----------|
+</span></span><span style="display:flex;"><span>| GET /browserconfig.xml HTTP/1.1                     |  <span style="color:#ae81ff">404</span>     |
+</span></span><span style="display:flex;"><span>| GET /employer/my/archive/2107569/98483600/ HTTP/1.1 |  <span style="color:#ae81ff">404</span>     |
+</span></span><span style="display:flex;"><span>| GET /employer/my/archive/2107569/98483867/ HTTP/1.1 |  <span style="color:#ae81ff">404</span>     |
+</span></span><span style="display:flex;"><span>| GET /jobs/1045534/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+</span></span><span style="display:flex;"><span>| GET /jobs/1230564/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+</span></span><span style="display:flex;"><span>| GET /jobs/1254320/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+</span></span><span style="display:flex;"><span>| GET /jobs/1304769/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+</span></span><span style="display:flex;"><span>| GET /jobs/1326496/ HTTP/1.1                         |  <span style="color:#ae81ff">404</span>     |
+</span></span></code></pre></div><p>Посмотреть IP-адреса, с которых приходит больше всего запросов можно командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ngxtop top remote_addr
+</span></span></code></pre></div><p>результат выполнения:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>running <span style="color:#66d9ef">for</span> <span style="color:#ae81ff">8</span> seconds, <span style="color:#ae81ff">1759</span> records processed: 217.15 req/sec
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>top remote_addr
+</span></span><span style="display:flex;"><span>| remote_addr     |   count |
+</span></span><span style="display:flex;"><span>|-----------------+---------|
+</span></span><span style="display:flex;"><span>| 92.60.184.91    |      <span style="color:#ae81ff">45</span> |
+</span></span><span style="display:flex;"><span>| 66.249.78.10    |      <span style="color:#ae81ff">42</span> |
+</span></span><span style="display:flex;"><span>| 77.120.121.122  |      <span style="color:#ae81ff">42</span> |
+</span></span><span style="display:flex;"><span>| 66.249.89.63    |      <span style="color:#ae81ff">28</span> |
+</span></span><span style="display:flex;"><span>| 91.206.201.152  |      <span style="color:#ae81ff">19</span> |
+</span></span><span style="display:flex;"><span>| 37.229.17.176   |      <span style="color:#ae81ff">17</span> |
+</span></span><span style="display:flex;"><span>| 77.87.193.40    |      <span style="color:#ae81ff">17</span> |
+</span></span><span style="display:flex;"><span>| 157.55.39.7     |      <span style="color:#ae81ff">16</span> |
+</span></span><span style="display:flex;"><span>| 188.115.135.245 |      <span style="color:#ae81ff">16</span> |
+</span></span><span style="display:flex;"><span>| 89.184.80.168   |      <span style="color:#ae81ff">16</span> |
+</span></span></code></pre></div><p>Однако не следует забывать, что в каждом конкретном случае нужно применять соответствующий инструмент. <code>Ngxtop</code> может быть очень полезен для сравнительно небольших сайтов, но использование данной утилиты на высоконагруженных проектах (с десятками тысяч запросов в секунду) может быть неразумно.</p>
                 </section>
             </article>
 
@@ -243,7 +243,7 @@ top remote_addr
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

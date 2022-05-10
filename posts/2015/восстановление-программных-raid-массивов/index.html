@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,7 +100,7 @@
                 <section id="post-body">
                     <p>Работа с <strong>программными RAID-массивами</strong> в GNU/Linux осуществляется с помощью утилиты <code>mdadm</code> (ранее <code>mdctl</code>). Весьма подробно работа с RAID-массивами описана <a href="http://xgu.ru/wiki/mdadm">здесь</a>, ну а мы давайте разберемся с восстановлением работоспособности программных рейдов.</p>
 <p>После незначительного сбоя (например, при неправильном выключении питания) может быть нарушена целостность RAID-массива:</p>
-<pre><code>cat /proc/mdstat 
+<pre tabindex="0"><code>cat /proc/mdstat 
 Personalities : [raid1] 
 md1 : active raid1 sdb5[1]
       860160192 blocks [2/1] [_U]
@@ -109,29 +109,29 @@ md0 : active raid1 sda1[0] sdb1[1]
       52427704 blocks super 1.2 [2/2] [UU]
 </code></pre><p>Видим проблему с программным массивом md1.</p>
 <p>Более подробно получить информацию об ошибке можно командой:</p>
-<pre><code>mdadm --query --detail /dev/md1
+<pre tabindex="0"><code>mdadm --query --detail /dev/md1
 </code></pre><p>Пытаемся добавить недостающий диск sda5 обратно в <strong>программный RAID-массив</strong>:</p>
-<pre><code>mdadm -a /dev/md1 /dev/sda5
+<pre tabindex="0"><code>mdadm -a /dev/md1 /dev/sda5
 mdadm: added /dev/sda5
 </code></pre><p>Если диск нормально добавился, то начнется синхронизация массива:</p>
-<pre><code>cat /proc/mdstat
+<pre tabindex="0"><code>cat /proc/mdstat
 Personalities : [raid1] 
 md1 : active raid1 sda5[0] sdb5[1]
       860160192 blocks [2/1] [_U]
       [===&gt;.................]  recovery = 18.0% (154891584/860160192) finish=108.7min speed=108091K/sec
 </code></pre><p>Если сбой был более серьезным и вышеописанные действия не помогают, но необходимо заменить проблемный жесткий диск на аналогичный по размеру (желательно того же производителя). После замены винчестера утилитой <code>sfdisk</code> копируем структуру разделов с работоспособного жесткого диска (sdb) на новый:</p>
-<pre><code>sfdisk -d /dev/sdb | sfdisk /dev/sda
+<pre tabindex="0"><code>sfdisk -d /dev/sdb | sfdisk /dev/sda
 </code></pre><p><strong>Примечание.</strong> Убедиться, что на жестких дисках таблицы разделов идентичны можно командой <code>fdisk -l</code>.</p>
 <p>После проделанных действий внимательно добавляем каждый раздел нового винчестера в соответствующий RAID-массив:</p>
-<pre><code>mdadm --add /dev/md1 /dev/sda5
+<pre tabindex="0"><code>mdadm --add /dev/md1 /dev/sda5
 mdadm: added /dev/sda5
 </code></pre><p>и</p>
-<pre><code>mdadm --add /dev/md0 /dev/sda1
+<pre tabindex="0"><code>mdadm --add /dev/md0 /dev/sda1
 mdadm: added /dev/sda1
 </code></pre><p>После успешного добавления можно проверить состояние синхронизации <strong>программных RAID-массивов</strong> с помощью:</p>
-<pre><code>cat /proc/mdstat
+<pre tabindex="0"><code>cat /proc/mdstat
 </code></pre><p>В руководствах по утилите <code>mdadm</code> после сборки массивов рекомендуется добавлять в файл <code>/etc/mdadm/mdadm.conf</code> результат вывода команды <code>mdadm --detail --scan</code>, например так:</p>
-<pre><code>mdadm --detail --scan &gt; /etc/mdadm/mdadm.conf
+<pre tabindex="0"><code>mdadm --detail --scan &gt; /etc/mdadm/mdadm.conf
 </code></pre>
                 </section>
             </article>
@@ -224,7 +224,7 @@ mdadm: added /dev/sda1
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

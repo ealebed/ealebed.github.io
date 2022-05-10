@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,7 +103,7 @@
                     <p>В завершении цикла статей о настройке <strong>continuous integration в GitLab</strong> мы рассмотрим еще один несложный, но важный этап, который позволит поддерживать в чистоте и порядке все наши сборочные контейнеры, а также увидим финальную версию конфигурационного файла <code>.gitlab-ci.yml</code>.</p>
 <p>Давайте разберемся с этапом удаления ненужных контейнеров, которые использовались при сборке проекта, его тестировании, упаковке и деплое!</p>
 <p>Инструкции для выполнения последнего этапа в цепочке continuous integration выглядят следующим образом:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 cleanup:
   stage: cleanup
   when: always
@@ -115,7 +115,7 @@ cleanup:
 </code></pre><p>Как и ранее, данный шаг будет выполняться для веток develop и docker, однако благодаря параметру <code>when: always</code> он будет выполнен вне зависимости от результатов выполнения предыдущих этапов (неважно, удалось ли собрать docker-образ или протестировать код — &ldquo;убираем&rdquo; за собой всегда).</p>
 <p>Основная задача также довольно проста — остановить и удалить docker-контейнеры, описанные в конфигурационном файле <code>docker-compose-build.yml</code>, который мы рассматривали в этой статье.</p>
 <p>&ldquo;Уборка&rdquo; занимает 15-20 секунд, а подробности выполнения этапа <code>cleanup</code> на вкладке pipelines выглядят так:</p>
-<pre><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
+<pre tabindex="0"><code>Running with gitlab-ci-multi-runner 1.10.0 (4a71a97)
 Using Docker executor with image registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh ...
 Starting service registry.gitlab.lc/develop/ed:my-docker-dind ...
 Using locally found image version due to if-not-present pull policy
@@ -156,7 +156,7 @@ Removing public/dsm/js/main-build.js
 Removing public/dsm/js/main-build.js.map
 Removing public/vendor/
 Removing vendor/
-HEAD is now at 635e14c14a Merge branch 'develop' into 'develop'
+HEAD is now at 635e14c14a Merge branch &#39;develop&#39; into &#39;develop&#39;
 Checking out 635e14c1 as develop...
 Skipping Git submodules setup
 Downloading artifacts for testing (2610)...
@@ -191,7 +191,7 @@ Removing node ... done
 Removing network docker_default
 Build succeeded
 </code></pre><p>Если собрать все наши этапы, которые мы подробно рассматривали на протяжении всего цикла статей о <strong>GitLab CI</strong>, в один файл, то у нас получится следующее:</p>
-<pre><code>image: registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh
+<pre tabindex="0"><code>image: registry.gitlab.lc:5000/develop/ed:tmaier-dc-ssh
  
 services:
   - registry.gitlab.lc:5000/develop/ed:my-docker-dind
@@ -226,11 +226,11 @@ compile:
   stage: build
   script:
     - cp -u .env.develop .env
-    - $BUILD exec --user www-data -T workspace sh -c &quot;composer install&quot;
-    - $BUILD exec --user www-data -T workspace sh -c &quot;./zf routes compile&quot;
-    - $BUILD exec --user www-data -T workspace sh -c &quot;./zf cache clean-modified-content&quot;
-    - $BUILD run -T --rm node sh -c &quot;npm install --production &amp;&amp; grunt install-build --no-dev&quot;
-    - $BUILD exec --user www-data -T workspace sh -c &quot;./zf user-default-avatar&quot;
+    - $BUILD exec --user www-data -T workspace sh -c &#34;composer install&#34;
+    - $BUILD exec --user www-data -T workspace sh -c &#34;./zf routes compile&#34;
+    - $BUILD exec --user www-data -T workspace sh -c &#34;./zf cache clean-modified-content&#34;
+    - $BUILD run -T --rm node sh -c &#34;npm install --production &amp;&amp; grunt install-build --no-dev&#34;
+    - $BUILD exec --user www-data -T workspace sh -c &#34;./zf user-default-avatar&#34;
   cache:
     key: ${CI_COMMIT_REF_NAME}
     paths:
@@ -270,7 +270,7 @@ testing:
   dependencies:
   - compile
   script:
-    - $BUILD exec --user www-data -T workspace sh -c &quot;./bin/phpmetrics \&quot;./\&quot;  --exclude=\&quot;node_modules|bin|log|temp|var|vendor|public|www|tests\&quot; --report-html=./build&quot;
+    - $BUILD exec --user www-data -T workspace sh -c &#34;./bin/phpmetrics \&#34;./\&#34;  --exclude=\&#34;node_modules|bin|log|temp|var|vendor|public|www|tests\&#34; --report-html=./build&#34;
   artifacts:
     paths:
     - build/all.html
@@ -310,10 +310,10 @@ deploy-to-review:
   stage: deploy
   before_script:
     - eval $(ssh-agent -s)
-    - ssh-add &lt;(echo &quot;$SSH_PRIVATE_KEY&quot;)
+    - ssh-add &lt;(echo &#34;$SSH_PRIVATE_KEY&#34;)
   script:
     - scp $ENV_FILE $DC_FILE provisioner@staging.lc:~/docker
-    - ssh provisioner@staging.lc 'bash -s' &lt; ./docker/deploy.sh
+    - ssh provisioner@staging.lc &#39;bash -s&#39; &lt; ./docker/deploy.sh
   environment:
     name: review/$CI_COMMIT_REF_NAME
     url: https://www.$CI_COMMIT_REF_SLUG.labs.lc
@@ -324,7 +324,7 @@ deploy-to-review:
 deploy-to-prod:
   stage: deploy
   script:
-    - echo &quot;Deployed!&quot; # здесь должен быть настоящий скрипт деплоя
+    - echo &#34;Deployed!&#34; # здесь должен быть настоящий скрипт деплоя
   environment:
     name: production
     url: https://www.example.com/
@@ -433,7 +433,7 @@ cleanup:
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -104,23 +104,23 @@
 <p>Эта статья начинает цикл публикаций, в которых мы подробно рассмотрим процесс <strong>настройки GitLab CI</strong> на реальном проекте. Давайте разберемся!</p>
 <p>Для функционирования процесса Continuous Integration нам необходимо настроить еще один компонент — раннер (runner). Раннер в <strong>GitLab</strong> используется для запуска определенных задач (jobs, о них мы поговорим позже), их выполнения и отправки результатов обратно в <strong>GitLab</strong>.</p>
 <p>В <a href="https://ealebed.github.io/posts/2017/gitlab-gitlab-ci-docker-registry-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-docker-compose/">этой</a> статье мы добавили docker-контейнер с раннером внутри в конфигурационный файл <code>docker-compose.yml</code> и запустили всю связку. Проверим состояние интересующего нас docker-контейнера:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker ps gitlab-runner
-CONTAINER ID        IMAGE                         COMMAND                  CREATED             STATUS              PORTS                                      NAMES
-e1470885895d        gitlab/gitlab-runner:latest   <span style="color:#e6db74">&#34;/usr/bin/dumb-ini...&#34;</span>   <span style="color:#ae81ff">2</span> weeks ago         Up <span style="color:#ae81ff">20</span> hours                                                    gitlab-runner 
-</code></pre></div><p>Теперь нам необходимо зарегистрировать наш раннер, сделать это можно с помощью следующей команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec -it gitlab-runner gitlab-runner register -n <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--url http://git.labs.lc:10080/ci <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--registration-token o_dsVxiqVssAPh3uxy46 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--executor docker <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--description <span style="color:#e6db74">&#34;docker-build-runner&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--builds-dir <span style="color:#e6db74">&#34;/srv/my_build_directory&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--docker-image <span style="color:#e6db74">&#34;ealebed/dc_ssh:latest&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--docker-dns 192.168.0.1 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--docker-privileged <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--docker-volumes /var/run/docker.sock:/var/run/docker.sock <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--docker-volumes /srv/my_build_directory:/srv/my_build_directory <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>	--docker-pull-policy <span style="color:#e6db74">&#34;if-not-present&#34;</span>
-</code></pre></div><p>Давайте подробнее остановимся на используемых параметрах:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker ps gitlab-runner
+</span></span><span style="display:flex;"><span>CONTAINER ID        IMAGE                         COMMAND                  CREATED             STATUS              PORTS                                      NAMES
+</span></span><span style="display:flex;"><span>e1470885895d        gitlab/gitlab-runner:latest   <span style="color:#e6db74">&#34;/usr/bin/dumb-ini...&#34;</span>   <span style="color:#ae81ff">2</span> weeks ago         Up <span style="color:#ae81ff">20</span> hours                                                    gitlab-runner 
+</span></span></code></pre></div><p>Теперь нам необходимо зарегистрировать наш раннер, сделать это можно с помощью следующей команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker exec -it gitlab-runner gitlab-runner register -n <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--url http://git.labs.lc:10080/ci <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--registration-token o_dsVxiqVssAPh3uxy46 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--executor docker <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--description <span style="color:#e6db74">&#34;docker-build-runner&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--builds-dir <span style="color:#e6db74">&#34;/srv/my_build_directory&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--docker-image <span style="color:#e6db74">&#34;ealebed/dc_ssh:latest&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--docker-dns 192.168.0.1 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--docker-privileged <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--docker-volumes /var/run/docker.sock:/var/run/docker.sock <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--docker-volumes /srv/my_build_directory:/srv/my_build_directory <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>	--docker-pull-policy <span style="color:#e6db74">&#34;if-not-present&#34;</span>
+</span></span></code></pre></div><p>Давайте подробнее остановимся на используемых параметрах:</p>
 <ul>
 <li><code>--url</code> — URL <strong>GitLab</strong>, к которому будет прикреплен раннер;</li>
 <li><code>--registration-token</code> — уникальный токен проекта, берется в настройках <strong>GitLab</strong>;</li>
@@ -227,7 +227,7 @@ e1470885895d        gitlab/gitlab-runner:latest   <span style="color:#e6db74">&#
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

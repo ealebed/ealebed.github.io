@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,9 +101,9 @@
                     <p>При попытке добавления еще одного диска к хосту под управлением ESXi получаем ошибку <code>Call &quot;HostStorageSystem.ComputeDiskPartitionInfo&quot; for object &quot;storageSystem&quot; on ESXi failed (2088707)</code>. Давайте разберемся!</p>
 <p>Данная проблема появляется, если на диске, который вы пытаетесь добавить к ESXi-хосту уже существует таблица разделов (partition table). Если автоматическая проверка, которая выполняется в момент добавления диска, находит таблицу разделов, то диск не может быть добавлен к хосту и операция завершается с ошибкой <code>Call &quot;HostStorageSystem.ComputeDiskPartitionInfo&quot; for object &quot;storageSystem&quot; on ESXi failed</code>.</p>
 <p>Для устранения проблемы подключаемся к хосту по ssh и выполняем следующее:</p>
-<pre><code>esxcfg-scsidevs –l
+<pre tabindex="0"><code>esxcfg-scsidevs –l
 </code></pre><p>Результат выполнения команды будет выглядеть примерно так:</p>
-<pre><code>naa.6b083fe0c2c8f6001b891af71508e8d8
+<pre tabindex="0"><code>naa.6b083fe0c2c8f6001b891af71508e8d8
 
 Device Type: Direct-Access
 Size: 1887435 MB
@@ -119,15 +119,15 @@ Other Names:
 vml.02000000006b083fe0c2c8f6001b891af71508e8d8504552432048
 VAAI Status: unsupported
 </code></pre><p>После того, как определили имя диска (в данном примере это <code>naa.6b083fe0c2c8f6001b891af71508e8d8</code>), проверим какие разделы существуют на диске:</p>
-<pre><code>partedUtil get /dev/disks/naa.6b083fe0c2c8f6001b891af71508e8d8
+<pre tabindex="0"><code>partedUtil get /dev/disks/naa.6b083fe0c2c8f6001b891af71508e8d8
 </code></pre><p>Если на диске существует один раздел, то результат выполнения команды будет следующий:</p>
-<pre><code>240614 255 63 3865468544
+<pre tabindex="0"><code>240614 255 63 3865468544
 1 2048 3865464831 7 0
 </code></pre><p><strong>Примечание.</strong> Следующая команда удалит информацию о таблице разделов диска и все имеющиеся данные станут недоступными — хорошо подумайте перед ее запуском.</p>
 <p>Удалим существующий раздел командой:</p>
-<pre><code>partedUtil delete /dev/disks/naa.6b083fe0c2c8f6001b891af71508e8d8 1
+<pre tabindex="0"><code>partedUtil delete /dev/disks/naa.6b083fe0c2c8f6001b891af71508e8d8 1
 </code></pre><p>Убедимся, что раздел действительно был удален:</p>
-<pre><code>partedUtil get /dev/disks/naa.6b083fe0c2c8f6001b891af71508e8d8
+<pre tabindex="0"><code>partedUtil get /dev/disks/naa.6b083fe0c2c8f6001b891af71508e8d8
 
 240614 255 63 3865468544
 </code></pre><p>Теперь можно еще раз попробовать добавить этот диск к ESXi хосту.</p>
@@ -222,7 +222,7 @@ VAAI Status: unsupported
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

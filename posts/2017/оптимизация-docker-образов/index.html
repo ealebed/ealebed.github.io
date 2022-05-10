@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,186 +101,186 @@
                     <p>Как известно, docker-контейнеры создаются и запускаются из образов, которые можно загрузить из общедоступных репозиториев (например, <a href="https://hub.docker.com/">Docker Hub</a>) или собрать самостоятельно с помощью инструкций в Dockerfile.</p>
 <p>Самостоятельная сборка образов, на мой взгляд, обладает целым рядом преимуществ, однако в результате можно получить образ неприлично большого размера. Давайте разберемся, <strong>как оптимизировать docker-образы</strong>, не жертвуя при этом их функциональностью!</p>
 <p>Действия производятся на:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
-No LSB modules are available.
-Distributor ID:    Ubuntu
-Description:    Ubuntu 16.04.2 LTS
-Release:    16.04
-Codename:    xenial
-</code></pre></div><p>Используемая версия docker-engine:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version
-Client:
- Version:      17.03.0-ce
- API version:  1.26
- Go version:   go1.7.5
- Git commit:   60ccb22
- Built:        Thu Feb <span style="color:#ae81ff">23</span> 11:02:43 <span style="color:#ae81ff">2017</span>
- OS/Arch:      linux/amd64
-
-Server:
- Version:      17.03.0-ce
- API version:  1.26 <span style="color:#f92672">(</span>minimum version 1.12<span style="color:#f92672">)</span>
- Go version:   go1.7.5
- Git commit:   60ccb22
- Built:        Thu Feb <span style="color:#ae81ff">23</span> 11:02:43 <span style="color:#ae81ff">2017</span>
- OS/Arch:      linux/amd64
- Experimental: false
-</code></pre></div><p>В примере рассмотрим сборку docker-образа для контейнера с Nginx (как полагается, с <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">поддержкой Brotli</a> и свеженьким <a href="https://ealebed.github.io/posts/2016/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-openssl-1.0.2-%D0%B4%D0%BB%D1%8F-http2.0/">OpenSSL для HTTP2.0</a>). Кроме этого, при запуске контейнера из шаблонов будут генерироваться конфигурационные файлы сайтов (в зависимости от параметров из <code>.env</code>-файла).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsb_release -a
+</span></span><span style="display:flex;"><span>No LSB modules are available.
+</span></span><span style="display:flex;"><span>Distributor ID:    Ubuntu
+</span></span><span style="display:flex;"><span>Description:    Ubuntu 16.04.2 LTS
+</span></span><span style="display:flex;"><span>Release:    16.04
+</span></span><span style="display:flex;"><span>Codename:    xenial
+</span></span></code></pre></div><p>Используемая версия docker-engine:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker version
+</span></span><span style="display:flex;"><span>Client:
+</span></span><span style="display:flex;"><span> Version:      17.03.0-ce
+</span></span><span style="display:flex;"><span> API version:  1.26
+</span></span><span style="display:flex;"><span> Go version:   go1.7.5
+</span></span><span style="display:flex;"><span> Git commit:   60ccb22
+</span></span><span style="display:flex;"><span> Built:        Thu Feb <span style="color:#ae81ff">23</span> 11:02:43 <span style="color:#ae81ff">2017</span>
+</span></span><span style="display:flex;"><span> OS/Arch:      linux/amd64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Server:
+</span></span><span style="display:flex;"><span> Version:      17.03.0-ce
+</span></span><span style="display:flex;"><span> API version:  1.26 <span style="color:#f92672">(</span>minimum version 1.12<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> Go version:   go1.7.5
+</span></span><span style="display:flex;"><span> Git commit:   60ccb22
+</span></span><span style="display:flex;"><span> Built:        Thu Feb <span style="color:#ae81ff">23</span> 11:02:43 <span style="color:#ae81ff">2017</span>
+</span></span><span style="display:flex;"><span> OS/Arch:      linux/amd64
+</span></span><span style="display:flex;"><span> Experimental: false
+</span></span></code></pre></div><p>В примере рассмотрим сборку docker-образа для контейнера с Nginx (как полагается, с <a href="https://ealebed.github.io/posts/2017/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%BE%D0%B9-brotli/">поддержкой Brotli</a> и свеженьким <a href="https://ealebed.github.io/posts/2016/%D0%BF%D0%B5%D1%80%D0%B5%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-nginx-%D1%81-openssl-1.0.2-%D0%B4%D0%BB%D1%8F-http2.0/">OpenSSL для HTTP2.0</a>). Кроме этого, при запуске контейнера из шаблонов будут генерироваться конфигурационные файлы сайтов (в зависимости от параметров из <code>.env</code>-файла).</p>
 <p>Dockerfile (инструкции по сборке образа) выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> debian:jessie</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> NGINX_VERSION<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>.11.10<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> OPENSSL_VERSION<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>.0.2g<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> NGX_CACHE_PURGE_VERSION<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>.3<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get install -y <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    build-essential <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    automake <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    autoconf <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    libtool <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    openssl <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    zlib1g-dev <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    libpcre3 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    libpcre3-dev <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    libgeoip-dev <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    unzip <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    wget <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    git <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    curl<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> cd /tmp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> git clone https://github.com/bagder/libbrotli <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> cd libbrotli <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ./autogen.sh <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ./configure <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> make <span style="color:#f92672">&amp;&amp;</span> make install <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> cd /tmp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> git clone https://github.com/google/ngx_brotli <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget -qO - https://www.openssl.org/source/openssl-<span style="color:#e6db74">${</span>OPENSSL_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>       | tar xzf  - -C /tmp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget http://labs.frickle.com/files/ngx_cache_purge-$NGX_CACHE_PURGE_VERSION.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> tar -zxvf ngx_cache_purge-$NGX_CACHE_PURGE_VERSION.tar.gz <span style="color:#f92672">&amp;&amp;</span> mv ngx_cache_purge-$NGX_CACHE_PURGE_VERSION ngx_cache_purge <span style="color:#f92672">&amp;&amp;</span> rm ngx_cache_purge-$NGX_CACHE_PURGE_VERSION.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget https://github.com/openresty/echo-nginx-module/archive/v0.60.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> tar -zxvf v0.60.tar.gz <span style="color:#f92672">&amp;&amp;</span> rm v0.60.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> mkdir -p /var/cache/nginx/client_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget http://nginx.org/download/nginx-<span style="color:#e6db74">${</span>NGINX_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> tar -xvzf nginx-<span style="color:#e6db74">${</span>NGINX_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> cd /tmp/ngx_brotli <span style="color:#f92672">&amp;&amp;</span> git submodule update --init <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> cd /tmp/nginx-<span style="color:#e6db74">${</span>NGINX_VERSION<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ./configure <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --prefix<span style="color:#f92672">=</span>/opt/nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --sbin-path<span style="color:#f92672">=</span>/usr/sbin/nginx <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --modules-path<span style="color:#f92672">=</span>/usr/lib64/nginx/modules <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --conf-path<span style="color:#f92672">=</span>/opt/nginx/nginx.conf <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --error-log-path<span style="color:#f92672">=</span>/var/log/nginx/error.log <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-log-path<span style="color:#f92672">=</span>/var/log/nginx/access.log <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --pid-path<span style="color:#f92672">=</span>/var/run/nginx.pid <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --lock-path<span style="color:#f92672">=</span>/var/run/nginx.lock <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-client-body-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/client_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-proxy-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/proxy_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-fastcgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/fastcgi_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-uwsgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/uwsgi_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --http-scgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/scgi_temp <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --user<span style="color:#f92672">=</span>www-data <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --group<span style="color:#f92672">=</span>www-data <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_stub_status_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_geoip_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_ssl_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_realip_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_addition_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_sub_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_dav_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_gunzip_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_gzip_static_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_random_index_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_secure_link_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_auth_request_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --without-http_ssi_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>        --with-threads <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-stream <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-stream_ssl_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-file-aio <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-http_v2_module <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-ipv6 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --with-cc-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic&#39;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>        --with-openssl<span style="color:#f92672">=</span>/tmp/openssl-<span style="color:#e6db74">${</span>OPENSSL_VERSION<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>        --add-module<span style="color:#f92672">=</span>/tmp/ngx_brotli <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --add-module<span style="color:#f92672">=</span>/tmp/ngx_cache_purge <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    --add-module<span style="color:#f92672">=</span>/tmp/echo-nginx-module-0.60 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> make <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> make install<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get remove -y build-essential zlib1g-dev libpcre3-dev unzip <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoremove -y <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get clean <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/nginx-<span style="color:#e6db74">${</span>NGINX_VERSION<span style="color:#e6db74">}</span>* <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/ngx_brotli <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/ngx_cache_purge <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/libbrotli <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/openssl-1.0.2g <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/echo-nginx-module-0.60<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> DOCKERIZE_VERSION v0.3.0<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> ln -sf /dev/stdout /var/log/nginx/access.log <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ln -sf /dev/stderr /var/log/nginx/error.log<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ADD</span> . /opt/nginx/<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> PUID<span style="color:#f92672">=</span><span style="color:#ae81ff">1000</span>
-<span style="color:#66d9ef">RUN</span> usermod -u <span style="color:#e6db74">${</span>PUID<span style="color:#e6db74">}</span> www-data<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 80 443</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> dockerize -template /opt/nginx/conf.d/main.tmpl:/opt/nginx/conf.d/main-gen.conf -template /opt/nginx/conf.d/landing.tmpl:/opt/nginx/conf.d/landing-gen.conf nginx<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>Для сборки образа, находясь в каталоге с Dockerfile, запускаем команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build -t nginx-test:latest .
-</code></pre></div><p>Проверим наличие нового образа после сборки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images nginx-test 
-REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-nginx-test          latest              43bf91aeb416        <span style="color:#ae81ff">3</span> minutes ago       <span style="color:#ae81ff">732</span> MB
-</code></pre></div><p>Размер образа составляет целых 732 MB! Размер, конечно, не столь важен, если мы говорим про образы использующиеся только на локальной машине. Но это становится проблемой, когда нужно постоянно скачивать/отправлять эти образы через интернет.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> debian:jessie</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> NGINX_VERSION<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>.11.10<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> OPENSSL_VERSION<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>.0.2g<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> NGX_CACHE_PURGE_VERSION<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>.3<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get update <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get install -y <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    build-essential <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    automake <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    autoconf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    libtool <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    openssl <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    zlib1g-dev <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    libpcre3 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    libpcre3-dev <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    libgeoip-dev <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    unzip <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    wget <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    git <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    curl<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> cd /tmp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> git clone https://github.com/bagder/libbrotli <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> cd libbrotli <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ./autogen.sh <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ./configure <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> make <span style="color:#f92672">&amp;&amp;</span> make install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> cd /tmp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> git clone https://github.com/google/ngx_brotli <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget -qO - https://www.openssl.org/source/openssl-<span style="color:#e6db74">${</span>OPENSSL_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       | tar xzf  - -C /tmp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget http://labs.frickle.com/files/ngx_cache_purge-$NGX_CACHE_PURGE_VERSION.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> tar -zxvf ngx_cache_purge-$NGX_CACHE_PURGE_VERSION.tar.gz <span style="color:#f92672">&amp;&amp;</span> mv ngx_cache_purge-$NGX_CACHE_PURGE_VERSION ngx_cache_purge <span style="color:#f92672">&amp;&amp;</span> rm ngx_cache_purge-$NGX_CACHE_PURGE_VERSION.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget https://github.com/openresty/echo-nginx-module/archive/v0.60.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> tar -zxvf v0.60.tar.gz <span style="color:#f92672">&amp;&amp;</span> rm v0.60.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> mkdir -p /var/cache/nginx/client_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> wget http://nginx.org/download/nginx-<span style="color:#e6db74">${</span>NGINX_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> tar -xvzf nginx-<span style="color:#e6db74">${</span>NGINX_VERSION<span style="color:#e6db74">}</span>.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> cd /tmp/ngx_brotli <span style="color:#f92672">&amp;&amp;</span> git submodule update --init <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> cd /tmp/nginx-<span style="color:#e6db74">${</span>NGINX_VERSION<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ./configure <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --prefix<span style="color:#f92672">=</span>/opt/nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --sbin-path<span style="color:#f92672">=</span>/usr/sbin/nginx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --modules-path<span style="color:#f92672">=</span>/usr/lib64/nginx/modules <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --conf-path<span style="color:#f92672">=</span>/opt/nginx/nginx.conf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --error-log-path<span style="color:#f92672">=</span>/var/log/nginx/error.log <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-log-path<span style="color:#f92672">=</span>/var/log/nginx/access.log <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --pid-path<span style="color:#f92672">=</span>/var/run/nginx.pid <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --lock-path<span style="color:#f92672">=</span>/var/run/nginx.lock <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-client-body-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/client_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-proxy-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/proxy_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-fastcgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/fastcgi_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-uwsgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/uwsgi_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --http-scgi-temp-path<span style="color:#f92672">=</span>/var/cache/nginx/scgi_temp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --user<span style="color:#f92672">=</span>www-data <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --group<span style="color:#f92672">=</span>www-data <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_stub_status_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_geoip_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_ssl_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_realip_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_addition_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_sub_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_dav_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_gunzip_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_gzip_static_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_random_index_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_secure_link_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_auth_request_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --without-http_ssi_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>        --with-threads <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-stream <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-stream_ssl_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-file-aio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-http_v2_module <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-ipv6 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --with-cc-opt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>        --with-openssl<span style="color:#f92672">=</span>/tmp/openssl-<span style="color:#e6db74">${</span>OPENSSL_VERSION<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        --add-module<span style="color:#f92672">=</span>/tmp/ngx_brotli <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --add-module<span style="color:#f92672">=</span>/tmp/ngx_cache_purge <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --add-module<span style="color:#f92672">=</span>/tmp/echo-nginx-module-0.60 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> make <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> make install<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get remove -y build-essential zlib1g-dev libpcre3-dev unzip <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get autoremove -y <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> apt-get clean <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/nginx-<span style="color:#e6db74">${</span>NGINX_VERSION<span style="color:#e6db74">}</span>* <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/ngx_brotli <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/ngx_cache_purge <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/libbrotli <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/openssl-1.0.2g <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm -rf /tmp/echo-nginx-module-0.60<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> DOCKERIZE_VERSION v0.3.0<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> ln -sf /dev/stdout /var/log/nginx/access.log <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">&amp;&amp;</span> ln -sf /dev/stderr /var/log/nginx/error.log<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span> <span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ADD</span> . /opt/nginx/<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ARG</span> PUID<span style="color:#f92672">=</span><span style="color:#ae81ff">1000</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">RUN</span> usermod -u <span style="color:#e6db74">${</span>PUID<span style="color:#e6db74">}</span> www-data<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 80 443</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> dockerize -template /opt/nginx/conf.d/main.tmpl:/opt/nginx/conf.d/main-gen.conf -template /opt/nginx/conf.d/landing.tmpl:/opt/nginx/conf.d/landing-gen.conf nginx<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>Для сборки образа, находясь в каталоге с Dockerfile, запускаем команду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker build -t nginx-test:latest .
+</span></span></code></pre></div><p>Проверим наличие нового образа после сборки:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker images nginx-test 
+</span></span><span style="display:flex;"><span>REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+</span></span><span style="display:flex;"><span>nginx-test          latest              43bf91aeb416        <span style="color:#ae81ff">3</span> minutes ago       <span style="color:#ae81ff">732</span> MB
+</span></span></code></pre></div><p>Размер образа составляет целых 732 MB! Размер, конечно, не столь важен, если мы говорим про образы использующиеся только на локальной машине. Но это становится проблемой, когда нужно постоянно скачивать/отправлять эти образы через интернет.</p>
 <p>Для оптимизации docker-образов можно воспользоваться утилитой <a href="https://github.com/goldmann/docker-squash"><code>docker-squash</code></a>. Установить ее довольно просто:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">pip install docker-squash
-</code></pre></div><p>Данная утилита позволяет объединять слои docker-образов (не забываем о том, что каждая инструкция в Dockerfile создает новый слой, и в нашем образе содержится аж 16 слоев). Слои можно объединять частично (например, N последних или с X по Y) или полностью (как мы и поступим).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install docker-squash
+</span></span></code></pre></div><p>Данная утилита позволяет объединять слои docker-образов (не забываем о том, что каждая инструкция в Dockerfile создает новый слой, и в нашем образе содержится аж 16 слоев). Слои можно объединять частично (например, N последних или с X по Y) или полностью (как мы и поступим).</p>
 <p>Запускаем команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-squash -t nginx-test:squashed nginx-test:latest
-2017-03-20 13:42:39,562 root         INFO     docker-squash version 1.0.5, Docker 60ccb22, API 1.26...
-2017-03-20 13:42:39,562 root         INFO     Using v2 image format
-2017-03-20 13:42:39,582 root         INFO     Old image has <span style="color:#ae81ff">16</span> layers
-2017-03-20 13:42:39,582 root         INFO     Checking <span style="color:#66d9ef">if</span> squashing is necessary...
-2017-03-20 13:42:39,582 root         INFO     Attempting to squash last <span style="color:#ae81ff">16</span> layers...
-2017-03-20 13:42:39,582 root         INFO     Saving image sha256:43bf91aeb416da42a75d2a0b825567aaed9742200a081259c85fa2d10e96f2ed to /tmp/docker-squash-sUSIVv/old directory...
-2017-03-20 13:43:08,947 root         INFO     Image saved!
-2017-03-20 13:43:08,947 root         INFO     Squashing image <span style="color:#e6db74">&#39;nginx-test:latest&#39;</span>...
-2017-03-20 13:43:09,848 root         INFO     Starting squashing...
-2017-03-20 13:43:09,849 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/e0d4b8ce48d8fd1930b367ed7aff1f7795b74756ed4ed9062acd18e59f6bdf06/layer.tar&#39;</span>...
-2017-03-20 13:43:09,871 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/36675d6554a8ebdf72265fe739214048565925b04a739733b84caddb92702b02/layer.tar&#39;</span>...
-2017-03-20 13:43:10,189 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/968002289f33e062ba172190dadeb0046ec6d34407992cbf1ca239d93d23e684/layer.tar&#39;</span>...
-2017-03-20 13:43:10,191 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/23bc9170b2cb9a7aee432d93d651288fa506178be14fbadfb630bcda09977ad3/layer.tar&#39;</span>...
-2017-03-20 13:43:10,345 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/1d8ab492b6fbfd6d2c00c43cccac25053b2669f590261c58a071204977426dcd/layer.tar&#39;</span>...
-2017-03-20 13:43:11,172 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/dcda4589a5d2be254d81216d1b22a26e633d8cc36ed3f1a27117f1ce4e852baf/layer.tar&#39;</span>...
-2017-03-20 13:43:11,945 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/d904382d2c552061a5a4198a9e0dcb56fb8515eb0bdc17969b28b366edb8dfb6/layer.tar&#39;</span>...
-2017-03-20 13:43:20,774 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/c22ce97cf003214a558f7a68d9a0538e504321bae40a8fe6aad393bf5be114bc/layer.tar&#39;</span>...
-2017-03-20 13:43:36,312 root         INFO     Squashing finished!
-2017-03-20 13:43:37,681 root         INFO     New squashed image ID is 3c1cfae6f24c14d4417aa6e32bc96d41e2e2caf8fbd0a351b027e2619fc493b1
-2017-03-20 13:43:45,236 root         INFO     Image registered in Docker daemon as nginx-test:squashed
-2017-03-20 13:43:45,297 root         INFO     Done
-</code></pre></div><p>Проверим информацию о docker-образах с именем nginx-test (теперь их станет 2):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker images nginx-test 
-REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
-nginx-test          squashed            3c1cfae6f24c        About a minute ago   <span style="color:#ae81ff">399</span> MB
-nginx-test          latest              43bf91aeb416        <span style="color:#ae81ff">9</span> minutes ago        <span style="color:#ae81ff">732</span> MB
-</code></pre></div><p>Как видим, последний образ с тегом <code>squashed</code> уменьшился на 46%.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-squash -t nginx-test:squashed nginx-test:latest
+</span></span><span style="display:flex;"><span>2017-03-20 13:42:39,562 root         INFO     docker-squash version 1.0.5, Docker 60ccb22, API 1.26...
+</span></span><span style="display:flex;"><span>2017-03-20 13:42:39,562 root         INFO     Using v2 image format
+</span></span><span style="display:flex;"><span>2017-03-20 13:42:39,582 root         INFO     Old image has <span style="color:#ae81ff">16</span> layers
+</span></span><span style="display:flex;"><span>2017-03-20 13:42:39,582 root         INFO     Checking <span style="color:#66d9ef">if</span> squashing is necessary...
+</span></span><span style="display:flex;"><span>2017-03-20 13:42:39,582 root         INFO     Attempting to squash last <span style="color:#ae81ff">16</span> layers...
+</span></span><span style="display:flex;"><span>2017-03-20 13:42:39,582 root         INFO     Saving image sha256:43bf91aeb416da42a75d2a0b825567aaed9742200a081259c85fa2d10e96f2ed to /tmp/docker-squash-sUSIVv/old directory...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:08,947 root         INFO     Image saved!
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:08,947 root         INFO     Squashing image <span style="color:#e6db74">&#39;nginx-test:latest&#39;</span>...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:09,848 root         INFO     Starting squashing...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:09,849 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/e0d4b8ce48d8fd1930b367ed7aff1f7795b74756ed4ed9062acd18e59f6bdf06/layer.tar&#39;</span>...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:09,871 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/36675d6554a8ebdf72265fe739214048565925b04a739733b84caddb92702b02/layer.tar&#39;</span>...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:10,189 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/968002289f33e062ba172190dadeb0046ec6d34407992cbf1ca239d93d23e684/layer.tar&#39;</span>...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:10,191 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/23bc9170b2cb9a7aee432d93d651288fa506178be14fbadfb630bcda09977ad3/layer.tar&#39;</span>...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:10,345 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/1d8ab492b6fbfd6d2c00c43cccac25053b2669f590261c58a071204977426dcd/layer.tar&#39;</span>...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:11,172 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/dcda4589a5d2be254d81216d1b22a26e633d8cc36ed3f1a27117f1ce4e852baf/layer.tar&#39;</span>...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:11,945 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/d904382d2c552061a5a4198a9e0dcb56fb8515eb0bdc17969b28b366edb8dfb6/layer.tar&#39;</span>...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:20,774 root         INFO     Squashing file <span style="color:#e6db74">&#39;/tmp/docker-squash-sUSIVv/old/c22ce97cf003214a558f7a68d9a0538e504321bae40a8fe6aad393bf5be114bc/layer.tar&#39;</span>...
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:36,312 root         INFO     Squashing finished!
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:37,681 root         INFO     New squashed image ID is 3c1cfae6f24c14d4417aa6e32bc96d41e2e2caf8fbd0a351b027e2619fc493b1
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:45,236 root         INFO     Image registered in Docker daemon as nginx-test:squashed
+</span></span><span style="display:flex;"><span>2017-03-20 13:43:45,297 root         INFO     Done
+</span></span></code></pre></div><p>Проверим информацию о docker-образах с именем nginx-test (теперь их станет 2):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker images nginx-test 
+</span></span><span style="display:flex;"><span>REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
+</span></span><span style="display:flex;"><span>nginx-test          squashed            3c1cfae6f24c        About a minute ago   <span style="color:#ae81ff">399</span> MB
+</span></span><span style="display:flex;"><span>nginx-test          latest              43bf91aeb416        <span style="color:#ae81ff">9</span> minutes ago        <span style="color:#ae81ff">732</span> MB
+</span></span></code></pre></div><p>Как видим, последний образ с тегом <code>squashed</code> уменьшился на 46%.</p>
 <p>Следует отметить, что docker-engine начиная с версии 1.13 в <strong>экспериментальном режиме</strong> содержит возможность сборки уже сжатых образов. Для этого в команду сборки необходимо добавить параметр <code>--squash</code>, например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build --squash -t nginx-test:late .
-Error response from daemon: squash is only supported with experimental mode
-</code></pre></div><p>Чтобы <strong>включить експериментальный режим docker-engine в Ubuntu 16.04</strong> необходимо в конфигурационном файле <code>/lib/systemd/system/docker.service</code> добавить параметр <code>--experimental=true</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker build --squash -t nginx-test:late .
+</span></span><span style="display:flex;"><span>Error response from daemon: squash is only supported with experimental mode
+</span></span></code></pre></div><p>Чтобы <strong>включить експериментальный режим docker-engine в Ubuntu 16.04</strong> необходимо в конфигурационном файле <code>/lib/systemd/system/docker.service</code> добавить параметр <code>--experimental=true</code>.</p>
 <p>В моем случае это выглядит так:</p>
-<pre><code>[Unit]
+<pre tabindex="0"><code>[Unit]
 Description=Docker Application Container Engine
 Documentation=https://docs.docker.com
 After=network.target docker.socket firewalld.service
@@ -310,29 +310,29 @@ KillMode=process
 [Install]
 WantedBy=multi-user.target
 </code></pre><p>После изменения конфигурационного файла выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo systemctl daemon-reload
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo systemctl restart docker
-</code></pre></div><p>Проверим информацию о версии docker-engine (следует обратить внимание на последнюю строку):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version
-Client:
- Version:      17.03.0-ce
- API version:  1.26
- Go version:   go1.7.5
- Git commit:   60ccb22
- Built:        Thu Feb <span style="color:#ae81ff">23</span> 11:02:43 <span style="color:#ae81ff">2017</span>
- OS/Arch:      linux/amd64
-
-Server:
- Version:      17.03.0-ce
- API version:  1.26 <span style="color:#f92672">(</span>minimum version 1.12<span style="color:#f92672">)</span>
- Go version:   go1.7.5
- Git commit:   60ccb22
- Built:        Thu Feb <span style="color:#ae81ff">23</span> 11:02:43 <span style="color:#ae81ff">2017</span>
- OS/Arch:      linux/amd64
- Experimental: true
-</code></pre></div><p>Теперь можно сразу собирать сжатые docker-образы командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker build --squash -t nginx-test:late .
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl daemon-reload
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl restart docker
+</span></span></code></pre></div><p>Проверим информацию о версии docker-engine (следует обратить внимание на последнюю строку):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker version
+</span></span><span style="display:flex;"><span>Client:
+</span></span><span style="display:flex;"><span> Version:      17.03.0-ce
+</span></span><span style="display:flex;"><span> API version:  1.26
+</span></span><span style="display:flex;"><span> Go version:   go1.7.5
+</span></span><span style="display:flex;"><span> Git commit:   60ccb22
+</span></span><span style="display:flex;"><span> Built:        Thu Feb <span style="color:#ae81ff">23</span> 11:02:43 <span style="color:#ae81ff">2017</span>
+</span></span><span style="display:flex;"><span> OS/Arch:      linux/amd64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Server:
+</span></span><span style="display:flex;"><span> Version:      17.03.0-ce
+</span></span><span style="display:flex;"><span> API version:  1.26 <span style="color:#f92672">(</span>minimum version 1.12<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> Go version:   go1.7.5
+</span></span><span style="display:flex;"><span> Git commit:   60ccb22
+</span></span><span style="display:flex;"><span> Built:        Thu Feb <span style="color:#ae81ff">23</span> 11:02:43 <span style="color:#ae81ff">2017</span>
+</span></span><span style="display:flex;"><span> OS/Arch:      linux/amd64
+</span></span><span style="display:flex;"><span> Experimental: true
+</span></span></code></pre></div><p>Теперь можно сразу собирать сжатые docker-образы командой:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker build --squash -t nginx-test:late .
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -424,7 +424,7 @@ Server:
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

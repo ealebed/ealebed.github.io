@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,18 +102,18 @@
 <p>Я знаю людей, которые любят создавать алиасы даже для таких команд, как <code>git clone</code> (например, <code>gc</code>). Спустя несколько месяцев можно напрочь забыть, как работать с полной версией команды, поэтому с алиасами лучше не перегибать и использовать их только для реально длинных команд.</p>
 <p>Мне довольно часто приходится запускать <code>docker-compose exec --user www-data workspace</code> за которой следует команда, которая выполняется внутри контейнера.</p>
 <p>Например:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose exec --user www-data workspace sh -c <span style="color:#e6db74">&#34;composer install -vv&#34;</span>
-</code></pre></div><p>или</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose exec --user www-data workspace ./zf cache clean-modified-content
-</code></pre></div><p>Частое использование столь длинных команд не может не раздражать, поэтому самое время написать bash-функцию, которая будет работать как алиас. Открываем на редактирование файл <code>~/.bashrc</code> (или отдельный файл <code>.bash_aliases</code>, если он у вас есть), а затем добавляем в него следующую функцию:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dcw<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-  docker-compose exec --user www-data workspace $@
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Параметр <code>$@</code> принимает все аргументы, переданные функции. Теперь я могу делать так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dcw sh -c <span style="color:#e6db74">&#34;composer install -vv&#34;</span>
-</code></pre></div><p>Вышеизложенное будет также работать, если вместо bash-функции использовать алиас, но для алиасов мы рассмотрим другой пример. В файле <code>~/.bashrc</code> можно добавить строку:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">alias up<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;docker-compose up&#39;</span>
-</code></pre></div><p>Думаю, объяснения излишни.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose exec --user www-data workspace sh -c <span style="color:#e6db74">&#34;composer install -vv&#34;</span>
+</span></span></code></pre></div><p>или</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose exec --user www-data workspace ./zf cache clean-modified-content
+</span></span></code></pre></div><p>Частое использование столь длинных команд не может не раздражать, поэтому самое время написать bash-функцию, которая будет работать как алиас. Открываем на редактирование файл <code>~/.bashrc</code> (или отдельный файл <code>.bash_aliases</code>, если он у вас есть), а затем добавляем в него следующую функцию:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dcw<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  docker-compose exec --user www-data workspace $@
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Параметр <code>$@</code> принимает все аргументы, переданные функции. Теперь я могу делать так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dcw sh -c <span style="color:#e6db74">&#34;composer install -vv&#34;</span>
+</span></span></code></pre></div><p>Вышеизложенное будет также работать, если вместо bash-функции использовать алиас, но для алиасов мы рассмотрим другой пример. В файле <code>~/.bashrc</code> можно добавить строку:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>alias up<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;docker-compose up&#39;</span>
+</span></span></code></pre></div><p>Думаю, объяснения излишни.</p>
 <p>Кроме того, можно использовать утилиту <code>make</code> для управления docker-контейнерами как описано в <a href="https://ealebed.github.io/posts/2017/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-make-%D0%B4%D0%BB%D1%8F-%D1%83%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F-docker-%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%B9%D0%BD%D0%B5%D1%80%D0%B0%D0%BC%D0%B8/">этой статье</a>.</p>
                 </section>
             </article>
@@ -206,7 +206,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

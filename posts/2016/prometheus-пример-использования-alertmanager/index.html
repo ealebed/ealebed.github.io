@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,24 +106,24 @@
 <p>Функция <code>predict_linear()</code> в <strong>системе мониторинга Prometheus</strong> позволяет получить предупреждение когда диск будет заполнен, например, в течении 4 часов.</p>
 <p><strong>Примечание.</strong> Несложно догадаться, что название функции происходит от английского to predict — предсказывать.</p>
 <p>Выглядеть это будет примерно так:</p>
-<pre><code>ALERT DiskWillFillIn4Hours
-  IF predict_linear(node_filesystem_free{job='node'}[1h], 4*3600) &lt; 0
+<pre tabindex="0"><code>ALERT DiskWillFillIn4Hours
+  IF predict_linear(node_filesystem_free{job=&#39;node&#39;}[1h], 4*3600) &lt; 0
   FOR 5m
   LABELS {
-    severity=&quot;page&quot;
+    severity=&#34;page&#34;
   }
 </code></pre><p>Рассмотрим данный пример подробнее. В первой строке</p>
-<pre><code>ALERT DiskWillFillIn4Hours
+<pre tabindex="0"><code>ALERT DiskWillFillIn4Hours
 </code></pre><p>начало описания уведомления и его название. Вторая строка — самая важная</p>
-<pre><code>IF predict_linear(node_filesystem_free{job='node'}[1h], 4*3600) &lt; 0
+<pre tabindex="0"><code>IF predict_linear(node_filesystem_free{job=&#39;node&#39;}[1h], 4*3600) &lt; 0
 </code></pre><p>Выражение <code>node_filesystem_free{job='node'}[1h]</code> вычисляет динамику заполнения диска за последний час и с помощью <code>predict_linear()</code> прогнозирует заполненность диска на следующие 4 часа (4 * 3600 секунд), и если свободного места предположительно остается меньше 0, то будет отправлено предупреждение.</p>
 <p><strong>Примечание.</strong> Способ отправки предупреждения будет зависеть от ваших индивидуальных настроек <code>alertmanager</code> - это может быть письмо или смс-сообщение.</p>
 <p>Строка</p>
-<pre><code>FOR 5m
+<pre tabindex="0"><code>FOR 5m
 </code></pre><p>позволяет подождать 5 минут перед отправкой предупреждения, для того чтобы исключить из прогнозирования внезапные и аномальные всплески. Метки (<code>LABELS</code>) вы можете добавить по своему вкусу и необходимости.</p>
 <p>Все это можно поместить в файл правил (назовем его <code>node.rules</code>) и дописать путь к этому файлу в конфиг <strong>Prometheus</strong> (<code>prometheus.yml</code>):</p>
-<pre><code>global:
-  scrape_interval: &quot;15s&quot;
+<pre tabindex="0"><code>global:
+  scrape_interval: &#34;15s&#34;
  
 # Paths are relative to the configuration file.
 rule_files:
@@ -225,7 +225,7 @@ scrape_configs:
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,9 +101,9 @@
                     <p><strong>DRBD</strong> — распределённое реплицируемое блочное устройство, которое используется для построения отказоустойчивых кластеров под управлением ОС Linux. <strong>DRBD</strong> отражает все операции с блочным устройством по сети, поэтому принято считать что это сетевой RAID-1.</p>
 <p>Больше информации о <strong>DRBD</strong> можно найти <a href="http://xgu.ru/wiki/DRBD">здесь</a>, а мы в данной статье разберемся как восстанавливать блочное устройство после <a href="https://en.wikipedia.org/wiki/Split-brain_(computing)">split brain</a>.</p>
 <p>Из-за возникновения split brain на обоих хостах DRBD-ресурсы находятся в режиме <code>Primary</code>, а состояние соединения <code>StandAlone</code>. В <code>/var/log/kern.log</code> можно увидеть такие строки:</p>
-<pre><code>kernel: block drbd0: Split-Brain detected, dropping connection!
+<pre tabindex="0"><code>kernel: block drbd0: Split-Brain detected, dropping connection!
 </code></pre><p>Смотрим состояние <strong>DRBD</strong> на первом хосте:</p>
-<pre><code>cat /proc/drbd 
+<pre tabindex="0"><code>cat /proc/drbd 
 version: 8.3.11 (api:88/proto:86-96)
 srcversion: F937DCB2E5D83C6CCE4A6C9 
  0: cs:StandAlone ro:Primary/Unknown ds:UpToDate/DUnknown C r-----
@@ -112,7 +112,7 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
  2: cs:StandAlone ro:Primary/Unknown ds:UpToDate/DUnknown C r-----
     ns:499963084 nr:1132592 dw:501095676 dr:857543433 al:2345239 bm:941 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 </code></pre><p>на втором:</p>
-<pre><code>cat /proc/drbd 
+<pre tabindex="0"><code>cat /proc/drbd 
 version: 8.3.11 (api:88/proto:86-96)
 srcversion: F937DCB2E5D83C6CCE4A6C9 
  0: cs:StandAlone ro:Primary/Unknown ds:UpToDate/DUnknown C r-----
@@ -124,17 +124,17 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
 <ul>
 <li>перевести один из хостов в режим <code>Secondary</code> и отменить на нем все внесенные изменения, выполнив следующие команды:</li>
 </ul>
-<pre><code>drbdadm secondary all
-</code></pre><pre><code>drbdadm disconnect all
-</code></pre><pre><code>drbdadm -- --discard-my-data connect all
+<pre tabindex="0"><code>drbdadm secondary all
+</code></pre><pre tabindex="0"><code>drbdadm disconnect all
+</code></pre><pre tabindex="0"><code>drbdadm -- --discard-my-data connect all
 </code></pre><ul>
 <li>второй хост перевести в режим <code>Primary</code> и отключить/подключить ресурсы такими командами:</li>
 </ul>
-<pre><code>drbdadm primary all
-</code></pre><pre><code>drbdadm disconnect all
-</code></pre><pre><code>drbdadm connect all
+<pre tabindex="0"><code>drbdadm primary all
+</code></pre><pre tabindex="0"><code>drbdadm disconnect all
+</code></pre><pre tabindex="0"><code>drbdadm connect all
 </code></pre><p>Проблема решена, после завершения синхронизации состояние <strong>DRBD</strong> на первом хосте:</p>
-<pre><code>cat /proc/drbd 
+<pre tabindex="0"><code>cat /proc/drbd 
 version: 8.3.11 (api:88/proto:86-96)
 srcversion: F937DCB2E5D83C6CCE4A6C9 
  0: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
@@ -143,7 +143,7 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
  2: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
     ns:500025956 nr:1132592 dw:501158548 dr:857725017 al:2345912 bm:941 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 </code></pre><p>на втором:</p>
-<pre><code>cat /proc/drbd 
+<pre tabindex="0"><code>cat /proc/drbd 
 version: 8.3.11 (api:88/proto:86-96)
 srcversion: F937DCB2E5D83C6CCE4A6C9 
  0: cs:Connected ro:Secondary/Primary ds:UpToDate/UpToDate C r-----
@@ -243,7 +243,7 @@ srcversion: F937DCB2E5D83C6CCE4A6C9
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

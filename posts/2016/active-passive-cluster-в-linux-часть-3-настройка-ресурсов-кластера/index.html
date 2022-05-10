@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,101 +106,101 @@
 <p>Пришло время заняться <strong>настройкой ресурсов кластера</strong>, объединить их в группы и определить порядок запуска — давайте разберемся!</p>
 <p><strong>Примечание.</strong> С точки зрения кластера все сущности, которые мы будем использовать — сервисы, службы, точки монтирования, тома и разделы — это ресурсы, поэтому в данной статье под словом «ресурс» мы понимаем все, что находится под управлением кластера.</p>
 <p>Создаем ресурсы drbd-разделов (база данных и пользовательские файлы). Называть ресурсы будем следующим образом: <code>drbd_&lt;имя-ресурса-в-конфиге-/etc/drbd.d/&gt;</code>. Следовательно, у нас будет два ресурса: <code>drbd_mysql</code> и <code>drbd_www</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive drbd_mysql ocf:linbit:drbd params drbd_resource<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;mysql&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>op monitor interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;60s&#34;</span> op start interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span> op stop interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span> op monitor role<span style="color:#f92672">=</span>Master interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10s&#34;</span> op monitor role<span style="color:#f92672">=</span>Slave interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;30s&#34;</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive drbd_www ocf:linbit:drbd params drbd_resource<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;www&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>op monitor interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;60s&#34;</span> op start interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span> op stop interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span> op monitor role<span style="color:#f92672">=</span>Master interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10s&#34;</span> op monitor role<span style="color:#f92672">=</span>Slave interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;30s&#34;</span>
-</code></pre></div><p>Создаем определение Мастер/Слейв для созданных drbd-ресурсов в первом пункте. Называть ресурсы будем следующим образом: <code>ms_drbd_&lt;имя-ресурса-в-конфиге-/etc/drbd.d/&gt;</code>. Следовательно, у нас будет <code>ms_drbd_mysql</code> и <code>ms_drbd_www</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure ms ms_drbd_mysql drbd_mysql meta master-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> master-node-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>clone-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;2&#34;</span> clone-node-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> notify<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure ms ms_drbd_www drbd_www meta master-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> master-node-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>clone-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;2&#34;</span> clone-node-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> notify<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>
-</code></pre></div><p>Создаем точки монтирования drbd-разделов. Называть их будем следующим образом: <code>fs_&lt;имя-ресурса-в-конфиге-/etc/drbd.d/&gt;</code>. Следовательно, у нас будет два ресурса — <code>fs_mysql</code> и <code>fs_www</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive fs_mysql ocf:heartbeat:Filesystem params device<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/dev/drbd0&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>directory<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/lib/mysql&#34;</span> fstype<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ext4&#34;</span> options<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;noatime&#34;</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive fs_www ocf:heartbeat:Filesystem params device<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/dev/drbd2&#34;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>directory<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/srv/www&#34;</span> fstype<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ext4&#34;</span> options<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;noatime&#34;</span>
-</code></pre></div><p>Настраиваем ресурсы отдельных служб/сервисов. Все ресурсы, кроме отказоустойчивого ip-адреса, будем называть так же, как они называются в каталоге <code>/etc/init.d/</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive drbd_mysql ocf:linbit:drbd params drbd_resource<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;mysql&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>op monitor interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;60s&#34;</span> op start interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span> op stop interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span> op monitor role<span style="color:#f92672">=</span>Master interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10s&#34;</span> op monitor role<span style="color:#f92672">=</span>Slave interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;30s&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive drbd_www ocf:linbit:drbd params drbd_resource<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;www&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>op monitor interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;60s&#34;</span> op start interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span> op stop interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span> op monitor role<span style="color:#f92672">=</span>Master interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10s&#34;</span> op monitor role<span style="color:#f92672">=</span>Slave interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;30s&#34;</span>
+</span></span></code></pre></div><p>Создаем определение Мастер/Слейв для созданных drbd-ресурсов в первом пункте. Называть ресурсы будем следующим образом: <code>ms_drbd_&lt;имя-ресурса-в-конфиге-/etc/drbd.d/&gt;</code>. Следовательно, у нас будет <code>ms_drbd_mysql</code> и <code>ms_drbd_www</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure ms ms_drbd_mysql drbd_mysql meta master-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> master-node-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>clone-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;2&#34;</span> clone-node-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> notify<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure ms ms_drbd_www drbd_www meta master-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> master-node-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>clone-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;2&#34;</span> clone-node-max<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> notify<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>
+</span></span></code></pre></div><p>Создаем точки монтирования drbd-разделов. Называть их будем следующим образом: <code>fs_&lt;имя-ресурса-в-конфиге-/etc/drbd.d/&gt;</code>. Следовательно, у нас будет два ресурса — <code>fs_mysql</code> и <code>fs_www</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive fs_mysql ocf:heartbeat:Filesystem params device<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/dev/drbd0&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>directory<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/lib/mysql&#34;</span> fstype<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ext4&#34;</span> options<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;noatime&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive fs_www ocf:heartbeat:Filesystem params device<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/dev/drbd2&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>directory<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/srv/www&#34;</span> fstype<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ext4&#34;</span> options<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;noatime&#34;</span>
+</span></span></code></pre></div><p>Настраиваем ресурсы отдельных служб/сервисов. Все ресурсы, кроме отказоустойчивого ip-адреса, будем называть так же, как они называются в каталоге <code>/etc/init.d/</code>.</p>
 <p>Отказоустойчивый ip-адрес. Назовем ресурс <code>failover_ip</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive failover_ip ocf:heartbeat:IPaddr2 params ip<span style="color:#f92672">=</span>192.168.0.16 nic<span style="color:#f92672">=</span>eth1
-</code></pre></div><p>Сервис <code>mysql</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive mysql lsb:mysql op start interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;900s&#34;</span>
-</code></pre></div><p>Сервис <code>sphinxsearch:</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive sphinxsearch lsb:sphinxsearch op start interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span>
-</code></pre></div><p>Сервис <code>gearman-job-server</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive gearman-job-server lsb:gearman-job-server
-</code></pre></div><p>Сервис <code>nfs-kernel-server</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive nfs-kernel-server lsb:nfs-kernel-server
-</code></pre></div><p>Сервис <code>nfs-common</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive nfs-common lsb:nfs-common
-</code></pre></div><p>Организуем созданные ресурсы служб/сервисов в группы. Будет две группы ресурсов, запуск которых будет зависеть от состояния соответственных drbd-ресурсов (например, запускать <code>nfs-kernel-server</code> нужно после того как drbd-ресурс <code>www</code> был запущен, получил состояние “Primary” и был примонтирован в соответствующую точку монтирования). Будем называть группы ресурсов следующим образом: <code>group_&lt;имя-ресурса-в-конфиге-/etc/drbd.d/&gt;</code>. Следовательно у нас будет два ресурса: <code>group_mysql</code> и <code>group_www</code>. Запуск ресурсов в группе происходит в том порядке, в котором они перечислены.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive failover_ip ocf:heartbeat:IPaddr2 params ip<span style="color:#f92672">=</span>192.168.0.16 nic<span style="color:#f92672">=</span>eth1
+</span></span></code></pre></div><p>Сервис <code>mysql</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive mysql lsb:mysql op start interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;900s&#34;</span>
+</span></span></code></pre></div><p>Сервис <code>sphinxsearch:</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive sphinxsearch lsb:sphinxsearch op start interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;240s&#34;</span>
+</span></span></code></pre></div><p>Сервис <code>gearman-job-server</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive gearman-job-server lsb:gearman-job-server
+</span></span></code></pre></div><p>Сервис <code>nfs-kernel-server</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive nfs-kernel-server lsb:nfs-kernel-server
+</span></span></code></pre></div><p>Сервис <code>nfs-common</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive nfs-common lsb:nfs-common
+</span></span></code></pre></div><p>Организуем созданные ресурсы служб/сервисов в группы. Будет две группы ресурсов, запуск которых будет зависеть от состояния соответственных drbd-ресурсов (например, запускать <code>nfs-kernel-server</code> нужно после того как drbd-ресурс <code>www</code> был запущен, получил состояние “Primary” и был примонтирован в соответствующую точку монтирования). Будем называть группы ресурсов следующим образом: <code>group_&lt;имя-ресурса-в-конфиге-/etc/drbd.d/&gt;</code>. Следовательно у нас будет два ресурса: <code>group_mysql</code> и <code>group_www</code>. Запуск ресурсов в группе происходит в том порядке, в котором они перечислены.</p>
 <p>В группу <code>group_mysql</code> определим ресурсы <code>fs_mysql</code> <code>failover_ip</code> <code>mysql</code> <code>sphinxsearch</code> <code>gearman-job-server</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure group group_mysql fs_mysql failover_ip mysql sphinxsearch gearman-job-server
-</code></pre></div><p>В группу <code>group_www</code> определим ресурсы <code>fs_www</code> <code>nfs-kernel-server</code> <code>nfs-common</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure group group_www fs_www nfs-kernel-server nfs-common
-</code></pre></div><p>Монтировать ресурсы будем на той ноде, где drbd-ресурсы находятся в состоянии Мастер. Назовем этот ресурс <code>cluster_resources</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure colocation cluster_resources inf: fs_www ms_drbd_www:Master fs_mysql ms_drbd_mysql:Master
-</code></pre></div><p>Даем указание группам ресурсов стартовать после старта соответственных drdb-разделов. Назовем этот ресурс <code>all_after_drbd</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure order all_after_drbd inf: ms_drbd_www:promote group_www:start ms_drbd_mysql:promote group_mysql:start
-</code></pre></div><p>Устанавливаем предпочтение запуска ресурсов Мастер/Слейв (например <code>ms_drbd_mysql</code>) с весом 100 на db1 и весом 50 на db2:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure location prefer_mysql_db1 ms_drbd_mysql 100: db1; <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>crm configure location prefer_mysql_db2 ms_drbd_mysql 50: db2; <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>crm configure location prefer_www_db1 ms_drbd_www 100: db1; <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>crm configure location prefer_www_db2 ms_drbd_www 50: db2
-</code></pre></div><p>Устанавливаем предпочтение запуска групп ресурсов с весом 100 на db1 и весом 50 на db2:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure location prefer_group_mysql_db1 group_mysql 100: db1; <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>crm configure location prefer_group_mysql_db2 group_mysql 50: db2; <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>crm configure location prefer_group_www_db1 group_www 100: db1; <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>crm configure location prefer_group_www_db2 group_www 50: db2
-</code></pre></div><p>Настраиваем ресурс <code>pingnet</code>, для проверки доступности удаленных хостов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure primitive pingnet ocf:pacemaker:ping <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>params host_list<span style="color:#f92672">=</span>192.168.0.1 host_list<span style="color:#f92672">=</span>192.168.0.7 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>multiplier<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;111&#34;</span> op monitor interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;60s&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;120s&#34;</span>
-</code></pre></div><p>Этот ресурс должен быть “клоном” и работать одновременно на двух нодах, для этого выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure clone pingnetclone pingnet meta interleave<span style="color:#f92672">=</span>true
-</code></pre></div><p>Устанавливаем одинаковый приоритет (вес) для одновременного запуска ресурса на обоих нодах:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure location prefer_clonepingnet_db1 pingnetclone 100: db1; <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>crm configure location prefer_clonepingnet_db2 pingnetclone 100: db2
-</code></pre></div><p>Никогда не запускать ресурсы на нодах, где переменная <code>pingd</code> не определена или значение переменной равно 0:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure location never_www ms_drbd_www rule -inf: not_defined pingd or pingd lte 0; <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>crm configure location never_mysql ms_drbd_mysql rule -inf: not_defined pingd or pingd lte <span style="color:#ae81ff">0</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">crm configure location never_group_mysql group_mysql rule -inf: not_defined pingd or pingd lte 0; <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>crm configure location never_group_www group_www rule -inf: not_defined pingd or pingd lte <span style="color:#ae81ff">0</span>
-</code></pre></div><p><strong>Примечание.</strong> Ресурс <code>pingnet</code> используем для проверки «живучести» веб-серверов. Если наши веб-сервера недоступны, то ресурсы кластера будут остановлены.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure group group_mysql fs_mysql failover_ip mysql sphinxsearch gearman-job-server
+</span></span></code></pre></div><p>В группу <code>group_www</code> определим ресурсы <code>fs_www</code> <code>nfs-kernel-server</code> <code>nfs-common</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure group group_www fs_www nfs-kernel-server nfs-common
+</span></span></code></pre></div><p>Монтировать ресурсы будем на той ноде, где drbd-ресурсы находятся в состоянии Мастер. Назовем этот ресурс <code>cluster_resources</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure colocation cluster_resources inf: fs_www ms_drbd_www:Master fs_mysql ms_drbd_mysql:Master
+</span></span></code></pre></div><p>Даем указание группам ресурсов стартовать после старта соответственных drdb-разделов. Назовем этот ресурс <code>all_after_drbd</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure order all_after_drbd inf: ms_drbd_www:promote group_www:start ms_drbd_mysql:promote group_mysql:start
+</span></span></code></pre></div><p>Устанавливаем предпочтение запуска ресурсов Мастер/Слейв (например <code>ms_drbd_mysql</code>) с весом 100 на db1 и весом 50 на db2:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure location prefer_mysql_db1 ms_drbd_mysql 100: db1; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>crm configure location prefer_mysql_db2 ms_drbd_mysql 50: db2; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>crm configure location prefer_www_db1 ms_drbd_www 100: db1; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>crm configure location prefer_www_db2 ms_drbd_www 50: db2
+</span></span></code></pre></div><p>Устанавливаем предпочтение запуска групп ресурсов с весом 100 на db1 и весом 50 на db2:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure location prefer_group_mysql_db1 group_mysql 100: db1; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>crm configure location prefer_group_mysql_db2 group_mysql 50: db2; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>crm configure location prefer_group_www_db1 group_www 100: db1; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>crm configure location prefer_group_www_db2 group_www 50: db2
+</span></span></code></pre></div><p>Настраиваем ресурс <code>pingnet</code>, для проверки доступности удаленных хостов:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure primitive pingnet ocf:pacemaker:ping <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>params host_list<span style="color:#f92672">=</span>192.168.0.1 host_list<span style="color:#f92672">=</span>192.168.0.7 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>multiplier<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;111&#34;</span> op monitor interval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;60s&#34;</span> timeout<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;120s&#34;</span>
+</span></span></code></pre></div><p>Этот ресурс должен быть “клоном” и работать одновременно на двух нодах, для этого выполняем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure clone pingnetclone pingnet meta interleave<span style="color:#f92672">=</span>true
+</span></span></code></pre></div><p>Устанавливаем одинаковый приоритет (вес) для одновременного запуска ресурса на обоих нодах:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure location prefer_clonepingnet_db1 pingnetclone 100: db1; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>crm configure location prefer_clonepingnet_db2 pingnetclone 100: db2
+</span></span></code></pre></div><p>Никогда не запускать ресурсы на нодах, где переменная <code>pingd</code> не определена или значение переменной равно 0:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure location never_www ms_drbd_www rule -inf: not_defined pingd or pingd lte 0; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>crm configure location never_mysql ms_drbd_mysql rule -inf: not_defined pingd or pingd lte <span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>crm configure location never_group_mysql group_mysql rule -inf: not_defined pingd or pingd lte 0; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>crm configure location never_group_www group_www rule -inf: not_defined pingd or pingd lte <span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p><strong>Примечание.</strong> Ресурс <code>pingnet</code> используем для проверки «живучести» веб-серверов. Если наши веб-сервера недоступны, то ресурсы кластера будут остановлены.</p>
 <p>Проверим состояние кластера командой <code>crm_mon -1</code> или <code>crm status</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">============</span>
-Last updated: Mon Dec <span style="color:#ae81ff">14</span> 17:08:52 <span style="color:#ae81ff">2015</span>
-Last change: Thu Dec <span style="color:#ae81ff">10</span> 13:58:18 <span style="color:#ae81ff">2015</span> via cibadmin on db2
-Stack: openais
-Current DC: db2 - partition with quorum
-Version: 1.1.7-ee0730e13d124c3d58f00016c3376a1de5323cff
-<span style="color:#ae81ff">2</span> Nodes configured, <span style="color:#ae81ff">2</span> expected votes
-<span style="color:#ae81ff">14</span> Resources configured.
-<span style="color:#f92672">============</span>
-
-Online: <span style="color:#f92672">[</span> db1 db2 <span style="color:#f92672">]</span>
-
- Master/Slave Set: ms_drbd_mysql <span style="color:#f92672">[</span>drbd_mysql<span style="color:#f92672">]</span>
-     Masters: <span style="color:#f92672">[</span> db1 <span style="color:#f92672">]</span>
-     Slaves: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
- Master/Slave Set: ms_drbd_www <span style="color:#f92672">[</span>drbd_www<span style="color:#f92672">]</span>
-     Masters: <span style="color:#f92672">[</span> db1 <span style="color:#f92672">]</span>
-     Slaves: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
- Resource Group: group_mysql
-     fs_mysql	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db1
-     failover_ip	<span style="color:#f92672">(</span>ocf::heartbeat:IPaddr2<span style="color:#f92672">)</span>:	Started db1
-     mysql	<span style="color:#f92672">(</span>lsb:mysql<span style="color:#f92672">)</span>:	Started db1
-     sphinxsearch	<span style="color:#f92672">(</span>lsb:sphinxsearch<span style="color:#f92672">)</span>:	Started db1
-     gearman-job-server	<span style="color:#f92672">(</span>lsb:gearman-job-server<span style="color:#f92672">)</span>:	Started db1
- Resource Group: group_www
-     fs_www	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db1
-     nfs-kernel-server	<span style="color:#f92672">(</span>lsb:nfs-kernel-server<span style="color:#f92672">)</span>:	Started db1
-     nfs-common	<span style="color:#f92672">(</span>lsb:nfs-common<span style="color:#f92672">)</span>:	Started db1
- Clone Set: pingnetclone <span style="color:#f92672">[</span>pingnet<span style="color:#f92672">]</span>
-     Started: <span style="color:#f92672">[</span> db1 db2 <span style="color:#f92672">]</span>
-</code></pre></div><p>Как видим, ресурсы кластера корректно настроены и запущены на ноде db1 — как мы и планировали. На этом все, <strong>настройка Active/Passive Cluster из двух нод</strong> закончена.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">============</span>
+</span></span><span style="display:flex;"><span>Last updated: Mon Dec <span style="color:#ae81ff">14</span> 17:08:52 <span style="color:#ae81ff">2015</span>
+</span></span><span style="display:flex;"><span>Last change: Thu Dec <span style="color:#ae81ff">10</span> 13:58:18 <span style="color:#ae81ff">2015</span> via cibadmin on db2
+</span></span><span style="display:flex;"><span>Stack: openais
+</span></span><span style="display:flex;"><span>Current DC: db2 - partition with quorum
+</span></span><span style="display:flex;"><span>Version: 1.1.7-ee0730e13d124c3d58f00016c3376a1de5323cff
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span> Nodes configured, <span style="color:#ae81ff">2</span> expected votes
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">14</span> Resources configured.
+</span></span><span style="display:flex;"><span><span style="color:#f92672">============</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Online: <span style="color:#f92672">[</span> db1 db2 <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> Master/Slave Set: ms_drbd_mysql <span style="color:#f92672">[</span>drbd_mysql<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     Masters: <span style="color:#f92672">[</span> db1 <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     Slaves: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span> Master/Slave Set: ms_drbd_www <span style="color:#f92672">[</span>drbd_www<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     Masters: <span style="color:#f92672">[</span> db1 <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     Slaves: <span style="color:#f92672">[</span> db2 <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span> Resource Group: group_mysql
+</span></span><span style="display:flex;"><span>     fs_mysql	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db1
+</span></span><span style="display:flex;"><span>     failover_ip	<span style="color:#f92672">(</span>ocf::heartbeat:IPaddr2<span style="color:#f92672">)</span>:	Started db1
+</span></span><span style="display:flex;"><span>     mysql	<span style="color:#f92672">(</span>lsb:mysql<span style="color:#f92672">)</span>:	Started db1
+</span></span><span style="display:flex;"><span>     sphinxsearch	<span style="color:#f92672">(</span>lsb:sphinxsearch<span style="color:#f92672">)</span>:	Started db1
+</span></span><span style="display:flex;"><span>     gearman-job-server	<span style="color:#f92672">(</span>lsb:gearman-job-server<span style="color:#f92672">)</span>:	Started db1
+</span></span><span style="display:flex;"><span> Resource Group: group_www
+</span></span><span style="display:flex;"><span>     fs_www	<span style="color:#f92672">(</span>ocf::heartbeat:Filesystem<span style="color:#f92672">)</span>:	Started db1
+</span></span><span style="display:flex;"><span>     nfs-kernel-server	<span style="color:#f92672">(</span>lsb:nfs-kernel-server<span style="color:#f92672">)</span>:	Started db1
+</span></span><span style="display:flex;"><span>     nfs-common	<span style="color:#f92672">(</span>lsb:nfs-common<span style="color:#f92672">)</span>:	Started db1
+</span></span><span style="display:flex;"><span> Clone Set: pingnetclone <span style="color:#f92672">[</span>pingnet<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>     Started: <span style="color:#f92672">[</span> db1 db2 <span style="color:#f92672">]</span>
+</span></span></code></pre></div><p>Как видим, ресурсы кластера корректно настроены и запущены на ноде db1 — как мы и планировали. На этом все, <strong>настройка Active/Passive Cluster из двух нод</strong> закончена.</p>
                 </section>
             </article>
 
@@ -292,7 +292,7 @@ Online: <span style="color:#f92672">[</span> db1 db2 <span style="color:#f92672"
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

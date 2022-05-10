@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,122 +102,122 @@
 <p>В завершающей части знакомства с <code>Ansible</code> давайте разберемся с условиями и циклами, а также научимся организовывать playbook в роли!</p>
 <p>Для сокращения количества задач в наборах инструкций (playbook) разумно использовать циклы. Например, иногда требуется установить несколько пакетов на один и тот же удаленный хост или выполнить несколько операций над одним и тем же ресурсом.</p>
 <p>Рассмотрим простой playbook, который поможет установить несколько пакетов на удаленный сервер:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
-  <span style="color:#f92672">tasks</span>:
- 
-  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Install packages</span>
-    <span style="color:#f92672">apt</span>: <span style="color:#ae81ff">name={{ item }} state=latest</span>
-    <span style="color:#f92672">with_items</span>:
-    - <span style="color:#ae81ff">htop</span>
-    - <span style="color:#ae81ff">mytop</span>
-    - <span style="color:#ae81ff">wget</span>
-    <span style="color:#f92672">sudo</span>: <span style="color:#66d9ef">yes</span>
-</code></pre></div><p>В результате выполнения данного набора инструкций на удаленном хосте будут установлены пакеты, перечисленные в <code>with_items:</code>. Playbook будет запущен один раз, но модуль <code>apt</code> будет вызываться для каждого указанного пакета:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ansible-playbook install_packages.yml 
-
-PLAY <span style="color:#f92672">[</span>test<span style="color:#f92672">]</span> ******************************************************************* 
-
-GATHERING FACTS *************************************************************** 
-ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
-
-TASK: <span style="color:#f92672">[</span>Install packages<span style="color:#f92672">]</span> ****************************************************** 
-changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">(</span>item<span style="color:#f92672">=</span>htop,mytop,wget<span style="color:#f92672">)</span>
-
-PLAY RECAP ******************************************************************** 
-test-1                 : ok<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>    changed<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>    unreachable<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>    failed<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>   
-</code></pre></div><p>Создать нескольких пользователей и добавить их в определенные группы можно с помощью такого набора инструкций:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
-  <span style="color:#f92672">tasks</span>:
-   - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Add test users</span>
-     <span style="color:#f92672">user</span>: <span style="color:#ae81ff">name={{ item.name }} state=present groups={{ item.groups }}</span>
-     <span style="color:#f92672">with_items</span>:
-      - { <span style="color:#f92672">name: &#39;user1&#39;, groups</span>: <span style="color:#e6db74">&#39;adm&#39;</span>  }
-      - { <span style="color:#f92672">name: &#39;user2&#39;, groups</span>: <span style="color:#e6db74">&#39;lpadmin&#39;</span> }
-     <span style="color:#f92672">sudo</span>: <span style="color:#66d9ef">yes</span>
-</code></pre></div><p>Результат выполнения данного playbook будет выглядеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ansible-playbook add_users.yml 
-
-PLAY <span style="color:#f92672">[</span>test<span style="color:#f92672">]</span> ******************************************************************* 
-
-GATHERING FACTS *************************************************************** 
-ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
-
-TASK: <span style="color:#f92672">[</span>Add test users<span style="color:#f92672">]</span> ******************************************************** 
-changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">(</span>item<span style="color:#f92672">={</span><span style="color:#e6db74">&#39;name&#39;</span>: <span style="color:#e6db74">&#39;user1&#39;</span>, <span style="color:#e6db74">&#39;groups&#39;</span>: <span style="color:#e6db74">&#39;adm&#39;</span><span style="color:#f92672">})</span>
-changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">(</span>item<span style="color:#f92672">={</span><span style="color:#e6db74">&#39;name&#39;</span>: <span style="color:#e6db74">&#39;user2&#39;</span>, <span style="color:#e6db74">&#39;groups&#39;</span>: <span style="color:#e6db74">&#39;lpadmin&#39;</span><span style="color:#f92672">})</span>
-
-PLAY RECAP ******************************************************************** 
-test-1                 : ok<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>    changed<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>    unreachable<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>    failed<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>   
-</code></pre></div><p><strong>Примечание.</strong> Больше примеров с использованием циклов можно найти в <a href="http://docs.ansible.com/ansible/playbooks_loops.html">официальной документации</a> по <code>Ansible</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">tasks</span>:
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Install packages</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">apt</span>: <span style="color:#ae81ff">name={{ item }} state=latest</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">with_items</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">htop</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">mytop</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">wget</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">sudo</span>: <span style="color:#66d9ef">yes</span>
+</span></span></code></pre></div><p>В результате выполнения данного набора инструкций на удаленном хосте будут установлены пакеты, перечисленные в <code>with_items:</code>. Playbook будет запущен один раз, но модуль <code>apt</code> будет вызываться для каждого указанного пакета:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ansible-playbook install_packages.yml 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PLAY <span style="color:#f92672">[</span>test<span style="color:#f92672">]</span> ******************************************************************* 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GATHERING FACTS *************************************************************** 
+</span></span><span style="display:flex;"><span>ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TASK: <span style="color:#f92672">[</span>Install packages<span style="color:#f92672">]</span> ****************************************************** 
+</span></span><span style="display:flex;"><span>changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">(</span>item<span style="color:#f92672">=</span>htop,mytop,wget<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PLAY RECAP ******************************************************************** 
+</span></span><span style="display:flex;"><span>test-1                 : ok<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>    changed<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>    unreachable<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>    failed<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>   
+</span></span></code></pre></div><p>Создать нескольких пользователей и добавить их в определенные группы можно с помощью такого набора инструкций:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">tasks</span>:
+</span></span><span style="display:flex;"><span>   - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Add test users</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#f92672">user</span>: <span style="color:#ae81ff">name={{ item.name }} state=present groups={{ item.groups }}</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#f92672">with_items</span>:
+</span></span><span style="display:flex;"><span>      - { <span style="color:#f92672">name: &#39;user1&#39;, groups</span>: <span style="color:#e6db74">&#39;adm&#39;</span>  }
+</span></span><span style="display:flex;"><span>      - { <span style="color:#f92672">name: &#39;user2&#39;, groups</span>: <span style="color:#e6db74">&#39;lpadmin&#39;</span> }
+</span></span><span style="display:flex;"><span>     <span style="color:#f92672">sudo</span>: <span style="color:#66d9ef">yes</span>
+</span></span></code></pre></div><p>Результат выполнения данного playbook будет выглядеть так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ansible-playbook add_users.yml 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PLAY <span style="color:#f92672">[</span>test<span style="color:#f92672">]</span> ******************************************************************* 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GATHERING FACTS *************************************************************** 
+</span></span><span style="display:flex;"><span>ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TASK: <span style="color:#f92672">[</span>Add test users<span style="color:#f92672">]</span> ******************************************************** 
+</span></span><span style="display:flex;"><span>changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">(</span>item<span style="color:#f92672">={</span><span style="color:#e6db74">&#39;name&#39;</span>: <span style="color:#e6db74">&#39;user1&#39;</span>, <span style="color:#e6db74">&#39;groups&#39;</span>: <span style="color:#e6db74">&#39;adm&#39;</span><span style="color:#f92672">})</span>
+</span></span><span style="display:flex;"><span>changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">(</span>item<span style="color:#f92672">={</span><span style="color:#e6db74">&#39;name&#39;</span>: <span style="color:#e6db74">&#39;user2&#39;</span>, <span style="color:#e6db74">&#39;groups&#39;</span>: <span style="color:#e6db74">&#39;lpadmin&#39;</span><span style="color:#f92672">})</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PLAY RECAP ******************************************************************** 
+</span></span><span style="display:flex;"><span>test-1                 : ok<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>    changed<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>    unreachable<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>    failed<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>   
+</span></span></code></pre></div><p><strong>Примечание.</strong> Больше примеров с использованием циклов можно найти в <a href="http://docs.ansible.com/ansible/playbooks_loops.html">официальной документации</a> по <code>Ansible</code>.</p>
 <p><code>Ansible</code> выполняет задачи в порядке их следования в наборе инструкций, но бывают случаи, когда требуется выполнить только часть задач. В <a href="https://ealebed.github.io/posts/2015/%D0%B7%D0%BD%D0%B0%D0%BA%D0%BE%D0%BC%D1%81%D1%82%D0%B2%D0%BE-%D1%81-ansible-%D1%87%D0%B0%D1%81%D1%82%D1%8C-3-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5/">третьей части</a> нашего цикла мы уже пробовали правильно устанавливать web-сервер Apache на разные дистрибутивы с помощью переменных. Чтобы задачи выполнялись только в определенном случае, можно (и нужно) указывать условия с помощью <code>when:</code>.</p>
 <p>В условиях в <code>Ansible</code> для сравнения используются <code>==</code> (равно), <code>!=</code> (не равно), <code>&gt;</code> (больше), <code>&lt;</code> (меньше), <code>&gt;=</code> (больше равно), <code>&lt;=</code> (меньше равно). Можно также указать несколько условий с помощью операторов <code>and</code> (и) и <code>or</code> (или). Для проверки вхождения символа или подстроки в строку используются операторы <code>in</code> и <code>not</code>.</p>
 <p>Для проверки работы некоторых условий в <code>Ansible</code> создадим playbook следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
-  <span style="color:#f92672">tasks</span>:
- 
-  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Check OS family</span>
-    <span style="color:#f92672">debug</span>: <span style="color:#ae81ff">msg=&#34;This is my OS&#34;</span>
-    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">ansible_os_family == &#34;Debian&#34;</span>
- 
-  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Check if Apache2 is installed</span>
-    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">dpkg-query -W apache2</span>
-    <span style="color:#f92672">register</span>: <span style="color:#ae81ff">apache2_check</span>
- 
-  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Print message if apache installed</span>
-    <span style="color:#f92672">debug</span>: <span style="color:#ae81ff">msg=&#34;Apache2 is installed on remote host&#34;</span>
-    <span style="color:#f92672">when</span>: <span style="color:#e6db74">&#34;&#39;apache2&#39; in apache2_check.stdout&#34;</span>
- 
-  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Check if admin logged</span>
-    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">who</span>
-    <span style="color:#f92672">register</span>: <span style="color:#ae81ff">who_check</span>
- 
-  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Print message if user admin not logged</span>
-    <span style="color:#f92672">debug</span>: <span style="color:#ae81ff">msg=&#34;User admin is not logged on remote host&#34;</span>
-    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">not &#39;admin&#39; in who_check.stdout</span>
-</code></pre></div><p>Результат выполнения данного набора инструкций будет таким:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ansible-playbook debug.yml 
-
-PLAY <span style="color:#f92672">[</span>test<span style="color:#f92672">]</span> ******************************************************************* 
-
-GATHERING FACTS *************************************************************** 
-ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
-
-TASK: <span style="color:#f92672">[</span>Check OS family<span style="color:#f92672">]</span> ******************************************************* 
-ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">{</span>
-    <span style="color:#e6db74">&#34;msg&#34;</span>: <span style="color:#e6db74">&#34;This is my OS&#34;</span>
-<span style="color:#f92672">}</span>
-
-TASK: <span style="color:#f92672">[</span>Check <span style="color:#66d9ef">if</span> Apache2 is installed<span style="color:#f92672">]</span> ***************************************** 
-changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
-
-TASK: <span style="color:#f92672">[</span>Print message <span style="color:#66d9ef">if</span> apache installed<span style="color:#f92672">]</span> ************************************* 
-ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">{</span>
-    <span style="color:#e6db74">&#34;msg&#34;</span>: <span style="color:#e6db74">&#34;Apache2 is installed on remote host&#34;</span>
-<span style="color:#f92672">}</span>
-
-TASK: <span style="color:#f92672">[</span>Check <span style="color:#66d9ef">if</span> admin logged<span style="color:#f92672">]</span> ************************************************* 
-changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
-
-TASK: <span style="color:#f92672">[</span>Print message <span style="color:#66d9ef">if</span> user admin not logged<span style="color:#f92672">]</span> ******************************** 
-ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">{</span>
-    <span style="color:#e6db74">&#34;msg&#34;</span>: <span style="color:#e6db74">&#34;User admin is not logged on remote host&#34;</span>
-<span style="color:#f92672">}</span>
-
-PLAY RECAP ******************************************************************** 
-test-1                 : ok<span style="color:#f92672">=</span><span style="color:#ae81ff">6</span>    changed<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>    unreachable<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>    failed<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>   
-</code></pre></div><p>Напоследок у нас остается немного &ldquo;магии&rdquo;. В архитектуре проекта обычно сервера разделяются по своему предназначению и выполняют определенную роль - web-сервер, сервер баз данных, почтовый сервер и т. д. Каждому из серверов требуется отличающийся набор пакетов и настроек для правильного выполнения своей роли. С ростом количества серверов будет расти количество наборов инструкций (playbook), которые будут использоваться повторно.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">test</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">tasks</span>:
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Check OS family</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">debug</span>: <span style="color:#ae81ff">msg=&#34;This is my OS&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">ansible_os_family == &#34;Debian&#34;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Check if Apache2 is installed</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">dpkg-query -W apache2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">register</span>: <span style="color:#ae81ff">apache2_check</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Print message if apache installed</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">debug</span>: <span style="color:#ae81ff">msg=&#34;Apache2 is installed on remote host&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">when</span>: <span style="color:#e6db74">&#34;&#39;apache2&#39; in apache2_check.stdout&#34;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Check if admin logged</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">command</span>: <span style="color:#ae81ff">who</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">register</span>: <span style="color:#ae81ff">who_check</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Print message if user admin not logged</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">debug</span>: <span style="color:#ae81ff">msg=&#34;User admin is not logged on remote host&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">when</span>: <span style="color:#ae81ff">not &#39;admin&#39; in who_check.stdout</span>
+</span></span></code></pre></div><p>Результат выполнения данного набора инструкций будет таким:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ansible-playbook debug.yml 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PLAY <span style="color:#f92672">[</span>test<span style="color:#f92672">]</span> ******************************************************************* 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GATHERING FACTS *************************************************************** 
+</span></span><span style="display:flex;"><span>ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TASK: <span style="color:#f92672">[</span>Check OS family<span style="color:#f92672">]</span> ******************************************************* 
+</span></span><span style="display:flex;"><span>ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;msg&#34;</span>: <span style="color:#e6db74">&#34;This is my OS&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TASK: <span style="color:#f92672">[</span>Check <span style="color:#66d9ef">if</span> Apache2 is installed<span style="color:#f92672">]</span> ***************************************** 
+</span></span><span style="display:flex;"><span>changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TASK: <span style="color:#f92672">[</span>Print message <span style="color:#66d9ef">if</span> apache installed<span style="color:#f92672">]</span> ************************************* 
+</span></span><span style="display:flex;"><span>ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;msg&#34;</span>: <span style="color:#e6db74">&#34;Apache2 is installed on remote host&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TASK: <span style="color:#f92672">[</span>Check <span style="color:#66d9ef">if</span> admin logged<span style="color:#f92672">]</span> ************************************************* 
+</span></span><span style="display:flex;"><span>changed: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TASK: <span style="color:#f92672">[</span>Print message <span style="color:#66d9ef">if</span> user admin not logged<span style="color:#f92672">]</span> ******************************** 
+</span></span><span style="display:flex;"><span>ok: <span style="color:#f92672">[</span>test-1<span style="color:#f92672">]</span> <span style="color:#f92672">=</span>&gt; <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;msg&#34;</span>: <span style="color:#e6db74">&#34;User admin is not logged on remote host&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PLAY RECAP ******************************************************************** 
+</span></span><span style="display:flex;"><span>test-1                 : ok<span style="color:#f92672">=</span><span style="color:#ae81ff">6</span>    changed<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>    unreachable<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>    failed<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>   
+</span></span></code></pre></div><p>Напоследок у нас остается немного &ldquo;магии&rdquo;. В архитектуре проекта обычно сервера разделяются по своему предназначению и выполняют определенную роль - web-сервер, сервер баз данных, почтовый сервер и т. д. Каждому из серверов требуется отличающийся набор пакетов и настроек для правильного выполнения своей роли. С ростом количества серверов будет расти количество наборов инструкций (playbook), которые будут использоваться повторно.</p>
 <p><code>Ansible</code> позволяет удобно организовать и структурировать наборы инструкций в соответствии с ролями серверов. Пример структуры набора инструкций с ролями выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">---
-- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">servers</span>
-  <span style="color:#f92672">roles</span>:
-     - <span style="color:#ae81ff">web</span>
-     <span style="color:#ae81ff">– db</span>
-     - <span style="color:#ae81ff">post</span>
-</code></pre></div><p>Тогда файловая структура ролей может выглядеть таким образом:</p>
-<pre><code>site.yml
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span>- <span style="color:#f92672">hosts</span>: <span style="color:#ae81ff">servers</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">roles</span>:
+</span></span><span style="display:flex;"><span>     - <span style="color:#ae81ff">web</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#ae81ff">– db</span>
+</span></span><span style="display:flex;"><span>     - <span style="color:#ae81ff">post</span>
+</span></span></code></pre></div><p>Тогда файловая структура ролей может выглядеть таким образом:</p>
+<pre tabindex="0"><code>site.yml
 servers.yml
 roles/
    web/
@@ -350,7 +350,7 @@ roles/
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

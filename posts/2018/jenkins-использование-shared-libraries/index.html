@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,163 +106,163 @@
 <p>Помимо принципа DRY, важна также возможность внести изменения в код пайплайна один раз и автоматически использовать обновленный пайплайн в 50-100 других проектах.</p>
 <p>Для этой цели как нельзя лучше подходят <a href="https://jenkins.io/doc/book/pipeline/shared-libraries/">Shared Libraries</a> - общие библиотеки, которые могут быть определены в отдельном репозитории системы управления версиями и загружены в описании пайплайна.</p>
 <p>Структура каталогов в репозитории общих библиотек должна выглядеть следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">+- src                     <span style="color:#75715e"># Source files</span>
-|   +- org
-|       +- foo
-|           +- Bar.groovy  <span style="color:#75715e"># for org.foo.Bar class</span>
-+- vars
-|   +- foo.groovy          <span style="color:#75715e"># for global &#39;foo&#39; variable</span>
-|   +- foo.txt             <span style="color:#75715e"># help for &#39;foo&#39; variable</span>
-+- resources               <span style="color:#75715e"># resource files (external libraries only)</span>
-|   +- org
-|       +- foo
-|           +- bar.json    <span style="color:#75715e"># static helper data for org.foo.Bar</span>
-</code></pre></div><p><strong>Примечание.</strong> В данной статье мы будем использовать только каталоги <code>vars</code> и <code>resources</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>+- src                     <span style="color:#75715e"># Source files</span>
+</span></span><span style="display:flex;"><span>|   +- org
+</span></span><span style="display:flex;"><span>|       +- foo
+</span></span><span style="display:flex;"><span>|           +- Bar.groovy  <span style="color:#75715e"># for org.foo.Bar class</span>
+</span></span><span style="display:flex;"><span>+- vars
+</span></span><span style="display:flex;"><span>|   +- foo.groovy          <span style="color:#75715e"># for global &#39;foo&#39; variable</span>
+</span></span><span style="display:flex;"><span>|   +- foo.txt             <span style="color:#75715e"># help for &#39;foo&#39; variable</span>
+</span></span><span style="display:flex;"><span>+- resources               <span style="color:#75715e"># resource files (external libraries only)</span>
+</span></span><span style="display:flex;"><span>|   +- org
+</span></span><span style="display:flex;"><span>|       +- foo
+</span></span><span style="display:flex;"><span>|           +- bar.json    <span style="color:#75715e"># static helper data for org.foo.Bar</span>
+</span></span></code></pre></div><p><strong>Примечание.</strong> В данной статье мы будем использовать только каталоги <code>vars</code> и <code>resources</code>.</p>
 <p>Для нас наибольший интерес представляет директория <code>vars</code> - в ней можно разместить глобальные функции и переменные, доступные в пайплайнах. Согласно документации, имена файлов должны быть в <code>camelCase</code> формате (без дефисов/подчеркиваний и т.д. - это важно), и иметь расширение <code>.groovy</code> (именно эти файлы нас и интересуют) или <code>.txt</code> (для документации).</p>
 <p>В каталоге <code>resources</code> можно разместить любые другие (не Java) файлы (например, <code>.yaml</code> или <code>.json</code>), которые будут загружаться в описании пайплайна с помощью шага <code>libraryResource</code>.</p>
 <p>Итак, рассмотрим несколько примеров. Допустим, у нас есть простенький проект, в котором описание пайплайна (файл <code>Jenkinsfile</code>) выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">pipeline <span style="color:#f92672">{</span>
-  agent any
-
-  stages <span style="color:#f92672">{</span>
-    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Checkout<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-      steps <span style="color:#f92672">{</span>
-        checkout scm
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Build<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-      steps <span style="color:#f92672">{</span>
-        script <span style="color:#f92672">{</span>
-          sh <span style="color:#e6db74">&#39;&#39;&#39;</span>
-            sudo docker version
-            sudo docker build <span style="color:#f92672">-</span>t ealebed<span style="color:#f92672">/</span>hellonode<span style="color:#f92672">:</span>latest <span style="color:#f92672">.</span>
-            sudo docker image ls
-          <span style="color:#e6db74">&#39;&#39;&#39;</span>
-        <span style="color:#f92672">}</span>
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-  <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Кроме описания пайплайна в репозитории находится еще два файла - <code>Dockerfile</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:6.9</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> server.js .<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 8080</span><span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> node server.js<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>и файл <code>server.js</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">http</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;http&#39;</span>);
-<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">handleRequest</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">request</span>, <span style="color:#a6e22e">response</span>) {
-  <span style="color:#a6e22e">response</span>.<span style="color:#a6e22e">writeHead</span>(<span style="color:#ae81ff">200</span>);
-  <span style="color:#a6e22e">response</span>.<span style="color:#a6e22e">end</span>(<span style="color:#e6db74">&#34;Hello World!&#34;</span>);
-}
-<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">www</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">createServer</span>(<span style="color:#a6e22e">handleRequest</span>);
-<span style="color:#a6e22e">www</span>.<span style="color:#a6e22e">listen</span>(<span style="color:#ae81ff">8080</span>);
-</code></pre></div><p>В первой итерации выделим в отдельные функции части пайплайна, которые можно будет использовать в других проектах. Для этого:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>pipeline <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  agent any
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  stages <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Checkout<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        checkout scm
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Build<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        script <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>          sh <span style="color:#e6db74">&#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>            sudo docker version
+</span></span><span style="display:flex;"><span>            sudo docker build <span style="color:#f92672">-</span>t ealebed<span style="color:#f92672">/</span>hellonode<span style="color:#f92672">:</span>latest <span style="color:#f92672">.</span>
+</span></span><span style="display:flex;"><span>            sudo docker image ls
+</span></span><span style="display:flex;"><span>          <span style="color:#e6db74">&#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Кроме описания пайплайна в репозитории находится еще два файла - <code>Dockerfile</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Dockerfile" data-lang="Dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> node:6.9</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> server.js .<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">EXPOSE</span><span style="color:#e6db74"> 8080</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> node server.js<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>и файл <code>server.js</code> следующего содержания:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">http</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;http&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">handleRequest</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">request</span>, <span style="color:#a6e22e">response</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">response</span>.<span style="color:#a6e22e">writeHead</span>(<span style="color:#ae81ff">200</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">response</span>.<span style="color:#a6e22e">end</span>(<span style="color:#e6db74">&#34;Hello World!&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">www</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">createServer</span>(<span style="color:#a6e22e">handleRequest</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">www</span>.<span style="color:#a6e22e">listen</span>(<span style="color:#ae81ff">8080</span>);
+</span></span></code></pre></div><p>В первой итерации выделим в отдельные функции части пайплайна, которые можно будет использовать в других проектах. Для этого:</p>
 <ul>
 <li>создаем отдельный git-репозиторий для наших общих библиотек;</li>
 <li>в репозитории создаем каталог <code>vars</code>;</li>
 <li>в каталоге <code>vars</code> размещаем скрипт <code>dockerCmd.groovy</code>.</li>
 </ul>
 <p>Содержимое <code>dockerCmd.groovy</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">def <span style="color:#a6e22e">call</span><span style="color:#f92672">(</span>args<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-  <span style="color:#66d9ef">assert</span> args <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span>
-  <span style="color:#a6e22e">sh</span><span style="color:#f92672">(</span>script<span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;sudo docker ${args}&#34;</span><span style="color:#f92672">)</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Настраиваем использование Shared Libraries на Jenkins (<a href="https://jenkins.io/doc/book/pipeline/shared-libraries/#global-shared-libraries">пример с картинками</a>). Теперь в нашем проекте пайплайн можно переписать так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Library</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>jenkins<span style="color:#f92672">-</span>shared<span style="color:#f92672">-</span>libs<span style="color:#a6e22e">@master</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> _
-
-pipeline <span style="color:#f92672">{</span>
-  agent any
-
-  stages <span style="color:#f92672">{</span>
-    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Checkout<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-      steps <span style="color:#f92672">{</span>
-        checkout scm
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Build<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-      steps <span style="color:#f92672">{</span>
-        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>version<span style="color:#960050;background-color:#1e0010">&#39;</span>
-        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>build <span style="color:#f92672">-</span>t ealebed<span style="color:#f92672">/</span>hellonode<span style="color:#f92672">:</span>latest <span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
-        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>image ls<span style="color:#960050;background-color:#1e0010">&#39;</span>
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-  <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Продолжаем. Во второй итерации избавимся от необходимости хранить <code>Dockerfile</code> в репозитории проекта. Для этого в git-репозитории с общими библиотеками создаем каталог <code>resources</code> и переносим в него <code>Dockerfile</code> из основного проекта. Далее, в каталоге <code>vars</code> размещаем скрипт <code>createDockerfile.groovy</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">def <span style="color:#a6e22e">call</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-  def file <span style="color:#f92672">=</span> libraryResource <span style="color:#960050;background-color:#1e0010">&#39;</span>Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span>
-  writeFile file<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> text<span style="color:#f92672">:</span> file
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Описание пайплайна в основном проекте изменяем на следующее:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Library</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>jenkins<span style="color:#f92672">-</span>shared<span style="color:#f92672">-</span>libs<span style="color:#a6e22e">@master</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> _
-
-pipeline <span style="color:#f92672">{</span>
-  agent any
-
-  stages <span style="color:#f92672">{</span>
-    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Checkout<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-      steps <span style="color:#f92672">{</span>
-        checkout scm
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Get Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-      steps <span style="color:#f92672">{</span>
-        createDockerfile<span style="color:#f92672">()</span>
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Build<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-      steps <span style="color:#f92672">{</span>
-        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>version<span style="color:#960050;background-color:#1e0010">&#39;</span>
-        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>build <span style="color:#f92672">-</span>t ealebed<span style="color:#f92672">/</span>hellonode<span style="color:#f92672">:</span>latest <span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
-        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>image ls<span style="color:#960050;background-color:#1e0010">&#39;</span>
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-  <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Но что, если мы хотим использовать в других проектах не только отдельные функции, а весь пайплайн целиком? Нет ничего проще!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>def <span style="color:#a6e22e">call</span><span style="color:#f92672">(</span>args<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">assert</span> args <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sh</span><span style="color:#f92672">(</span>script<span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;sudo docker ${args}&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Настраиваем использование Shared Libraries на Jenkins (<a href="https://jenkins.io/doc/book/pipeline/shared-libraries/#global-shared-libraries">пример с картинками</a>). Теперь в нашем проекте пайплайн можно переписать так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Library</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>jenkins<span style="color:#f92672">-</span>shared<span style="color:#f92672">-</span>libs<span style="color:#a6e22e">@master</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> _
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pipeline <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  agent any
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  stages <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Checkout<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        checkout scm
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Build<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>version<span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>build <span style="color:#f92672">-</span>t ealebed<span style="color:#f92672">/</span>hellonode<span style="color:#f92672">:</span>latest <span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>image ls<span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Продолжаем. Во второй итерации избавимся от необходимости хранить <code>Dockerfile</code> в репозитории проекта. Для этого в git-репозитории с общими библиотеками создаем каталог <code>resources</code> и переносим в него <code>Dockerfile</code> из основного проекта. Далее, в каталоге <code>vars</code> размещаем скрипт <code>createDockerfile.groovy</code> следующего содержания:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>def <span style="color:#a6e22e">call</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  def file <span style="color:#f92672">=</span> libraryResource <span style="color:#960050;background-color:#1e0010">&#39;</span>Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>  writeFile file<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> text<span style="color:#f92672">:</span> file
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Описание пайплайна в основном проекте изменяем на следующее:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Library</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>jenkins<span style="color:#f92672">-</span>shared<span style="color:#f92672">-</span>libs<span style="color:#a6e22e">@master</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> _
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pipeline <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  agent any
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  stages <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Checkout<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        checkout scm
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Get Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        createDockerfile<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Build<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>version<span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>build <span style="color:#f92672">-</span>t ealebed<span style="color:#f92672">/</span>hellonode<span style="color:#f92672">:</span>latest <span style="color:#f92672">.</span><span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>        dockerCmd <span style="color:#960050;background-color:#1e0010">&#39;</span>image ls<span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Но что, если мы хотим использовать в других проектах не только отдельные функции, а весь пайплайн целиком? Нет ничего проще!</p>
 <p>В git-репозитории с общими библиотеками в каталоге <code>vars</code> создаем скрипт <code>allPipeline.groovy</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">def <span style="color:#a6e22e">call</span><span style="color:#f92672">(</span>body<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-  def pipelineParams<span style="color:#f92672">=</span> <span style="color:#f92672">[:]</span>
-  body<span style="color:#f92672">.</span><span style="color:#a6e22e">resolveStrategy</span> <span style="color:#f92672">=</span> Closure<span style="color:#f92672">.</span><span style="color:#a6e22e">DELEGATE_FIRST</span>
-  body<span style="color:#f92672">.</span><span style="color:#a6e22e">delegate</span> <span style="color:#f92672">=</span> pipelineParams
-  <span style="color:#a6e22e">body</span><span style="color:#f92672">()</span>
-
-  pipeline <span style="color:#f92672">{</span>
-    agent any
-
-    stages <span style="color:#f92672">{</span>
-      stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Checkout<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        steps <span style="color:#f92672">{</span>
-          checkout scm
-        <span style="color:#f92672">}</span>
-      <span style="color:#f92672">}</span>
-      stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Get Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        steps <span style="color:#f92672">{</span>
-          script <span style="color:#f92672">{</span>
-            def tmpFile <span style="color:#f92672">=</span> libraryResource <span style="color:#960050;background-color:#1e0010">&#39;</span>Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span>
-            writeFile file<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> text<span style="color:#f92672">:</span> tmpFile
-          <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span>
-      <span style="color:#f92672">}</span>
-      stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Build<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
-        steps <span style="color:#f92672">{</span>
-          script <span style="color:#f92672">{</span>
-            sh <span style="color:#e6db74">&#39;&#39;&#39;</span>
-              docker version
-              docker build <span style="color:#f92672">-</span>t ealebed<span style="color:#f92672">/</span>hellonode<span style="color:#f92672">:</span>latest <span style="color:#f92672">.</span>
-              docker image ls
-            <span style="color:#e6db74">&#39;&#39;&#39;</span>
-          <span style="color:#f92672">}</span>
-        <span style="color:#f92672">}</span>
-      <span style="color:#f92672">}</span>
-    <span style="color:#f92672">}</span>
-  <span style="color:#f92672">}</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p>Теперь, в содержимое файла <code>Jenkinsfile</code> (описание пайплайна) в основном репозитории проекта невероятно упрощается:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Library</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>jenkins<span style="color:#f92672">-</span>shared<span style="color:#f92672">-</span>libs<span style="color:#a6e22e">@master</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> _
-
-allPipeline <span style="color:#f92672">{}</span>
-</code></pre></div><p>Больше интересных примеров можно найти в <a href="https://jenkins.io/doc/book/pipeline/shared-libraries/#writing-libraries">официальной документации</a>, а также <a href="https://dev.to/jalogut/centralise-jenkins-pipelines-configuration-using-shared-libraries">здесь</a>, <a href="https://automatingguy.com/2017/12/29/jenkins-pipelines-shared-libraries/">здесь</a> и <a href="https://jenkins.io/blog/2017/10/02/pipeline-templates-with-shared-libraries/">здесь</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>def <span style="color:#a6e22e">call</span><span style="color:#f92672">(</span>body<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  def pipelineParams<span style="color:#f92672">=</span> <span style="color:#f92672">[:]</span>
+</span></span><span style="display:flex;"><span>  body<span style="color:#f92672">.</span><span style="color:#a6e22e">resolveStrategy</span> <span style="color:#f92672">=</span> Closure<span style="color:#f92672">.</span><span style="color:#a6e22e">DELEGATE_FIRST</span>
+</span></span><span style="display:flex;"><span>  body<span style="color:#f92672">.</span><span style="color:#a6e22e">delegate</span> <span style="color:#f92672">=</span> pipelineParams
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">body</span><span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  pipeline <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    agent any
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    stages <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Checkout<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>          checkout scm
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>      stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Get Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>          script <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            def tmpFile <span style="color:#f92672">=</span> libraryResource <span style="color:#960050;background-color:#1e0010">&#39;</span>Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span>
+</span></span><span style="display:flex;"><span>            writeFile file<span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>Dockerfile<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">,</span> text<span style="color:#f92672">:</span> tmpFile
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>      stage<span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Build<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        steps <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>          script <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            sh <span style="color:#e6db74">&#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>              docker version
+</span></span><span style="display:flex;"><span>              docker build <span style="color:#f92672">-</span>t ealebed<span style="color:#f92672">/</span>hellonode<span style="color:#f92672">:</span>latest <span style="color:#f92672">.</span>
+</span></span><span style="display:flex;"><span>              docker image ls
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Теперь, в содержимое файла <code>Jenkinsfile</code> (описание пайплайна) в основном репозитории проекта невероятно упрощается:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Library</span><span style="color:#f92672">(</span><span style="color:#960050;background-color:#1e0010">&#39;</span>jenkins<span style="color:#f92672">-</span>shared<span style="color:#f92672">-</span>libs<span style="color:#a6e22e">@master</span><span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">)</span> _
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>allPipeline <span style="color:#f92672">{}</span>
+</span></span></code></pre></div><p>Больше интересных примеров можно найти в <a href="https://jenkins.io/doc/book/pipeline/shared-libraries/#writing-libraries">официальной документации</a>, а также <a href="https://dev.to/jalogut/centralise-jenkins-pipelines-configuration-using-shared-libraries">здесь</a>, <a href="https://automatingguy.com/2017/12/29/jenkins-pipelines-shared-libraries/">здесь</a> и <a href="https://jenkins.io/blog/2017/10/02/pipeline-templates-with-shared-libraries/">здесь</a>.</p>
 <p>Don&rsquo;t Repeat Yourself!</p>
                 </section>
             </article>
@@ -355,7 +355,7 @@ allPipeline <span style="color:#f92672">{}</span>
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,169 +101,169 @@
                     <p>Мы уже знаем, <a href="https://ealebed.github.io/posts/2015/%D1%83%D0%B2%D0%B5%D0%BB%D0%B8%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%80%D0%B0-%D0%BB%D0%BE%D0%B3%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D1%85-%D1%82%D0%BE%D0%BC%D0%BE%D0%B2-%D0%B2-linux/">как расширить логический том</a> в ОС Linux, но в случае с drbd-ресурсом потребуются дополнительные действия.</p>
 <p>Например, нам необходимо «на лету» <strong>увеличить размер drbd-ресурса</strong>, созданного на <code>lvm</code>. Давайте разберемся!</p>
 <p>Проверим заполненность диска до начала работ:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">df -h
-Filesystem                           Size  Used Avail Use% Mounted on
-...
-/dev/drbd2                           542G  431G  106G  81% /srv/www
-...
-</code></pre></div><p>Итак, искомый раздел заполнен на 81%.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>df -h
+</span></span><span style="display:flex;"><span>Filesystem                           Size  Used Avail Use% Mounted on
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>/dev/drbd2                           542G  431G  106G  81% /srv/www
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Итак, искомый раздел заполнен на 81%.</p>
 <p>Проверим состояние групп томов (Volume group) на обоих серверах. Первый сервер:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">vgdisplay
-...
---- Volume group ---
-  VG Name               sata
-  System ID
-  Format                lvm2
-  Metadata Areas        <span style="color:#ae81ff">1</span>
-  Metadata Sequence No  <span style="color:#ae81ff">20</span>
-  VG Access             read/write
-  VG Status             resizable
-  MAX LV                <span style="color:#ae81ff">0</span>
-  Cur LV                <span style="color:#ae81ff">1</span>
-  Open LV               <span style="color:#ae81ff">1</span>
-  Max PV                <span style="color:#ae81ff">0</span>
-  Cur PV                <span style="color:#ae81ff">1</span>
-  Act PV                <span style="color:#ae81ff">1</span>
-  VG Size               880.71 GiB
-  PE Size               4.00 MiB
-  Total PE              <span style="color:#ae81ff">225461</span>
-  Alloc PE / Size       <span style="color:#ae81ff">140800</span> / 550.00 GiB
-  Free  PE / Size       <span style="color:#ae81ff">84661</span> / 330.71 GiB
-  VG UUID               Y9cKNi-82zv-fEn2-IbS7-M00Y-5rPh-49cQox
-...
-</code></pre></div><p>второй сервер:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">vgdisplay
-...
-  --- Volume group ---
-  VG Name               sata
-  System ID
-  Format                lvm2
-  Metadata Areas        <span style="color:#ae81ff">1</span>
-  Metadata Sequence No  <span style="color:#ae81ff">14</span>
-  VG Access             read/write
-  VG Status             resizable
-  MAX LV                <span style="color:#ae81ff">0</span>
-  Cur LV                <span style="color:#ae81ff">1</span>
-  Open LV               <span style="color:#ae81ff">1</span>
-  Max PV                <span style="color:#ae81ff">0</span>
-  Cur PV                <span style="color:#ae81ff">1</span>
-  Act PV                <span style="color:#ae81ff">1</span>
-  VG Size               880.09 GiB
-  PE Size               4.00 MiB
-  Total PE              <span style="color:#ae81ff">225304</span>
-  Alloc PE / Size       <span style="color:#ae81ff">140800</span> / 550.00 GiB
-  Free  PE / Size       <span style="color:#ae81ff">84504</span> / 330.09 GiB
-  VG UUID               8n4Goi-FyuU-KcPH-aY54-96Hn-RgRP-3mEy0y
-...
-</code></pre></div><p>Как видим, на обоих серверах есть свободное место (<code>Free PE</code>) в группе томов sata.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vgdisplay
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>--- Volume group ---
+</span></span><span style="display:flex;"><span>  VG Name               sata
+</span></span><span style="display:flex;"><span>  System ID
+</span></span><span style="display:flex;"><span>  Format                lvm2
+</span></span><span style="display:flex;"><span>  Metadata Areas        <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  Metadata Sequence No  <span style="color:#ae81ff">20</span>
+</span></span><span style="display:flex;"><span>  VG Access             read/write
+</span></span><span style="display:flex;"><span>  VG Status             resizable
+</span></span><span style="display:flex;"><span>  MAX LV                <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  Cur LV                <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  Open LV               <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  Max PV                <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  Cur PV                <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  Act PV                <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  VG Size               880.71 GiB
+</span></span><span style="display:flex;"><span>  PE Size               4.00 MiB
+</span></span><span style="display:flex;"><span>  Total PE              <span style="color:#ae81ff">225461</span>
+</span></span><span style="display:flex;"><span>  Alloc PE / Size       <span style="color:#ae81ff">140800</span> / 550.00 GiB
+</span></span><span style="display:flex;"><span>  Free  PE / Size       <span style="color:#ae81ff">84661</span> / 330.71 GiB
+</span></span><span style="display:flex;"><span>  VG UUID               Y9cKNi-82zv-fEn2-IbS7-M00Y-5rPh-49cQox
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>второй сервер:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vgdisplay
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>  --- Volume group ---
+</span></span><span style="display:flex;"><span>  VG Name               sata
+</span></span><span style="display:flex;"><span>  System ID
+</span></span><span style="display:flex;"><span>  Format                lvm2
+</span></span><span style="display:flex;"><span>  Metadata Areas        <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  Metadata Sequence No  <span style="color:#ae81ff">14</span>
+</span></span><span style="display:flex;"><span>  VG Access             read/write
+</span></span><span style="display:flex;"><span>  VG Status             resizable
+</span></span><span style="display:flex;"><span>  MAX LV                <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  Cur LV                <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  Open LV               <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  Max PV                <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  Cur PV                <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  Act PV                <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  VG Size               880.09 GiB
+</span></span><span style="display:flex;"><span>  PE Size               4.00 MiB
+</span></span><span style="display:flex;"><span>  Total PE              <span style="color:#ae81ff">225304</span>
+</span></span><span style="display:flex;"><span>  Alloc PE / Size       <span style="color:#ae81ff">140800</span> / 550.00 GiB
+</span></span><span style="display:flex;"><span>  Free  PE / Size       <span style="color:#ae81ff">84504</span> / 330.09 GiB
+</span></span><span style="display:flex;"><span>  VG UUID               8n4Goi-FyuU-KcPH-aY54-96Hn-RgRP-3mEy0y
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Как видим, на обоих серверах есть свободное место (<code>Free PE</code>) в группе томов sata.</p>
 <p>Проверим состояние логических томов в группе томов sata на обоих серверах. Первый сервер:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lvdisplay
-...
---- Logical volume ---
-  LV Path                /dev/sata/www
-  LV Name                www
-  VG Name                sata
-  LV UUID                FaF2aC-QnZS-QbFX-hwB7-0cFP-xII9-y1loTm
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  <span style="color:#75715e"># open                 2</span>
-  LV Size                550.00 GiB
-  Current LE             <span style="color:#ae81ff">140800</span>
-  Segments               <span style="color:#ae81ff">3</span>
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     <span style="color:#ae81ff">256</span>
-  Block device           254:1
-...
-</code></pre></div><p>второй сервер:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lvdisplay
-...
---- Logical volume ---
-  LV Path                /dev/sata/www
-  LV Name                www
-  VG Name                sata
-  LV UUID                U8JESt-dcFx-dmmg-lNkX-K7YO-cFmw-UO2eTh
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  <span style="color:#75715e"># open                 2</span>
-  LV Size                550.00 GiB
-  Current LE             <span style="color:#ae81ff">140800</span>
-  Segments               <span style="color:#ae81ff">3</span>
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     <span style="color:#ae81ff">256</span>
-  Block device           254:1
-</code></pre></div><p>Смотрим состояние drbd-ресурсов на обоих серверах, на первом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/drbd
-version: 8.3.11 <span style="color:#f92672">(</span>api:88/proto:86-96<span style="color:#f92672">)</span>
-srcversion: F937DCB2E5D83C6CCE4A6C9
-
- 1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
-    ns:580966800 nr:0 dw:574780708 dr:829055181 al:2102442 bm:2875 lo:2 pe:2 ua:0 ap:2 ep:1 wo:f oos:0
- 2: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
-    ns:22532352 nr:0 dw:22473520 dr:72213873 al:120898 bm:824 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
-</code></pre></div><p>на втором:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/drbd
-version: 8.3.11 <span style="color:#f92672">(</span>api:88/proto:86-96<span style="color:#f92672">)</span>
-srcversion: F937DCB2E5D83C6CCE4A6C9
-
- 1: cs:Connected ro:Secondary/Primary ds:UpToDate/UpToDate C r-----
-    ns:0 nr:580980756 dw:580980756 dr:0 al:0 bm:3388 lo:1 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
- 2: cs:Connected ro:Secondary/Primary ds:UpToDate/UpToDate C r-----
-    ns:0 nr:22532488 dw:22532488 dr:0 al:0 bm:790 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
-</code></pre></div><p><strong>Примечание.</strong> Для успешного <strong>увеличения размера drbd-ресурса</strong> необходимо, чтобы на одной из нод ресурс находился в состоянии <code>Secondary</code> — как в нашем случае.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lvdisplay
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>--- Logical volume ---
+</span></span><span style="display:flex;"><span>  LV Path                /dev/sata/www
+</span></span><span style="display:flex;"><span>  LV Name                www
+</span></span><span style="display:flex;"><span>  VG Name                sata
+</span></span><span style="display:flex;"><span>  LV UUID                FaF2aC-QnZS-QbFX-hwB7-0cFP-xII9-y1loTm
+</span></span><span style="display:flex;"><span>  LV Write Access        read/write
+</span></span><span style="display:flex;"><span>  LV Creation host, time ,
+</span></span><span style="display:flex;"><span>  LV Status              available
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># open                 2</span>
+</span></span><span style="display:flex;"><span>  LV Size                550.00 GiB
+</span></span><span style="display:flex;"><span>  Current LE             <span style="color:#ae81ff">140800</span>
+</span></span><span style="display:flex;"><span>  Segments               <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>  Allocation             inherit
+</span></span><span style="display:flex;"><span>  Read ahead sectors     auto
+</span></span><span style="display:flex;"><span>  - currently set to     <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>  Block device           254:1
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>второй сервер:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lvdisplay
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>--- Logical volume ---
+</span></span><span style="display:flex;"><span>  LV Path                /dev/sata/www
+</span></span><span style="display:flex;"><span>  LV Name                www
+</span></span><span style="display:flex;"><span>  VG Name                sata
+</span></span><span style="display:flex;"><span>  LV UUID                U8JESt-dcFx-dmmg-lNkX-K7YO-cFmw-UO2eTh
+</span></span><span style="display:flex;"><span>  LV Write Access        read/write
+</span></span><span style="display:flex;"><span>  LV Creation host, time ,
+</span></span><span style="display:flex;"><span>  LV Status              available
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># open                 2</span>
+</span></span><span style="display:flex;"><span>  LV Size                550.00 GiB
+</span></span><span style="display:flex;"><span>  Current LE             <span style="color:#ae81ff">140800</span>
+</span></span><span style="display:flex;"><span>  Segments               <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>  Allocation             inherit
+</span></span><span style="display:flex;"><span>  Read ahead sectors     auto
+</span></span><span style="display:flex;"><span>  - currently set to     <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>  Block device           254:1
+</span></span></code></pre></div><p>Смотрим состояние drbd-ресурсов на обоих серверах, на первом:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/drbd
+</span></span><span style="display:flex;"><span>version: 8.3.11 <span style="color:#f92672">(</span>api:88/proto:86-96<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>srcversion: F937DCB2E5D83C6CCE4A6C9
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> 1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
+</span></span><span style="display:flex;"><span>    ns:580966800 nr:0 dw:574780708 dr:829055181 al:2102442 bm:2875 lo:2 pe:2 ua:0 ap:2 ep:1 wo:f oos:0
+</span></span><span style="display:flex;"><span> 2: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
+</span></span><span style="display:flex;"><span>    ns:22532352 nr:0 dw:22473520 dr:72213873 al:120898 bm:824 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+</span></span></code></pre></div><p>на втором:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/drbd
+</span></span><span style="display:flex;"><span>version: 8.3.11 <span style="color:#f92672">(</span>api:88/proto:86-96<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>srcversion: F937DCB2E5D83C6CCE4A6C9
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> 1: cs:Connected ro:Secondary/Primary ds:UpToDate/UpToDate C r-----
+</span></span><span style="display:flex;"><span>    ns:0 nr:580980756 dw:580980756 dr:0 al:0 bm:3388 lo:1 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+</span></span><span style="display:flex;"><span> 2: cs:Connected ro:Secondary/Primary ds:UpToDate/UpToDate C r-----
+</span></span><span style="display:flex;"><span>    ns:0 nr:22532488 dw:22532488 dr:0 al:0 bm:790 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+</span></span></code></pre></div><p><strong>Примечание.</strong> Для успешного <strong>увеличения размера drbd-ресурса</strong> необходимо, чтобы на одной из нод ресурс находился в состоянии <code>Secondary</code> — как в нашем случае.</p>
 <p>Расширяем логический том <code>/dev/sata/www</code> на обоих серверах, первый:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lvextend -L+250G /dev/sata/www
-File descriptor <span style="color:#ae81ff">7</span> <span style="color:#f92672">(</span>pipe:<span style="color:#f92672">[</span>1414462951<span style="color:#f92672">])</span> leaked on lvextend invocation. Parent PID 12147: bash
-  Extending logical volume www to 800.00 GiB
-  Logical volume www successfully resized
-</code></pre></div><p>второй:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lvextend -L+250G /dev/sata/www
-File descriptor <span style="color:#ae81ff">7</span> <span style="color:#f92672">(</span>pipe:<span style="color:#f92672">[</span>23754604<span style="color:#f92672">])</span> leaked on lvextend invocation. Parent PID 24915: bash
-  Extending logical volume www to 800.00 GiB
-  Logical volume www successfully resized
-</code></pre></div><p>Выполняем следующую команду на сервере, где drbd-ресурс находится в состоянии <code>Primary</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">drbdadm resize www
-
-  --<span style="color:#f92672">==</span>  Thank you <span style="color:#66d9ef">for</span> participating in the global usage survey  <span style="color:#f92672">==</span>--
-The server<span style="color:#960050;background-color:#1e0010">&#39;</span>s response is:
-
-node already registered
-</code></pre></div><p>Проверим состояние drbd-ресурсов, между ними должна начаться синхронизация:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/drbd
-version: 8.3.11 <span style="color:#f92672">(</span>api:88/proto:86-96<span style="color:#f92672">)</span>
-srcversion: F937DCB2E5D83C6CCE4A6C9
-
- 1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
-    ns:583100940 nr:0 dw:576914832 dr:830717889 al:2110366 bm:2875 lo:2 pe:1 ua:0 ap:1 ep:1 wo:f oos:0
- 2: cs:SyncSource ro:Primary/Secondary ds:UpToDate/Inconsistent C r-----
-    ns:24141696 nr:0 dw:22489312 dr:73894105 al:121175 bm:921 lo:25 pe:111 ua:58 ap:15 ep:1 wo:f oos:260556636
-	<span style="color:#f92672">[</span>&gt;....................<span style="color:#f92672">]</span> sync<span style="color:#960050;background-color:#1e0010">&#39;</span>ed:  0.7% <span style="color:#f92672">(</span>254448/255992<span style="color:#f92672">)</span>Mfinish: 0:57:05 speed: 76,044 <span style="color:#f92672">(</span>75,204<span style="color:#f92672">)</span> K/sec
-</code></pre></div><p>Дожидаемся завершения синхронизации ресурсов, проверяем состояние:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/drbd
-version: 8.3.11 <span style="color:#f92672">(</span>api:88/proto:86-96<span style="color:#f92672">)</span>
-srcversion: F937DCB2E5D83C6CCE4A6C9
-
- 1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
-    ns:587986596 nr:0 dw:581800488 dr:834136653 al:2128615 bm:2875 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
- 2: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
-    ns:284992468 nr:0 dw:22797636 dr:334658225 al:122513 bm:16818 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
-</code></pre></div><p>На ведущем сервере (drbd-ресурс находится в состоянии <code>Primary</code>) для расширения файловой системы выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">resize2fs /dev/drbd2
-resize2fs 1.42.5 <span style="color:#f92672">(</span>29-Jul-2012<span style="color:#f92672">)</span>
-Filesystem at /dev/drbd2 is mounted on /srv/www; on-line resizing required
-old_desc_blocks <span style="color:#f92672">=</span> 35, new_desc_blocks <span style="color:#f92672">=</span> <span style="color:#ae81ff">50</span>
-Performing an on-line resize of /dev/drbd2 to <span style="color:#ae81ff">209708791</span> <span style="color:#f92672">(</span>4k<span style="color:#f92672">)</span> blocks.
-The filesystem on /dev/drbd2 is now <span style="color:#ae81ff">209708791</span> blocks long.
-</code></pre></div><p><strong>Изменение размера drbd-ресурса</strong> будет выполняться on-line. После завершения проверим заполненность интересующего нас диска:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">df -h
-Filesystem                           Size  Used Avail Use% Mounted on
-...
-/dev/drbd2                           788G  431G  350G  56% /srv/www
-...
-</code></pre></div><p>Готово!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lvextend -L+250G /dev/sata/www
+</span></span><span style="display:flex;"><span>File descriptor <span style="color:#ae81ff">7</span> <span style="color:#f92672">(</span>pipe:<span style="color:#f92672">[</span>1414462951<span style="color:#f92672">])</span> leaked on lvextend invocation. Parent PID 12147: bash
+</span></span><span style="display:flex;"><span>  Extending logical volume www to 800.00 GiB
+</span></span><span style="display:flex;"><span>  Logical volume www successfully resized
+</span></span></code></pre></div><p>второй:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lvextend -L+250G /dev/sata/www
+</span></span><span style="display:flex;"><span>File descriptor <span style="color:#ae81ff">7</span> <span style="color:#f92672">(</span>pipe:<span style="color:#f92672">[</span>23754604<span style="color:#f92672">])</span> leaked on lvextend invocation. Parent PID 24915: bash
+</span></span><span style="display:flex;"><span>  Extending logical volume www to 800.00 GiB
+</span></span><span style="display:flex;"><span>  Logical volume www successfully resized
+</span></span></code></pre></div><p>Выполняем следующую команду на сервере, где drbd-ресурс находится в состоянии <code>Primary</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>drbdadm resize www
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  --<span style="color:#f92672">==</span>  Thank you <span style="color:#66d9ef">for</span> participating in the global usage survey  <span style="color:#f92672">==</span>--
+</span></span><span style="display:flex;"><span>The server<span style="color:#960050;background-color:#1e0010">&#39;</span>s response is:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>node already registered
+</span></span></code></pre></div><p>Проверим состояние drbd-ресурсов, между ними должна начаться синхронизация:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/drbd
+</span></span><span style="display:flex;"><span>version: 8.3.11 <span style="color:#f92672">(</span>api:88/proto:86-96<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>srcversion: F937DCB2E5D83C6CCE4A6C9
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> 1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
+</span></span><span style="display:flex;"><span>    ns:583100940 nr:0 dw:576914832 dr:830717889 al:2110366 bm:2875 lo:2 pe:1 ua:0 ap:1 ep:1 wo:f oos:0
+</span></span><span style="display:flex;"><span> 2: cs:SyncSource ro:Primary/Secondary ds:UpToDate/Inconsistent C r-----
+</span></span><span style="display:flex;"><span>    ns:24141696 nr:0 dw:22489312 dr:73894105 al:121175 bm:921 lo:25 pe:111 ua:58 ap:15 ep:1 wo:f oos:260556636
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">[</span>&gt;....................<span style="color:#f92672">]</span> sync<span style="color:#960050;background-color:#1e0010">&#39;</span>ed:  0.7% <span style="color:#f92672">(</span>254448/255992<span style="color:#f92672">)</span>Mfinish: 0:57:05 speed: 76,044 <span style="color:#f92672">(</span>75,204<span style="color:#f92672">)</span> K/sec
+</span></span></code></pre></div><p>Дожидаемся завершения синхронизации ресурсов, проверяем состояние:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/drbd
+</span></span><span style="display:flex;"><span>version: 8.3.11 <span style="color:#f92672">(</span>api:88/proto:86-96<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>srcversion: F937DCB2E5D83C6CCE4A6C9
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> 1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
+</span></span><span style="display:flex;"><span>    ns:587986596 nr:0 dw:581800488 dr:834136653 al:2128615 bm:2875 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+</span></span><span style="display:flex;"><span> 2: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
+</span></span><span style="display:flex;"><span>    ns:284992468 nr:0 dw:22797636 dr:334658225 al:122513 bm:16818 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+</span></span></code></pre></div><p>На ведущем сервере (drbd-ресурс находится в состоянии <code>Primary</code>) для расширения файловой системы выполняем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>resize2fs /dev/drbd2
+</span></span><span style="display:flex;"><span>resize2fs 1.42.5 <span style="color:#f92672">(</span>29-Jul-2012<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Filesystem at /dev/drbd2 is mounted on /srv/www; on-line resizing required
+</span></span><span style="display:flex;"><span>old_desc_blocks <span style="color:#f92672">=</span> 35, new_desc_blocks <span style="color:#f92672">=</span> <span style="color:#ae81ff">50</span>
+</span></span><span style="display:flex;"><span>Performing an on-line resize of /dev/drbd2 to <span style="color:#ae81ff">209708791</span> <span style="color:#f92672">(</span>4k<span style="color:#f92672">)</span> blocks.
+</span></span><span style="display:flex;"><span>The filesystem on /dev/drbd2 is now <span style="color:#ae81ff">209708791</span> blocks long.
+</span></span></code></pre></div><p><strong>Изменение размера drbd-ресурса</strong> будет выполняться on-line. После завершения проверим заполненность интересующего нас диска:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>df -h
+</span></span><span style="display:flex;"><span>Filesystem                           Size  Used Avail Use% Mounted on
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>/dev/drbd2                           788G  431G  350G  56% /srv/www
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Готово!</p>
                 </section>
             </article>
 
@@ -355,7 +355,7 @@ Filesystem                           Size  Used Avail Use% Mounted on
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

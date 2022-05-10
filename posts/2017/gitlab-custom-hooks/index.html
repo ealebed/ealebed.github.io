@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,89 +106,89 @@
 <li>выбрать проект, для которого необходимо сделать кастомный хук;</li>
 <li>на сервере с GitLab перейти в каталоге репозитория проекта (в нашем случае — <code>/srv/gitlab/data/repositories/MYGROUP/MYREPO.git/</code>) создать новый каталог с именем <code>custom_hooks</code>:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks
+</span></span></code></pre></div><ul>
 <li>в каталоге …/custom_hooks создать файл с именем, соответствующим типу хука (например, для <code>pre-receive</code> хука файл должен называться <code>pre-receive</code>) без расширения:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
-</code></pre></div><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>touch /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
+</span></span></code></pre></div><ul>
 <li>сделать файл исполняемым и рекурсивно сменить владельца директории <code>custom_hooks</code> на пользователя, от которого запускаются docker-контейнеры (обычно у него id=1000):</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chmod +x /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
-</code></pre></div><pre><code class="language-bahs" data-lang="bahs">chown -R 1000:1000 /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/pre-receive
+</span></span></code></pre></div><pre tabindex="0"><code class="language-bahs" data-lang="bahs">chown -R 1000:1000 /srv/gitlab/data/repositories/MYGROUP/MYREPO.git/custom_hooks/
 </code></pre><ul>
 <li>в созданном файле написать git-хука (можно использовать любой язык программирования, главное не забыть в первой строке вставить &ldquo;shebang&rdquo; — <code>!#</code>). В нашем случае хук, выглядит так:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/sh
-</span><span style="color:#75715e"></span>  
-GITCMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/bin/git&#34;</span>
-NULLSHA<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0000000000000000000000000000000000000000&#34;</span>
-MAXSIZE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;5242880&#34;</span> <span style="color:#75715e"># 5MB limit on file size</span>
-EXIT<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-  
-<span style="color:#75715e"># Read stdin for ref information</span>
-<span style="color:#66d9ef">while</span> read oldref newref refname; <span style="color:#66d9ef">do</span>
- <span style="color:#75715e"># Skip branch deletions</span>
- <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>newref<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>NULLSHA<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-   <span style="color:#66d9ef">continue</span>;
- <span style="color:#66d9ef">fi</span>
-  
- <span style="color:#75715e"># Set oldref properly if this is branch creation.</span>
- <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>oldref<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>NULLSHA<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-   oldref<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;HEAD&#34;</span>
- <span style="color:#66d9ef">fi</span>
-  
- <span style="color:#75715e"># Get list of files to look at using git diff</span>
- <span style="color:#66d9ef">for</span> file in <span style="color:#66d9ef">$(</span>$GITCMD diff --stat --name-only --diff-filter<span style="color:#f92672">=</span>ACMRT <span style="color:#e6db74">${</span>oldref<span style="color:#e6db74">}</span>..<span style="color:#e6db74">${</span>newref<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">do</span>
-   <span style="color:#75715e"># Get the size of this file</span>
-   size<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>$GITCMD cat-file -s <span style="color:#e6db74">${</span>newref<span style="color:#e6db74">}</span>:<span style="color:#e6db74">${</span>file<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>
-   <span style="color:#75715e"># Check to see if for some reason we didn&#39;t get a size</span>
-   <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -z <span style="color:#e6db74">${</span>size<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-     <span style="color:#75715e"># Compare filesize to MAXSIZE</span>
-     <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>size<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -gt <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MAXSIZE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
-       <span style="color:#75715e"># Send output back to the user about oversized files.</span>
-       echo <span style="color:#e6db74">&#34;ERROR: </span><span style="color:#e6db74">${</span>file<span style="color:#e6db74">}</span><span style="color:#e6db74"> larger than </span><span style="color:#e6db74">${</span>MAXSIZE<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span>
-       EXIT<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
-     <span style="color:#66d9ef">fi</span> <span style="color:#75715e"># End size comparison</span>
-   <span style="color:#66d9ef">fi</span>   <span style="color:#75715e"># End check for empty size</span>
- <span style="color:#66d9ef">done</span>   <span style="color:#75715e"># End list of files</span>
-<span style="color:#66d9ef">done</span>     <span style="color:#75715e"># End reading stdin</span>
-  
-<span style="color:#75715e"># If we have oversized files, write more information out to the user</span>
-<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>EXIT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
- echo <span style="color:#e6db74">&#34;ERROR: Your commit has been blocked due to certain files being oversized.&#34;</span>
- echo <span style="color:#e6db74">&#34;ERROR: Check output above for more information.&#34;</span>
-<span style="color:#66d9ef">fi</span>
-exit $EXIT
-</code></pre></div><p>Добавляем в каталог с кодом проекта файл, заведомо большего размера (~12Mb), коммитим его:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git status
-On branch docker
-Your branch is up-to-date with <span style="color:#e6db74">&#39;upstream/docker&#39;</span>.
-Untracked files:
-  <span style="color:#f92672">(</span>use <span style="color:#e6db74">&#34;git add ...&#34;</span> to include in what will be committed<span style="color:#f92672">)</span>
-
-        Apresyan.dict.dz_3
-
-nothing added to commit but untracked files present <span style="color:#f92672">(</span>use <span style="color:#e6db74">&#34;git add&#34;</span> to track<span style="color:#f92672">)</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git add .
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git commit -am <span style="color:#e6db74">&#39;test commit large file&#39;</span> 
-<span style="color:#f92672">[</span>docker 73549ab<span style="color:#f92672">]</span> test commit large file
- <span style="color:#ae81ff">1</span> file changed, <span style="color:#ae81ff">0</span> insertions<span style="color:#f92672">(</span>+<span style="color:#f92672">)</span>, <span style="color:#ae81ff">0</span> deletions<span style="color:#f92672">(</span>-<span style="color:#f92672">)</span>
- create mode <span style="color:#ae81ff">100644</span> Apresyan.dict.dz_3
-</code></pre></div><p>Пробуем запушить в репозиторий:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git push
-Counting objects: 3, <span style="color:#66d9ef">done</span>.
-Delta compression using up to <span style="color:#ae81ff">4</span> threads.
-Compressing objects: 100% <span style="color:#f92672">(</span>3/3<span style="color:#f92672">)</span>, <span style="color:#66d9ef">done</span>.
-Writing objects: 100% <span style="color:#f92672">(</span>3/3<span style="color:#f92672">)</span>, 12.69 MiB | <span style="color:#ae81ff">0</span> bytes/s, <span style="color:#66d9ef">done</span>.
-Total <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>delta 1<span style="color:#f92672">)</span>, reused <span style="color:#ae81ff">0</span> <span style="color:#f92672">(</span>delta 0<span style="color:#f92672">)</span>
-remote: ERROR: Apresyan.dict.dz_3 larger than 5242880.
-remote: ERROR: Your commit has been blocked due to certain files being oversized.
-remote: ERROR: Check output above <span style="color:#66d9ef">for</span> more information.
-To ssh://git@gitlab.lc:23/MYGROUP/MYREPO.git
- ! <span style="color:#f92672">[</span>remote rejected<span style="color:#f92672">]</span> docker -&gt; docker <span style="color:#f92672">(</span>pre-receive hook declined<span style="color:#f92672">)</span>
-error: failed to push some refs to <span style="color:#e6db74">&#39;ssh://git@gitlab.lc:23/MYGROUP/MYREPO.git&#39;</span>
-</code></pre></div><p>Отлично, git-хук отработал как и ожидалось!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  
+</span></span><span style="display:flex;"><span>GITCMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/bin/git&#34;</span>
+</span></span><span style="display:flex;"><span>NULLSHA<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0000000000000000000000000000000000000000&#34;</span>
+</span></span><span style="display:flex;"><span>MAXSIZE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;5242880&#34;</span> <span style="color:#75715e"># 5MB limit on file size</span>
+</span></span><span style="display:flex;"><span>EXIT<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Read stdin for ref information</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> read oldref newref refname; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span> <span style="color:#75715e"># Skip branch deletions</span>
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>newref<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>NULLSHA<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">continue</span>;
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span> <span style="color:#75715e"># Set oldref properly if this is branch creation.</span>
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>oldref<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>NULLSHA<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>   oldref<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;HEAD&#34;</span>
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span> <span style="color:#75715e"># Get list of files to look at using git diff</span>
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">for</span> file in <span style="color:#66d9ef">$(</span>$GITCMD diff --stat --name-only --diff-filter<span style="color:#f92672">=</span>ACMRT <span style="color:#e6db74">${</span>oldref<span style="color:#e6db74">}</span>..<span style="color:#e6db74">${</span>newref<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e"># Get the size of this file</span>
+</span></span><span style="display:flex;"><span>   size<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>$GITCMD cat-file -s <span style="color:#e6db74">${</span>newref<span style="color:#e6db74">}</span>:<span style="color:#e6db74">${</span>file<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e"># Check to see if for some reason we didn&#39;t get a size</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -z <span style="color:#e6db74">${</span>size<span style="color:#e6db74">}</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e"># Compare filesize to MAXSIZE</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>size<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -gt <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MAXSIZE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#75715e"># Send output back to the user about oversized files.</span>
+</span></span><span style="display:flex;"><span>       echo <span style="color:#e6db74">&#34;ERROR: </span><span style="color:#e6db74">${</span>file<span style="color:#e6db74">}</span><span style="color:#e6db74"> larger than </span><span style="color:#e6db74">${</span>MAXSIZE<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span>
+</span></span><span style="display:flex;"><span>       EXIT<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">fi</span> <span style="color:#75715e"># End size comparison</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">fi</span>   <span style="color:#75715e"># End check for empty size</span>
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">done</span>   <span style="color:#75715e"># End list of files</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>     <span style="color:#75715e"># End reading stdin</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># If we have oversized files, write more information out to the user</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>EXIT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span> echo <span style="color:#e6db74">&#34;ERROR: Your commit has been blocked due to certain files being oversized.&#34;</span>
+</span></span><span style="display:flex;"><span> echo <span style="color:#e6db74">&#34;ERROR: Check output above for more information.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>exit $EXIT
+</span></span></code></pre></div><p>Добавляем в каталог с кодом проекта файл, заведомо большего размера (~12Mb), коммитим его:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git status
+</span></span><span style="display:flex;"><span>On branch docker
+</span></span><span style="display:flex;"><span>Your branch is up-to-date with <span style="color:#e6db74">&#39;upstream/docker&#39;</span>.
+</span></span><span style="display:flex;"><span>Untracked files:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">(</span>use <span style="color:#e6db74">&#34;git add ...&#34;</span> to include in what will be committed<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        Apresyan.dict.dz_3
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>nothing added to commit but untracked files present <span style="color:#f92672">(</span>use <span style="color:#e6db74">&#34;git add&#34;</span> to track<span style="color:#f92672">)</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git add .
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git commit -am <span style="color:#e6db74">&#39;test commit large file&#39;</span> 
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>docker 73549ab<span style="color:#f92672">]</span> test commit large file
+</span></span><span style="display:flex;"><span> <span style="color:#ae81ff">1</span> file changed, <span style="color:#ae81ff">0</span> insertions<span style="color:#f92672">(</span>+<span style="color:#f92672">)</span>, <span style="color:#ae81ff">0</span> deletions<span style="color:#f92672">(</span>-<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> create mode <span style="color:#ae81ff">100644</span> Apresyan.dict.dz_3
+</span></span></code></pre></div><p>Пробуем запушить в репозиторий:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git push
+</span></span><span style="display:flex;"><span>Counting objects: 3, <span style="color:#66d9ef">done</span>.
+</span></span><span style="display:flex;"><span>Delta compression using up to <span style="color:#ae81ff">4</span> threads.
+</span></span><span style="display:flex;"><span>Compressing objects: 100% <span style="color:#f92672">(</span>3/3<span style="color:#f92672">)</span>, <span style="color:#66d9ef">done</span>.
+</span></span><span style="display:flex;"><span>Writing objects: 100% <span style="color:#f92672">(</span>3/3<span style="color:#f92672">)</span>, 12.69 MiB | <span style="color:#ae81ff">0</span> bytes/s, <span style="color:#66d9ef">done</span>.
+</span></span><span style="display:flex;"><span>Total <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>delta 1<span style="color:#f92672">)</span>, reused <span style="color:#ae81ff">0</span> <span style="color:#f92672">(</span>delta 0<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>remote: ERROR: Apresyan.dict.dz_3 larger than 5242880.
+</span></span><span style="display:flex;"><span>remote: ERROR: Your commit has been blocked due to certain files being oversized.
+</span></span><span style="display:flex;"><span>remote: ERROR: Check output above <span style="color:#66d9ef">for</span> more information.
+</span></span><span style="display:flex;"><span>To ssh://git@gitlab.lc:23/MYGROUP/MYREPO.git
+</span></span><span style="display:flex;"><span> ! <span style="color:#f92672">[</span>remote rejected<span style="color:#f92672">]</span> docker -&gt; docker <span style="color:#f92672">(</span>pre-receive hook declined<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>error: failed to push some refs to <span style="color:#e6db74">&#39;ssh://git@gitlab.lc:23/MYGROUP/MYREPO.git&#39;</span>
+</span></span></code></pre></div><p>Отлично, git-хук отработал как и ожидалось!</p>
                 </section>
             </article>
 
@@ -280,7 +280,7 @@ error: failed to push some refs to <span style="color:#e6db74">&#39;ssh://git@gi
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -102,71 +102,71 @@
                 <section id="post-body">
                     <p>Детализированная информация о всех телефонных вызовах содержится в <strong>CDR</strong> (Call Detail Records). В Asterisk есть возможность сохранять CDR-записи в базе данных MySQL, вместо текстовых CSV файлов, использующихся по умолчанию. Давайте разберемся, <strong>как писать CDR в базу MySQL</strong>!</p>
 <p>Действия производятся на:</p>
-<pre><code>lsb_release -a
+<pre tabindex="0"><code>lsb_release -a
 No LSB modules are available.
 Distributor ID:	Debian
 Description:	Debian GNU/Linux 8.4 (jessie)
 Release:	8.4
 Codename:	jessie
 </code></pre><p>Считаем, что MySQL-сервер у вас уже установлен и настроен. Если нет, то установить его можно командой:</p>
-<pre><code>apt-get install mysql-server mysql-client libmysqlclient-dev
+<pre tabindex="0"><code>apt-get install mysql-server mysql-client libmysqlclient-dev
 </code></pre><p>Подключаемся к MySQL-серверу:</p>
-<pre><code>mysql -u root -p
+<pre tabindex="0"><code>mysql -u root -p
 </code></pre><p>Cоздаем базу данных:</p>
-<pre><code>CREATE DATABASE asterisk;
+<pre tabindex="0"><code>CREATE DATABASE asterisk;
 </code></pre><p>Выбираем только что созданную базу данных:</p>
-<pre><code>USE asterisk;
+<pre tabindex="0"><code>USE asterisk;
 </code></pre><p>Создаем таблицу для хранения записей CDR:</p>
-<pre><code>CREATE TABLE cdr (
-       calldate datetime NOT NULL default '0000-00-00 00:00:00',
-       clid varchar(80) NOT NULL default '',
-       src varchar(80) NOT NULL default '',
-       dst varchar(80) NOT NULL default '',
-       dcontext varchar(80) NOT NULL default '',
-       channel varchar(80) NOT NULL default '',
-       dstchannel varchar(80) NOT NULL default '',
-       lastapp varchar(80) NOT NULL default '',
-       lastdata varchar(80) NOT NULL default '',
-       duration int(11) NOT NULL default '0',
-       billsec int(11) NOT NULL default '0',
-       disposition varchar(45) NOT NULL default '',
-       amaflags int(11) NOT NULL default '0',
-       accountcode varchar(20) NOT NULL default '',
-       userfield varchar(255) NOT NULL default '',
-       uniqueid varchar(32) NOT NULL default ''
+<pre tabindex="0"><code>CREATE TABLE cdr (
+       calldate datetime NOT NULL default &#39;0000-00-00 00:00:00&#39;,
+       clid varchar(80) NOT NULL default &#39;&#39;,
+       src varchar(80) NOT NULL default &#39;&#39;,
+       dst varchar(80) NOT NULL default &#39;&#39;,
+       dcontext varchar(80) NOT NULL default &#39;&#39;,
+       channel varchar(80) NOT NULL default &#39;&#39;,
+       dstchannel varchar(80) NOT NULL default &#39;&#39;,
+       lastapp varchar(80) NOT NULL default &#39;&#39;,
+       lastdata varchar(80) NOT NULL default &#39;&#39;,
+       duration int(11) NOT NULL default &#39;0&#39;,
+       billsec int(11) NOT NULL default &#39;0&#39;,
+       disposition varchar(45) NOT NULL default &#39;&#39;,
+       amaflags int(11) NOT NULL default &#39;0&#39;,
+       accountcode varchar(20) NOT NULL default &#39;&#39;,
+       userfield varchar(255) NOT NULL default &#39;&#39;,
+       uniqueid varchar(32) NOT NULL default &#39;&#39;
 );
  
 ALTER TABLE cdr ADD INDEX ( calldate );
 ALTER TABLE cdr ADD INDEX ( dst );
 ALTER TABLE cdr ADD INDEX ( uniqueid );
 </code></pre><p>Создаем пользователя для работы с CDR:</p>
-<pre><code>CREATE USER asterisk@localhost IDENTIFIED BY &lt; password &gt;;
+<pre tabindex="0"><code>CREATE USER asterisk@localhost IDENTIFIED BY &lt; password &gt;;
 </code></pre><p>Выставляем созданному пользователю необходимые права:</p>
-<pre><code>GRANT ALL ON asterisk.* TO asterisk@localhost;
+<pre tabindex="0"><code>GRANT ALL ON asterisk.* TO asterisk@localhost;
 </code></pre><p>Asterisk должен быть собран с поддержкой <code>mysql</code> (модули <code>cdr_mysql</code>,<code>res_config_mysql</code>). Если нет, то в каталоге с исходным кодом выполняем:</p>
-<pre><code>make clean
-</code></pre><pre><code>./configure
-</code></pre><pre><code>make menuselect
+<pre tabindex="0"><code>make clean
+</code></pre><pre tabindex="0"><code>./configure
+</code></pre><pre tabindex="0"><code>make menuselect
 </code></pre><p>&hellip;выбираем нужные модули&hellip;</p>
-<pre><code>make
-</code></pre><pre><code>make install
+<pre tabindex="0"><code>make
+</code></pre><pre tabindex="0"><code>make install
 </code></pre><p>Открываем конфигурационный файл <code>/etc/asterisk/cdr.conf</code>, проверяем следующий параметр:</p>
-<pre><code>[global]
+<pre tabindex="0"><code>[global]
 enable=yes
 </code></pre><p>Открываем конфигурационный файл <code>/etc/asterisk/cdr_mysql.conf</code>, приводим к следующему виду:</p>
-<pre><code>[global]
+<pre tabindex="0"><code>[global]
 hostname=localhost
 dbname=asterisk
 table=cdr
 user=asterisk
 password=&lt;password&gt;
 </code></pre><p>Для применения изменений перезапускаем Asterisk командой:</p>
-<pre><code>/etc/init.d/asterisk restart
+<pre tabindex="0"><code>/etc/init.d/asterisk restart
 </code></pre><p>Проверить, что все было сделано правильно можно так:</p>
-<pre><code>asterisk -rx &quot;cdr mysql status&quot;
+<pre tabindex="0"><code>asterisk -rx &#34;cdr mysql status&#34;
 Connected to asterisk on socket file default using table cdr for 2 seconds.
   Wrote 0 records since last restart.
-</code></pre><pre><code>asterisk -rx &quot;cdr show status&quot;
+</code></pre><pre tabindex="0"><code>asterisk -rx &#34;cdr show status&#34;
 
 Call Detail Record (CDR) settings
 ----------------------------------
@@ -273,7 +273,7 @@ Call Detail Record (CDR) settings
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

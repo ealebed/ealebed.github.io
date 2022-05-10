@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,14 +106,14 @@
 <li><code>hard limit</code> — максимальное значение, которое не может быть превышено установкой значения <code>soft limit</code>.</li>
 </ul>
 <p>Максимальное значение открытых файловых дескрипторов (файлы, которые пользователь открыл с момента логина) в системе можно просмотреть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/sys/fs/file-max
-<span style="color:#ae81ff">798066</span>
-</code></pre></div><p>Иногда по некоторым причинам требуется <strong>увеличить число доступных файловых дескрипторов</strong> для всей системы или для конкретного процесса.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/sys/fs/file-max
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">798066</span>
+</span></span></code></pre></div><p>Иногда по некоторым причинам требуется <strong>увеличить число доступных файловых дескрипторов</strong> для всей системы или для конкретного процесса.
 Сделать это можно следующими способами:</p>
 <p><strong>Вариант 1</strong>, используя <code>ulimit</code>.</p>
 <p>Синтаксис команды следующий:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit <span style="color:#f92672">[</span>options <span style="color:#f92672">[</span>limit<span style="color:#f92672">]]</span>
-</code></pre></div><p>Опции могут быть следующими:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ulimit <span style="color:#f92672">[</span>options <span style="color:#f92672">[</span>limit<span style="color:#f92672">]]</span>
+</span></span></code></pre></div><p>Опции могут быть следующими:</p>
 <ul>
 <li><code>-a</code> — вывод текущих значений;</li>
 <li><code>-f</code> — лимит размера файлов которые, могут быть созданы командной оболочкой;</li>
@@ -121,22 +121,22 @@
 <li><code>-H</code> и <code>-S</code> — Hard и Soft лимиты соответственно.</li>
 </ul>
 <p>Смотрим текущий лимит на файловые дескрипторы:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -a | grep open
-Maximum number of open file descriptors                          <span style="color:#f92672">(</span>-n<span style="color:#f92672">)</span> <span style="color:#ae81ff">1024</span>
-</code></pre></div><p>Смотрим значение жесткого (Hard) лимита:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -Hn
-<span style="color:#ae81ff">1048576</span>
-</code></pre></div><p>Смотрим значение мягкого (Soft) лимита:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -Sn
-<span style="color:#ae81ff">1024</span>
-</code></pre></div><p>Меняем значение Hard / Soft лимитов на 3000:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -n <span style="color:#ae81ff">3000</span>
-</code></pre></div><p>Проверяем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -Sn
-<span style="color:#ae81ff">3000</span>
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ulimit -Hn
-<span style="color:#ae81ff">3000</span>
-</code></pre></div><p>Новые лимиты будут дествительны до перезагрузки компьютера.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ulimit -a | grep open
+</span></span><span style="display:flex;"><span>Maximum number of open file descriptors                          <span style="color:#f92672">(</span>-n<span style="color:#f92672">)</span> <span style="color:#ae81ff">1024</span>
+</span></span></code></pre></div><p>Смотрим значение жесткого (Hard) лимита:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ulimit -Hn
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1048576</span>
+</span></span></code></pre></div><p>Смотрим значение мягкого (Soft) лимита:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ulimit -Sn
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1024</span>
+</span></span></code></pre></div><p>Меняем значение Hard / Soft лимитов на 3000:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ulimit -n <span style="color:#ae81ff">3000</span>
+</span></span></code></pre></div><p>Проверяем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ulimit -Sn
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3000</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ulimit -Hn
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3000</span>
+</span></span></code></pre></div><p>Новые лимиты будут дествительны до перезагрузки компьютера.</p>
 <p><strong>Вариант 2</strong>, с помощью <code>Pluggable Authentication Modules</code> (PAM).</p>
 <p>Настройка PAM модулей в большинстве Linux дистрибутивов осуществляется в файле <code>/etc/security/limits.conf</code>. В файле присутствуют 4 поля:</p>
 <ul>
@@ -146,30 +146,30 @@ Maximum number of open file descriptors                          <span style="co
 <li><code>value</code> — значение которое будет установлено.</li>
 </ul>
 <p>Для установки максимального количества открытых файлов для всех пользователей в файл <code>/etc/security/limits.conf</code> добавляем следующие строки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-* hard nofile 20000
-* soft nofile 15000
-...
-</code></pre></div><p>после чего перелогиниться в системе (или перезагрузиться).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>* hard nofile 20000
+</span></span><span style="display:flex;"><span>* soft nofile 15000
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>после чего перелогиниться в системе (или перезагрузиться).</p>
 <p><strong>Вариант 3</strong>, изменение общесистемных (system wide) лимитов.</p>
 <p>В Linux-дистрибутивах существует значение <code>file-max</code> — максимальное количество файловых дескрипторов (значение подразумевает, что операционную систему используют несколько пользователей). Этот параметр можно изменить отредактировав конфигурационный файл <code>/etc/sysctl.conf</code> или напрямую изменив <code>fs.file-max</code> из командной строки.</p>
 <p>Текущее значение открытых файлов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/sys/fs/file-max
-<span style="color:#ae81ff">798066</span>
-</code></pre></div><p>Меняем значение из командной строки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -w fs.file-max<span style="color:#f92672">=</span><span style="color:#ae81ff">250000</span>
-fs.file-max <span style="color:#f92672">=</span> <span style="color:#ae81ff">250000</span>
-</code></pre></div><p>Проверяем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat /proc/sys/fs/file-max
-<span style="color:#ae81ff">250000</span>
-</code></pre></div><p>Данные значения будут действительны до следующей перезагрузки компьютера. Чтобы изменения остались, нужно внести их в файл <code>/etc/sysctl.conf</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-fs.file-max=250000
-...
-</code></pre></div><p>после чего выполнить команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sysctl -p
-fs.file-max <span style="color:#f92672">=</span> <span style="color:#ae81ff">250000</span>
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/sys/fs/file-max
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">798066</span>
+</span></span></code></pre></div><p>Меняем значение из командной строки:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sysctl -w fs.file-max<span style="color:#f92672">=</span><span style="color:#ae81ff">250000</span>
+</span></span><span style="display:flex;"><span>fs.file-max <span style="color:#f92672">=</span> <span style="color:#ae81ff">250000</span>
+</span></span></code></pre></div><p>Проверяем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/sys/fs/file-max
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">250000</span>
+</span></span></code></pre></div><p>Данные значения будут действительны до следующей перезагрузки компьютера. Чтобы изменения остались, нужно внести их в файл <code>/etc/sysctl.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>fs.file-max=250000
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>после чего выполнить команду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sysctl -p
+</span></span><span style="display:flex;"><span>fs.file-max <span style="color:#f92672">=</span> <span style="color:#ae81ff">250000</span>
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -261,7 +261,7 @@ fs.file-max <span style="color:#f92672">=</span> <span style="color:#ae81ff">250
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

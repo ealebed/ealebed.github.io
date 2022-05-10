@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,106 +101,106 @@
                     <p><strong>Nmap</strong> (сокращение от «Network Mapper») — это набор инструментов для сканирования сети. Зачастую используется для проверки безопасности, определения сервисов запущенных на узле, для идентификации ОС и приложений, определения типа фаерволла и т. д. Давайте разберемся с несколькими <strong>практическими примерами использования <code>nmap</code></strong>!</p>
 <p>Считаем, что в вашей системе уже установлен <code>nmap</code>.</p>
 <p>Синтаксис команды следующий:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap <span style="color:#f92672">[</span>параметры_сканирования<span style="color:#f92672">]</span> цель_сканирования
-</code></pre></div><p>Простой пример сканирования хоста по ip-адресу или по имени:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap 192.168.0.12
-
-Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 09:11 EEST
-Nmap scan report <span style="color:#66d9ef">for</span> saturn <span style="color:#f92672">(</span>192.168.0.12<span style="color:#f92672">)</span>
-Host is up <span style="color:#f92672">(</span>0.000080s latency<span style="color:#f92672">)</span>.
-Not shown: <span style="color:#ae81ff">991</span> closed ports
-PORT     STATE SERVICE
-22/tcp   open  ssh
-25/tcp   open  smtp
-80/tcp   open  http
-111/tcp  open  rpcbind
-2000/tcp open  cisco-sccp
-3306/tcp open  mysql
-5061/tcp open  sip-tls
-8080/tcp open  http-proxy
-9100/tcp open  jetdirect
-MAC Address: 00:0C:29:9A:15:C7 <span style="color:#f92672">(</span>VMware<span style="color:#f92672">)</span>
-
-Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 1.65 seconds
-</code></pre></div><p>Сканирование нескольких ip-адресов можно выполнить так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap 192.168.0.1 192.168.0.2 192.168.0.3
-</code></pre></div><p>или так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap 192.168.0.1-20
-</code></pre></div><p>Для сканирования всей подсети можно использовать такую команду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap 192.168.0.*
-</code></pre></div><p>или так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap 192.168.0.0/24
-</code></pre></div><p>При сканировании сетей можно пропускать некоторые ip-адреса:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap 192.168.0.0/24 --exclude 192.168.0.5,192.168.0.7,192.168.0.254
-</code></pre></div><p>Список хостов для сканирование можно взять из файла (допустим, <code>/tmp/test.txt</code>):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -iL /tmp/test.txt
-</code></pre></div><p>Также из файла можно взять список исключений (допустим, <code>/tmp/exclude.txt</code>):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -iL /tmp/test.txt --excludefile /tmp/exclude.txt
-</code></pre></div><p>Получить больше информации можно с помощью опции <code>-v</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -v 192.168.0.12
-
-Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 09:31 EEST
-Initiating ARP Ping Scan at 09:31
-Scanning 192.168.0.12 <span style="color:#f92672">[</span><span style="color:#ae81ff">1</span> port<span style="color:#f92672">]</span>
-Completed ARP Ping Scan at 09:31, 0.22s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> total hosts<span style="color:#f92672">)</span>
-Initiating Parallel DNS resolution of <span style="color:#ae81ff">1</span> host. at 09:31
-Completed Parallel DNS resolution of <span style="color:#ae81ff">1</span> host. at 09:31, 0.00s elapsed
-Initiating SYN Stealth Scan at 09:31
-Scanning saturn.reactor-v3 <span style="color:#f92672">(</span>192.168.0.12<span style="color:#f92672">)</span> <span style="color:#f92672">[</span><span style="color:#ae81ff">1000</span> ports<span style="color:#f92672">]</span>
-Discovered open port 3306/tcp on 192.168.0.12
-Discovered open port 22/tcp on 192.168.0.12
-Discovered open port 25/tcp on 192.168.0.12
-Discovered open port 8080/tcp on 192.168.0.12
-Discovered open port 111/tcp on 192.168.0.12
-Discovered open port 80/tcp on 192.168.0.12
-Discovered open port 2000/tcp on 192.168.0.12
-Discovered open port 9100/tcp on 192.168.0.12
-Discovered open port 5061/tcp on 192.168.0.12
-Completed SYN Stealth Scan at 09:31, 1.23s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">1000</span> total ports<span style="color:#f92672">)</span>
-Nmap scan report <span style="color:#66d9ef">for</span> saturn.reactor-v3 <span style="color:#f92672">(</span>192.168.0.12<span style="color:#f92672">)</span>
-Host is up <span style="color:#f92672">(</span>0.000095s latency<span style="color:#f92672">)</span>.
-Not shown: <span style="color:#ae81ff">991</span> closed ports
-PORT     STATE SERVICE
-22/tcp   open  ssh
-25/tcp   open  smtp
-80/tcp   open  http
-111/tcp  open  rpcbind
-2000/tcp open  cisco-sccp
-3306/tcp open  mysql
-5061/tcp open  sip-tls
-8080/tcp open  http-proxy
-9100/tcp open  jetdirect
-MAC Address: 00:0C:29:9A:15:C7 <span style="color:#f92672">(</span>VMware<span style="color:#f92672">)</span>
-
-Read data files from: /usr/bin/../share/nmap
-Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 1.56 seconds
-           Raw packets sent: <span style="color:#ae81ff">1001</span> <span style="color:#f92672">(</span>44.028KB<span style="color:#f92672">)</span> | Rcvd: <span style="color:#ae81ff">1005</span> <span style="color:#f92672">(</span>40.970KB<span style="color:#f92672">)</span>
-</code></pre></div><p>Определить ОС, установленную на хосте можно с помощью опции <code>-O</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -O 192.168.0.12
-...
-Device type: general purpose
-Running: Linux 3.X
-OS CPE: cpe:/o:linux:linux_kernel:3
-OS details: Linux 3.11 - 3.14
-Network Distance: <span style="color:#ae81ff">1</span> hop
-...
-</code></pre></div><p>Проверить какие хосты доступны и вывести их в виде списка можно с помощью опции <code>-sP</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -sP 192.168.0.0/24
-
-Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 09:47 EEST
-Nmap scan report <span style="color:#66d9ef">for</span> astra <span style="color:#f92672">(</span>192.168.0.1<span style="color:#f92672">)</span>
-Host is up <span style="color:#f92672">(</span>0.00022s latency<span style="color:#f92672">)</span>.
-MAC Address: E8:40:F2:3B:CB:98 <span style="color:#f92672">(</span>Pegatron<span style="color:#f92672">)</span>
-Nmap scan report <span style="color:#66d9ef">for</span> sao <span style="color:#f92672">(</span>192.168.0.2<span style="color:#f92672">)</span>
-Host is up <span style="color:#f92672">(</span>0.00037s latency<span style="color:#f92672">)</span>.
-MAC Address: 00:0C:29:BF:7F:93 <span style="color:#f92672">(</span>VMware<span style="color:#f92672">)</span>
-Nmap scan report <span style="color:#66d9ef">for</span> dao <span style="color:#f92672">(</span>192.168.0.5<span style="color:#f92672">)</span>
-Host is up <span style="color:#f92672">(</span>0.00021s latency<span style="color:#f92672">)</span>.
-MAC Address: 00:0C:29:0E:17:0C <span style="color:#f92672">(</span>VMware<span style="color:#f92672">)</span>
-Nmap scan report <span style="color:#66d9ef">for</span> deimos <span style="color:#f92672">(</span>192.168.0.6<span style="color:#f92672">)</span>
-...
-</code></pre></div><p>Узнать версии запущенных сервисов на хосте можно используя опцию <code>-sV</code>:</p>
-<pre><code>nmap -sV 192.168.0.13
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap <span style="color:#f92672">[</span>параметры_сканирования<span style="color:#f92672">]</span> цель_сканирования
+</span></span></code></pre></div><p>Простой пример сканирования хоста по ip-адресу или по имени:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap 192.168.0.12
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 09:11 EEST
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> saturn <span style="color:#f92672">(</span>192.168.0.12<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Host is up <span style="color:#f92672">(</span>0.000080s latency<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>Not shown: <span style="color:#ae81ff">991</span> closed ports
+</span></span><span style="display:flex;"><span>PORT     STATE SERVICE
+</span></span><span style="display:flex;"><span>22/tcp   open  ssh
+</span></span><span style="display:flex;"><span>25/tcp   open  smtp
+</span></span><span style="display:flex;"><span>80/tcp   open  http
+</span></span><span style="display:flex;"><span>111/tcp  open  rpcbind
+</span></span><span style="display:flex;"><span>2000/tcp open  cisco-sccp
+</span></span><span style="display:flex;"><span>3306/tcp open  mysql
+</span></span><span style="display:flex;"><span>5061/tcp open  sip-tls
+</span></span><span style="display:flex;"><span>8080/tcp open  http-proxy
+</span></span><span style="display:flex;"><span>9100/tcp open  jetdirect
+</span></span><span style="display:flex;"><span>MAC Address: 00:0C:29:9A:15:C7 <span style="color:#f92672">(</span>VMware<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 1.65 seconds
+</span></span></code></pre></div><p>Сканирование нескольких ip-адресов можно выполнить так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap 192.168.0.1 192.168.0.2 192.168.0.3
+</span></span></code></pre></div><p>или так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap 192.168.0.1-20
+</span></span></code></pre></div><p>Для сканирования всей подсети можно использовать такую команду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap 192.168.0.*
+</span></span></code></pre></div><p>или так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap 192.168.0.0/24
+</span></span></code></pre></div><p>При сканировании сетей можно пропускать некоторые ip-адреса:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap 192.168.0.0/24 --exclude 192.168.0.5,192.168.0.7,192.168.0.254
+</span></span></code></pre></div><p>Список хостов для сканирование можно взять из файла (допустим, <code>/tmp/test.txt</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -iL /tmp/test.txt
+</span></span></code></pre></div><p>Также из файла можно взять список исключений (допустим, <code>/tmp/exclude.txt</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -iL /tmp/test.txt --excludefile /tmp/exclude.txt
+</span></span></code></pre></div><p>Получить больше информации можно с помощью опции <code>-v</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -v 192.168.0.12
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 09:31 EEST
+</span></span><span style="display:flex;"><span>Initiating ARP Ping Scan at 09:31
+</span></span><span style="display:flex;"><span>Scanning 192.168.0.12 <span style="color:#f92672">[</span><span style="color:#ae81ff">1</span> port<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Completed ARP Ping Scan at 09:31, 0.22s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> total hosts<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Initiating Parallel DNS resolution of <span style="color:#ae81ff">1</span> host. at 09:31
+</span></span><span style="display:flex;"><span>Completed Parallel DNS resolution of <span style="color:#ae81ff">1</span> host. at 09:31, 0.00s elapsed
+</span></span><span style="display:flex;"><span>Initiating SYN Stealth Scan at 09:31
+</span></span><span style="display:flex;"><span>Scanning saturn.reactor-v3 <span style="color:#f92672">(</span>192.168.0.12<span style="color:#f92672">)</span> <span style="color:#f92672">[</span><span style="color:#ae81ff">1000</span> ports<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Discovered open port 3306/tcp on 192.168.0.12
+</span></span><span style="display:flex;"><span>Discovered open port 22/tcp on 192.168.0.12
+</span></span><span style="display:flex;"><span>Discovered open port 25/tcp on 192.168.0.12
+</span></span><span style="display:flex;"><span>Discovered open port 8080/tcp on 192.168.0.12
+</span></span><span style="display:flex;"><span>Discovered open port 111/tcp on 192.168.0.12
+</span></span><span style="display:flex;"><span>Discovered open port 80/tcp on 192.168.0.12
+</span></span><span style="display:flex;"><span>Discovered open port 2000/tcp on 192.168.0.12
+</span></span><span style="display:flex;"><span>Discovered open port 9100/tcp on 192.168.0.12
+</span></span><span style="display:flex;"><span>Discovered open port 5061/tcp on 192.168.0.12
+</span></span><span style="display:flex;"><span>Completed SYN Stealth Scan at 09:31, 1.23s elapsed <span style="color:#f92672">(</span><span style="color:#ae81ff">1000</span> total ports<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> saturn.reactor-v3 <span style="color:#f92672">(</span>192.168.0.12<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Host is up <span style="color:#f92672">(</span>0.000095s latency<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>Not shown: <span style="color:#ae81ff">991</span> closed ports
+</span></span><span style="display:flex;"><span>PORT     STATE SERVICE
+</span></span><span style="display:flex;"><span>22/tcp   open  ssh
+</span></span><span style="display:flex;"><span>25/tcp   open  smtp
+</span></span><span style="display:flex;"><span>80/tcp   open  http
+</span></span><span style="display:flex;"><span>111/tcp  open  rpcbind
+</span></span><span style="display:flex;"><span>2000/tcp open  cisco-sccp
+</span></span><span style="display:flex;"><span>3306/tcp open  mysql
+</span></span><span style="display:flex;"><span>5061/tcp open  sip-tls
+</span></span><span style="display:flex;"><span>8080/tcp open  http-proxy
+</span></span><span style="display:flex;"><span>9100/tcp open  jetdirect
+</span></span><span style="display:flex;"><span>MAC Address: 00:0C:29:9A:15:C7 <span style="color:#f92672">(</span>VMware<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Read data files from: /usr/bin/../share/nmap
+</span></span><span style="display:flex;"><span>Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 1.56 seconds
+</span></span><span style="display:flex;"><span>           Raw packets sent: <span style="color:#ae81ff">1001</span> <span style="color:#f92672">(</span>44.028KB<span style="color:#f92672">)</span> | Rcvd: <span style="color:#ae81ff">1005</span> <span style="color:#f92672">(</span>40.970KB<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Определить ОС, установленную на хосте можно с помощью опции <code>-O</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -O 192.168.0.12
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Device type: general purpose
+</span></span><span style="display:flex;"><span>Running: Linux 3.X
+</span></span><span style="display:flex;"><span>OS CPE: cpe:/o:linux:linux_kernel:3
+</span></span><span style="display:flex;"><span>OS details: Linux 3.11 - 3.14
+</span></span><span style="display:flex;"><span>Network Distance: <span style="color:#ae81ff">1</span> hop
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Проверить какие хосты доступны и вывести их в виде списка можно с помощью опции <code>-sP</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -sP 192.168.0.0/24
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 09:47 EEST
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> astra <span style="color:#f92672">(</span>192.168.0.1<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Host is up <span style="color:#f92672">(</span>0.00022s latency<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>MAC Address: E8:40:F2:3B:CB:98 <span style="color:#f92672">(</span>Pegatron<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> sao <span style="color:#f92672">(</span>192.168.0.2<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Host is up <span style="color:#f92672">(</span>0.00037s latency<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>MAC Address: 00:0C:29:BF:7F:93 <span style="color:#f92672">(</span>VMware<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> dao <span style="color:#f92672">(</span>192.168.0.5<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Host is up <span style="color:#f92672">(</span>0.00021s latency<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>MAC Address: 00:0C:29:0E:17:0C <span style="color:#f92672">(</span>VMware<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> deimos <span style="color:#f92672">(</span>192.168.0.6<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Узнать версии запущенных сервисов на хосте можно используя опцию <code>-sV</code>:</p>
+<pre tabindex="0"><code>nmap -sV 192.168.0.13
 
 Starting Nmap 6.47 ( http://nmap.org ) at 2016-10-13 09:58 EEST
 Nmap scan report for mars (192.168.0.13)
@@ -214,81 +214,81 @@ PORT     STATE SERVICE         VERSION
 3306/tcp open  mysql           MySQL 5.5.49-0+deb8u1-log
 ...
 </code></pre><p>Осуществить быстрое сканирование:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -F 192.168.0.1
-</code></pre></div><p>Показать открытые порты на сканируемом узле:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap --open 192.168.0.1
-</code></pre></div><p>Отобразить отправленные/полученные пакеты:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap --packet-trace 192.168.0.1
-</code></pre></div><p>Вывести сетевые интерфейсы и маршруты хоста, с которого выполняется сканирование (весьма полезно для отладки):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap --iflist
-
-Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 10:04 EEST
-************************INTERFACES************************
-DEV      <span style="color:#f92672">(</span>SHORT<span style="color:#f92672">)</span>    IP/MASK                     TYPE     UP   MTU   MAC
-eth0.101 <span style="color:#f92672">(</span>eth0.101<span style="color:#f92672">)</span> 192.168.2.13/24             ethernet up   <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:3E
-eth0.101 <span style="color:#f92672">(</span>eth0.101<span style="color:#f92672">)</span> fe80::20c:29ff:fe8a:ac3e/64 ethernet up   <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:3E
-eth0     <span style="color:#f92672">(</span>eth0<span style="color:#f92672">)</span>     192.168.0.13/23             ethernet up   <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:3E
-eth0     <span style="color:#f92672">(</span>eth0<span style="color:#f92672">)</span>     fe80::20c:29ff:fe8a:ac3e/64 ethernet up   <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:3E
-eth1     <span style="color:#f92672">(</span>eth1<span style="color:#f92672">)</span>     <span style="color:#f92672">(</span>none<span style="color:#f92672">)</span>/0                    ethernet down <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:48
-lo       <span style="color:#f92672">(</span>lo<span style="color:#f92672">)</span>       127.0.0.1/8                 loopback up   <span style="color:#ae81ff">65536</span>
-lo       <span style="color:#f92672">(</span>lo<span style="color:#f92672">)</span>       ::1/128                     loopback up   <span style="color:#ae81ff">65536</span>
-
-**************************ROUTES**************************
-DST/MASK                     DEV      METRIC GATEWAY
-192.168.2.0/24               eth0.101 <span style="color:#ae81ff">0</span>
-192.168.0.0/23               eth0     <span style="color:#ae81ff">0</span>
-0.0.0.0/0                    eth0     <span style="color:#ae81ff">0</span>      192.168.0.15
-::1/128                      lo       <span style="color:#ae81ff">0</span>
-fe80::20c:29ff:fe8a:ac3e/128 lo       <span style="color:#ae81ff">0</span>
-fe80::20c:29ff:fe8a:ac3e/128 lo       <span style="color:#ae81ff">0</span>
-ff02::1/128                  eth0     <span style="color:#ae81ff">0</span>
-::1/128                      lo       <span style="color:#ae81ff">256</span>
-fe80::/64                    eth0     <span style="color:#ae81ff">256</span>
-fe80::/64                    eth0.101 <span style="color:#ae81ff">256</span>
-ff00::/8                     eth0     <span style="color:#ae81ff">256</span>
-ff00::/8                     eth0.101 <span style="color:#ae81ff">256</span>
-</code></pre></div><p>Выполнить сканирование определенно порта можно несколькими способами, например так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -p <span style="color:#ae81ff">80</span> 192.168.0.1
-
-Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 10:07 EEST
-Nmap scan report <span style="color:#66d9ef">for</span> astra <span style="color:#f92672">(</span>192.168.0.1<span style="color:#f92672">)</span>
-Host is up <span style="color:#f92672">(</span>0.00028s latency<span style="color:#f92672">)</span>.
-PORT   STATE SERVICE
-80/tcp open  http
-MAC Address: E8:40:F2:3B:CB:98 <span style="color:#f92672">(</span>Pegatron<span style="color:#f92672">)</span>
-
-Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 0.63 seconds
-</code></pre></div><p>или так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -p T:80 192.168.0.1
-</code></pre></div><p>Можно также указывать для сканирование несколько портов через запятую:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -p 80,443 192.168.0.1
-</code></pre></div><p>или задавать диапазон портов:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -p 80-200 192.168.0.1
-</code></pre></div><p>Топ 5 портов можно увидеть так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap --top-ports <span style="color:#ae81ff">5</span> 192.168.0.1
-
-Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 10:18 EEST
-Nmap scan report <span style="color:#66d9ef">for</span> astra <span style="color:#f92672">(</span>192.168.0.1<span style="color:#f92672">)</span>
-Host is up <span style="color:#f92672">(</span>0.00022s latency<span style="color:#f92672">)</span>.
-PORT    STATE  SERVICE
-21/tcp  closed ftp
-22/tcp  open   ssh
-23/tcp  closed telnet
-80/tcp  open   http
-443/tcp open   https
-MAC Address: E8:40:F2:3B:CB:98 <span style="color:#f92672">(</span>Pegatron<span style="color:#f92672">)</span>
-
-Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 1.63 seconds
-</code></pre></div><p>Выполнить сканирование узла используя <code>TCP ACK (PA)</code> и <code>TCP Syn (PS)</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -PS 192.168.0.1
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -PS 80,443 192.168.0.1
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -PA 192.168.0.1
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -PA 80,200-400 192.168.0.1
-</code></pre></div><p>Сканировать хост с использованием IP ping:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -PO 192.168.0.1
-</code></pre></div><p>Сканировать хост с использованием UDP ping:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nmap -PU 192.168.0.1
-</code></pre></div><p>Мы рассмотрели несколько практических примеров, которые чаще всего используются в повседневной жизни. Больше вариантов и способов сканирования удаленных хостов можно найти <a href="https://svn.nmap.org/nmap/docs/nmap.usage.txt">здесь</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -F 192.168.0.1
+</span></span></code></pre></div><p>Показать открытые порты на сканируемом узле:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap --open 192.168.0.1
+</span></span></code></pre></div><p>Отобразить отправленные/полученные пакеты:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap --packet-trace 192.168.0.1
+</span></span></code></pre></div><p>Вывести сетевые интерфейсы и маршруты хоста, с которого выполняется сканирование (весьма полезно для отладки):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap --iflist
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 10:04 EEST
+</span></span><span style="display:flex;"><span>************************INTERFACES************************
+</span></span><span style="display:flex;"><span>DEV      <span style="color:#f92672">(</span>SHORT<span style="color:#f92672">)</span>    IP/MASK                     TYPE     UP   MTU   MAC
+</span></span><span style="display:flex;"><span>eth0.101 <span style="color:#f92672">(</span>eth0.101<span style="color:#f92672">)</span> 192.168.2.13/24             ethernet up   <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:3E
+</span></span><span style="display:flex;"><span>eth0.101 <span style="color:#f92672">(</span>eth0.101<span style="color:#f92672">)</span> fe80::20c:29ff:fe8a:ac3e/64 ethernet up   <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:3E
+</span></span><span style="display:flex;"><span>eth0     <span style="color:#f92672">(</span>eth0<span style="color:#f92672">)</span>     192.168.0.13/23             ethernet up   <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:3E
+</span></span><span style="display:flex;"><span>eth0     <span style="color:#f92672">(</span>eth0<span style="color:#f92672">)</span>     fe80::20c:29ff:fe8a:ac3e/64 ethernet up   <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:3E
+</span></span><span style="display:flex;"><span>eth1     <span style="color:#f92672">(</span>eth1<span style="color:#f92672">)</span>     <span style="color:#f92672">(</span>none<span style="color:#f92672">)</span>/0                    ethernet down <span style="color:#ae81ff">1500</span>  00:0C:29:8A:AC:48
+</span></span><span style="display:flex;"><span>lo       <span style="color:#f92672">(</span>lo<span style="color:#f92672">)</span>       127.0.0.1/8                 loopback up   <span style="color:#ae81ff">65536</span>
+</span></span><span style="display:flex;"><span>lo       <span style="color:#f92672">(</span>lo<span style="color:#f92672">)</span>       ::1/128                     loopback up   <span style="color:#ae81ff">65536</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>**************************ROUTES**************************
+</span></span><span style="display:flex;"><span>DST/MASK                     DEV      METRIC GATEWAY
+</span></span><span style="display:flex;"><span>192.168.2.0/24               eth0.101 <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>192.168.0.0/23               eth0     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>0.0.0.0/0                    eth0     <span style="color:#ae81ff">0</span>      192.168.0.15
+</span></span><span style="display:flex;"><span>::1/128                      lo       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>fe80::20c:29ff:fe8a:ac3e/128 lo       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>fe80::20c:29ff:fe8a:ac3e/128 lo       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>ff02::1/128                  eth0     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>::1/128                      lo       <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>fe80::/64                    eth0     <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>fe80::/64                    eth0.101 <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>ff00::/8                     eth0     <span style="color:#ae81ff">256</span>
+</span></span><span style="display:flex;"><span>ff00::/8                     eth0.101 <span style="color:#ae81ff">256</span>
+</span></span></code></pre></div><p>Выполнить сканирование определенно порта можно несколькими способами, например так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -p <span style="color:#ae81ff">80</span> 192.168.0.1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 10:07 EEST
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> astra <span style="color:#f92672">(</span>192.168.0.1<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Host is up <span style="color:#f92672">(</span>0.00028s latency<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>PORT   STATE SERVICE
+</span></span><span style="display:flex;"><span>80/tcp open  http
+</span></span><span style="display:flex;"><span>MAC Address: E8:40:F2:3B:CB:98 <span style="color:#f92672">(</span>Pegatron<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 0.63 seconds
+</span></span></code></pre></div><p>или так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -p T:80 192.168.0.1
+</span></span></code></pre></div><p>Можно также указывать для сканирование несколько портов через запятую:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -p 80,443 192.168.0.1
+</span></span></code></pre></div><p>или задавать диапазон портов:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -p 80-200 192.168.0.1
+</span></span></code></pre></div><p>Топ 5 портов можно увидеть так:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap --top-ports <span style="color:#ae81ff">5</span> 192.168.0.1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting Nmap 6.47 <span style="color:#f92672">(</span> http://nmap.org <span style="color:#f92672">)</span> at 2016-10-13 10:18 EEST
+</span></span><span style="display:flex;"><span>Nmap scan report <span style="color:#66d9ef">for</span> astra <span style="color:#f92672">(</span>192.168.0.1<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Host is up <span style="color:#f92672">(</span>0.00022s latency<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>PORT    STATE  SERVICE
+</span></span><span style="display:flex;"><span>21/tcp  closed ftp
+</span></span><span style="display:flex;"><span>22/tcp  open   ssh
+</span></span><span style="display:flex;"><span>23/tcp  closed telnet
+</span></span><span style="display:flex;"><span>80/tcp  open   http
+</span></span><span style="display:flex;"><span>443/tcp open   https
+</span></span><span style="display:flex;"><span>MAC Address: E8:40:F2:3B:CB:98 <span style="color:#f92672">(</span>Pegatron<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 1.63 seconds
+</span></span></code></pre></div><p>Выполнить сканирование узла используя <code>TCP ACK (PA)</code> и <code>TCP Syn (PS)</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -PS 192.168.0.1
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -PS 80,443 192.168.0.1
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -PA 192.168.0.1
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -PA 80,200-400 192.168.0.1
+</span></span></code></pre></div><p>Сканировать хост с использованием IP ping:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -PO 192.168.0.1
+</span></span></code></pre></div><p>Сканировать хост с использованием UDP ping:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmap -PU 192.168.0.1
+</span></span></code></pre></div><p>Мы рассмотрели несколько практических примеров, которые чаще всего используются в повседневной жизни. Больше вариантов и способов сканирования удаленных хостов можно найти <a href="https://svn.nmap.org/nmap/docs/nmap.usage.txt">здесь</a>.</p>
                 </section>
             </article>
 
@@ -380,7 +380,7 @@ Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</spa
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

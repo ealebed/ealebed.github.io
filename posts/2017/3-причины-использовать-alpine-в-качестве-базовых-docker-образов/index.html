@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -105,7 +105,7 @@
 <p>Звучит интересно, но что это значит на самом деле для активных пользователей Docker?</p>
 <p><strong>Во-первых, размер.</strong>
 Размер имеет значение. В определенных контекстах «маленький размер» скорее огорчит, чем обрадует, но в мире Docker все наоборот — чем меньше размер образа, тем лучше. Docker-образ Alpine 3.6 занимает всего 3.98MB. В сравнении с остальными версиями популярных дистрибутивов, это выглядит так:</p>
-<pre><code>+----------------+---------+--------+
+<pre tabindex="0"><code>+----------------+---------+--------+
 | DISTRIBUTION   | VERSION | SIZE   |
 +----------------+---------+--------+
 | Debian         | Jessie  | 123MB  |
@@ -117,7 +117,7 @@
 </code></pre><p>Alpine примерно в 30 раз меньше Debian — теперь понятно, почему команда Docker изменила свой выбор базового обораза.</p>
 <p>Можно посмотреть сколько раз с Docker Hub были скачаны образы <a href="https://hub.docker.com/v2/repositories/library/debian/">Debian</a> и <a href="https://hub.docker.com/v2/repositories/library/alpine/">Alpine</a> (на момент написания статьи 39277937 и 219376002 раз соответственно). Конечно, если мы помним про использование слоев в docker-образах, то мы не будем утверждать, что каждый раз при скачивании из реджистри «вытягивается» полный размер образа до последнего байта, но давайте на минутку представим, что это именно так и наши образы хранятся на Amazon S3.</p>
 <p>Скачивание 39277937 раз базового образа с Amazon S3 нам обойдется:</p>
-<pre><code>+----------------+------------------+----------------------+
+<pre tabindex="0"><code>+----------------+------------------+----------------------+
 | DISTRIBUTION   | GIGS TRANSFERRED | S3 TRANSFER OUT COST |
 +----------------+------------------+----------------------+
 | Debian         | 4717955          | $ 253676.98          |
@@ -128,8 +128,8 @@
 <p><strong>Во-вторых, скорость.</strong>
 Alpine быстрый, и чтобы убедиться в этом рассмотрим конкретный пример — установку утилиты <code>curl</code> в docker-образ. В первом случае будем выполнять команду на хосте, где нет базовых docker-образов (они будут скачаны).
 Debian:</p>
-<pre><code>time docker run --rm debian:jessie sh -c &quot;apt-get update &amp;&amp; apt-get install curl -y --no-install-recommends&quot;
-Unable to find image 'debian:jessie' locally
+<pre tabindex="0"><code>time docker run --rm debian:jessie sh -c &#34;apt-get update &amp;&amp; apt-get install curl -y --no-install-recommends&#34;
+Unable to find image &#39;debian:jessie&#39; locally
 jessie: Pulling from library/debian
 
 ...
@@ -138,8 +138,8 @@ real	1m6,773s
 user	0m0,040s
 sys	0m0,040s
 </code></pre><p>Alpine:</p>
-<pre><code>time docker run --rm alpine:3.6 sh -c &quot;apk update &amp;&amp; apk add curl&quot;
-Unable to find image 'alpine:3.6' locally
+<pre tabindex="0"><code>time docker run --rm alpine:3.6 sh -c &#34;apk update &amp;&amp; apk add curl&#34;
+Unable to find image &#39;alpine:3.6&#39; locally
 3.6: Pulling from library/alpine
 88286f41530e: Pull complete 
 
@@ -150,7 +150,7 @@ user	0m0,036s
 sys	0m0,004s
 </code></pre><p>Окей, допустим большую часть времени заняло скачивание самого образа. Повторим эксперимент на том же хосте (образы уже скачаны, следовательно все будет быстрее).
 Debian:</p>
-<pre><code>time docker run --rm debian:jessie sh -c &quot;apt-get update &amp;&amp; apt-get install curl -y --no-install-recommends&quot;
+<pre tabindex="0"><code>time docker run --rm debian:jessie sh -c &#34;apt-get update &amp;&amp; apt-get install curl -y --no-install-recommends&#34;
 
 ...
 
@@ -158,7 +158,7 @@ real	0m40,108s
 user	0m0,020s
 sys	0m0,020s
 </code></pre><p>Alpine:</p>
-<pre><code>time docker run --rm alpine:3.6 sh -c &quot;apk update &amp;&amp; apk add curl&quot;
+<pre tabindex="0"><code>time docker run --rm alpine:3.6 sh -c &#34;apk update &amp;&amp; apk add curl&#34;
 
 ...
 
@@ -263,7 +263,7 @@ sys	0m0,004s
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

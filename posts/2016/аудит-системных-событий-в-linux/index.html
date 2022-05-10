@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,16 +103,16 @@
 <p>В интернете доступно множество инструкций по установке, настройке и использованию системы аудита (<a href="https://xakep.ru/2011/03/30/54897/">раз</a>, <a href="https://habrahabr.ru/company/selectel/blog/267833/">два</a> и т.д.), поэтому в эту тему углубляться не будем, а рассмотрим конкретный пример.</p>
 <p>Возникла необходимость с помощью системного аудита узнать подробности вызова процесса <code>gs</code> (с какими параметрами запускается, какой процесс запускает, как завершается и т.д.) .</p>
 <p>Устанавливаем демон <code>auditd</code> и вспомогательные утилиты:</p>
-<pre><code>apt-get install auditd
+<pre tabindex="0"><code>apt-get install auditd
 </code></pre><p>Посмотрим информацию о расположении файлов приложения <code>gs</code>:</p>
-<pre><code>whereis gs
+<pre tabindex="0"><code>whereis gs
 gs: /usr/bin/gs /usr/bin/X11/gs /usr/share/man/man1/gs.1.gz
 </code></pre><p>В конфигурационный файл <code>/etc/audit/audit.rules</code> добавим следующее правило:</p>
-<pre><code>-a exit,always -F arch=b64 -S all -F path=/usr/bin/gs
+<pre tabindex="0"><code>-a exit,always -F arch=b64 -S all -F path=/usr/bin/gs
 </code></pre><p>Перезапускаем демон для применения изменений:</p>
-<pre><code>/etc/init.d/auditd restart
+<pre tabindex="0"><code>/etc/init.d/auditd restart
 </code></pre><p>Для просмотра журнальных файлов, созданных демоном <code>auditd</code> будем использовать утилиту <code>aureport</code>. Для сокращения вывода будем запрашивать информацию только за определенный период времени (например 10 минут):</p>
-<pre><code>aureport -f --start recent
+<pre tabindex="0"><code>aureport -f --start recent
 
 File Report
 ===============================================
@@ -120,17 +120,17 @@ File Report
 ===============================================
 1. 05/11/2016 12:13:05 /usr/bin/gs 59 yes /usr/bin/gs -1 3020
 </code></pre><p>Зная номер события (последнее число в предыдущем выводе команды), можно его проанализировать более детально:</p>
-<pre><code>ausearch -a 3020
+<pre tabindex="0"><code>ausearch -a 3020
 ----
 time-&gt;Wed May 11 12:13:05 2016
 type=PATH msg=audit(1462957985.049:3020): item=1 name=(null) inode=811245 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00
-type=PATH msg=audit(1462957985.049:3020): item=0 name=&quot;/usr/bin/gs&quot; inode=889571 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00
-type=CWD msg=audit(1462957985.049:3020):  cwd=&quot;/var/www/work-utf&quot;
-type=EXECVE msg=audit(1462957985.049:3020): argc=17 a0=&quot;gs&quot; a1=&quot;-q&quot; a2=&quot;-dQUIET&quot; a3=&quot;-dSAFER&quot; a4=&quot;-dBATCH&quot; a5=&quot;-dNOPAUSE&quot; a6=&quot;-dNOPROMPT&quot; a7=&quot;-dMaxBitmap=500000000&quot; a8=&quot;-dAlignToPixels=0&quot; a9=&quot;-dGridFitTT=2&quot; a10=&quot;-sDEVICE=pngalpha&quot; a11=&quot;-dTextAlphaBits=4&quot; a12=&quot;-dGraphicsAlphaBits=4&quot; a13=&quot;-r300x300&quot; a14=&quot;-sOutputFile=/tmp/magick-mxX1zRa2-%08d&quot; a15=&quot;-f/tmp/magick-NjsmJhEA&quot; a16=&quot;-f/tmp/magick-CDT6PCa9&quot;
-type=SYSCALL msg=audit(1462957985.049:3020): arch=c000003e syscall=59 success=yes exit=0 a0=7fff414c9094 a1=7fc6c1050a88 a2=7fff414d9578 a3=7fc6be0dd240 items=2 ppid=23481 pid=4367 auid=4294967295 uid=33 gid=33 euid=33 suid=33 fsuid=33 egid=33 sgid=33 fsgid=33 tty=(none) ses=4294967295 comm=&quot;gs&quot; exe=&quot;/usr/bin/gs&quot; key=(null)
+type=PATH msg=audit(1462957985.049:3020): item=0 name=&#34;/usr/bin/gs&#34; inode=889571 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00
+type=CWD msg=audit(1462957985.049:3020):  cwd=&#34;/var/www/work-utf&#34;
+type=EXECVE msg=audit(1462957985.049:3020): argc=17 a0=&#34;gs&#34; a1=&#34;-q&#34; a2=&#34;-dQUIET&#34; a3=&#34;-dSAFER&#34; a4=&#34;-dBATCH&#34; a5=&#34;-dNOPAUSE&#34; a6=&#34;-dNOPROMPT&#34; a7=&#34;-dMaxBitmap=500000000&#34; a8=&#34;-dAlignToPixels=0&#34; a9=&#34;-dGridFitTT=2&#34; a10=&#34;-sDEVICE=pngalpha&#34; a11=&#34;-dTextAlphaBits=4&#34; a12=&#34;-dGraphicsAlphaBits=4&#34; a13=&#34;-r300x300&#34; a14=&#34;-sOutputFile=/tmp/magick-mxX1zRa2-%08d&#34; a15=&#34;-f/tmp/magick-NjsmJhEA&#34; a16=&#34;-f/tmp/magick-CDT6PCa9&#34;
+type=SYSCALL msg=audit(1462957985.049:3020): arch=c000003e syscall=59 success=yes exit=0 a0=7fff414c9094 a1=7fc6c1050a88 a2=7fff414d9578 a3=7fc6be0dd240 items=2 ppid=23481 pid=4367 auid=4294967295 uid=33 gid=33 euid=33 suid=33 fsuid=33 egid=33 sgid=33 fsgid=33 tty=(none) ses=4294967295 comm=&#34;gs&#34; exe=&#34;/usr/bin/gs&#34; key=(null)
 </code></pre><p><strong>Примечание.</strong> Типы системных вызовов можно узнать <a href="https://filippo.io/linux-syscall-table/">здесь</a>.</p>
 <p>Вывести информацию в человекочитаемой форме можно при помощи опции <code>-i</code> или <code>−−interpret</code>, например:</p>
-<pre><code>ausearch -a 3020 -i
+<pre tabindex="0"><code>ausearch -a 3020 -i
 ----
 type=PATH msg=audit(05/11/2016 12:13:05.049:3020) : item=1 name=(null) inode=811245 dev=08:02 mode=file,755 ouid=root ogid=root rdev=00:00
 type=PATH msg=audit(05/11/2016 12:13:05.049:3020) : item=0 name=/usr/bin/gs inode=889571 dev=08:02 mode=file,755 ouid=root ogid=root rdev=00:00
@@ -229,7 +229,7 @@ type=SYSCALL msg=audit(05/11/2016 12:13:05.049:3020) : arch=x86_64 syscall=execv
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

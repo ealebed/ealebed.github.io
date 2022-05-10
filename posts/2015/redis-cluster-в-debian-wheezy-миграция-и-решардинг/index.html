@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -106,27 +106,27 @@
 <ul>
 <li>подключаемся к первой ноде:</li>
 </ul>
-<pre><code>redis-cli -c -p 7000
+<pre tabindex="0"><code>redis-cli -c -p 7000
 </code></pre><ul>
 <li>выполняем команду:</li>
 </ul>
-<pre><code>CLUSTER SETSLOT 12182 IMPORTING 5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a
+<pre tabindex="0"><code>CLUSTER SETSLOT 12182 IMPORTING 5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a
 </code></pre><p><strong>Примечание.</strong> В данном примере 5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a — id третьей ноды (откуда импортируем слот)</p>
 <ul>
 <li>подключаемся к третьей ноде:</li>
 </ul>
-<pre><code>redis-cli -c -p 7002
+<pre tabindex="0"><code>redis-cli -c -p 7002
 </code></pre><ul>
 <li>выполняем команду:</li>
 </ul>
-<pre><code>CLUSTER SETSLOT 12182 MIGRATING c1783119d172d55becfcea8ec10855bf79d17c83
+<pre tabindex="0"><code>CLUSTER SETSLOT 12182 MIGRATING c1783119d172d55becfcea8ec10855bf79d17c83
 </code></pre><p><strong>Примечание.</strong> В данном примере c1783119d172d55becfcea8ec10855bf79d17c83 — id первой ноды (куда импортируем слот)</p>
 <ul>
 <li>после этого выполняем:</li>
 </ul>
-<pre><code>./redis-trib.rb fix 127.0.0.1:7000
+<pre tabindex="0"><code>./redis-trib.rb fix 127.0.0.1:7000
 </code></pre><p>Результат выполнения последней команды будет таким:</p>
-<pre><code>Connecting to node 127.0.0.1:7000: OK
+<pre tabindex="0"><code>Connecting to node 127.0.0.1:7000: OK
 Connecting to node 127.0.0.1:7005: OK
 Connecting to node 127.0.0.1:7002: OK
 Connecting to node 127.0.0.1:7001: OK
@@ -166,19 +166,19 @@ Moving slot 12182 from 127.0.0.1:7002 to 127.0.0.1:7000: .
 <ul>
 <li>подключаемся к третьей ноде:</li>
 </ul>
-<pre><code>redis-cli -c -p 7002
+<pre tabindex="0"><code>redis-cli -c -p 7002
 </code></pre><ul>
 <li>выполняем команду:</li>
 </ul>
-<pre><code>127.0.0.1:7002&gt; get foo
+<pre tabindex="0"><code>127.0.0.1:7002&gt; get foo
 -&gt; Redirected to slot [12182] located at 127.0.0.1:7000
-&quot;bar&quot;
+&#34;bar&#34;
 </code></pre><p>Решардинг (Resharding the cluster) — перемещение части слотов с одной ноды на другую.</p>
 <p>В <strong>Redis Cluster</strong> для решардинга выполняем следующие шаги:</p>
 <ul>
 <li>запускаем скрипт <code>redis-trib</code> с командой <code>reshard</code>:</li>
 </ul>
-<pre><code>./redis-trib.rb reshard 127.0.0.1:7000
+<pre tabindex="0"><code>./redis-trib.rb reshard 127.0.0.1:7000
 Connecting to node 127.0.0.1:7000: OK
 Connecting to node 127.0.0.1:7005: OK
 Connecting to node 127.0.0.1:7002: OK
@@ -211,23 +211,23 @@ S: 5367ea30f9db7e42bd3304ed4d7df56a541d6cb8 127.0.0.1:7003
 </code></pre><ul>
 <li>вводим количество слотов для перемещения:</li>
 </ul>
-<pre><code>How many slots do you want to move (from 1 to 16384)? 200
+<pre tabindex="0"><code>How many slots do you want to move (from 1 to 16384)? 200
 </code></pre><ul>
 <li>вводим id ноды, на которую хотим переместить слоты:</li>
 </ul>
-<pre><code>What is the receiving node ID? 6140050dc706b4d73362968316e6d5ddce184a10
+<pre tabindex="0"><code>What is the receiving node ID? 6140050dc706b4d73362968316e6d5ddce184a10
 </code></pre><ul>
 <li>вводим id нод, с каких хотим переместить слоты (можно выбрать несколько нод):</li>
 </ul>
-<pre><code>Please enter all the source node IDs.
-  Type 'all' to use all the nodes as source nodes for the hash slots.
-  Type 'done' once you entered all the source nodes IDs.
+<pre tabindex="0"><code>Please enter all the source node IDs.
+  Type &#39;all&#39; to use all the nodes as source nodes for the hash slots.
+  Type &#39;done&#39; once you entered all the source nodes IDs.
 Source node #1:c1783119d172d55becfcea8ec10855bf79d17c83
 Source node #2:done
 </code></pre><ul>
 <li>смотрим предложенный план перемещения и соглашаемся:</li>
 </ul>
-<pre><code>Ready to move 200 slots.
+<pre tabindex="0"><code>Ready to move 200 slots.
   Source nodes:
     M: c1783119d172d55becfcea8ec10855bf79d17c83 127.0.0.1:7000
    slots:0-5460,12182 (5462 slots) master
@@ -243,15 +243,15 @@ Source node #2:done
     Moving slot 199 from c1783119d172d55becfcea8ec10855bf79d17c83
 Do you want to proceed with the proposed reshard plan (yes/no)? yes
 </code></pre><p>Результат перемещения слотов:</p>
-<pre><code>Moving slot 0 from 127.0.0.1:7000 to 127.0.0.1:7001: 
+<pre tabindex="0"><code>Moving slot 0 from 127.0.0.1:7000 to 127.0.0.1:7001: 
 Moving slot 1 from 127.0.0.1:7000 to 127.0.0.1:7001: 
 ...
 Moving slot 198 from 127.0.0.1:7000 to 127.0.0.1:7001: 
 Moving slot 199 from 127.0.0.1:7000 to 127.0.0.1:7001:
 </code></pre><p>Убедиться, что решардинг прошел успешно и слоты перемещены можно запустив команду:</p>
-<pre><code>redis-cli -p 7000 cluster nodes | grep master
+<pre tabindex="0"><code>redis-cli -p 7000 cluster nodes | grep master
 </code></pre><p>Результат выполнения будет следующий:</p>
-<pre><code>5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a 127.0.0.1:7002 master - 0 1440157951939 3 connected 10923-12181 12183-16383
+<pre tabindex="0"><code>5b901bb4fe5a783c9a63c7c084cdb6d5e6a9396a 127.0.0.1:7002 master - 0 1440157951939 3 connected 10923-12181 12183-16383
 6140050dc706b4d73362968316e6d5ddce184a10 127.0.0.1:7001 master - 0 1440157953942 8 connected 0-199 5461-10922
 c1783119d172d55becfcea8ec10855bf79d17c83 127.0.0.1:7000 myself,master - 0 0 7 connected 200-5460 12182
 </code></pre>
@@ -346,7 +346,7 @@ c1783119d172d55becfcea8ec10855bf79d17c83 127.0.0.1:7000 myself,master - 0 0 7 co
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

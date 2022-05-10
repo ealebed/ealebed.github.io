@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -105,64 +105,64 @@
                     <p>Ручная настройка ip-телефонов Linksys (Cisco) несложная, но занимает очень много времени, особенно если таких телефонов в компании более сотни. Давайте разберемся с <strong>[Linksys|Cisco] Provisioning</strong> и облегчим себе жизнь!</p>
 <p>Информация не секретная и прекрасно находится в Google. Идея заключается в том, что модели ip-телефонов, поддерживающие provisioning при включении ищут в локальной сети <code>tftp</code>-сервер с конфигурационными файлами вида <code>spa$PSN.cfg</code> и <code>$MA.xml</code>, где <code>$PSN</code> это модель телефона (так как у меня используются три модели телефонов, то таких файлов будет тоже три), а <code>$MA</code> — MAC-адрес телефона (подробнее об этом чуть ниже).</p>
 <p>Для начала установим и настроим необходимое ПО:</p>
-<pre><code>sudo aptitude install atftp atftpd
+<pre tabindex="0"><code>sudo aptitude install atftp atftpd
 </code></pre><p>Приводим конфигурационный файл <code>/etc/default/atftpd</code> к следующему виду:</p>
-<pre><code>USE_INETD=false
-OPTIONS=&quot;--daemon --tftpd-timeout 300 --bind-address 192.168.2.26 --retry-timeout 5 --mcast-port 1758 --mcast-addr 239.239.239.0-255 --mcast-ttl 1 --maxthread 100 --verbose=7 --logfile=/var/log/atftp.log /var/tftp&quot;
+<pre tabindex="0"><code>USE_INETD=false
+OPTIONS=&#34;--daemon --tftpd-timeout 300 --bind-address 192.168.2.26 --retry-timeout 5 --mcast-port 1758 --mcast-addr 239.239.239.0-255 --mcast-ttl 1 --maxthread 100 --verbose=7 --logfile=/var/log/atftp.log /var/tftp&#34;
 </code></pre><p>Создаем все необходимые каталоги, выставляем права:</p>
-<pre><code>sudo mkdir /var/tftp
+<pre tabindex="0"><code>sudo mkdir /var/tftp
 sudo chmod -R 777 /var/tftp
 </code></pre><p>Запускаем сервис:</p>
-<pre><code>systemctl start atftpd.service
+<pre tabindex="0"><code>systemctl start atftpd.service
 </code></pre><p><strong>Примечание.</strong> Если порт 69/udp занят, то сервис не запустится, пока его не освободить.</p>
 <p>Далее необходимо добавить одну строку в конфигурационный файл <code>dhcp</code>-сервера (в моем случае это <code>/etc/dhcp/dhcpd.conf</code>):</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 # Telephones
 subnet 192.168.2.0 netmask 255.255.255.0 {
 ...
-    option tftp-server-name &quot;192.168.2.26&quot;;
+    option tftp-server-name &#34;192.168.2.26&#34;;
 }
 ...
 </code></pre><p>и перезапустить dhcp-сервер:</p>
-<pre><code>systemctl restart isc-dhcp-server.service
+<pre tabindex="0"><code>systemctl restart isc-dhcp-server.service
 </code></pre><p>Как я уже упоминал, в моем случае используются три различные модели телефонов, поддерживающие provisioning. Создадим конфигурационные файлы с общими настройками для каждой модели:</p>
-<pre><code>sudo touch /var/tftp/spa942.cfg
-</code></pre><pre><code>sudo touch /var/tftp/spa504G.cfg
-</code></pre><pre><code>sudo touch /var/tftp/spa509G.cfg
+<pre tabindex="0"><code>sudo touch /var/tftp/spa942.cfg
+</code></pre><pre tabindex="0"><code>sudo touch /var/tftp/spa504G.cfg
+</code></pre><pre tabindex="0"><code>sudo touch /var/tftp/spa509G.cfg
 </code></pre><p>Содержимое файлов будет практически идентичным и выглядеть так:</p>
-<pre><code>&lt;flat-profile&gt;
-&lt;Primary_NTP_Server ua=&quot;na&quot;&gt;192.168.0.13&lt;/Primary_NTP_Server&gt;
-&lt;Secondary_NTP_Server ua=&quot;na&quot;&gt;192.168.0.13&lt;/Secondary_NTP_Server&gt;
-&lt;Proxy_1_ ua=&quot;na&quot;&gt;192.168.1.12&lt;/Proxy_1_&gt;
-&lt;Enable_VLAN group=&quot;System/VLAN_Settings&quot;&gt;Yes&lt;/Enable_VLAN&gt;
-&lt;VLAN_ID group=&quot;System/VLAN_Settings&quot;&gt;101&lt;/VLAN_ID&gt;
-&lt;Enable_PC_Port_VLAN_Tagging group=&quot;System/VLAN_Settings&quot;&gt;No&lt;/Enable_PC_Port_VLAN_Tagging&gt;
-&lt;PC_Port_VLAN_ID group=&quot;System/VLAN_Settings&quot;&gt;1&lt;/PC_Port_VLAN_ID&gt;
-&lt;Default_Character_Encoding group=&quot;Regional/Miscellaneous&quot;&gt;UTF-8&lt;/Default_Character_Encoding&gt;
-&lt;Select_Logo ua=&quot;na&quot;&gt;Text Logo&lt;/Select_Logo&gt;
-&lt;Select_Background_Picture ua=&quot;na&quot;&gt;Text Logo&lt;/Select_Background_Picture&gt; 
-&lt;Time_Zone ua=&quot;na&quot;&gt;GMT+02:00&lt;/Time_Zone&gt; 
-&lt;Daylight_Saving_Time_Rule ua=&quot;na&quot;&gt;start=3/-1/7/3:0:0;end=10/-1/7/4:0:0;save=1&lt;/Daylight_Saving_Time_Rule&gt;
-&lt;Profile_Rule_B ua=&quot;na&quot;&gt;/Cisco/SPA504G/$MA.xml&lt;/Profile_Rule_B&gt;
-&lt;Resync_Periodic ua=&quot;na&quot;&gt;3600&lt;/Resync_Periodic&gt;
+<pre tabindex="0"><code>&lt;flat-profile&gt;
+&lt;Primary_NTP_Server ua=&#34;na&#34;&gt;192.168.0.13&lt;/Primary_NTP_Server&gt;
+&lt;Secondary_NTP_Server ua=&#34;na&#34;&gt;192.168.0.13&lt;/Secondary_NTP_Server&gt;
+&lt;Proxy_1_ ua=&#34;na&#34;&gt;192.168.1.12&lt;/Proxy_1_&gt;
+&lt;Enable_VLAN group=&#34;System/VLAN_Settings&#34;&gt;Yes&lt;/Enable_VLAN&gt;
+&lt;VLAN_ID group=&#34;System/VLAN_Settings&#34;&gt;101&lt;/VLAN_ID&gt;
+&lt;Enable_PC_Port_VLAN_Tagging group=&#34;System/VLAN_Settings&#34;&gt;No&lt;/Enable_PC_Port_VLAN_Tagging&gt;
+&lt;PC_Port_VLAN_ID group=&#34;System/VLAN_Settings&#34;&gt;1&lt;/PC_Port_VLAN_ID&gt;
+&lt;Default_Character_Encoding group=&#34;Regional/Miscellaneous&#34;&gt;UTF-8&lt;/Default_Character_Encoding&gt;
+&lt;Select_Logo ua=&#34;na&#34;&gt;Text Logo&lt;/Select_Logo&gt;
+&lt;Select_Background_Picture ua=&#34;na&#34;&gt;Text Logo&lt;/Select_Background_Picture&gt; 
+&lt;Time_Zone ua=&#34;na&#34;&gt;GMT+02:00&lt;/Time_Zone&gt; 
+&lt;Daylight_Saving_Time_Rule ua=&#34;na&#34;&gt;start=3/-1/7/3:0:0;end=10/-1/7/4:0:0;save=1&lt;/Daylight_Saving_Time_Rule&gt;
+&lt;Profile_Rule_B ua=&#34;na&#34;&gt;/Cisco/SPA504G/$MA.xml&lt;/Profile_Rule_B&gt;
+&lt;Resync_Periodic ua=&#34;na&#34;&gt;3600&lt;/Resync_Periodic&gt;
 &lt;/flat-profile&gt;
 </code></pre><p>Отличаться друг от друга конфиги будут только параметром</p>
-<pre><code>&lt;Profile_Rule_B ua=&quot;na&quot;&gt;/Cisco/SPA504G/$MA.xml&lt;/Profile_Rule_B&gt;
+<pre tabindex="0"><code>&lt;Profile_Rule_B ua=&#34;na&#34;&gt;/Cisco/SPA504G/$MA.xml&lt;/Profile_Rule_B&gt;
 </code></pre><p>, в котором указан относительный путь к файлам с индивидуальными настройками каждого телефона.</p>
 <p>Создаем каталоги, где будут находиться индивидуальные настройки:</p>
-<pre><code>mkdir -p Cisco/SPA504G
-</code></pre><pre><code>mkdir -p Cisco/SPA509G
-</code></pre><pre><code>mkdir -p Linksys/SPA942
+<pre tabindex="0"><code>mkdir -p Cisco/SPA504G
+</code></pre><pre tabindex="0"><code>mkdir -p Cisco/SPA509G
+</code></pre><pre tabindex="0"><code>mkdir -p Linksys/SPA942
 </code></pre><p>И раскладываем внутри них файлы вида <code>$MA.xml</code>, где <code>$MA</code> — MAC-адрес телефона. Индивидуальные настройки для каждого телефона примерно следующие:</p>
-<pre><code>cat 30e4db80fa87.xml
+<pre tabindex="0"><code>cat 30e4db80fa87.xml
 &lt;flat-profile&gt;
-&lt;Display_Name_1_ ua=&quot;na&quot;&gt;Test User&lt;/Display_Name_1_&gt;
-&lt;User_ID_1_ ua=&quot;na&quot;&gt;305&lt;/User_ID_1_&gt;
-&lt;Password_1_ ua=&quot;na&quot;&gt;VeryStrongPassword&lt;/Password_1_&gt;
-&lt;Auth_ID_1_ ua=&quot;na&quot;&gt;305&lt;/Auth_ID_1_&gt;
+&lt;Display_Name_1_ ua=&#34;na&#34;&gt;Test User&lt;/Display_Name_1_&gt;
+&lt;User_ID_1_ ua=&#34;na&#34;&gt;305&lt;/User_ID_1_&gt;
+&lt;Password_1_ ua=&#34;na&#34;&gt;VeryStrongPassword&lt;/Password_1_&gt;
+&lt;Auth_ID_1_ ua=&#34;na&#34;&gt;305&lt;/Auth_ID_1_&gt;
 &lt;/flat-profile&gt;
 </code></pre><p>После проделанных действий у нас получилась примерно следующая структура каталогов и файлов:</p>
-<pre><code>tree
+<pre tabindex="0"><code>tree
 .
 ├── Cisco
 │   ├── SPA504G
@@ -273,7 +273,7 @@ subnet 192.168.2.0 netmask 255.255.255.0 {
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

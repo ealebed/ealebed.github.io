@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,28 +103,28 @@
                     <p>Даже в небольших организациях для упрощения администрирования локальной сети необходимы один или несколько <strong>DNS</strong> (Domain Name System — система доменных имён) и <strong>DHCP</strong> (Dynamic Host Configuration Protocol — протокол динамической настройки узла) серверов.</p>
 <p>Давайте рассмотрим процесс <strong>установки DNS и DHCP серверов</strong>, а также разберемся с настройкой динамического обновления DNS-зон в операционной системе Ubuntu 16.04!</p>
 <p>Установка DNS-сервера выполняется командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt install bind9
-</code></pre></div><p>DHCP-сервер устанавливаем следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo apt install isc-dhcp-server
-</code></pre></div><p>Редактируем конфигурационный файл <code>/etc/bind/named.conf.options</code> и приводим его к следующему виду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">options {
-    directory &#34;/var/cache/bind&#34;;
-    listen-on {
-        192.168.0.0/22;
-        127.0.0.1;
-    };
- 
-    forwarders {
-        8.8.8.8;
-        8.8.4.4;
-    };
- 
-    dnssec-validation auto;
- 
-    auth-nxdomain no;    # conform to RFC1035
-    listen-on-v6 { any; };
-};
-</code></pre></div><p>Здесь важными являются директивы <code>forwarders</code> (вышестоящие DNS-сервера, на которые будет переадресован запрос при отсутствии информации о хосте на локальном сервере) и <code>listen-on</code> (с каких сетей или IP адресов локальный DNS-сервер будет обслуживать запросы).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install bind9
+</span></span></code></pre></div><p>DHCP-сервер устанавливаем следующим образом:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install isc-dhcp-server
+</span></span></code></pre></div><p>Редактируем конфигурационный файл <code>/etc/bind/named.conf.options</code> и приводим его к следующему виду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>options {
+</span></span><span style="display:flex;"><span>    directory &#34;/var/cache/bind&#34;;
+</span></span><span style="display:flex;"><span>    listen-on {
+</span></span><span style="display:flex;"><span>        192.168.0.0/22;
+</span></span><span style="display:flex;"><span>        127.0.0.1;
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    forwarders {
+</span></span><span style="display:flex;"><span>        8.8.8.8;
+</span></span><span style="display:flex;"><span>        8.8.4.4;
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    dnssec-validation auto;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    auth-nxdomain no;    # conform to RFC1035
+</span></span><span style="display:flex;"><span>    listen-on-v6 { any; };
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>Здесь важными являются директивы <code>forwarders</code> (вышестоящие DNS-сервера, на которые будет переадресован запрос при отсутствии информации о хосте на локальном сервере) и <code>listen-on</code> (с каких сетей или IP адресов локальный DNS-сервер будет обслуживать запросы).</p>
 <p>Далее создадим файлы зон (прямого и обратного просмотра) и добавить их в конфигурацию DNS-сервера. По умолчанию предлагается создавать файлы зон в каталоге <code>/etc/bind/zones/</code>, но в будущем это вызовет проблемы с их динамическим обновлением, поэтому мы будем создавать файлы зон в папке <code>/var/lib/bind/</code>.</p>
 <p>Исходные данные для создания зон:</p>
 <ul>
@@ -133,131 +133,131 @@
 <li>ip-адрес DNS-сервера — <code>192.168.0.218</code>.</li>
 </ul>
 <p>Создаем файл зоны прямого просмотра:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch /var/lib/bind/db.lc
-</code></pre></div><p>Содержимое файла следующее:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$TTL 604800     ; 1 week
-@          IN            SOA      ns.lc. root.ns.lc. (
-                                201703271  ; serial
-                                604800     ; refresh (1 week)
-                                86400      ; retry (1 day)
-                                2419200    ; expire (4 weeks)
-                                604800     ; minimum (1 week)
-                                )
-@		IN	NS	ns.lc.
-@		IN	A	192.168.0.218
-ns		IN	A	192.168.0.218
- 
-labs				IN    A    192.168.0.218
-*.labs				IN    A    192.168.0.218
-jira.labs			IN    A    192.168.0.3
-confluence.labs		IN    A    192.168.0.3
-gitlab				IN    A    192.168.0.3
-router 				IN    A    192.168.0.1
-zabbix				IN    A    192.168.0.3
-grafana				IN    A    192.168.0.3
-e-lebed				IN    A    192.168.0.80
-</code></pre></div><p>Создаем файл зоны обратного просмотра:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">touch /var/lib/bind/db.192.168.0
-</code></pre></div><p>Содержимое файла выглядит следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$TTL 604800     ; 1 week
-@  IN  SOA    ns.lc. root.ns.lc. (
-                                201703271 ; serial
-                                604800    ; refresh (1 week)
-                                86400     ; retry (1 day)
-                                2419200   ; expire (4 weeks)
-                                604800    ; minimum (1 week)
-                                )
-@		IN	NS	ns.lc.
-218		IN	PTR	lc.
- 
-218		IN    PTR    labs.lc.
-218		IN    PTR    git.labs.lc.
-218		IN    PTR    develop.labs.lc.
-218		IN    PTR    gocd.labs.lc.
-80		IN    PTR    e-lebed.lc.
-3		IN    PTR    jira.labs.lc.
-3		IN    PTR    confluence.labs.lc.
-3		IN    PTR    gitlab.lc
-3		IN    PTR    zabbix.lc.
-3		IN    PTR    grafana.lc.
-1		IN    PTR    router.lc.
-</code></pre></div><p>Добавляем ссылки на только что созданные зоны в конфигурационный файл <code>/etc/bind/named.conf.local</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-zone &#34;lc&#34; {
-    type master;
-    file &#34;/var/lib/bind/db.lc&#34;;
-    allow-update { key rndc-key; };
-};
- 
-zone &#34;0.168.192.in-addr.arpa&#34; {
-    type master;
-    file &#34;/var/lib/bind/db.192.168.0&#34;;
-    allow-update { key rndc-key; };
-};
-...
-</code></pre></div><p>Здесь именно благодаря строке <code>allow-update { key rndc-key; };</code> будет возможно динамическое обновление зон.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>touch /var/lib/bind/db.lc
+</span></span></code></pre></div><p>Содержимое файла следующее:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>$TTL 604800     ; 1 week
+</span></span><span style="display:flex;"><span>@          IN            SOA      ns.lc. root.ns.lc. (
+</span></span><span style="display:flex;"><span>                                201703271  ; serial
+</span></span><span style="display:flex;"><span>                                604800     ; refresh (1 week)
+</span></span><span style="display:flex;"><span>                                86400      ; retry (1 day)
+</span></span><span style="display:flex;"><span>                                2419200    ; expire (4 weeks)
+</span></span><span style="display:flex;"><span>                                604800     ; minimum (1 week)
+</span></span><span style="display:flex;"><span>                                )
+</span></span><span style="display:flex;"><span>@		IN	NS	ns.lc.
+</span></span><span style="display:flex;"><span>@		IN	A	192.168.0.218
+</span></span><span style="display:flex;"><span>ns		IN	A	192.168.0.218
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>labs				IN    A    192.168.0.218
+</span></span><span style="display:flex;"><span>*.labs				IN    A    192.168.0.218
+</span></span><span style="display:flex;"><span>jira.labs			IN    A    192.168.0.3
+</span></span><span style="display:flex;"><span>confluence.labs		IN    A    192.168.0.3
+</span></span><span style="display:flex;"><span>gitlab				IN    A    192.168.0.3
+</span></span><span style="display:flex;"><span>router 				IN    A    192.168.0.1
+</span></span><span style="display:flex;"><span>zabbix				IN    A    192.168.0.3
+</span></span><span style="display:flex;"><span>grafana				IN    A    192.168.0.3
+</span></span><span style="display:flex;"><span>e-lebed				IN    A    192.168.0.80
+</span></span></code></pre></div><p>Создаем файл зоны обратного просмотра:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>touch /var/lib/bind/db.192.168.0
+</span></span></code></pre></div><p>Содержимое файла выглядит следующим образом:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>$TTL 604800     ; 1 week
+</span></span><span style="display:flex;"><span>@  IN  SOA    ns.lc. root.ns.lc. (
+</span></span><span style="display:flex;"><span>                                201703271 ; serial
+</span></span><span style="display:flex;"><span>                                604800    ; refresh (1 week)
+</span></span><span style="display:flex;"><span>                                86400     ; retry (1 day)
+</span></span><span style="display:flex;"><span>                                2419200   ; expire (4 weeks)
+</span></span><span style="display:flex;"><span>                                604800    ; minimum (1 week)
+</span></span><span style="display:flex;"><span>                                )
+</span></span><span style="display:flex;"><span>@		IN	NS	ns.lc.
+</span></span><span style="display:flex;"><span>218		IN	PTR	lc.
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>218		IN    PTR    labs.lc.
+</span></span><span style="display:flex;"><span>218		IN    PTR    git.labs.lc.
+</span></span><span style="display:flex;"><span>218		IN    PTR    develop.labs.lc.
+</span></span><span style="display:flex;"><span>218		IN    PTR    gocd.labs.lc.
+</span></span><span style="display:flex;"><span>80		IN    PTR    e-lebed.lc.
+</span></span><span style="display:flex;"><span>3		IN    PTR    jira.labs.lc.
+</span></span><span style="display:flex;"><span>3		IN    PTR    confluence.labs.lc.
+</span></span><span style="display:flex;"><span>3		IN    PTR    gitlab.lc
+</span></span><span style="display:flex;"><span>3		IN    PTR    zabbix.lc.
+</span></span><span style="display:flex;"><span>3		IN    PTR    grafana.lc.
+</span></span><span style="display:flex;"><span>1		IN    PTR    router.lc.
+</span></span></code></pre></div><p>Добавляем ссылки на только что созданные зоны в конфигурационный файл <code>/etc/bind/named.conf.local</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>zone &#34;lc&#34; {
+</span></span><span style="display:flex;"><span>    type master;
+</span></span><span style="display:flex;"><span>    file &#34;/var/lib/bind/db.lc&#34;;
+</span></span><span style="display:flex;"><span>    allow-update { key rndc-key; };
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>zone &#34;0.168.192.in-addr.arpa&#34; {
+</span></span><span style="display:flex;"><span>    type master;
+</span></span><span style="display:flex;"><span>    file &#34;/var/lib/bind/db.192.168.0&#34;;
+</span></span><span style="display:flex;"><span>    allow-update { key rndc-key; };
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>Здесь именно благодаря строке <code>allow-update { key rndc-key; };</code> будет возможно динамическое обновление зон.</p>
 <p>Можно просмотреть содержимое файла <code>rndc-key</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cat rndc.key 
-key <span style="color:#e6db74">&#34;rndc-key&#34;</span> <span style="color:#f92672">{</span>
-    algorithm hmac-md5;
-    secret <span style="color:#e6db74">&#34;/NjKY+BwOtgxBbpsmAp0Cg==&#34;</span>;
-<span style="color:#f92672">}</span>;
-</code></pre></div><p>Теперь проверим правильность синтаксиса конфигурационных файлов DNS-сервера:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">named-checkconf
-</code></pre></div><p>Если все выполнено правильно, то вывод этой команды должен быть пуст.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat rndc.key 
+</span></span><span style="display:flex;"><span>key <span style="color:#e6db74">&#34;rndc-key&#34;</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    algorithm hmac-md5;
+</span></span><span style="display:flex;"><span>    secret <span style="color:#e6db74">&#34;/NjKY+BwOtgxBbpsmAp0Cg==&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>;
+</span></span></code></pre></div><p>Теперь проверим правильность синтаксиса конфигурационных файлов DNS-сервера:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>named-checkconf
+</span></span></code></pre></div><p>Если все выполнено правильно, то вывод этой команды должен быть пуст.</p>
 <p>Перезапускаем DNS-сервер командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/bind9 restart
-</code></pre></div><p>Далее приступаем к настройке DHCP-сервера, приводим конфигурационный файл <code>/etc/dhcp/dhcpd.conf</code> к следующему виду:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">ddns-updates on;
-ddns-update-style interim;
-update-static-leases on;
- 
-key rndc-key {
-        algorithm hmac-md5;
-        secret &#34;/NjKY+BwOtgxBbpsmAp0Cg==&#34;;
-}
- 
-zone lc. {
-    primary 192.168.0.218;
-    key rndc-key;
-}
- 
-zone 0.168.192.in-addr.arpa. {
-    primary 192.168.0.218;
-    key rndc-key;
-}
- 
-authoritative;
-log-facility local7;
-  
-subnet 192.168.0.0 netmask 255.255.252.0 {
-    range 192.168.0.100 192.168.0.199;
-    option domain-name-servers 192.168.0.218;
-    option domain-name &#34;lc&#34;;
-    option routers 192.168.0.1;
-    option broadcast-address 192.168.3.255;
-    default-lease-time 604800;
-    max-lease-time 604800; 
-}
-  
-host e-lebed {
-    hardware ethernet 90:2b:34:ac:3a:d2;
-    fixed-address 192.168.0.80;
-}
-</code></pre></div><p>Для применения изменений перезапускаем службу DHCP:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/etc/init.d/isc-dhcp-server restart
-</code></pre></div><p>или</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">service isc-dhcp-server restart
-</code></pre></div><p>Теперь, при появлении нового компьютера в локальной сети, DHCP-сервер выдаст ему свободный ip-адрес из определенного диапазона и обновит DNS-зоны (при этом в каталоге с зонами также будут созданы два файла с расширением <code>.jnl</code>).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/bind9 restart
+</span></span></code></pre></div><p>Далее приступаем к настройке DHCP-сервера, приводим конфигурационный файл <code>/etc/dhcp/dhcpd.conf</code> к следующему виду:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ddns-updates on;
+</span></span><span style="display:flex;"><span>ddns-update-style interim;
+</span></span><span style="display:flex;"><span>update-static-leases on;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>key rndc-key {
+</span></span><span style="display:flex;"><span>        algorithm hmac-md5;
+</span></span><span style="display:flex;"><span>        secret &#34;/NjKY+BwOtgxBbpsmAp0Cg==&#34;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>zone lc. {
+</span></span><span style="display:flex;"><span>    primary 192.168.0.218;
+</span></span><span style="display:flex;"><span>    key rndc-key;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>zone 0.168.192.in-addr.arpa. {
+</span></span><span style="display:flex;"><span>    primary 192.168.0.218;
+</span></span><span style="display:flex;"><span>    key rndc-key;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>authoritative;
+</span></span><span style="display:flex;"><span>log-facility local7;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>subnet 192.168.0.0 netmask 255.255.252.0 {
+</span></span><span style="display:flex;"><span>    range 192.168.0.100 192.168.0.199;
+</span></span><span style="display:flex;"><span>    option domain-name-servers 192.168.0.218;
+</span></span><span style="display:flex;"><span>    option domain-name &#34;lc&#34;;
+</span></span><span style="display:flex;"><span>    option routers 192.168.0.1;
+</span></span><span style="display:flex;"><span>    option broadcast-address 192.168.3.255;
+</span></span><span style="display:flex;"><span>    default-lease-time 604800;
+</span></span><span style="display:flex;"><span>    max-lease-time 604800; 
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>host e-lebed {
+</span></span><span style="display:flex;"><span>    hardware ethernet 90:2b:34:ac:3a:d2;
+</span></span><span style="display:flex;"><span>    fixed-address 192.168.0.80;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Для применения изменений перезапускаем службу DHCP:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/init.d/isc-dhcp-server restart
+</span></span></code></pre></div><p>или</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>service isc-dhcp-server restart
+</span></span></code></pre></div><p>Теперь, при появлении нового компьютера в локальной сети, DHCP-сервер выдаст ему свободный ip-адрес из определенного диапазона и обновит DNS-зоны (при этом в каталоге с зонами также будут созданы два файла с расширением <code>.jnl</code>).</p>
 <p>Если бы мы создавали файлы зон в каталоге по умолчанию (<code>/etc/bind/zones/</code>), то столкнулись бы со следующими ошибками в логах:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">...
-Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: signer &#34;rndc-key&#34; approved
-Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone &#39;lc/IN&#39;: adding an RR at &#39;Olesya.lc&#39; A 192.168.0.142
-Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone &#39;lc/IN&#39;: adding an RR at &#39;Olesya.lc&#39; TXT &#34;31863aeb2d49662304b5e70f4d291ca2c4&#34;
-Mar 28 05:45:07 labs named[16662]: /etc/bind/zones/db.lc.jnl: create: permission denied
-Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone &#39;lc/IN&#39;: error: journal open failed: unexpected error
-...
-</code></pre></div><p>На этом все, <strong>установка и настройка DNS и DHCP серверов с динамическим обновлением зон</strong> в Ubuntu 16.04 закончена.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: signer &#34;rndc-key&#34; approved
+</span></span><span style="display:flex;"><span>Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone &#39;lc/IN&#39;: adding an RR at &#39;Olesya.lc&#39; A 192.168.0.142
+</span></span><span style="display:flex;"><span>Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone &#39;lc/IN&#39;: adding an RR at &#39;Olesya.lc&#39; TXT &#34;31863aeb2d49662304b5e70f4d291ca2c4&#34;
+</span></span><span style="display:flex;"><span>Mar 28 05:45:07 labs named[16662]: /etc/bind/zones/db.lc.jnl: create: permission denied
+</span></span><span style="display:flex;"><span>Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: updating zone &#39;lc/IN&#39;: error: journal open failed: unexpected error
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>На этом все, <strong>установка и настройка DNS и DHCP серверов с динамическим обновлением зон</strong> в Ubuntu 16.04 закончена.</p>
                 </section>
             </article>
 
@@ -349,7 +349,7 @@ Mar 28 05:45:07 labs named[16662]: client 192.168.0.218#37999/key rndc-key: upda
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

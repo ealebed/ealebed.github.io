@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,9 +103,9 @@
                     <p>Apache и Nginx — наиболее распространенные web-серверы с открытым исходным кодом. Они могут прекрасно справляться с различными рабочими нагрузками, но также имеют и свои недостатки (например, Apache требует много памяти сервера, а Nginx зависит от модулей для динамического контента). Давайте разберемся, как взять лучшее от каждого из этих web-серверов!</p>
 <p>Зачастую для получения максимального эффекта <strong>Nginx используют как фронтенд</strong> (для статического контента), а <strong>Apache — как бекенд</strong> (для динамического контента). Считаем, что необходимые пакеты уже установлены в системе.</p>
 <p>Для настройки Nginx в роли фронтенда создадим конфигурационный файл:</p>
-<pre><code>nano /etc/nginx/sites-available/example
+<pre tabindex="0"><code>nano /etc/nginx/sites-available/example
 </code></pre><p>Пример содержимого конфигурационного файла:</p>
-<pre><code>server {
+<pre tabindex="0"><code>server {
   listen   80;
  
   root /var/www/;
@@ -132,7 +132,7 @@
     allow 127.0.0.1;
     allow 192.168.0.0/24;
     deny all;
-    auth_basic    &quot;Nginx&quot;;
+    auth_basic    &#34;Nginx&#34;;
     auth_basic_user_file  /etc/nginx/basic.auth;
   }
  
@@ -140,7 +140,7 @@
     satisfy any;
     allow 192.168.0.0/24;
     deny all;
-    auth_basic            &quot;PhpMyAdmin&quot;;
+    auth_basic            &#34;PhpMyAdmin&#34;;
     auth_basic_user_file  /etc/phpmyadmin/basic.auth;
     proxy_pass   http://127.0.0.1:8080;
   }
@@ -150,20 +150,20 @@
   }
 }
 </code></pre><p>Активируем созданный виртуальный хост:</p>
-<pre><code>ln -s /etc/nginx/sites-available/example /etc/nginx/sites-enabled/example
+<pre tabindex="0"><code>ln -s /etc/nginx/sites-available/example /etc/nginx/sites-enabled/example
 </code></pre><p>И удалим присутствующий по умолччанию виртуальный хост:</p>
-<pre><code>rm /etc/nginx/sites-enabled/default
+<pre tabindex="0"><code>rm /etc/nginx/sites-enabled/default
 </code></pre><p>Проверить конфигурацию Nginx можно командой:</p>
-<pre><code>nginx -t
+<pre tabindex="0"><code>nginx -t
 </code></pre><p>Перечитать конфиг можно так:</p>
-<pre><code>nginx -s reload
+<pre tabindex="0"><code>nginx -s reload
 </code></pre><p>Переходим к настройке web-сервера Apache. Открываем конфигурационный файл <code>/etc/apache2/ports.conf</code>, и изменяем порт, на котором будет запущен Apache:</p>
-<pre><code>Listen 127.0.0.1:8080
+<pre tabindex="0"><code>Listen 127.0.0.1:8080
 </code></pre><p><strong>Примечание.</strong> Параметр <code>NameVirtualHost</code> начиная с версии 2.3.11 больше не используется.</p>
 <p>Копируем пример настроек виртуального хоста из настроек по умолчанию:</p>
-<pre><code>cp /etc/apache2/sites-available/default /etc/apache2/sites-available/example
+<pre tabindex="0"><code>cp /etc/apache2/sites-available/default /etc/apache2/sites-available/example
 </code></pre><p>Редактируем конфигурационный файл <code>/etc/apache2/sites-available/example</code>, в моем случае он выглядит следующим образом:</p>
-<pre><code>...
+<pre tabindex="0"><code>...
 &lt;VirtualHost *&gt;
     ServerName example.com
     ServerAlias www.example.com example.com
@@ -174,13 +174,13 @@
 &lt;/VirtualHost&gt;
 ...
 </code></pre><p>Активируем виртуальный хост:</p>
-<pre><code>a2ensite example
+<pre tabindex="0"><code>a2ensite example
 </code></pre><p>Перезапустить web-сервер Apache можно командой:</p>
-<pre><code>service apache2 restart
+<pre tabindex="0"><code>service apache2 restart
 </code></pre><p>Убедиться, что web-серверы запущены на указанных портах можно командой:</p>
-<pre><code>netstat -plunt
+<pre tabindex="0"><code>netstat -plunt
 </code></pre><p>Результатом будет примерно следующее:</p>
-<pre><code>Active Internet connections (only servers)
+<pre tabindex="0"><code>Active Internet connections (only servers)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
 tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      539/rpcbind
 tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      22092/apache2
@@ -278,7 +278,7 @@ tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

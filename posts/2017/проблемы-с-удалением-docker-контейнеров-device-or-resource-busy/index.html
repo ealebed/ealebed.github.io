@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,92 +100,92 @@
                 <section id="post-body">
                     <p>Столкнулся с проблемой на одном из серверов с установленной ОС Centos 7 — при обновлении docker-контейнеров запускается новый экземпляр контейнера, но старый при этом не удаляется. Давайте разберемся!</p>
 <p>В консоли при этом можно увидеть ошибку примерно следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Error response from daemon: Driver overlay failed to remove root filesystem 88189a16be60761a2c04a455206650048e784d750533ce2858bcabe2f528c92e: rename /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21 /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21-removing: device or resource busy
-</code></pre></div><p>Информация об установленном docker’е:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker version
-Client:
- Version:      17.06.0-ce
- API version:  1.30
- Go version:   go1.8.3
- Git commit:   02c1d87
- Built:        Fri Jun <span style="color:#ae81ff">23</span> 21:20:36 <span style="color:#ae81ff">2017</span>
- OS/Arch:      linux/amd64
-
-Server:
- Version:      17.06.0-ce
- API version:  1.30 <span style="color:#f92672">(</span>minimum version 1.12<span style="color:#f92672">)</span>
- Go version:   go1.8.3
- Git commit:   02c1d87
- Built:        Fri Jun <span style="color:#ae81ff">23</span> 21:21:56 <span style="color:#ae81ff">2017</span>
- OS/Arch:      linux/amd64
- Experimental: false
-</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker info
-Containers: <span style="color:#ae81ff">9</span>
- Running: <span style="color:#ae81ff">8</span>
- Paused: <span style="color:#ae81ff">0</span>
- Stopped: <span style="color:#ae81ff">1</span>
-Images: <span style="color:#ae81ff">9</span>
-Server Version: 17.06.0-ce
-Storage Driver: overlay
- Backing Filesystem: extfs
- Supports d_type: true
-Logging Driver: json-file
-Cgroup Driver: cgroupfs
-Plugins:
- Volume: local
- Network: bridge host macvlan null overlay
- Log: awslogs fluentd gcplogs gelf journald json-file logentries splunk syslog
-Swarm: inactive
-Runtimes: runc
-Default Runtime: runc
-Init Binary: docker-init
-containerd version: cfb82a876ecc11b5ca0977d1733adbe58599088a
-runc version: 2d41c047c83e09a6d61d464906feb2a2f3c52aa4
-init version: 949e6fa
-Security Options:
- seccomp
-  Profile: default
-Kernel Version: 3.10.0-514.26.2.el7.x86_64
-Operating System: CentOS Linux <span style="color:#ae81ff">7</span> <span style="color:#f92672">(</span>Core<span style="color:#f92672">)</span>
-OSType: linux
-Architecture: x86_64
-CPUs: <span style="color:#ae81ff">8</span>
-Total Memory: 31.13GiB
-Name: example.com
-ID: 7ZTI:WFHT:H5N5:PJBW:DE64:DPKN:PQFD:7HFH:2F5Q:DAUG:H5FH:EKK2
-Docker Root Dir: /var/lib/docker
-Debug Mode <span style="color:#f92672">(</span>client<span style="color:#f92672">)</span>: false
-Debug Mode <span style="color:#f92672">(</span>server<span style="color:#f92672">)</span>: false
-Username: ealebed
-Registry: https://index.docker.io/v1/
-Experimental: false
-Insecure Registries:
- 127.0.0.0/8
-Live Restore Enabled: false
-</code></pre></div><p>Удаление контейнера с ключом <code>-f</code> также не помогает, примерно в половине случаев проблема уходит после перезапуска сервиса <code>docker</code>. Выяснить, какой еще процесс использует каталог не удалось ни через <code>mount</code>, ни через <code>lsof</code>, ни с помощью <code>fuser</code>&hellip;</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Error response from daemon: Driver overlay failed to remove root filesystem 88189a16be60761a2c04a455206650048e784d750533ce2858bcabe2f528c92e: rename /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21 /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21-removing: device or resource busy
+</span></span></code></pre></div><p>Информация об установленном docker’е:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker version
+</span></span><span style="display:flex;"><span>Client:
+</span></span><span style="display:flex;"><span> Version:      17.06.0-ce
+</span></span><span style="display:flex;"><span> API version:  1.30
+</span></span><span style="display:flex;"><span> Go version:   go1.8.3
+</span></span><span style="display:flex;"><span> Git commit:   02c1d87
+</span></span><span style="display:flex;"><span> Built:        Fri Jun <span style="color:#ae81ff">23</span> 21:20:36 <span style="color:#ae81ff">2017</span>
+</span></span><span style="display:flex;"><span> OS/Arch:      linux/amd64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Server:
+</span></span><span style="display:flex;"><span> Version:      17.06.0-ce
+</span></span><span style="display:flex;"><span> API version:  1.30 <span style="color:#f92672">(</span>minimum version 1.12<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> Go version:   go1.8.3
+</span></span><span style="display:flex;"><span> Git commit:   02c1d87
+</span></span><span style="display:flex;"><span> Built:        Fri Jun <span style="color:#ae81ff">23</span> 21:21:56 <span style="color:#ae81ff">2017</span>
+</span></span><span style="display:flex;"><span> OS/Arch:      linux/amd64
+</span></span><span style="display:flex;"><span> Experimental: false
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker info
+</span></span><span style="display:flex;"><span>Containers: <span style="color:#ae81ff">9</span>
+</span></span><span style="display:flex;"><span> Running: <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span> Paused: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span> Stopped: <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>Images: <span style="color:#ae81ff">9</span>
+</span></span><span style="display:flex;"><span>Server Version: 17.06.0-ce
+</span></span><span style="display:flex;"><span>Storage Driver: overlay
+</span></span><span style="display:flex;"><span> Backing Filesystem: extfs
+</span></span><span style="display:flex;"><span> Supports d_type: true
+</span></span><span style="display:flex;"><span>Logging Driver: json-file
+</span></span><span style="display:flex;"><span>Cgroup Driver: cgroupfs
+</span></span><span style="display:flex;"><span>Plugins:
+</span></span><span style="display:flex;"><span> Volume: local
+</span></span><span style="display:flex;"><span> Network: bridge host macvlan null overlay
+</span></span><span style="display:flex;"><span> Log: awslogs fluentd gcplogs gelf journald json-file logentries splunk syslog
+</span></span><span style="display:flex;"><span>Swarm: inactive
+</span></span><span style="display:flex;"><span>Runtimes: runc
+</span></span><span style="display:flex;"><span>Default Runtime: runc
+</span></span><span style="display:flex;"><span>Init Binary: docker-init
+</span></span><span style="display:flex;"><span>containerd version: cfb82a876ecc11b5ca0977d1733adbe58599088a
+</span></span><span style="display:flex;"><span>runc version: 2d41c047c83e09a6d61d464906feb2a2f3c52aa4
+</span></span><span style="display:flex;"><span>init version: 949e6fa
+</span></span><span style="display:flex;"><span>Security Options:
+</span></span><span style="display:flex;"><span> seccomp
+</span></span><span style="display:flex;"><span>  Profile: default
+</span></span><span style="display:flex;"><span>Kernel Version: 3.10.0-514.26.2.el7.x86_64
+</span></span><span style="display:flex;"><span>Operating System: CentOS Linux <span style="color:#ae81ff">7</span> <span style="color:#f92672">(</span>Core<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>OSType: linux
+</span></span><span style="display:flex;"><span>Architecture: x86_64
+</span></span><span style="display:flex;"><span>CPUs: <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>Total Memory: 31.13GiB
+</span></span><span style="display:flex;"><span>Name: example.com
+</span></span><span style="display:flex;"><span>ID: 7ZTI:WFHT:H5N5:PJBW:DE64:DPKN:PQFD:7HFH:2F5Q:DAUG:H5FH:EKK2
+</span></span><span style="display:flex;"><span>Docker Root Dir: /var/lib/docker
+</span></span><span style="display:flex;"><span>Debug Mode <span style="color:#f92672">(</span>client<span style="color:#f92672">)</span>: false
+</span></span><span style="display:flex;"><span>Debug Mode <span style="color:#f92672">(</span>server<span style="color:#f92672">)</span>: false
+</span></span><span style="display:flex;"><span>Username: ealebed
+</span></span><span style="display:flex;"><span>Registry: https://index.docker.io/v1/
+</span></span><span style="display:flex;"><span>Experimental: false
+</span></span><span style="display:flex;"><span>Insecure Registries:
+</span></span><span style="display:flex;"><span> 127.0.0.0/8
+</span></span><span style="display:flex;"><span>Live Restore Enabled: false
+</span></span></code></pre></div><p>Удаление контейнера с ключом <code>-f</code> также не помогает, примерно в половине случаев проблема уходит после перезапуска сервиса <code>docker</code>. Выяснить, какой еще процесс использует каталог не удалось ни через <code>mount</code>, ни через <code>lsof</code>, ни с помощью <code>fuser</code>&hellip;</p>
 <p>Как оказалось, проблема давно известна и связана с контейнером cAdvisor, который часто используется для мониторинга запущенных контейнеров:</p>
 <p><em>It seems Cadvisor, with permission to access other container’s volumes could lock them on the run</em></p>
 <p><a href="http://man7.org/linux/man-pages/man7/mount_namespaces.7.html">Здесь</a> написано, что у каждого <code>pid</code> есть свой <code>mountinfo</code>, который находится в <code>/proc/[pid]/mountinfo</code> и отличается от <code>mountinfo</code> машины-хоста.</p>
 <p>Делаем следующим образом:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">grep docker /proc/*/mountinfo | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21
-
-/proc/1495/mountinfo:634 <span style="color:#ae81ff">537</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:244 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
-/proc/7080/mountinfo:632 <span style="color:#ae81ff">586</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:253 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
-/proc/16445/mountinfo:632 <span style="color:#ae81ff">586</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:253 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
-/proc/16446/mountinfo:632 <span style="color:#ae81ff">586</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:253 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
-/proc/16447/mountinfo:632 <span style="color:#ae81ff">586</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:253 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
-</code></pre></div><p>Видим, что процессы 16447, 16446, 16445, 7080, 1495 все еще ссылаются на данный каталог и не дают нам его удалить. Подключаемся как суперпользователь в пространство имен (<code>namespace</code>) интересующего нас процесса с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nsenter -m -t <span style="color:#ae81ff">16447</span> /bin/bash
-</code></pre></div><p>Смотрим список примонтированных каталогов (с помощью <code>grep</code> выбираем только интересующие):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">[</span>root@example /<span style="color:#f92672">]</span><span style="color:#75715e"># mount | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21</span>
-overlay on /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged type overlay <span style="color:#f92672">(</span>rw,relatime,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work<span style="color:#f92672">)</span>
-</code></pre></div><p>Отмонтируем, проверяем результат и выходим из пространства имен процесса:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">[</span>root@example /<span style="color:#f92672">]</span><span style="color:#75715e"># umount /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged</span>
-<span style="color:#f92672">[</span>root@example /<span style="color:#f92672">]</span><span style="color:#75715e"># mount | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21</span>
-<span style="color:#f92672">[</span>root@example /<span style="color:#f92672">]</span><span style="color:#75715e"># exit</span>
-</code></pre></div><p>Повторяем данную процедуру для всех процессов, ссылающихся на данный каталог (16447, 16446, 16445, 7080, 1495). После проделанных действий можно удалить старый контейнер с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker rm &lt;id_контейнера&gt;
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grep docker /proc/*/mountinfo | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/proc/1495/mountinfo:634 <span style="color:#ae81ff">537</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:244 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
+</span></span><span style="display:flex;"><span>/proc/7080/mountinfo:632 <span style="color:#ae81ff">586</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:253 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
+</span></span><span style="display:flex;"><span>/proc/16445/mountinfo:632 <span style="color:#ae81ff">586</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:253 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
+</span></span><span style="display:flex;"><span>/proc/16446/mountinfo:632 <span style="color:#ae81ff">586</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:253 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
+</span></span><span style="display:flex;"><span>/proc/16447/mountinfo:632 <span style="color:#ae81ff">586</span> 0:92 / /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged rw,relatime shared:253 - overlay overlay rw,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work
+</span></span></code></pre></div><p>Видим, что процессы 16447, 16446, 16445, 7080, 1495 все еще ссылаются на данный каталог и не дают нам его удалить. Подключаемся как суперпользователь в пространство имен (<code>namespace</code>) интересующего нас процесса с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nsenter -m -t <span style="color:#ae81ff">16447</span> /bin/bash
+</span></span></code></pre></div><p>Смотрим список примонтированных каталогов (с помощью <code>grep</code> выбираем только интересующие):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>root@example /<span style="color:#f92672">]</span><span style="color:#75715e"># mount | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21</span>
+</span></span><span style="display:flex;"><span>overlay on /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged type overlay <span style="color:#f92672">(</span>rw,relatime,lowerdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/5e43c3efd86aba4c2a2d13699b61ae93dcb15e4cdb425ffe5f2de290abb94b26/root,upperdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/upper,workdir<span style="color:#f92672">=</span>/var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/work<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Отмонтируем, проверяем результат и выходим из пространства имен процесса:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>root@example /<span style="color:#f92672">]</span><span style="color:#75715e"># umount /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21/merged</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>root@example /<span style="color:#f92672">]</span><span style="color:#75715e"># mount | grep 2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c880439b989ef4f0acb3c5b21</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>root@example /<span style="color:#f92672">]</span><span style="color:#75715e"># exit</span>
+</span></span></code></pre></div><p>Повторяем данную процедуру для всех процессов, ссылающихся на данный каталог (16447, 16446, 16445, 7080, 1495). После проделанных действий можно удалить старый контейнер с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker rm &lt;id_контейнера&gt;
+</span></span></code></pre></div>
                 </section>
             </article>
 
@@ -277,7 +277,7 @@ overlay on /var/lib/docker/overlay/2b70ddff2ab1de78ca8c6f04b89c1cef6234bc1c88043
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

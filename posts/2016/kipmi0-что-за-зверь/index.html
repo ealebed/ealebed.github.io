@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -105,17 +105,17 @@
 <p>В на сайте поддержки IBM <a href="http://www-01.ibm.com/support/docview.wss?uid=nas7d580df3d15874988862575fa0050f604">пишут</a>, что это нормальная ситуация и увеличение утилизации процессора можно игнорировать. Также указано, что проблема может исчезнуть после перезагрузки, но не всегда есть возможность перезагрузить сервер.</p>
 <p>Устранить процесс «классическим» способом (<code>kill</code>, <code>pkill</code>, <code>kill -9</code>, …) не получается, но решение все же есть. Сама проблема происходит от двух модулей ядра (<code>ipmi_si</code> и <code>ipmi_msghandler</code>), которые используются пакетом <code>lm-sensors</code>.</p>
 <p>Проверить, загружены ли модули можно командой:</p>
-<pre><code>lsmod | grep ipmi
+<pre tabindex="0"><code>lsmod | grep ipmi
 ipmi_si                36954  0
 ipmi_msghandler        35965  1 ipmi_si
 </code></pre><p>Далее выполняем:</p>
-<pre><code>rmmod ipmi_si
+<pre tabindex="0"><code>rmmod ipmi_si
 rmmod ipmi_msghandler
 </code></pre><p>Можно также отключить загрузку модуля <code>ipmi_si</code> в конфигурационном файле <code>/etc/modules</code>, закомментировав соответствующую строку:</p>
-<pre><code># /etc/modules: kernel modules to load at boot time.
+<pre tabindex="0"><code># /etc/modules: kernel modules to load at boot time.
 #
 # This file contains the names of kernel modules that should be loaded
-# at boot time, one per line. Lines beginning with &quot;#&quot; are ignored.
+# at boot time, one per line. Lines beginning with &#34;#&#34; are ignored.
 # Parameters can be specified after the module name.
  
 loop
@@ -128,13 +128,13 @@ adm1021
 bonding
 drbd
 </code></pre><p>После внесения изменений перезапускаем <code>lm-sensors</code>:</p>
-<pre><code>/etc/init.d/lm-sensors restart
+<pre tabindex="0"><code>/etc/init.d/lm-sensors restart
 </code></pre><p>Существует еще один вариант решения проблемы — внимательно ознакомиться с <a href="https://www.kernel.org/doc/Documentation/IPMI.txt">документацией IPMI</a> и изменить параметр <code>kipmid_max_busy_us</code> в соответствии с вашими нуждами. В моем случае достаточно выполнить следующую команду:</p>
-<pre><code>echo 100 &gt; /sys/module/ipmi_si/parameters/kipmid_max_busy_us
+<pre tabindex="0"><code>echo 100 &gt; /sys/module/ipmi_si/parameters/kipmid_max_busy_us
 </code></pre><p>Для того, чтобы это значение не изменилось после перезагрузки сервера, в каталоге <code>/etc/modprobe.d/</code> создаем файл <code>ipmi.conf</code>:</p>
-<pre><code>touch /etc/modprobe.d/ipmi.conf
+<pre tabindex="0"><code>touch /etc/modprobe.d/ipmi.conf
 </code></pre><p>Содержимое файла будет следующим:</p>
-<pre><code># Prevent kipmi0 from consuming 100% CPU
+<pre tabindex="0"><code># Prevent kipmi0 from consuming 100% CPU
  
 options ipmi_si kipmid_max_busy_us=100
 </code></pre>
@@ -229,7 +229,7 @@ options ipmi_si kipmid_max_busy_us=100
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

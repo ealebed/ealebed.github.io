@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,41 +101,41 @@
                     <p>Ранее мы уже рассматривали процесс <a href="https://ealebed.github.io/posts/2016/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-glusterfs-server-3.5.2-%D0%B2-%D0%BE%D1%81-debian/">установки и настройки GlusterFS-server</a> в ОС Debian, теперь возникла необходимость добавить новый &lsquo;кирпич&rsquo; (brick) в существующее хранилище. Давайте разберемся!</p>
 <p>Считаем, что все необходимые разделы на новом сервере уже созданы и отформатированы. Локальный ip-адрес нового сервера 192.168.0.15, остальные сервера на которых настроен <strong>GlusterFS</strong> доступны по сети.</p>
 <p>Действия производятся на:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">lsb_release -a
-No LSB modules are available.
-Distributor ID:	Debian
-Description:	Debian GNU/Linux 8.6 <span style="color:#f92672">(</span>jessie<span style="color:#f92672">)</span>
-Release:	8.6
-Codename:	jessie
-</code></pre></div><p><strong>Установка GlusterFS-server</strong> на новом сервере под управлением Debian Jessie самую малость отличается от установки на Debian Wheezy:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">aptitude install glusterfs-server glusterfs-client
-</code></pre></div><p>Проверим версию установленных пакетов (должна быть 3.5.2):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">dpkg -l | grep gluster
-ii  glusterfs-client                     3.5.2-2+deb8u2                     amd64        clustered file-system <span style="color:#f92672">(</span>client package<span style="color:#f92672">)</span>
-ii  glusterfs-common                     3.5.2-2+deb8u2                     amd64        GlusterFS common libraries and translator modules
-ii  glusterfs-server                     3.5.2-2+deb8u2                     amd64        clustered file-system <span style="color:#f92672">(</span>server package<span style="color:#f92672">)</span>
-</code></pre></div><p>Логинимся по SSH на любой из серверов, на котором уже настроен <strong>GlusterFS</strong> (допустим, это будет хост с локальным ip-адресом 192.168.0.1) и проверяем состояние хранилища:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume info
-
-Volume Name: www
-Type: Replicate
-Volume ID: 782e8fd8-0a72-4966-9590-77c244bce3b6
-Status: Started
-Number of Bricks: <span style="color:#ae81ff">1</span> x 5 <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>
-Transport-type: tcp
-Bricks:
-Brick1: 192.168.0.1:/var/www/testsite
-Brick2: 192.168.0.7:/var/www/testsite
-Brick3: 192.168.0.3:/var/www/testsite
-Brick4: 192.168.0.13:/var/www/testsite
-Brick5: 192.168.0.14:/var/www/testsite
-</code></pre></div><p>Далее выполняем:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster peer probe 192.168.0.15
-peer probe: success.
-</code></pre></div><p>И добавляем новый &lsquo;кирпич&rsquo;:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume add-brick www replica <span style="color:#ae81ff">6</span> 192.168.0.15:/var/www/testsite
-volume add-brick: success
-</code></pre></div><p>Где:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsb_release -a
+</span></span><span style="display:flex;"><span>No LSB modules are available.
+</span></span><span style="display:flex;"><span>Distributor ID:	Debian
+</span></span><span style="display:flex;"><span>Description:	Debian GNU/Linux 8.6 <span style="color:#f92672">(</span>jessie<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Release:	8.6
+</span></span><span style="display:flex;"><span>Codename:	jessie
+</span></span></code></pre></div><p><strong>Установка GlusterFS-server</strong> на новом сервере под управлением Debian Jessie самую малость отличается от установки на Debian Wheezy:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>aptitude install glusterfs-server glusterfs-client
+</span></span></code></pre></div><p>Проверим версию установленных пакетов (должна быть 3.5.2):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dpkg -l | grep gluster
+</span></span><span style="display:flex;"><span>ii  glusterfs-client                     3.5.2-2+deb8u2                     amd64        clustered file-system <span style="color:#f92672">(</span>client package<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>ii  glusterfs-common                     3.5.2-2+deb8u2                     amd64        GlusterFS common libraries and translator modules
+</span></span><span style="display:flex;"><span>ii  glusterfs-server                     3.5.2-2+deb8u2                     amd64        clustered file-system <span style="color:#f92672">(</span>server package<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Логинимся по SSH на любой из серверов, на котором уже настроен <strong>GlusterFS</strong> (допустим, это будет хост с локальным ip-адресом 192.168.0.1) и проверяем состояние хранилища:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster volume info
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Volume Name: www
+</span></span><span style="display:flex;"><span>Type: Replicate
+</span></span><span style="display:flex;"><span>Volume ID: 782e8fd8-0a72-4966-9590-77c244bce3b6
+</span></span><span style="display:flex;"><span>Status: Started
+</span></span><span style="display:flex;"><span>Number of Bricks: <span style="color:#ae81ff">1</span> x 5 <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>Transport-type: tcp
+</span></span><span style="display:flex;"><span>Bricks:
+</span></span><span style="display:flex;"><span>Brick1: 192.168.0.1:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick2: 192.168.0.7:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick3: 192.168.0.3:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick4: 192.168.0.13:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick5: 192.168.0.14:/var/www/testsite
+</span></span></code></pre></div><p>Далее выполняем:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster peer probe 192.168.0.15
+</span></span><span style="display:flex;"><span>peer probe: success.
+</span></span></code></pre></div><p>И добавляем новый &lsquo;кирпич&rsquo;:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster volume add-brick www replica <span style="color:#ae81ff">6</span> 192.168.0.15:/var/www/testsite
+</span></span><span style="display:flex;"><span>volume add-brick: success
+</span></span></code></pre></div><p>Где:</p>
 <ul>
 <li><code>gluster</code> — команда для <strong>GlusterFS</strong>;</li>
 <li><code>volume</code> — команду следует применить к хранилищу (<code>volume</code>);</li>
@@ -145,24 +145,24 @@ volume add-brick: success
 <li><code>192.168.0.15:/var/www/testsite</code> — ip-адрес и абсолютный путь к месту, где будут храниться данные.
 Проверим состояние хранилища еще раз:</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gluster volume info
-
-Volume Name: www
-Type: Replicate
-Volume ID: 782e8fd8-0a72-4966-9590-77c244bce3b6
-Status: Started
-Number of Bricks: <span style="color:#ae81ff">1</span> x 6 <span style="color:#f92672">=</span> <span style="color:#ae81ff">6</span>
-Transport-type: tcp
-Bricks:
-Brick1: 192.168.0.1:/var/www/testsite
-Brick2: 192.168.0.7:/var/www/testsite
-Brick3: 192.168.0.3:/var/www/testsite
-Brick4: 192.168.0.13:/var/www/testsite
-Brick5: 192.168.0.14:/var/www/testsite
-Brick6: 192.168.0.15:/var/www/testsite
-</code></pre></div><p>Отлично, &lsquo;кирпич&rsquo; добавлен.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gluster volume info
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Volume Name: www
+</span></span><span style="display:flex;"><span>Type: Replicate
+</span></span><span style="display:flex;"><span>Volume ID: 782e8fd8-0a72-4966-9590-77c244bce3b6
+</span></span><span style="display:flex;"><span>Status: Started
+</span></span><span style="display:flex;"><span>Number of Bricks: <span style="color:#ae81ff">1</span> x 6 <span style="color:#f92672">=</span> <span style="color:#ae81ff">6</span>
+</span></span><span style="display:flex;"><span>Transport-type: tcp
+</span></span><span style="display:flex;"><span>Bricks:
+</span></span><span style="display:flex;"><span>Brick1: 192.168.0.1:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick2: 192.168.0.7:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick3: 192.168.0.3:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick4: 192.168.0.13:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick5: 192.168.0.14:/var/www/testsite
+</span></span><span style="display:flex;"><span>Brick6: 192.168.0.15:/var/www/testsite
+</span></span></code></pre></div><p>Отлично, &lsquo;кирпич&rsquo; добавлен.</p>
 <p>Если необходимо удалить «кирпич» из хранилища <strong>GlusterFS</strong>, то следует выполнить следующую команду:</p>
-<pre><code class="language-bahs" data-lang="bahs">gluster volume remove-brick www replica 5 192.168.0.15:/var/www/testsite
+<pre tabindex="0"><code class="language-bahs" data-lang="bahs">gluster volume remove-brick www replica 5 192.168.0.15:/var/www/testsite
 Removing brick(s) can result in data loss. Do you want to Continue? (y/n) y
 volume remove-brick commit force: success
 </code></pre><p>Здесь вместо <code>add-brick</code> используем команду <code>remove-brick</code> и количество реплик уменьшаем на 1 (было 6 станет 5).</p>
@@ -257,7 +257,7 @@ volume remove-brick commit force: success
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

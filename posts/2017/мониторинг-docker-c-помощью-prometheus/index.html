@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -108,100 +108,100 @@
 <p><strong>Примечание.</strong> К слову, все эти компоненты можно устанавливать в docker-контейнерах и объединять весь стек с помощью <code>docker-compose</code>.</p>
 <p>Если с мониторингом docker-хоста все просто и понятно — как и на любом другом физическом сервере метрики собирает <code>node_exporter</code> и передает их в <strong>Prometheus</strong>, то для мониторинга docker-контейнеров придется воспользоваться инструментом <a href="https://github.com/google/cadvisor">cAdvisor</a> (Container Advisor) от google.</p>
 <p>Для запуска cAdvisor воспользуемся файлом <code>docker-compose.yml</code> следующего содержания:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
-<span style="color:#f92672">services</span>:
-    <span style="color:#f92672">cadvisor-exporter</span>:
-        <span style="color:#f92672">container_name</span>: <span style="color:#e6db74">&#34;cadvisor-exporter&#34;</span>
-        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">google/cadvisor</span>
-        <span style="color:#f92672">ports</span>:
-          - <span style="color:#e6db74">&#34;9200:8080&#34;</span>
-        <span style="color:#f92672">volumes</span>:
-          - <span style="color:#e6db74">&#34;/:/rootfs:ro&#34;</span>
-          - <span style="color:#e6db74">&#34;/var/run:/var/run:rw&#34;</span>
-          - <span style="color:#e6db74">&#34;/sys:/sys:ro&#34;</span>
-          - <span style="color:#e6db74">&#34;/var/lib/docker/:/var/lib/docker:ro&#34;</span>
-        <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">unless-stopped</span>
-</code></pre></div><p>Запускаем контейнер с помощью команды:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker-compose up -d
-</code></pre></div><p>Далее в уже хорошо известный нам конфигурационный файл <code>prometheus.yml</code> (в debian-based дистрибутивах находится в каталоге <code>/etc/prometheus</code>) нужно добавить следующие строки:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">- <span style="color:#f92672">job_name</span>: <span style="color:#e6db74">&#39;cadvisor-exporter&#39;</span>
-  <span style="color:#f92672">scrape_interval</span>: <span style="color:#ae81ff">1s</span>
-  <span style="color:#f92672">target_groups</span>:
-      - <span style="color:#f92672">targets</span>: [<span style="color:#e6db74">&#39;cadvisor-exporter:9200&#39;</span>]
-</code></pre></div><p>и перезапустить <strong>Prometheus</strong> для применения изменений.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">version</span>: <span style="color:#e6db74">&#39;2&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">cadvisor-exporter</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">container_name</span>: <span style="color:#e6db74">&#34;cadvisor-exporter&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">google/cadvisor</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">ports</span>:
+</span></span><span style="display:flex;"><span>          - <span style="color:#e6db74">&#34;9200:8080&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>          - <span style="color:#e6db74">&#34;/:/rootfs:ro&#34;</span>
+</span></span><span style="display:flex;"><span>          - <span style="color:#e6db74">&#34;/var/run:/var/run:rw&#34;</span>
+</span></span><span style="display:flex;"><span>          - <span style="color:#e6db74">&#34;/sys:/sys:ro&#34;</span>
+</span></span><span style="display:flex;"><span>          - <span style="color:#e6db74">&#34;/var/lib/docker/:/var/lib/docker:ro&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">restart</span>: <span style="color:#ae81ff">unless-stopped</span>
+</span></span></code></pre></div><p>Запускаем контейнер с помощью команды:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker-compose up -d
+</span></span></code></pre></div><p>Далее в уже хорошо известный нам конфигурационный файл <code>prometheus.yml</code> (в debian-based дистрибутивах находится в каталоге <code>/etc/prometheus</code>) нужно добавить следующие строки:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>- <span style="color:#f92672">job_name</span>: <span style="color:#e6db74">&#39;cadvisor-exporter&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">scrape_interval</span>: <span style="color:#ae81ff">1s</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">target_groups</span>:
+</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">targets</span>: [<span style="color:#e6db74">&#39;cadvisor-exporter:9200&#39;</span>]
+</span></span></code></pre></div><p>и перезапустить <strong>Prometheus</strong> для применения изменений.</p>
 <p>Следующим шагом нужно импортировать (или создать самостоятельно) в Grafana дашборд для отображения собираемых метрик по docker-контейнерам — взять готовые можно <a href="https://grafana.com/dashboards?dataSource=prometheus&amp;search=docker">здесь</a>. В некоторых случаях потребуется внести небольшие правки в зависимости от используемого вами <a href="https://docs.docker.com/engine/userguide/storagedriver/selectadriver/">docker storage driver</a> — в готовых дашбордах используется <code>aufs</code>, если же у вас <code>overlay/overlay2</code>, то некоторые графики будут пустыми.</p>
 <p>Например, в моем случае используется <code>overlay</code>, поэтому правильная метрика для отображения используемого места на системном диске будет выглядеть так:</p>
-<pre><code>sum((node_filesystem_size{fstype=&quot;overlay&quot;} - node_filesystem_free{fstype=&quot;overlay&quot;})) / sum(node_filesystem_size{fstype=&quot;overlay&quot;})  * 100
+<pre tabindex="0"><code>sum((node_filesystem_size{fstype=&#34;overlay&#34;} - node_filesystem_free{fstype=&#34;overlay&#34;})) / sum(node_filesystem_size{fstype=&#34;overlay&#34;})  * 100
 </code></pre><p>Далее следует настроить уведомления, по умолчанию данные настройки находятся в <code>/etc/prometheus/alert.rules</code>, но для удобства их можно разделить на несколько файлов в зависимости от типа оповещения.</p>
 <p>Например, для оповещения о проблемах с контейнерами, можем использовать файл <code>containers.rules</code>, а для оповещений о проблемах с docker-хостом — файл <code>docker.rules</code>.</p>
 <p>Содержимое файла правил <code>containers.rules</code> следующее:</p>
-<pre><code># Контейнер не запущен более 30 секунд
+<pre tabindex="0"><code># Контейнер не запущен более 30 секунд
 ALERT test_container_down
-  IF absent(container_memory_usage_bytes{name=&quot;test_container&quot;})
+  IF absent(container_memory_usage_bytes{name=&#34;test_container&#34;})
   FOR 30s
-  LABELS { severity = &quot;critical&quot; }
+  LABELS { severity = &#34;critical&#34; }
   ANNOTATIONS {
-    summary= &quot;test_container down&quot;,
-    description= &quot;test_container container is down for more than 30 seconds.&quot;
+    summary= &#34;test_container down&#34;,
+    description= &#34;test_container container is down for more than 30 seconds.&#34;
   }
 # Контейнер использует более 10% CPU более 30 секунд подряд
  ALERT test_container_high_cpu
-  IF sum(rate(container_cpu_usage_seconds_total{name=&quot;test_container&quot;}[1m])) / count(node_cpu{mode=&quot;system&quot;}) * 100 &gt; 10
+  IF sum(rate(container_cpu_usage_seconds_total{name=&#34;test_container&#34;}[1m])) / count(node_cpu{mode=&#34;system&#34;}) * 100 &gt; 10
   FOR 30s
-  LABELS { severity = &quot;warning&quot; }
+  LABELS { severity = &#34;warning&#34; }
   ANNOTATIONS {
-    summary= &quot;test_container high CPU usage&quot;,
-    description= &quot;test_container CPU usage is {{ humanize $value}}%.&quot;
+    summary= &#34;test_container high CPU usage&#34;,
+    description= &#34;test_container CPU usage is {{ humanize $value}}%.&#34;
   }
 # Контейнер использует более 1,2GB RAM более 30 секунд подряд
 ALERT test_container_high_memory
-  IF sum(container_memory_usage_bytes{name=&quot;test_container&quot;}) &gt; 1200000000
+  IF sum(container_memory_usage_bytes{name=&#34;test_container&#34;}) &gt; 1200000000
   FOR 30s
-  LABELS { severity = &quot;warning&quot; }
+  LABELS { severity = &#34;warning&#34; }
   ANNOTATIONS {
-      summary = &quot;test_container high memory usage&quot;,
-      description = &quot;test_container memory consumption is at {{ humanize $value}}.&quot;,
+      summary = &#34;test_container high memory usage&#34;,
+      description = &#34;test_container memory consumption is at {{ humanize $value}}.&#34;,
   }
 </code></pre><p>В конфигурационном файле <code>docker.rules</code> следующие строки:</p>
-<pre><code># LA выше определенного лимита (1.5) более 30 секунд
+<pre tabindex="0"><code># LA выше определенного лимита (1.5) более 30 секунд
 ALERT high_cpu_load
   IF node_load1 &gt; 1.5
   FOR 30s
-  LABELS { severity = &quot;warning&quot; }
+  LABELS { severity = &#34;warning&#34; }
   ANNOTATIONS {
-      summary = &quot;Server under high load&quot;,
-      description = &quot;Docker host is under high load, the LA 1m is at {{ $value}}.&quot;,
+      summary = &#34;Server under high load&#34;,
+      description = &#34;Docker host is under high load, the LA 1m is at {{ $value}}.&#34;,
   }
 # Использование памяти превышает 85%
 ALERT high_memory_load
   IF (sum(node_memory_MemTotal) - sum(node_memory_MemFree + node_memory_Buffers + node_memory_Cached) ) / sum(node_memory_MemTotal) * 100 &gt; 85
   FOR 30s
-  LABELS { severity = &quot;warning&quot; }
+  LABELS { severity = &#34;warning&#34; }
   ANNOTATIONS {
-      summary = &quot;Server memory is almost full&quot;,
-      description = &quot;Docker host memory usage is {{ humanize $value}}%.&quot;,
+      summary = &#34;Server memory is almost full&#34;,
+      description = &#34;Docker host memory usage is {{ humanize $value}}%.&#34;,
   }
 # Использование системного диска превышает 85%
 ALERT hight_storage_load
-  IF (node_filesystem_size{fstype=&quot;aufs&quot;} - node_filesystem_free{fstype=&quot;aufs&quot;}) / node_filesystem_size{fstype=&quot;aufs&quot;}  * 100 &gt; 85
+  IF (node_filesystem_size{fstype=&#34;aufs&#34;} - node_filesystem_free{fstype=&#34;aufs&#34;}) / node_filesystem_size{fstype=&#34;aufs&#34;}  * 100 &gt; 85
   FOR 30s
-  LABELS { severity = &quot;warning&quot; }
+  LABELS { severity = &#34;warning&#34; }
   ANNOTATIONS {
-      summary = &quot;Server storage is almost full&quot;,
-      description = &quot;Docker host storage usage is {{ humanize $value}}%.&quot;,
+      summary = &#34;Server storage is almost full&#34;,
+      description = &#34;Docker host storage usage is {{ humanize $value}}%.&#34;,
   }
 </code></pre><p>Alertmanager также умеет оправлять оповещения о проблемах с помощью e-mail, Pushover, Slack, HipChat. Пример интеграции alertmanager&rsquo;а и slack подробно расписан <a href="https://www.robustperception.io/using-slack-with-the-alertmanager/">здесь</a>, поэтому воспользуемся данным примером.</p>
 <p>Конфигурационный файл с настройками отправки уведомлений выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">route</span>:
-    <span style="color:#f92672">receiver</span>: <span style="color:#e6db74">&#39;slack&#39;</span>
-<span style="color:#f92672">receivers</span>:
-    - <span style="color:#f92672">name</span>: <span style="color:#e6db74">&#39;slack&#39;</span>
-      <span style="color:#f92672">slack_configs</span>:
-          - <span style="color:#f92672">send_resolved</span>: <span style="color:#66d9ef">true</span>
-            <span style="color:#f92672">username</span>: <span style="color:#e6db74">&#39;Prometheus&#39;</span>
-            <span style="color:#f92672">channel</span>: <span style="color:#e6db74">&#39;#random&#39;</span>
-            <span style="color:#f92672">api_url</span>: <span style="color:#e6db74">&#39;https://hooks.slack.com/services/&lt;your&gt;/&lt;stuff&gt;/&lt;here&gt;&#39;</span>
-</code></pre></div><p>На этом все, а для быстрой настройки всего стека мониторинга «с нуля» могу порекомендовать <a href="https://github.com/stefanprodan/dockprom">готовый проект</a> от Stefan Prodan.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">route</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">receiver</span>: <span style="color:#e6db74">&#39;slack&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">receivers</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#f92672">name</span>: <span style="color:#e6db74">&#39;slack&#39;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">slack_configs</span>:
+</span></span><span style="display:flex;"><span>          - <span style="color:#f92672">send_resolved</span>: <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">username</span>: <span style="color:#e6db74">&#39;Prometheus&#39;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">channel</span>: <span style="color:#e6db74">&#39;#random&#39;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">api_url</span>: <span style="color:#e6db74">&#39;https://hooks.slack.com/services/&lt;your&gt;/&lt;stuff&gt;/&lt;here&gt;&#39;</span>
+</span></span></code></pre></div><p>На этом все, а для быстрой настройки всего стека мониторинга «с нуля» могу порекомендовать <a href="https://github.com/stefanprodan/dockprom">готовый проект</a> от Stefan Prodan.</p>
                 </section>
             </article>
 
@@ -293,7 +293,7 @@ ALERT hight_storage_load
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

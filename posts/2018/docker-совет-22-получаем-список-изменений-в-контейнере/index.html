@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -101,18 +101,18 @@
                     <p>Бывают случаи, когда вносятся изменения внутри уже запущенного docker-контейнера, после чего нужно увидеть, насколько измененный контейнер отличается от оригинального образа. Давайте разберемся!</p>
 <p>Всем хорошо известно, что контейнеры являются идемпотентными - внесенные изменения внутри запущенного контейнера будут утеряны при следующем запуске контейнера. Именно поэтому, все внесенные изменения (если, конечно, в них есть смысл и они привели к нужному результату) внутри запущенного docker-контейнера необходимо дописать в <code>Dockerfile</code> и пересобрать docker-образ. Как же получить список изменений внутри контейнера?</p>
 <p>Все просто - используйте команду <code>docker container diff &lt;container_name&gt;</code>. Рассмотрим конкретный пример - запускаем docker-контейнер из образа alpine и вносим некоторые изменения:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run --rm -it --name difftest alpine:3.7
-&gt; mkdir exampledir
-&gt; cd /tmp
-&gt; touch hello.txt
-</code></pre></div><p>Во второй вкладке терминала проверим, что же изменилось внутри docker-контейнера с именем <code>difftest</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker container diff difftest
-&gt; A /exampledir
-&gt; C /root
-&gt; A /root/.ash_history
-&gt; C /tmp
-&gt; A /tmp/hello.txt
-</code></pre></div><p>При выводе результата команды <code>docker container diff &lt;container_name&gt;</code> можно увидеть, что каждая строка вначале содержит один из трех возможных символов - A,C,D:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run --rm -it --name difftest alpine:3.7
+</span></span><span style="display:flex;"><span>&gt; mkdir exampledir
+</span></span><span style="display:flex;"><span>&gt; cd /tmp
+</span></span><span style="display:flex;"><span>&gt; touch hello.txt
+</span></span></code></pre></div><p>Во второй вкладке терминала проверим, что же изменилось внутри docker-контейнера с именем <code>difftest</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker container diff difftest
+</span></span><span style="display:flex;"><span>&gt; A /exampledir
+</span></span><span style="display:flex;"><span>&gt; C /root
+</span></span><span style="display:flex;"><span>&gt; A /root/.ash_history
+</span></span><span style="display:flex;"><span>&gt; C /tmp
+</span></span><span style="display:flex;"><span>&gt; A /tmp/hello.txt
+</span></span></code></pre></div><p>При выводе результата команды <code>docker container diff &lt;container_name&gt;</code> можно увидеть, что каждая строка вначале содержит один из трех возможных символов - A,C,D:</p>
 <ul>
 <li>A - файл (помним, что с точки зрения Linux каталог это тоже файл) был добавлен;</li>
 <li>C - файл был изменен;</li>
@@ -120,8 +120,8 @@
 </ul>
 <p>В нашем примере мы ничего не удаляли, поэтому в результате вывода есть только строки с символами A и С. Файл <code>/root/.ash_history</code>, как вы наверняка уже догадались, это стандартный файл с историей команд.</p>
 <p>Команда <code>diff</code> выведет в результате только те файлы, которые были добавлены/изменены/удалены. Если нужно получить <strong>всю</strong> историю действий в запущенном docker-контейнере, то можно воспользоваться такой командой:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker exec difftest cat /root/.ash_history
-</code></pre></div><p>Обе команды имеют разное предназначение, поэтому в каждом конкретном случае лучше пользоваться более подходящей командой. Благодаря команде <code>diff</code> можно быстро получить представление о том, что изменялось, а благодаря файлу с историей команд можно воспроизвести каждый шаг вносимых изменений.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker exec difftest cat /root/.ash_history
+</span></span></code></pre></div><p>Обе команды имеют разное предназначение, поэтому в каждом конкретном случае лучше пользоваться более подходящей командой. Благодаря команде <code>diff</code> можно быстро получить представление о том, что изменялось, а благодаря файлу с историей команд можно воспроизвести каждый шаг вносимых изменений.</p>
                 </section>
             </article>
 
@@ -213,7 +213,7 @@
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

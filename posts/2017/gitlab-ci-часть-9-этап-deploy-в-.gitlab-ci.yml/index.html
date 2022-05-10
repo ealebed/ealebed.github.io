@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -103,23 +103,23 @@
                     <p>В <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-8-%D1%8D%D1%82%D0%B0%D0%BF-release-%D0%B2-.gitlab-ci.yml/">предыдущей статье</a> цикла о настройке <strong>GitLab continuous integration</strong> мы занимались сборкой docker-образа с исходниками проекта. После сборки и загрузки docker-образа в локальный docker-registry, мы можем использовать его для деплоя на ревью (review), продакшн (production) и т. д.</p>
 <p>Давайте разберемся со следующим этапом из конфигурационного файла <code>.gitlab-ci.yml</code> — этапом деплоя!</p>
 <p>Часть специального файла <code>.gitlab-ci.yml</code>, в которой описаны инстукции для этапа деплоя в нашем случае выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">...
-<span style="color:#f92672">deploy-to-review</span>:
-  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">deploy</span>
-  <span style="color:#f92672">before_script</span>:
-    - <span style="color:#ae81ff">eval $(ssh-agent -s)</span>
-    - <span style="color:#ae81ff">ssh-add &lt;(echo &#34;$SSH_PRIVATE_KEY&#34;)</span>
-  <span style="color:#f92672">script</span>:
-    - <span style="color:#ae81ff">scp ./docker/.env.staging.lc ./docker/docker-compose-staging.yml provisioner@staging.lc:~/docker</span>
-    - <span style="color:#ae81ff">ssh provisioner@staging.lc &#39;bash -s&#39; &lt; ./docker/deploy.sh</span>
-  <span style="color:#f92672">environment</span>:
-    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">review/$CI_COMMIT_REF_NAME</span>
-    <span style="color:#f92672">url</span>: <span style="color:#ae81ff">https://www.$CI_COMMIT_REF_SLUG.labs.lc</span>
-  <span style="color:#f92672">only</span>:
-    - <span style="color:#ae81ff">develop</span>
-    - <span style="color:#ae81ff">docker</span>
-...
-</code></pre></div><p>В статье про <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%81%D0%BF%D0%B5%D1%86%D0%B8%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D1%8B/">специальные docker-образы</a>, которые используются в процессе <strong>GitLab CI</strong>, мы упоминали о необходимости установки ssh-клиента — он нам пригодится в момент деплоя на ревью (сервер с именем staging.lc). Как обычно, действия выполняются для веток develop и docker, но у нас появилась новая секция — <code>environment</code> — в которой описаны настройки окружения (отличаются, как не сложно догадаться, именем ветки).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#f92672">deploy-to-review</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">stage</span>: <span style="color:#ae81ff">deploy</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">before_script</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">eval $(ssh-agent -s)</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">ssh-add &lt;(echo &#34;$SSH_PRIVATE_KEY&#34;)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">script</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">scp ./docker/.env.staging.lc ./docker/docker-compose-staging.yml provisioner@staging.lc:~/docker</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">ssh provisioner@staging.lc &#39;bash -s&#39; &lt; ./docker/deploy.sh</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">environment</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">review/$CI_COMMIT_REF_NAME</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">url</span>: <span style="color:#ae81ff">https://www.$CI_COMMIT_REF_SLUG.labs.lc</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">only</span>:
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">develop</span>
+</span></span><span style="display:flex;"><span>    - <span style="color:#ae81ff">docker</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>В статье про <a href="https://ealebed.github.io/posts/2017/gitlab-ci-%D1%87%D0%B0%D1%81%D1%82%D1%8C-2-%D1%81%D0%BF%D0%B5%D1%86%D0%B8%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5-%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D1%8B/">специальные docker-образы</a>, которые используются в процессе <strong>GitLab CI</strong>, мы упоминали о необходимости установки ssh-клиента — он нам пригодится в момент деплоя на ревью (сервер с именем staging.lc). Как обычно, действия выполняются для веток develop и docker, но у нас появилась новая секция — <code>environment</code> — в которой описаны настройки окружения (отличаются, как не сложно догадаться, именем ветки).</p>
 <p>Например, если <strong>GitLab CI</strong> выполняется для ветки docker, то после успешного деплоя сайт будет доступен из браузера по адресу <a href="https://www.docker.labs.lc">https://www.docker.labs.lc</a>. Больше подробностей об окружениях, в частности о динамических окружениях которые используются в данном примере можно прочесть <a href="https://docs.gitlab.com/ce/ci/environments.html#dynamic-environments">здесь</a>.</p>
 <p><strong>Примечание.</strong> Конечно же, ваш web-сервер должен быть настроен на обслуживание данных доменов и каталогов с кодом, но это тема для отдельной статьи.</p>
 <p>Основные команды, описанные в секции <code>script</code> с помощью утилиты <code>scp</code> копируют на сервер staging.lc (в каталог <code>~/docker</code>) файлы <code>.env.staging.lc</code> (переменные окружения) и <code>docker-compose-staging.yml</code> (настройки docker-контейнеров окружения), после чего выполняют на удаленном сервере скрипт <code>deploy.sh</code> (рассмотрим его позже).</p>
@@ -127,18 +127,18 @@
 <p><strong>Примечание.</strong> Secret Variables — These variables will be set to environment by the runner. So you can use them for passwords, secret keys or whatever you want.</p>
 <p>&ldquo;Секретные&rdquo; переменные можно найти и добавить в вебинтерфейсе GitLab в настройках проекта (&ldquo;Settings -&gt; CI/CD Pipelines&rdquo;).</p>
 <p>Содержимое скрипта <code>deploy.sh</code>, который и выполняет основные действия деплоя на удаленный сервер выглядит так:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/bash
-</span><span style="color:#75715e"></span>DIRECTORY<span style="color:#f92672">=</span>~/docker
-DC_FILE<span style="color:#f92672">=</span>docker-compose-staging.yml
-ENV_FILE<span style="color:#f92672">=</span>.env.staging.lc
- 
-cd $DIRECTORY;
- 
-set -o allexport; . $ENV_FILE;
-docker-compose -f $DC_FILE pull;
-docker-compose -f $DC_FILE down;
-docker-compose -f $DC_FILE up -d;
-</code></pre></div><p>Как видим, скрипт выполняет несколько простых действий:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>DIRECTORY<span style="color:#f92672">=</span>~/docker
+</span></span><span style="display:flex;"><span>DC_FILE<span style="color:#f92672">=</span>docker-compose-staging.yml
+</span></span><span style="display:flex;"><span>ENV_FILE<span style="color:#f92672">=</span>.env.staging.lc
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>cd $DIRECTORY;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>set -o allexport; . $ENV_FILE;
+</span></span><span style="display:flex;"><span>docker-compose -f $DC_FILE pull;
+</span></span><span style="display:flex;"><span>docker-compose -f $DC_FILE down;
+</span></span><span style="display:flex;"><span>docker-compose -f $DC_FILE up -d;
+</span></span></code></pre></div><p>Как видим, скрипт выполняет несколько простых действий:</p>
 <ul>
 <li>применяет переменные окружения из файла <code>.env.staging.lc</code>;</li>
 <li>скачивает из локального docker-registry последние версии docker-образов (если образ не был изменен, то и скачиваться он не будет);</li>
@@ -146,7 +146,7 @@ docker-compose -f $DC_FILE up -d;
 <li>создает и запускает новые docker-контейнеры согласно описанию в <code>docker-compose-staging.yml</code>.</li>
 </ul>
 <p>Файл с переменными окружения в данном случае выглядит так:</p>
-<pre><code>#########################################################
+<pre tabindex="0"><code>#########################################################
 # Эти переменные используются для staging-окружения 
 #########################################################
 # UID пользователя запускающего контейнеры в хост-системе
@@ -255,7 +255,7 @@ HTTP_PORT=80
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>

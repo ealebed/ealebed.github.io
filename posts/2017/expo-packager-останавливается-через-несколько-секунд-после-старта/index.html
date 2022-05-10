@@ -29,7 +29,7 @@
 		
 		<meta name="author" content="Yevhen Lebid">
 		<meta name="description" content="Yevhen Lebid&#39;s website">
-		<meta name="generator" content="Hugo 0.87.0" />
+		<meta name="generator" content="Hugo 0.98.0" />
 		
   			
 			<script async src="https://www.googletagmanager.com/gtag/js?id=UA-112453311-1"></script>
@@ -100,7 +100,7 @@
                 <section id="post-body">
                     <p>При запуске проекта при помощи команды <code>exp</code> через несколько секунд после старта React Native packager отваливается без каких-либо сообщений в логах. Давайте разберемся!</p>
 <p>Сразу после запуска команды <code>exp start --tunnel --send-to ealebed@gmail.com</code> в консоли можно увидеть следующее:</p>
-<pre><code>[exp] Starting React Native packager...
+<pre tabindex="0"><code>[exp] Starting React Native packager...
 [exp] Scanning folders for symlinks in /var/www/mobile/node_modules (19ms)
 [exp] Loading dependency graph.
 [exp] Running packager on port 19001.
@@ -114,12 +114,12 @@
 [exp] Sent.
 [exp] Logs for your project will appear below. Press Ctrl+C to exit.
 </code></pre><p>В этот момент можно «засечь» порт, на котором запускается React Native packager (19001):</p>
-<pre><code>netstat -napl | grep 1900
+<pre tabindex="0"><code>netstat -napl | grep 1900
 tcp6       0      0 :::19000                :::*                    LISTEN      10899/node      
 tcp6       0      0 127.0.0.1:19001         127.0.0.1:45950         TIME_WAIT   -               
 tcp6       0      0 127.0.0.1:19000         127.0.0.1:38556         TIME_WAIT   -              
 </code></pre><p>Но спустя несколько секунд он пропадает:</p>
-<pre><code>netstat -napl | grep 1900
+<pre tabindex="0"><code>netstat -napl | grep 1900
 tcp6       0      0 :::19000                :::*                    LISTEN      10899/node
 </code></pre><p>Ситуация повторяется и при запуске exp в docker-контейнере, и при запуске непосредственно с хост-машины. Мы знаем, что LISTEN использует <a href="http://linux.die.net/man/7/inotify"><code>inotify</code></a> по умолчанию для отслеживания изменений в файлах и каталогах Linux. Иногда происходит ситуация, когда можно «упереться» в лимит количества файлов, за которыми ведется наблюдение — в таком случае его необходимо увеличить.</p>
 <p>У <code>inotify</code> есть три параметра (<code>ls /proc/sys/fs/inotify/</code>), на которые мы можем повлиять:</p>
@@ -129,26 +129,26 @@ tcp6       0      0 :::19000                :::*                    LISTEN      
 <li><code>max_user_watches</code> — сколько файлов может отслеживать один пользоваль (default = 8192).</li>
 </ul>
 <p>Проверим значение этих параметров на хост-машине:</p>
-<pre><code>sysctl -a | grep fs.inotify
+<pre tabindex="0"><code>sysctl -a | grep fs.inotify
 fs.inotify.max_queued_events = 16384
 fs.inotify.max_user_instances = 128
 fs.inotify.max_user_watches = 8192
 </code></pre><p>Очевидно, что внутри docker-контейнера значения будут такими же:</p>
-<pre><code>docker exec -it node-expo sysctl -a | grep fs.inotify
+<pre tabindex="0"><code>docker exec -it node-expo sysctl -a | grep fs.inotify
 fs.inotify.max_queued_events = 16384
 fs.inotify.max_user_instances = 128
 fs.inotify.max_user_watches = 8192
 </code></pre><p>Увеличиваем значения параметра <code>fs.inotify.max_user_watches</code> на хост-машине:</p>
-<pre><code>echo fs.inotify.max_user_watches = 524288 | sudo tee -a /etc/sysctl.conf &amp;&amp; sudo sysctl -p
+<pre tabindex="0"><code>echo fs.inotify.max_user_watches = 524288 | sudo tee -a /etc/sysctl.conf &amp;&amp; sudo sysctl -p
 fs.inotify.max_user_watches = 524288
 fs.inotify.max_user_watches = 524288
 </code></pre><p>Проверим, изменилось ли значение внутри docker-контейнера:</p>
-<pre><code>docker exec -it node-expo sysctl -a | grep fs.inotify
+<pre tabindex="0"><code>docker exec -it node-expo sysctl -a | grep fs.inotify
 fs.inotify.max_queued_events = 16384
 fs.inotify.max_user_instances = 128
 fs.inotify.max_user_watches = 524288
 </code></pre><p>Запускаем <code>exp</code> в docker-контейнере, через несколько секунд проверяем открытые порты на хост-машине:</p>
-<pre><code>netstat -napl | grep 1900
+<pre tabindex="0"><code>netstat -napl | grep 1900
 tcp        0      0 127.0.0.1:34540         127.0.0.1:19000         ESTABLISHED 19602/ngrok     
 tcp        0      0 127.0.0.1:42368         127.0.0.1:19001         ESTABLISHED 19602/ngrok     
 tcp6       0      0 :::19000                :::*                    LISTEN      19473/node      
@@ -249,7 +249,7 @@ tcp6       0      0 127.0.0.1:19001         127.0.0.1:40498         TIME_WAIT   
     
     <p class="small">
     
-       © Copyright 2021 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
+       © Copyright 2022 <i class="fa fa-heart" aria-hidden="true"></i> Yevhen Lebid
     
     </p>
 </footer>
